@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<webModule>
+    <path>/</path>
+    <webFragments>nabu.cms.page.rest.page.list</webFragments>
+    <webFragments>nabu.cms.page.rest.page.create</webFragments>
+    <webFragments>nabu.cms.page.rest.page.update</webFragments>
+</webModule>

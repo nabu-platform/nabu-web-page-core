@@ -1,0 +1,22 @@
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" disabled="false" id="70455fa4-d71d-4aae-89c9-37743baa644e">
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" id="d9e45bd4-3dac-4a2f-9f3d-e4af84b863e9">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="741b069d-bcf5-425c-b318-5efce0e33347" invocationOrder="1" temporaryMapping="true" serviceId="nabu.utils.Resource.write" resultName="result0f65dcc2cdb34c54b81f86ad69141f2b" y="124" x="183">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="4714fd71-4a8b-46b1-be4e-8ecf5eaa51a4" optional="false" fixedValue="false" mask="false">
+				<from>resulte407a4a60c86426fa5a88aa97a747886/marshalled</from>
+				<to>stream</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="478a8a0f-286a-4ef3-bbba-49814d39da4a" optional="false" fixedValue="true" mask="false">
+				<from>="file:/home/alex/tmp/pages/" + input/content/id</from>
+				<to>uri</to>
+			</steps>
+			<asynchronous>false</asynchronous>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="399f45f7-e89f-43ef-b835-7bce2ca2523b" invocationOrder="0" temporaryMapping="true" serviceId="nabu.data.xml.Services.marshal" resultName="resulte407a4a60c86426fa5a88aa97a747886" y="18" x="46">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="fc52637a-4e74-4fca-8bff-cbfa642b5227" optional="false" fixedValue="false" mask="false">
+				<from>input/content</from>
+				<to>data</to>
+			</steps>
+			<asynchronous>false</asynchronous>
+		</steps>
+	</steps>
+</sequence>

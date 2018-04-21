@@ -1,0 +1,12 @@
+.n-prompt-container {
+	min-height: 80vh !important;
+	&[template~="cms-page"] {
+		overflow: visible !important;
+	}
+}
+.cms-page {
+	&.n-form {
+		background-color: #fff;
+		padding: 2rem;
+	}
+}
