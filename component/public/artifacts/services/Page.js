@@ -61,7 +61,7 @@ nabu.services.VueService(Vue.extend({
 				var route = {
 					alias: self.alias(page),
 					url: page.path,
-					query: page.content.query ? page.query : [],
+					query: page.content.query ? page.content.query : [],
 					enter: function(parameters) {
 						return new nabu.views.cms.Page({propsData: {page: page, parameters: parameters }});
 					}

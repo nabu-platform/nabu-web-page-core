@@ -21,6 +21,53 @@ nabu.views.cms.Page = Vue.extend({
 	},
 	computed: {
 		events: function() {
+			return this.getEvents();
+		},
+		availableParameters: function() {
+			// there are all the events
+			var available = nabu.utils.objects.clone(this.getEvents());
+			// and the page
+			available.page = this.$services.page.getPageParameters(this.page);
+			return available;
+		}
+	},
+	data: function() {
+		return {
+			edit: false,
+			// contains all the component instances
+			// the key is their id
+			components: {},
+			// contains (amongst other things) the event instances
+			variables: {},
+			lastParameters: null,
+			configuring: false
+		}
+	},
+	methods: {
+		removeQuery: function(index) {
+			this.page.content.query.splice(index, 1);	
+		},
+		canEdit: function() {
+			return true;	
+		},
+		mounted: function(cell, component) {
+			this.components[cell.id] = component;
+		},
+		addRow: function() {
+			this.page.content.rows.push({
+				id: this.page.content.counter++,
+				cells: []
+			});
+		},
+		removeRow: function(row) { 
+			this.page.content.rows.splice(this.page.content.rows(indexOf(row), 1))
+		},
+		rerender: function(changedValues) {
+			if (changedValues && changedValues.length) {
+				this.$refs[this.page.name + '_rows'].renderAll(changedValues);
+			}
+		},
+		getEvents: function() {
 			var events = {};
 			var self = this;
 			Object.keys(this.components).map(function(cellId) {
@@ -38,35 +85,28 @@ nabu.views.cms.Page = Vue.extend({
 				}
 			});
 			return events;
-		}	
-	},
-	data: function() {
-		return {
-			edit: true,
-			// contains all the component instances
-			// the key is their id
-			components: {},
-			// contains (amongst other things) the event instances
-			variables: {},
-			lastParameters: null
-		}
-	},
-	methods: {
-		mounted: function(cell, component) {
-			this.components[cell.id] = component;
 		},
-		addRow: function() {
-			this.page.content.rows.push({
-				id: this.page.content.counter++,
-				cells: []
-			});
+		emit: function(name, value) {
+			this.variables[name] = value;
 		},
-		removeRow: function(row) { 
-			this.page.content.rows.splice(this.page.content.rows(indexOf(row), 1))
-		},
-		rerender: function(changedValues) {
-			if (changedValues && changedValues.length) {
-				this.$refs[this.page.name + '_rows'].renderAll(changedValues);
+		get: function(name) {
+			if (name == "page") {
+				return this.parameters;
+			}
+			else if (name.indexOf("page.") == 0) {
+				return this.parameters[name.substring("page.".length)];	
+			}
+			// we want an entire event
+			else if (name.indexOf(".") < 0) {
+				return this.variables[name];
+			}
+			// we still want an entire event
+			else if (name.indexOf(".$all") >= 0) {
+				return this.variables[name.substring(0, name.indexOf(".$all"))];
+			}
+			else {
+				var parts = name.split(".");
+				return this.variables[parts[0]][parts[1]];
 			}
 		}
 	},
@@ -116,19 +156,35 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 		}
 	},
 	ready: function() {
-		this.renderAll();	
+		//this.renderAll();	
 	},
 	methods: {
+		canConfigure: function(cell) {
+			var pageInstance = this.$services.page.instances[this.page.name];
+			var components = pageInstance.components;
+			return components[cell.id] && components[cell.id].configure;
+		},
+		configure: function(cell) {
+			var pageInstance = this.$services.page.instances[this.page.name];
+			var cellInstance = pageInstance.components[cell.id];
+			cellInstance.configure();
+		},
 		shouldRenderCell: function(cell) {
 			if (!cell.alias) {
 				return false;
 			}
+			else if (this.edit) {
+				return true;
+			}
+			var self = this;
+			var pageInstance = self.$services.page.instances[self.page.name];
 			return Object.keys(cell.bindings).reduce(function(consensus, name) {
 				// if we have a bound value and it does not originate from the (ever present) page, it must come from an event
 				// check that the event has occurred
 				if (cell.bindings[name] && cell.bindings[name].indexOf("page.") != 0) {
 					var parts = cell.bindings[name].split(".");
-					if (!self.$services.page.instances[self.page.name].variables[parts[0]]) {
+					// if the event does not exist yet, stop
+					if (!pageInstance.variables[parts[0]]) {
 						return false;
 					}
 				}
@@ -143,6 +199,12 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 			return Object.keys(cell.bindings).reduce(function(consensus, name) {
 				return consensus || changedValues.indexOf(cell.bindings[name]) >= 0;
 			}, false);
+		},
+		mounted: function(cell, component) {
+			this.$services.page.instances[this.page.name].mounted(cell, component);
+		},
+		getMountedFor: function(cell) {
+			return this.mounted.bind(this, cell);	
 		},
 		renderAll: function(changedValues) {
 			var self = this;
@@ -191,9 +253,11 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 				cell: cell,
 				edit: this.edit
 			};
-			var parameters = this.parameters;
+			var pageInstance = this.$services.page.instances[this.page.name];
 			Object.keys(cell.bindings).map(function(key) {
-				result[key] = parameters[key];
+				if (cell.bindings[key]) {
+					result[key] = pageInstance.get(cell.bindings[key]);
+				}
 			});
 			return result;
 		},

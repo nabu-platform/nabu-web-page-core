@@ -5,7 +5,7 @@
 				:formatter="function(x) { return x.alias }"
 				:required="true"/>
 		</n-form-section>
-		<n-page-mapper :to="parameters" v-if="parameters.length" :from="{page:$services.page.getPageParameters(page)}" v-model="bindings"/>
+		<n-page-mapper :to="parameters" v-if="parameters.length" :from="$services.page.instances[page.name].availableParameters" v-model="bindings"/>
 		<footer class="actions">
 			<a href="javascript:void(0)" @click="$reject()">%{Cancel}</a>
 			<button @click="set" :disabled="!route">%{Set Content}</button>

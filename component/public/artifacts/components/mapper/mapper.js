@@ -38,7 +38,7 @@ Vue.component("n-page-mapper", {
 				this.from[label].filter(function(x) {
 					return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
 				}).map(function(x) {
-					x = label + "." + x;
+					//x = label + "." + x;
 					if (fields.indexOf(x) < 0) {
 						fields.push(x);
 					}
@@ -46,6 +46,16 @@ Vue.component("n-page-mapper", {
 			}
 			fields.sort();
 			return fields;
+		},
+		getValueFor: function(field) {
+			return this.value[field]
+				? this.value[field].split(".")[1]
+				: null;
+		},
+		getLabelFor: function(field) {
+			return this.value[field]
+				? this.value[field].split(".")[0]
+				: null;
 		}
 	}
 });

@@ -19,7 +19,14 @@ nabu.views.cms.PageAddCell = Vue.extend({
 	computed: {
 		parameters: function() {
 			return this.route ? this.$services.page.getRouteParameters(this.route) : [];
-		}	
+		},
+		availableParameters: function() {
+			// there are all the events
+			var available = nabu.utils.objects.clone(this.$services.page.instances[this.page.name].getEvents());
+			// and the page
+			available.page = this.$services.page.getPageParameters(this.page);
+			return available;
+		}
 	},
 	methods: {
 		filterRoutes: function(value) {
