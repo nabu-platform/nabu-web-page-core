@@ -25,12 +25,16 @@
 		}
 		.page-cell {
 			flex-grow: 1;
+			flex-basis: 0;
 		}
 	}
 }
 
 .page {
 	position: relative;
+	.custom-row {
+		width: 100%;
+	}
 	.page-menu {
 		background-color: steelblue;
 		text-align: center;
@@ -52,10 +56,17 @@
 	}
 	.page-edit {
 		padding: 0.3rem;
+		position: absolute;
+		top: 0rem;
+		z-index: 100;
+		background-color: #333;
+		color: #fff;
+		border: ${border/apply()};
 		span {
-			position: absolute;
-			right: 1rem;
-			top: 0.3rem;
+			font-size: 0.8rem;
+			text-transform: uppercase;
+			margin: 0 1rem;
+			display: inline-block;
 			cursor: pointer;
 		}
 	}

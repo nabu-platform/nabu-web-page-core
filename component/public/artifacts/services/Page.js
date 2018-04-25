@@ -60,11 +60,28 @@ nabu.services.VueService(Vue.extend({
 				
 				var route = {
 					alias: self.alias(page),
-					url: page.path,
+					url: page.content.initial ? null : page.path,
 					query: page.content.query ? page.content.query : [],
 					enter: function(parameters) {
+						var found = false;
+						// check that there is a row with the default anchor, if not, insert it
+						for (var i = 0; i < page.content.rows.length; i++) {
+							if (page.content.rows[i].customId == "main") {
+								found = true;
+								break;
+							}
+						}
+						if (!found && false) {
+							page.content.rows.push({
+								customId: "main",
+								id: page.content.counter++,
+								cells: [],
+								class: null
+							});
+						}
 						return new nabu.views.cms.Page({propsData: {page: page, parameters: parameters }});
-					}
+					},
+					initial: page.content.initial
 				};
 				
 				self.$services.router.register(route);
@@ -91,13 +108,22 @@ nabu.services.VueService(Vue.extend({
 			if (!content.query) {
 				content.query = [];
 			}
-			// contains the events, each event has:
-			// - name
-			// - parameters (a list of fields, you can also choose to get "all" the fields)
-			// - number of emitters: everytime we register the event, we increment, if we unregister we decrement
-			// - subscriptions: array of cell ids that are listening to this event
-			if (!content.events) {
-				content.events = [];
+			// actions linked to an event
+			if (!content.actions) {
+				content.actions = [];
+			}
+			// css class
+			if (!content.class) {
+				content.class = null;
+			}
+			if (!content.initial) {
+				content.initial = false;
+			}
+			if (!content.menuX) {
+				content.menuX = 0;
+			}
+			if (!content.menuY) {
+				content.menuY = 0;
 			}
 			return content;
 		},

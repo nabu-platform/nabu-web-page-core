@@ -29,6 +29,16 @@ nabu.views.cms.Page = Vue.extend({
 			// and the page
 			available.page = this.$services.page.getPageParameters(this.page);
 			return available;
+		},
+		classes: function() {
+			var classes = [];
+			if (this.edit) {
+				classes.push("edit");
+			}
+			if (this.page.content.class) {
+				classes.push(this.page.content.class);
+			}
+			return classes;
 		}
 	},
 	data: function() {
@@ -40,10 +50,47 @@ nabu.views.cms.Page = Vue.extend({
 			// contains (amongst other things) the event instances
 			variables: {},
 			lastParameters: null,
-			configuring: false
+			configuring: false,
+			// per cell
+			closed: {},
+			// subscriptions to events
+			subscriptions: {}
 		}
 	},
 	methods: {
+		dragMenu: function(event) {
+			event.dataTransfer.setData("page-menu", this.page.name);	
+		},
+		dragOver: function(event) {
+			console.log("over", event);
+		},
+		dropMenu: function(event) {
+			event.preventDefault();
+			event.stopPropagation();
+			Vue.set(this.page.content, "menuX", event.clientX);
+			Vue.set(this.page.content, "menuY", event.clientY);
+			this.$services.page.update(this.page);
+		},
+		getOperationParameters: function(operation) {
+			var parameters = this.$services.swagger.operations[operation].parameters;
+			return parameters ? parameters.map(function(x) { return x.name }) : [];
+		},
+		getOperations: function() {
+			return Object.keys(this.$services.swagger.operations);
+		},
+		getAvailableEvents: function() {
+			var available = this.getEvents();
+			return Object.keys(available);
+		},
+		addAction: function() {
+			this.page.content.actions.push({
+				name: null,
+				on: null,
+				confirmation: null,
+				operation: null,
+				bindings: {}
+			});
+		},
 		removeQuery: function(index) {
 			this.page.content.query.splice(index, 1);	
 		},
@@ -52,11 +99,21 @@ nabu.views.cms.Page = Vue.extend({
 		},
 		mounted: function(cell, component) {
 			this.components[cell.id] = component;
+			// make sure we have a watchable variable for each event
+			if (component.events) {
+				var self = this;
+				Object.keys(component.events).map(function(name) {
+					if (!self.variables[name]) {
+						Vue.set(self.variables, name, null);
+					}
+				})
+			}
 		},
 		addRow: function() {
 			this.page.content.rows.push({
 				id: this.page.content.counter++,
-				cells: []
+				cells: [],
+				class: null
 			});
 		},
 		removeRow: function(row) { 
@@ -86,8 +143,60 @@ nabu.views.cms.Page = Vue.extend({
 			});
 			return events;
 		},
+		subscribe: function(event, handler) {
+			if (!this.subscriptions[event]) {
+				this.subscriptions[event] = [];
+			}
+			this.subscriptions[event].push(handler);
+			var self = this;
+			return function() {
+				self.subscriptions[event].splice(self.subscriptions[event].indexOf(handler), 1);
+			};
+		},
 		emit: function(name, value) {
 			this.variables[name] = value;
+			var self = this;
+			
+			var promises = [];
+			
+			var promise = this.$services.q.defer();
+			promises.push(promise);
+			// check all the actions to see if we need to run something
+			this.page.content.actions.map(function(action) {
+				if (action.on == name) {
+					var parameters = {};
+					Object.keys(action.bindings).map(function(key) {
+						parameters[key] = self.get(action.bindings[key]);	
+					});
+					if (action.confirmation) {
+						self.$confirm({message:action.confirmation}).then(function() {
+							self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
+						}, function() {
+							promise.reject();
+						})
+					}
+					else {
+						self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
+					}
+				}
+			});
+			
+			if (this.subscriptions[name]) {
+				this.subscriptions[name].map(function(handler) {
+					var result = handler(value);
+					if (result && result.then) {
+						promises.push(result);
+					}
+				});
+			}
+			
+			// remove all the closed stuff for this event, we may want to reopen something
+			Object.keys(this.closed).map(function(key) {
+				if (self.closed[key] == name) {
+					Vue.set(self.closed, key, null);
+				}
+			});
+			return this.$services.q.all(promises);
 		},
 		get: function(name) {
 			if (name == "page") {
@@ -106,13 +215,8 @@ nabu.views.cms.Page = Vue.extend({
 			}
 			else {
 				var parts = name.split(".");
-				return this.variables[parts[0]][parts[1]];
+				return this.variables[parts[0]] ? this.variables[parts[0]][parts[1]] : null;
 			}
-		}
-	},
-	event: {
-		instance: function(name, value) {
-			this.variables[name] = value;
 		}
 	},
 	watch: {
@@ -155,19 +259,87 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 			required: true
 		}
 	},
-	ready: function() {
-		//this.renderAll();	
+	data: function() {
+		return {
+			configuring: null
+		}
 	},
 	methods: {
+		getStyles: function(cell) {
+			var width = typeof(cell.width) == "undefined" ? 1 : cell.width;
+			return [{'flex-grow': width}]
+		},
+		up: function(row) {
+			var index = this.rows.indexOf(row);
+			if (index > 0) {
+				var replacement = this.rows[index - 1];
+				this.rows.splice(index - 1, 1, row);
+				this.rows.splice(index, 1, replacement);
+			}
+		},
+		down: function(row) {
+			var index = this.rows.indexOf(row);
+			if (index < this.rows.length - 1) {
+				var replacement = this.rows[index + 1];
+				this.rows.splice(index + 1, 1, row);
+				this.rows.splice(index, 1, replacement);
+			}
+		},
+		left: function(row, cell) {
+			var index = row.cells.indexOf(cell);
+			if (index > 0) {
+				var replacement = row.cells[index - 1];
+				row.cells.splice(index - 1, 1, cell);
+				row.cells.splice(index, 1, replacement);
+			}
+		},
+		right: function(row, cell) {
+			var index = row.cells.indexOf(cell);
+			if (index < row.cells.length - 1) {
+				var replacement = row.cells[index + 1];
+				row.cells.splice(index + 1, 1, cell);
+				row.cells.splice(index, 1, replacement);
+			}
+		},
+		filterRoutes: function(value) {
+			var routes = this.$services.router.list().filter(function(x) {
+				return x.alias && (!value || x.alias.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+			});
+			routes.sort(function(a, b) {
+				return a.alias.localeCompare(b.alias);
+			});
+			return routes.map(function(x) { return x.alias });
+		},
+		getAvailableParameters: function(cell) {
+			// there are all the events
+			var available = nabu.utils.objects.clone(this.$services.page.instances[this.page.name].getEvents());
+			var result = {};
+			if (cell.on) {
+				result[cell.on] = available[cell.on];
+			}
+			// and the page
+			result.page = this.$services.page.getPageParameters(this.page);
+			return result;
+		},
+		getAvailableEvents: function() {
+			var available = nabu.utils.objects.clone(this.$services.page.instances[this.page.name].getEvents());
+			return Object.keys(available);
+		},
 		canConfigure: function(cell) {
 			var pageInstance = this.$services.page.instances[this.page.name];
 			var components = pageInstance.components;
 			return components[cell.id] && components[cell.id].configure;
 		},
 		configure: function(cell) {
+			if (this.canConfigure) {
+				var pageInstance = this.$services.page.instances[this.page.name];
+				var cellInstance = pageInstance.components[cell.id];
+				cellInstance.configure();
+			}
+		},
+		close: function(cell) {
 			var pageInstance = this.$services.page.instances[this.page.name];
-			var cellInstance = pageInstance.components[cell.id];
-			cellInstance.configure();
+			Vue.set(pageInstance.closed, cell.id, cell.on);
 		},
 		shouldRenderCell: function(cell) {
 			if (!cell.alias) {
@@ -178,6 +350,17 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 			}
 			var self = this;
 			var pageInstance = self.$services.page.instances[self.page.name];
+			// if we depend on an event and it hasn't happened yet, don't render
+			// not sure if it will rerender if we close it?
+			if (cell.on) {
+				// if we explicitly closed it, leave it closed until it is reset
+				if (pageInstance.closed[cell.id]) {
+					return false;
+				}
+				else if (!pageInstance.get(cell.on)) {
+					return false;
+				}
+			}
 			return Object.keys(cell.bindings).reduce(function(consensus, name) {
 				// if we have a bound value and it does not originate from the (ever present) page, it must come from an event
 				// check that the event has occurred
@@ -202,6 +385,10 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 		},
 		mounted: function(cell, component) {
 			this.$services.page.instances[this.page.name].mounted(cell, component);
+			var self = this;
+			component.$on("close", function() {
+				self.close(cell);
+			});
 		},
 		getMountedFor: function(cell) {
 			return this.mounted.bind(this, cell);	
@@ -275,7 +462,17 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 				bindings: {},
 				// state that is maintained by the cell owner (the route alias)
 				// for example it might offer additional configuration
-				state: {}
+				state: {},
+				// the rendering target (e.g. sidebar, prompt,...)
+				target: 'page',
+				// it can depend on an event of taking place
+				on: null,
+				// a class for this cell
+				class: null,
+				// a custom id for this cell
+				customId: null,
+				// flex width
+				width: 1
 			});
 		},
 		addRow: function(target) {
@@ -284,7 +481,10 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 			}
 			target.rows.push({
 				id: this.page.content.counter++,
-				cells: []
+				cells: [],
+				class: null,
+				// a custom id for this row
+				customId: null
 			});
 		},
 		removeCell: function(cells, cell) {
@@ -304,4 +504,8 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 			});
 		}
 	}
+});
+
+Vue.component("n-prompt", {
+	template: "#n-prompt"
 });

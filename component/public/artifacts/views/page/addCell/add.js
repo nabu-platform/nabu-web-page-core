@@ -13,19 +13,29 @@ nabu.views.cms.PageAddCell = Vue.extend({
 	data: function() {
 		return {
 			route: null,
-			bindings: {}
+			bindings: {},
+			target: 'page',
+			on: null
 		}
 	},
 	computed: {
+		availableEvents: function() {
+			var available = nabu.utils.objects.clone(this.$services.page.instances[this.page.name].getEvents());
+			return Object.keys(available);
+		},
 		parameters: function() {
 			return this.route ? this.$services.page.getRouteParameters(this.route) : [];
 		},
 		availableParameters: function() {
 			// there are all the events
 			var available = nabu.utils.objects.clone(this.$services.page.instances[this.page.name].getEvents());
+			var result = {};
+			if (this.on) {
+				result[this.on] = available[this.on];
+			}
 			// and the page
-			available.page = this.$services.page.getPageParameters(this.page);
-			return available;
+			result.page = this.$services.page.getPageParameters(this.page);
+			return result;
 		}
 	},
 	methods: {
@@ -41,7 +51,9 @@ nabu.views.cms.PageAddCell = Vue.extend({
 		set: function() {
 			this.$resolve({
 				alias: this.route.alias,
-				bindings: this.bindings
+				bindings: this.bindings,
+				target: this.on ? this.target : 'page',
+				on: this.on
 			})
 		}
 	}
