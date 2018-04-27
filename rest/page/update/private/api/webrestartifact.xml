@@ -2,9 +2,15 @@
 <restInterface>
     <method>PUT</method>
     <path>/page/{pageId}</path>
+    <role>$user</role>
+    <permissionContext>=input/path/pageId</permissionContext>
+    <permissionAction>page.update</permissionAction>
     <input>nabu.cms.page.types.rest.page</input>
+    <configurationType>nabu.cms.core.configuration</configurationType>
     <lenient>false</lenient>
     <webApplicationId>false</webApplicationId>
     <language>false</language>
     <allowFormBinding>false</allowFormBinding>
+    <caseInsensitive>false</caseInsensitive>
+    <cache>false</cache>
 </restInterface>

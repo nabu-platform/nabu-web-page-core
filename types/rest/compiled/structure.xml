@@ -1,0 +1,3 @@
+<structure name="compiled">
+    <field name="compiled" type="java.lang.String"/>
+</structure>

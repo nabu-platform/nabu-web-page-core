@@ -24,10 +24,12 @@ nabu.views.page.Richtext = Vue.extend({
 	},
 	created: function() {
 		this.normalize(this.cell.state);
+		Vue.set(this, "state", this.$services.page.instances[this.page.name].variables);
 	},
 	data: function() {
 		return {
-			configuring: false
+			configuring: false,
+			state: null
 		}
 	},
 	methods: {

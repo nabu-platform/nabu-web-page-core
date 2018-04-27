@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<restInterface>
+    <method>POST</method>
+    <path>/{applicationId}/style/compiled</path>
+    <role>$user</role>
+    <permissionContext>=input/path/applicationId</permissionContext>
+    <permissionAction>style.compile</permissionAction>
+    <input>nabu.cms.page.types.rest.compiled</input>
+    <lenient>false</lenient>
+    <webApplicationId>true</webApplicationId>
+    <language>false</language>
+    <allowFormBinding>false</allowFormBinding>
+    <caseInsensitive>false</caseInsensitive>
+    <cache>false</cache>
+</restInterface>

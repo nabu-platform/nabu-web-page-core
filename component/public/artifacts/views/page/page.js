@@ -14,6 +14,24 @@ nabu.views.cms.Page = Vue.extend({
 			required: false
 		}
 	},
+	activate: function(done) {
+		if (this.page.content.states.length) {
+			var self = this;
+			var promises = this.page.content.states.map(function(state) {
+				var parameters = {};
+				Object.keys(state.bindings).map(function(key) {
+					parameters[key] = self.get(state.bindings[key]);
+				});
+				return self.$services.swagger.execute(state.operation, parameters).then(function(result) {
+					Vue.set(self.variables, state.name, result ? result : null);
+				});
+			});
+			this.$services.q.all(promises).then(done, done);
+		}
+		else {
+			done();
+		}
+	},
 	created: function() {
 		this.$services.page.instances[this.page.name] = this;
 		// keep a stringified copy of the last parameters so we can diff
@@ -58,6 +76,44 @@ nabu.views.cms.Page = Vue.extend({
 		}
 	},
 	methods: {
+		filterRoutes: function(value) {
+			var routes = this.$services.router.list().filter(function(x) {
+				return x.alias && (!value || x.alias.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+			});
+			routes.sort(function(a, b) {
+				return a.alias.localeCompare(b.alias);
+			});
+			return routes.map(function(x) { return x.alias });
+		},
+		getStateOperations: function() {
+			var self = this;
+			return Object.keys(this.$services.swagger.operations).filter(function(operationId) {
+				var operation = self.$services.swagger.operations[operationId];
+				// must be a get
+				return operation.method.toLowerCase() == "get"
+					// and contain the name fragment (if any)
+					&& (!name || operation.id.toLowerCase().indexOf(name.toLowerCase()) >= 0)
+					// must have _a_ response
+					&& operation.responses["200"];
+			});
+		},
+		setStateOperation: function(state, operation) {
+			state.operation = operation;
+			var bindings = {};
+			if (operation) {
+				this.$services.swagger.operations[operation].parameters.map(function(parameter) {
+					bindings[parameter.name] = null;
+				});
+			}
+			Vue.set(state, "bindings", bindings);
+		},
+		addState: function() {
+			this.page.content.states.push({
+				name: null,
+				operation: null,
+				bindings: {}
+			})	
+		},
 		dragMenu: function(event) {
 			event.dataTransfer.setData("page-menu", this.page.name);	
 		},
@@ -67,8 +123,9 @@ nabu.views.cms.Page = Vue.extend({
 		dropMenu: function(event) {
 			event.preventDefault();
 			event.stopPropagation();
-			Vue.set(this.page.content, "menuX", event.clientX);
-			Vue.set(this.page.content, "menuY", event.clientY);
+			var rect = this.$el.getBoundingClientRect();
+			Vue.set(this.page.content, "menuX", event.clientX - rect.left);
+			Vue.set(this.page.content, "menuY", event.clientY - rect.top);
 			this.$services.page.update(this.page);
 		},
 		getOperationParameters: function(operation) {
@@ -88,14 +145,13 @@ nabu.views.cms.Page = Vue.extend({
 				on: null,
 				confirmation: null,
 				operation: null,
+				route: null,
+				anchor: null,
 				bindings: {}
 			});
 		},
 		removeQuery: function(index) {
 			this.page.content.query.splice(index, 1);	
-		},
-		canEdit: function() {
-			return true;	
 		},
 		mounted: function(cell, component) {
 			this.components[cell.id] = component;
@@ -170,13 +226,23 @@ nabu.views.cms.Page = Vue.extend({
 					});
 					if (action.confirmation) {
 						self.$confirm({message:action.confirmation}).then(function() {
-							self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
+							if (action.route) {
+								self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
+							}
+							else {
+								self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
+							}
 						}, function() {
 							promise.reject();
 						})
 					}
 					else {
-						self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
+						if (action.route) {
+							self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
+						}
+						else {
+							self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
+						}
 					}
 				}
 			});
@@ -310,10 +376,15 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 			});
 			return routes.map(function(x) { return x.alias });
 		},
+		getRouteParameters: function(cell) {
+			var route = this.$services.router.get(cell.alias);
+			return this.$services.page.getRouteParameters(route);
+		},
 		getAvailableParameters: function(cell) {
+			console.log("get parameters");
 			// there are all the events
-			var available = nabu.utils.objects.clone(this.$services.page.instances[this.page.name].getEvents());
 			var result = {};
+			var available = nabu.utils.objects.clone(this.$services.page.instances[this.page.name].getEvents());
 			if (cell.on) {
 				result[cell.on] = available[cell.on];
 			}
@@ -434,13 +505,14 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 			return null;
 		},
 		getParameters: function(cell) {
+			var pageInstance = this.$services.page.instances[this.page.name];
 			var result = {
 				page: this.page,
 				parameters: this.parameters,
 				cell: cell,
-				edit: this.edit
+				edit: this.edit,
+				state: pageInstance.variables
 			};
-			var pageInstance = this.$services.page.instances[this.page.name];
 			Object.keys(cell.bindings).map(function(key) {
 				if (cell.bindings[key]) {
 					result[key] = pageInstance.get(cell.bindings[key]);

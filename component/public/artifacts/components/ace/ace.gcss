@@ -1,0 +1,4 @@
+.n-ace {
+	min-height: 30rem;
+	border: ${border/apply()};
+}

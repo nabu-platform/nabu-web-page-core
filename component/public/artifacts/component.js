@@ -6,7 +6,8 @@ window.addEventListener("load", function() {
 			enter: function(parameters) {
 				return new nabu.views.cms.Pages({propsData:parameters});
 			},
-			url: "/pages"
+			url: "/pages",
+			actions: ["page.admin"]
 		});
 		
 		$services.router.register({
@@ -15,11 +16,12 @@ window.addEventListener("load", function() {
 				return new nabu.views.cms.Pages({propsData:parameters});
 			},
 			priority: -5,
-			url: "/"
+			url: "/",
+			actions: ["page.admin"]
 		});
 		
 		$services.router.register({
-			alias: "page-image",
+			alias: "page-static-image",
 			enter: function(parameters) {
 				return new nabu.views.page.Image({propsData: parameters});
 			}

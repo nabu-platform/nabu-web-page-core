@@ -1,0 +1,5 @@
+<structure interface="$self:api" name="pipeline">
+    <structure name="input"/>
+    <structure name="output"/>
+    <structure collectionName="Nodes" definition="nabu.cms.core.types.model.core.Node" name="style" namespace="nabu.cms.core.types.model.core"/>
+</structure>

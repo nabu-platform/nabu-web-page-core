@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <webModule>
-    <path>/</path>
-    <webFragments>nabu.cms.page.rest.page.list</webFragments>
+    <path>/page/v1/api</path>
     <webFragments>nabu.cms.page.rest.page.create</webFragments>
     <webFragments>nabu.cms.page.rest.page.update</webFragments>
+    <webFragments>nabu.cms.page.rest.page.delete</webFragments>
+    <webFragments>nabu.cms.page.rest.configuration</webFragments>
+    <webFragments>nabu.cms.page.rest.style.create</webFragments>
+    <webFragments>nabu.cms.page.rest.style.delete</webFragments>
+    <webFragments>nabu.cms.page.rest.style.list</webFragments>
+    <webFragments>nabu.cms.page.rest.style.update</webFragments>
+    <webFragments>nabu.cms.page.rest.style.compile</webFragments>
 </webModule>

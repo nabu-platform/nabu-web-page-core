@@ -42,7 +42,7 @@ nabu.views.page.Image = Vue.extend({
 				Vue.set(state, "title", null);
 			}
 			if (!state.height) {
-				Vue.set(state, "height", null);
+				Vue.set(state, "height", "15rem");
 			}
 			if (!state.size) {
 				Vue.set(state, "size", 'contain');

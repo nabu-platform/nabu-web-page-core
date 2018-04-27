@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<restInterface>
+    <method>POST</method>
+    <path>/{applicationId}/style</path>
+    <role>$user</role>
+    <permissionContext>=input/path/applicationId</permissionContext>
+    <permissionAction>style.create</permissionAction>
+    <input>nabu.cms.page.types.rest.page</input>
+    <output>nabu.cms.page.types.rest.page</output>
+    <configurationType>nabu.cms.core.configuration</configurationType>
+    <lenient>false</lenient>
+    <webApplicationId>false</webApplicationId>
+    <language>false</language>
+    <allowFormBinding>false</allowFormBinding>
+    <caseInsensitive>false</caseInsensitive>
+    <cache>false</cache>
+</restInterface>

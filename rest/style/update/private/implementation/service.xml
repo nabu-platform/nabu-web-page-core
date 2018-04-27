@@ -1,0 +1,61 @@
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" disabled="false" id="e73897ab-c80d-47de-b7f9-61bbb123884c">
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" id="f65d251d-2848-41ba-86ed-e0c1fb67dbe7">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="e4d15a23-356c-4e73-a6f8-fc2d1c5efe3b" invocationOrder="0" temporaryMapping="true" serviceId="nabu.cms.core.database.node.selectById" resultName="result5164e23e6a1149a6a817e54235e79808" y="73" x="91">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="ad6fe5dd-a9d1-4da1-b861-20c472f342ec" optional="false" fixedValue="true" mask="false">
+				<from>true</from>
+				<to>parameters/enabledOnly</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="6c132bf8-bc34-4401-b2f2-3fc3edbe3d8e" optional="false" fixedValue="false" mask="false">
+				<from>input/configuration/connectionId</from>
+				<to>connection</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="ef578ec8-8bda-4d6b-b2ed-51c489b870a2" optional="false" fixedValue="false" mask="false">
+				<from>input/path/styleId</from>
+				<to>parameters/id</to>
+			</steps>
+			<asynchronous>false</asynchronous>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="763db8f8-746f-4e71-82c3-41ed3e6543ff" optional="false" fixedValue="false" mask="false">
+			<from>result5164e23e6a1149a6a817e54235e79808/results[0]</from>
+			<to>style</to>
+		</steps>
+	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" comment="Map new fields" id="8a2d13cf-968f-4c9d-80ba-cbb8681d6fe5">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="aec6011b-df5a-4849-bdb3-8bb9d155a283" optional="false" fixedValue="false" mask="false">
+			<from>input/content/name</from>
+			<to>style/name</to>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="bf19f090-576c-4171-b566-cd9625f3d74b" optional="false" fixedValue="false" mask="false">
+			<from>input/content/title</from>
+			<to>style/title</to>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="cd250da6-519e-4b56-bf13-6b596ad35d9e" optional="false" fixedValue="false" mask="false">
+			<from>input/content/description</from>
+			<to>style/description</to>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="271b76ed-c936-4450-85d2-17e361540c45" invocationOrder="0" temporaryMapping="true" serviceId="nabu.utils.Date.now" resultName="resultad40235dc7fe4825a1a05da429e9e4b1" y="206" x="303">
+			<asynchronous>false</asynchronous>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="dcbc4066-6b43-40b5-b93e-b4db31371965" optional="false" fixedValue="false" mask="false">
+			<from>resultad40235dc7fe4825a1a05da429e9e4b1/date</from>
+			<to>style/modified</to>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="bc9db493-1bac-4632-9b2e-12bbfe0ddd74" optional="false" fixedValue="false" mask="false">
+			<from>input/content/priority</from>
+			<to>style/priority</to>
+		</steps>
+	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" id="707675d9-b5c9-4736-baf6-1f3815fcc672">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="5f95e303-9dd9-456a-9677-a44b50487871" invocationOrder="0" temporaryMapping="true" serviceId="nabu.cms.core.database.node.update" resultName="resultb76c929be7d4465e924b69bac890b806" y="106" x="119">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="1bda3c74-fdf0-4482-b47b-08a0342d62c8" optional="false" fixedValue="false" mask="false">
+				<from>style</from>
+				<to>parameters[0]</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="b152fa69-b89b-4b28-a153-634f958dd284" optional="false" fixedValue="false" mask="false">
+				<from>input/configuration/connectionId</from>
+				<to>connection</to>
+			</steps>
+			<asynchronous>false</asynchronous>
+		</steps>
+	</steps>
+</sequence>
