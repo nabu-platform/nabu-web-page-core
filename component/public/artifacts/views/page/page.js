@@ -333,7 +333,11 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 	methods: {
 		getStyles: function(cell) {
 			var width = typeof(cell.width) == "undefined" ? 1 : cell.width;
-			return [{'flex-grow': width}]
+			var styles = [{'flex-grow': width}];
+			if (cell.height) {
+				styles.push({'height': cell.height});
+			}
+			return styles;
 		},
 		up: function(row) {
 			var index = this.rows.indexOf(row);
@@ -349,6 +353,22 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 				var replacement = this.rows[index + 1];
 				this.rows.splice(index + 1, 1, row);
 				this.rows.splice(index, 1, replacement);
+			}
+		},
+		cellDown: function(row, cell) {
+			var index = this.rows.indexOf(row);
+			if (index < this.rows.length - 1) {
+				var target = this.rows[index + 1];
+				row.cells.splice(row.cells.indexOf(cell));
+				target.cells.push(cell);
+			}
+		},
+		cellUp: function(row, cell) {
+			var index = this.rows.indexOf(row);
+			if (index > 0) {
+				var target = this.rows[index - 1];
+				row.cells.splice(row.cells.indexOf(cell));
+				target.cells.push(cell);
 			}
 		},
 		left: function(row, cell) {
@@ -544,7 +564,8 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 				// a custom id for this cell
 				customId: null,
 				// flex width
-				width: 1
+				width: 1,
+				height: null
 			});
 		},
 		addRow: function(target) {

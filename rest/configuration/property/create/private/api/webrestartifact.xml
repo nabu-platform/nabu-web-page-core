@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<restInterface>
+    <method>POST</method>
+    <path>/{applicationId}/configuration/property</path>
+    <permissionContext>=input/path/applicationId</permissionContext>
+    <permissionAction>configuration.update</permissionAction>
+    <input>nabu.cms.core.types.property</input>
+    <output>nabu.cms.core.types.property</output>
+    <configurationType>nabu.cms.core.configuration</configurationType>
+    <lenient>false</lenient>
+    <webApplicationId>false</webApplicationId>
+    <language>false</language>
+    <allowFormBinding>false</allowFormBinding>
+    <caseInsensitive>false</caseInsensitive>
+    <cache>false</cache>
+</restInterface>

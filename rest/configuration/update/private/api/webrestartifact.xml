@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<restInterface>
+    <method>PUT</method>
+    <path>/{applicationId}/configuration</path>
+    <permissionContext>=input/path/applicationId</permissionContext>
+    <permissionAction>configuration.update</permissionAction>
+    <input>nabu.cms.page.types.rest.configuration</input>
+    <configurationType>nabu.cms.core.configuration</configurationType>
+    <lenient>false</lenient>
+    <webApplicationId>true</webApplicationId>
+    <language>false</language>
+    <allowFormBinding>false</allowFormBinding>
+    <caseInsensitive>false</caseInsensitive>
+    <cache>false</cache>
+</restInterface>

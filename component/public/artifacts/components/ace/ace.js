@@ -60,6 +60,7 @@ Vue.component("n-ace", {
 	},
 	methods: {
 		setMode: function(mode) {
+			console.log("setting mode", mode);
 			this.editor.getSession().setMode("ace/mode/" + mode);
 		}
 	},

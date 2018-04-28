@@ -85,7 +85,8 @@
 						<n-form-section>
 							<n-collapsible title="Cell Settings" key="cell-settings">
 								<n-form-text label="Cell Id" v-model="cell.customId"/>
-								<n-form-text label="Cell Width" v-model="cell.width"/>
+								<n-form-text label="Cell Width (flex)" v-model="cell.width"/>
+								<n-form-text label="Cell Height (any)" v-model="cell.height"/>
 								<n-form-text label="Class" v-model="cell.class"/>
 							</n-collapsible>
 							<n-collapsible title="Content" key="cell-content">
@@ -110,6 +111,8 @@
 					<button @click="configure(cell)" v-if="cell.alias"><span class="n-icon n-icon-cog" title="Configure Cell Content"></span></button>
 					<button @click="left(row, cell)"><span class="n-icon n-icon-chevron-circle-left"></span></button>
 					<button @click="right(row, cell)"><span class="n-icon n-icon-chevron-circle-right"></span></button>
+					<button @click="cellUp(row, cell)"><span class="n-icon n-icon-chevron-circle-up"></span></button>
+					<button @click="cellDown(row, cell)"><span class="n-icon n-icon-chevron-circle-down"></span></button>
 					<button @click="addRow(cell)"><span class="n-icon n-icon-plus" title="Add Row"></span></button>
 					<button @click="removeCell(row.cells, cell)"><span class="n-icon n-icon-times" title="Remove Cell"></span></button>
 				</div>

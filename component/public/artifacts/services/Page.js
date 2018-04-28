@@ -48,7 +48,7 @@ nabu.services.VueService(Vue.extend({
 		}
 		
 		promise.then(function() {
-			self.$services.swagger.execute("nabu.cms.page.rest.configuration").then(function(configuration) {
+			self.$services.swagger.execute("nabu.cms.page.rest.configuration.get").then(function(configuration) {
 				if (configuration.pages) {
 					nabu.utils.arrays.merge(self.pages, configuration.pages);
 					self.loadPages(self.pages);
@@ -93,6 +93,42 @@ nabu.services.VueService(Vue.extend({
 		})
 	},
 	methods: {
+		saveConfiguration: function() {
+			return this.$services.swagger.execute("nabu.cms.page.rest.configuration.update", {
+				applicationId: this.applicationId,
+				body: {
+					title: this.title
+				}
+			});
+		},
+		createProperty: function() {
+			var self = this;
+			this.$services.swagger.execute("nabu.cms.page.rest.configuration.property.create", {
+				applicationId: this.applicationId,
+				body: {
+					name: "unnamed",
+					content: "<empty>"
+				}
+			}).then(function(property) {
+				self.properties.push(property);
+			});
+		},
+		updateProperty: function(property) {
+			return this.$services.swagger.execute("nabu.cms.page.rest.configuration.property.update", {
+				applicationId: this.applicationId,
+				propertyId: property.id,
+				body: property
+			});
+		},
+		deleteProperty: function(property) {
+			var self = this;
+			this.$services.swagger.execute("nabu.cms.page.rest.configuration.property.delete", {
+				applicationId: this.applicationId,
+				propertyId: property.id
+			}).then(function() {
+				self.properties.splice(self.properties.indexOf(property), 1)
+			});
+		},
 		saveCompiledCss: function() {
 			this.$services.swagger.execute("nabu.cms.page.rest.style.compile", {
 				applicationId: this.applicationId,

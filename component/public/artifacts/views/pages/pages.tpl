@@ -17,7 +17,15 @@
 		</div>
 		<n-collapsible title="Main Settings" class="main">
 			<n-form-section>
-				<n-form-text v-model="$services.page.title" label="Website Title"/>
+				<n-form-text v-model="$services.page.title" label="Website Title" :timeout="600" @input="$services.page.saveConfiguration"/>
+				<div class="list-actions">
+					<button @click="$services.page.createProperty">Add property</button>
+				</div>
+				<div class="list-row" v-for="property in $services.page.properties">
+					<n-form-text v-model="property.name" label="Key" :timeout="600" @input="$services.page.updateProperty(property)"/>
+					<n-form-text v-model="property.content" label="Value" :timeout="600" @input="$services.page.updateProperty(property)"/>
+					<button @click="$services.page.deleteProperty(property)"><span class="n-icon n-icon-trash"></span></button>
+				</div>
 			</n-form-section>
 		</n-collapsible>
 		<n-collapsible title="Pages" class="list">
