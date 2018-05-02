@@ -24,24 +24,23 @@ nabu.services.VueService(Vue.extend({
 		
 		// inject some javascript stuff if we are in edit mode
 		if (this.canEdit()) {
-			// assumed present by some libraries...
-			//this.inject("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.js", function() {
-				// inject ace editor
-				// check out https://cdnjs.com/libraries/ace/
-				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ace.js", function() {
-					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-scss.js");
-					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-javascript.js");
-					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-language_tools.js");
-					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-whitespace.js");
-					
-					// inject sass compiler
-					self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.js", function() {
-						self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.worker.js", function() {
-							promise.resolve();
-						});
+			//self.inject("https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.js");
+			// inject ace editor
+			// check out https://cdnjs.com/libraries/ace/
+			self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ace.js", function() {
+				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-scss.js");
+				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-javascript.js");
+				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-html.js");
+				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-language_tools.js");
+				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-whitespace.js");
+				
+				// inject sass compiler
+				self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.js", function() {
+					self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.worker.js", function() {
+						promise.resolve();
 					});
 				});
-			//});
+			});
 		}
 		else {
 			promise.resolve();
@@ -93,6 +92,29 @@ nabu.services.VueService(Vue.extend({
 		})
 	},
 	methods: {
+		getSimpleKeysFor: function(definition, includeComplex, keys, path) {
+			var self = this;
+			if (!keys) {
+				keys = [];
+			}
+			if (definition.properties) {
+				Object.keys(definition.properties).map(function(key) {
+					// arrays can not be chosen, you need to bind them first
+					if (definition.properties[key].type != "array") {
+						var childPath = (path ? path + "." : "") + key;
+						if (includeComplex || !definition.properties[key].properties) {
+							keys.push(childPath);
+						}
+						// if it is complex, recurse
+						if (definition.properties[key].properties) {
+							self.getKeysFor(definition.properties[key], keys, childPath);
+						}
+					}
+				});
+			}
+			keys.sort();
+			return keys;
+		},
 		saveConfiguration: function() {
 			return this.$services.swagger.execute("nabu.cms.page.rest.configuration.update", {
 				applicationId: this.applicationId,
@@ -281,12 +303,13 @@ nabu.services.VueService(Vue.extend({
 		},
 		create: function(name) {
 			var self = this;
+			var page = typeof(name) == "string" ? {
+				name: name,
+				path: "/page/" + name
+			} : name;
 			return this.$services.swagger.execute("nabu.cms.page.rest.page.create", {
 				applicationId: this.applicationId,
-				body: {
-					name: name,
-					path: "/page/" + name
-				}
+				body: page
 			}).then(function(page) {
 				self.pages.push(page);
 			})

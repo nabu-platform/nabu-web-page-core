@@ -190,11 +190,25 @@ nabu.views.cms.Page = Vue.extend({
 				}
 			});
 			Object.keys(events).map(function(name) {
-				// its an array of names
-				events[name].sort();
-				// we add the pseudo variable "$all" which basically indicates you want the entire event rather than a specific sub-value of it
-				if (events[name].indexOf("$all") < 0) {
-					events[name].push("$all");
+				// because events can reference one another in circular fashion, we allow for event references
+				// this means if the value is a string rather than an array of fields, we assume it is the name of another event and we should use those parameters
+				if (typeof(events[name]) == "string") {
+					if (events[events[name]]) {
+						events[name] = events[events[name]];
+					}
+					else {
+						console.warn("Can not find event: " + events[events[name]]);
+						events[name] = [];
+					}
+				}
+				// because we copy the array by reference (if needed), the operations will be performed when the referenced event is found
+				else {
+					// its an array of names
+					events[name].sort();
+					// we add the pseudo variable "$all" which basically indicates you want the entire event rather than a specific sub-value of it
+					if (events[name].indexOf("$all") < 0) {
+						events[name].push("$all");
+					}
 				}
 			});
 			return events;
@@ -401,7 +415,6 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 			return this.$services.page.getRouteParameters(route);
 		},
 		getAvailableParameters: function(cell) {
-			console.log("get parameters");
 			// there are all the events
 			var result = {};
 			var available = nabu.utils.objects.clone(this.$services.page.instances[this.page.name].getEvents());
@@ -535,7 +548,13 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 			};
 			Object.keys(cell.bindings).map(function(key) {
 				if (cell.bindings[key]) {
-					result[key] = pageInstance.get(cell.bindings[key]);
+					var value = pageInstance.get(cell.bindings[key]);
+					// only set the value if it actually has some value
+					// otherwise we might accidently trigger a redraw with no actual new value
+					// if we remove a value that was there before, it will still redraw as the parameters will have fewer keys
+					if (typeof(value) != "undefined" && value != null) {
+						result[key] = pageInstance.get(cell.bindings[key]);
+					}
 				}
 			});
 			return result;

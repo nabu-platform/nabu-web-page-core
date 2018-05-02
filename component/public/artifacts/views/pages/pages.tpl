@@ -32,8 +32,8 @@
 			<footer class="list-actions">
 				<button @click="create">Create New Page</button>
 			</footer>
-			<div v-for="category in categories" :key="category">
-				<h2>{{category ? category : 'Uncategorized'}}</h2>
+			<div v-for="category in categories" :key="category" :ref="'category_' + category">
+				<h2>{{category ? category : 'Uncategorized'}} <span class="n-icon n-icon-clipboard" @click="copyCategory(category)"></span></h2>
 				<n-collapsible :title="page.name" v-for="page in getPagesFor(category)" class="page-cell layout2 list-item" :key="page.id">
 					<h2 @click="opened = category">{{page.name}}</h2>
 					<n-form-section>
@@ -60,7 +60,8 @@
 			<n-collapsible :title="style.name ? style.name : 'Unnamed'" v-for="style in $services.page.styles" class="page-cell layout2 list-item" :key="style.id">
 				<n-form-text :required="true" v-model="style.name" label="Name" @input="$services.page.updateCss(style)" :timeout="600"/>
 				<n-form-switch :value="style.title == 'utility'" label="Is utility file" @input="function(newValue) { style.title = newValue ? 'utility' : 'page' }"/>
-				<n-ace v-model="style.description" :timeout="600" @input="$services.page.updateCss(style, true)"/>
+				<n-form-text type="color" v-model="lastColor[style.name]" :timeout="600" @input="function(value) { insertColor(style, value) }" label="Color Picker"/>
+				<n-ace v-model="style.description" :timeout="600" @input="$services.page.updateCss(style, true)" :ref="'editors_' + style.name"/>
 			</n-collapsible>
 		</n-collapsible>
 	</n-form>

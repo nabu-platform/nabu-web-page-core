@@ -11,7 +11,8 @@ Vue.component("n-ace", {
 		},
 		timeout: {
 			type: Number,
-			required: false
+			required: false,
+			default: 300
 		}
 	},
 	data: function() {
@@ -62,6 +63,10 @@ Vue.component("n-ace", {
 		setMode: function(mode) {
 			console.log("setting mode", mode);
 			this.editor.getSession().setMode("ace/mode/" + mode);
+		},
+		insert: function(text) {
+			console.log("inserting", text);
+			this.editor.insert(text);
 		}
 	},
 	watch: {

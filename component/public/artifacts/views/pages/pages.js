@@ -10,7 +10,8 @@ nabu.views.cms.Pages = Vue.extend({
 			showing: false,
 			pageToRoute: null,
 			// the currently open category
-			opened: null
+			opened: null,
+			lastColor: {}
 		}
 	},
 	computed: {
@@ -32,11 +33,44 @@ nabu.views.cms.Pages = Vue.extend({
 			return categories;
 		}
 	},
+	ready: function() {
+		var self = this;
+		this.$el.addEventListener("paste", function(event) {
+			var data = event.clipboardData.getData("text/plain");
+			if (data) {
+				var parsed = JSON.parse(data);
+				console.log("pasted", parsed);
+				if (parsed && parsed.type == "page-category") {
+					self.$confirm({ 
+						message: "Are you sure you want to add the category '" + parsed.category + "' to this website?", 
+						type: 'question', 
+						ok: 'Add'
+					}).then(function() {
+						parsed.pages.map(function(page) {
+							self.$services.page.create(page);
+						})
+					});
+				}
+			}
+		});
+	},
 	methods: {
+		copyCategory: function(category) {
+			console.log("copying", category);
+			nabu.utils.objects.copy({
+				type: "page-category",
+				category: category,
+				pages: this.getPagesFor(category)
+			});
+		},
 		getPagesFor: function(category) {
 			return this.$services.page.pages.filter(function(x) {
 				return (!category && !x.content.category) || x.content.category == category;
 			});
+		},
+		insertColor: function(style, color) {
+			console.log("refs", this.$refs);
+			this.$refs['editors_' + style.name][0].insert(color);
 		},
 		remove: function(page) {
 			var self = this;

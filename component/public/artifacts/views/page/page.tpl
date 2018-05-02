@@ -12,7 +12,8 @@
 			<span>{{page.name}}</span>
 			<span class="n-icon n-icon-pencil" @click="edit = !edit"></span>
 			<span class="n-icon n-icon-files-o" v-route:pages></span>
-			<span class="n-icon" :class="'n-icon-' + $services.page.cssStep" v-if="$services.page.cssStep"></span>
+			<span class="n-icon" :class="'n-icon-' + $services.page.cssStep" v-if="false && $services.page.cssStep"></span>
+			<span class="n-icon n-icon-clipboard" @click="copyToClipboard"></span>
 		</div>
 		<n-sidebar v-if="configuring" @close="configuring = false" class="settings">
 			<n-form class="layout2">
@@ -21,16 +22,19 @@
 					<n-form-text v-model="page.path" label="Path"/>
 					<n-form-text v-model="page.content.class" label="Class"/>
 				</n-collapsible>
-				<n-collapsible v-if="$services.page.getPageParameters(page).length" title="Initial State" class="list">
+				<n-collapsible title="Initial State" class="list">
 					<div class="list-actions">
 						<button @click="addState">Add State</button>
 					</div>
 					<n-collapsible class="list-item" :title="state.name" v-for="state in page.content.states">
 						<n-form-text v-model="state.name" label="Name" :required="true"/>
 						<n-form-combo :value="state.operation" :filter="getStateOperations" label="Operation" @input="function(newValue) { setStateOperation(state, newValue) }"/>
-						<n-page-mapper v-if="state.operation" :to="getOperationParameters(state.operation)"
+						<n-page-mapper v-if="state.operation && $services.page.getPageParameters(page).length" :to="getOperationParameters(state.operation)"
 							:from="{page:$services.page.getPageParameters(page)}" 
 							v-model="state.bindings"/>
+						<div class="list-item-actions">
+							<button @click="page.content.states.splice(page.content.states.indexOf(state), 1)"><span class="n-icon n-icon-trash"></span></button>
+						</div>
 					</n-collapsible>
 				</n-collapsible>
 				<n-collapsible title="Query Parameters">
@@ -83,12 +87,6 @@
 				<n-sidebar v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings">
 					<n-form class="layout2" key="cell-form">
 						<n-form-section>
-							<n-collapsible title="Cell Settings" key="cell-settings">
-								<n-form-text label="Cell Id" v-model="cell.customId"/>
-								<n-form-text label="Cell Width (flex)" v-model="cell.width"/>
-								<n-form-text label="Cell Height (any)" v-model="cell.height"/>
-								<n-form-text label="Class" v-model="cell.class"/>
-							</n-collapsible>
 							<n-collapsible title="Content" key="cell-content">
 								<n-form-combo label="Content Route" :filter="filterRoutes" v-model="cell.alias"
 									:key="cell.id + '_alias'"
@@ -98,6 +96,12 @@
 									:to="getRouteParameters(cell)"
 									:from="getAvailableParameters(cell)" 
 									v-model="cell.bindings"/>
+							</n-collapsible>
+							<n-collapsible title="Cell Settings" key="cell-settings">
+								<n-form-text label="Cell Id" v-model="cell.customId"/>
+								<n-form-text label="Cell Width (flex)" v-model="cell.width"/>
+								<n-form-text label="Cell Height (any)" v-model="cell.height"/>
+								<n-form-text label="Class" v-model="cell.class"/>
 							</n-collapsible>
 							<n-collapsible title="Eventing" key="cell-events">
 								<n-form-combo label="Show On" v-model="cell.on" :items="getAvailableEvents()"/>
