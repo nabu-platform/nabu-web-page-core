@@ -56,7 +56,6 @@ nabu.views.cms.Pages = Vue.extend({
 	},
 	methods: {
 		copyCategory: function(category) {
-			console.log("copying", category);
 			nabu.utils.objects.copy({
 				type: "page-category",
 				category: category,

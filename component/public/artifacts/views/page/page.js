@@ -2,6 +2,46 @@ if (!nabu) { var nabu = {} }
 if (!nabu.views) { nabu.views = {} }
 if (!nabu.views.cms) { nabu.views.cms = {} }
 
+// on created, we want to inject the state of the page into this component so we can access all the data
+Vue.mixin({
+	props: {
+		localState: {
+			type: Object,
+			required: false
+		}
+	},
+	data: function() {
+		return {
+			state: {}
+		}
+	},
+	created: function() {
+		var self = this;
+		// map any local state
+		if (this.localState) {
+			Object.keys(this.localState).map(function(key) {
+				Vue.set(self.state, key, self.localState[key]);
+			});
+		}
+		if (this.page) {
+			var pageInstance = this.$services.page.instances[this.page.name];
+			// when creating the actual page, we do not have an instance yet!
+			// nor is it important...
+			if (pageInstance) {
+				Object.keys(pageInstance.variables).map(function(key) {
+					if (typeof(self.state[key]) == "undefined") {
+						Vue.set(self.state, key, pageInstance.variables[key]);
+					}
+				})
+			}
+		}
+	}
+})
+
+// methods in cell instances:
+// - configure: start configuration for the cell content
+// - getEvents: return event definitions
+// - getState: return the state definition for this level (e.g. because of for loop or variable scoping)
 nabu.views.cms.Page = Vue.extend({
 	template: "#nabu-cms-page",
 	props: {
@@ -153,12 +193,55 @@ nabu.views.cms.Page = Vue.extend({
 		removeQuery: function(index) {
 			this.page.content.query.splice(index, 1);	
 		},
-		mounted: function(cell, component) {
+		mounted: function(cell, row, state, component) {
 			this.components[cell.id] = component;
+			
+			// we want to inject all the data into the component so it can be used easily
+			var data = {};
+			// shallow copy of the variables that exist
+			var self = this;
+			Object.keys(this.variables).map(function(key) {
+				data[key] = self.variables[key];
+			});
+			
+			// actually, the state is not in the parents as rows and cells are not components
+			// state is sent in
+			/*
+			// now we want to walk the parent nodes of the component until we reach the page
+			// and check if they have any local state that should be added
+			// parents can override page-level properties but because we loop from closest parent to furthest parent, they can not override each others keys
+			// as the most specific parent is supposed to win
+			var parentKeys = [];
+			var parent = component.$parent;
+			while (parent) {
+				if (parent == this) {
+					break;
+				}
+				if (parent.data) {
+					Object.keys(parent.data).map(function(key) {
+						if (parentKeys.indexOf(key) < 0) {
+							data[key] = parent.data[key];
+							parentKeys.push(key);
+						}
+					})
+				}
+				parent = parent.$parent;
+			}
+			*/
+			
+			if (state) {
+				Object.keys(state).map(function(key) {
+					data[key] = state[key];
+				})
+			}
+			
+			// we want to inject all the necessary data into the cell so it can be referenced by components
+//			Vue.set(component, "state", data);
+		
 			// make sure we have a watchable variable for each event
-			if (component.events) {
+			if (component.getEvents) {
 				var self = this;
-				Object.keys(component.events).map(function(name) {
+				Object.keys(component.getEvents()).map(function(name) {
 					if (!self.variables[name]) {
 						Vue.set(self.variables, name, null);
 					}
@@ -169,24 +252,28 @@ nabu.views.cms.Page = Vue.extend({
 			this.page.content.rows.push({
 				id: this.page.content.counter++,
 				cells: [],
-				class: null
+				class: null,
+				customId: null,
+				instances: {}
 			});
 		},
 		removeRow: function(row) { 
 			this.page.content.rows.splice(this.page.content.rows(indexOf(row), 1))
 		},
-		rerender: function(changedValues) {
+		/*rerender: function(changedValues) {
 			if (changedValues && changedValues.length) {
 				this.$refs[this.page.name + '_rows'].renderAll(changedValues);
 			}
-		},
+		},*/
 		getEvents: function() {
 			var events = {};
 			var self = this;
 			Object.keys(this.components).map(function(cellId) {
-				var cellEvents = self.components[cellId].events;
-				if (cellEvents) {
-					nabu.utils.objects.merge(events, cellEvents);
+				if (self.components[cellId].getEvents) {
+					var cellEvents = self.components[cellId].getEvents();
+					if (cellEvents) {
+						nabu.utils.objects.merge(events, cellEvents);
+					}
 				}
 			});
 			Object.keys(events).map(function(name) {
@@ -198,16 +285,7 @@ nabu.views.cms.Page = Vue.extend({
 					}
 					else {
 						console.warn("Can not find event: " + events[events[name]]);
-						events[name] = [];
-					}
-				}
-				// because we copy the array by reference (if needed), the operations will be performed when the referenced event is found
-				else {
-					// its an array of names
-					events[name].sort();
-					// we add the pseudo variable "$all" which basically indicates you want the entire event rather than a specific sub-value of it
-					if (events[name].indexOf("$all") < 0) {
-						events[name].push("$all");
+						events[name] = {};
 					}
 				}
 			});
@@ -337,6 +415,11 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 		events: {
 			type: Object,
 			required: true
+		},
+		// pass in state that is built up in rows/cells above (e.g. repeats)
+		localState: {
+			type: Object,
+			required: false
 		}
 	},
 	data: function() {
@@ -345,6 +428,95 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 		}
 	},
 	methods: {
+		getState: function(row, cell) {
+			var state = {};
+			// inherit state from above
+			if (this.localState) {
+				Object.keys(this.localState).map(function(key) {
+					state[key] = this.localState[key];
+				})
+			}
+			// add local state of row
+			if (row.data) {
+				Object.keys(row.data).map(function(key) {
+					state[key] = row.data[key];
+				})
+			}
+			// add local state of cell
+			if (cell.data) {
+				Object.keys(cell.data).map(function(key) {
+					state[key] = cell.data[key];
+				})
+			}
+			return state;
+		},
+		// can't be a computed cause we depend on the $parent to resolve some variables
+		// and that's not reactive...
+		getCalculatedRows: function() {
+			// if we are in edit mode, we don't actually calculate rows
+			if (this.edit) {
+				return this.rows;
+			}
+			else {
+				return this.mapCalculated(this.rows);
+			}
+		},
+		mapCalculated: function(list) {
+			var self = this;
+			var result = [];
+			var pageInstance = self.$services.page.instances[self.page.name];
+			list.map(function(entry) {
+				// no local state, just push it
+				if (!entry.instances || !Object.keys(entry.instances).length) {
+					result.push(entry);
+				}
+				else {
+					var key = Object.keys(entry.instances)[0];
+					var parts = entry.instances[key].split(".");
+					var parent = self.$parent;
+					var value = null;
+					var found = false;
+					while (parent) {
+						if (parent.data && parent.data[parts[0]]) {
+							found = true;
+							value = parent.data;
+							parts.map(function(single) {
+								if (value) {
+									value = value[single];
+								}
+							});
+							break;
+						}
+						parent = parent.$parent;
+					}
+					if (!found) {
+						value = pageInstance.get(entry.instances[key]);
+					}
+					if (value instanceof Array) {
+						var counter = 0;
+						value.map(function(single) {
+							var newEntry = {};
+							Object.keys(entry).map(function(key) {
+								newEntry[key] = entry[key];
+							});
+							newEntry.data = {};
+							newEntry.data[key] = single;
+							newEntry.id += "-" + counter++;
+							result.push(newEntry);
+						})
+					}
+				}
+			});
+			return result;
+		},
+		getCalculatedCells: function(row) {
+			if (this.edit) {
+				return row.cells;
+			}
+			else {
+				return this.mapCalculated(row.cells);
+			}
+		},
 		getStyles: function(cell) {
 			var width = typeof(cell.width) == "undefined" ? 1 : cell.width;
 			var styles = [{'flex-grow': width}];
@@ -415,13 +587,23 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 			return this.$services.page.getRouteParameters(route);
 		},
 		getAvailableParameters: function(cell) {
+			return this.$services.page.getAvailableParameters(this.page, cell);
 			// there are all the events
 			var result = {};
-			var available = nabu.utils.objects.clone(this.$services.page.instances[this.page.name].getEvents());
+			var pageInstance = this.$services.page.instances[this.page.name];
+			// the available events
+			var available = pageInstance.getEvents();
 			if (cell.on) {
 				result[cell.on] = available[cell.on];
 			}
-			// and the page
+			var self = this;
+			// the available state
+			this.page.content.states.map(function(state) {
+				if (self.$services.swagger.operation(state.operation).responses && self.$services.swagger.operation(state.operation).responses["200"]) {
+					result[state.name] = self.$services.swagger.resolve(self.$services.swagger.operation(state.operation).responses["200"]).schema;
+				}
+			});
+			// and the page itself
 			result.page = this.$services.page.getPageParameters(this.page);
 			return result;
 		},
@@ -487,17 +669,17 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 				return consensus || changedValues.indexOf(cell.bindings[name]) >= 0;
 			}, false);
 		},
-		mounted: function(cell, component) {
-			this.$services.page.instances[this.page.name].mounted(cell, component);
+		mounted: function(cell, row, state, component) {
+			this.$services.page.instances[this.page.name].mounted(cell, row, state, component);
 			var self = this;
 			component.$on("close", function() {
 				self.close(cell);
 			});
 		},
-		getMountedFor: function(cell) {
-			return this.mounted.bind(this, cell);	
+		getMountedFor: function(cell, row) {
+			return this.mounted.bind(this, cell, row, this.getState(row, cell));
 		},
-		renderAll: function(changedValues) {
+	/*	renderAll: function(changedValues) {
 			var self = this;
 			var mount = function(cell) {
 				self.$services.router.route(cell.alias, self.getParameters(cell), self.page.name + "_" + cell.id, true).then(function(component) {
@@ -524,7 +706,7 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 		},
 		render: function(id) {
 			// TODO
-		},
+		},*/
 		getCell: function(id) {
 			for (var i = 0; i < this.rows.length; i++) {
 				if (this.rows[i].cells) {
@@ -537,15 +719,22 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 			}
 			return null;
 		},
-		getParameters: function(cell) {
+		getParameters: function(row, cell) {
 			var pageInstance = this.$services.page.instances[this.page.name];
 			var result = {
 				page: this.page,
 				parameters: this.parameters,
 				cell: cell,
 				edit: this.edit,
-				state: pageInstance.variables
+				//state: pageInstance.variables,
+				// if we are in edit mode, the local state does not matter
+				// and if we add it, we retrigger a redraw everytime we change something
+				localState: this.edit ? null : this.getState(row, cell)
 			};
+			// if we have a trigger event, add it explicitly to trigger a redraw if needed
+			if (cell.on) {
+				result[cell.on] = pageInstance.variables[cell.on];
+			}
 			Object.keys(cell.bindings).map(function(key) {
 				if (cell.bindings[key]) {
 					var value = pageInstance.get(cell.bindings[key]);
@@ -584,8 +773,23 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 				customId: null,
 				// flex width
 				width: 1,
-				height: null
+				height: null,
+				instances: {}
 			});
+		},
+		addInstance: function(target) {
+			if (!target.instances) {
+				Vue.set(target, "instances", {});
+			}
+			Vue.set(target.instances, "unnamed", null);
+		},
+		removeInstance: function(target, name) {
+			// currently just reset the instances thing, we currently only allow one
+			Vue.set(target, "instances", {});	
+		},
+		renameInstance: function(target, oldName, newName) {
+			Vue.set(target.instances, newName, target.instances[oldName]);
+			Vue.delete(target.instances, oldName);
 		},
 		addRow: function(target) {
 			if (!target.rows) {
@@ -596,7 +800,11 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 				cells: [],
 				class: null,
 				// a custom id for this row
-				customId: null
+				customId: null,
+				// you can map an instance of an array to a row
+				// for instance if you have an array of "contracts", you could map it to the variable "contract"
+				// the key is the local name, the value is the name of the object in the page
+				instances: {}
 			});
 		},
 		removeCell: function(cells, cell) {

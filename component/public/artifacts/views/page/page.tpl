@@ -13,7 +13,6 @@
 			<span class="n-icon n-icon-pencil" @click="edit = !edit"></span>
 			<span class="n-icon n-icon-files-o" v-route:pages></span>
 			<span class="n-icon" :class="'n-icon-' + $services.page.cssStep" v-if="false && $services.page.cssStep"></span>
-			<span class="n-icon n-icon-clipboard" @click="copyToClipboard"></span>
 		</div>
 		<n-sidebar v-if="configuring" @close="configuring = false" class="settings">
 			<n-form class="layout2">
@@ -80,9 +79,9 @@
 
 <template id="nabu-cms-page-rows">
 	<div class="page-rows">
-		<div v-for="row in rows" class="page-row" :id="page.name + '_' + row.id" :class="['page-row-' + row.cells.length, row.class ? row.class : null ]" :key="row.id">
+		<div v-for="row in getCalculatedRows()" class="page-row" :id="page.name + '_' + row.id" :class="['page-row-' + row.cells.length, row.class ? row.class : null ]" :key="row.id">
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-			<div :style="getStyles(cell)" v-for="cell in row.cells" v-if="edit || shouldRenderCell(cell) || cell.rows.length" :id="page.name + '_' + row.id + '_' + cell.id" :class="[{'page-cell': edit || !cell.target || cell.target == 'page'}, cell.class ? cell.class : null ]" :key="cell.id">
+			<div :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="edit || shouldRenderCell(cell) || cell.rows.length" :id="page.name + '_' + row.id + '_' + cell.id" :class="[{'page-cell': edit || !cell.target || cell.target == 'page'}, cell.class ? cell.class : null ]" :key="cell.id">
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				<n-sidebar v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings">
 					<n-form class="layout2" key="cell-form">
@@ -96,6 +95,18 @@
 									:to="getRouteParameters(cell)"
 									:from="getAvailableParameters(cell)" 
 									v-model="cell.bindings"/>
+							</n-collapsible>
+							<n-collapsible title="Repeat" class="list" v-if="$services.page.getAllArrays(page, cell.id).length">
+								<div class="list-actions" v-if="!Object.keys(cell.instances).length">
+									<button @click="addInstance(cell)">Add Repeat</button>
+								</div>
+								<n-collapsible class="list-item" :title="key" v-for="key in Object.keys(cell.instances)">
+									<n-form-text :value="key" label="Name" :required="true" :timeout="600" @input="function(value) { renameInstance(cell, key, value) }"/>
+									<n-form-combo v-model="cell.instances[key]" label="Array" :filter="function() { return $services.page.getAllArrays(page, cell.id) }" />
+									<div class="list-item-actions">
+										<button @click="removeInstance(cell, key)"><span class="n-icon n-icon-trash"></span></button>
+									</div>
+								</n-collapsible>
 							</n-collapsible>
 							<n-collapsible title="Cell Settings" key="cell-settings">
 								<n-form-text label="Cell Id" v-model="cell.customId"/>
@@ -121,21 +132,22 @@
 					<button @click="removeCell(row.cells, cell)"><span class="n-icon n-icon-times" title="Remove Cell"></span></button>
 				</div>
 				
-				<div v-if="edit && cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(cell), mounted: getMountedFor(cell) }"></div>
+				<div v-if="edit && cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
 				<template v-else-if="shouldRenderCell(cell)">
 					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)">
-						<div v-route-render="{ alias: cell.alias, parameters: getParameters(cell), mounted: getMountedFor(cell) }"></div>
+						<div v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
 					</n-sidebar>
 					<n-prompt v-if="cell.target == 'prompt'" @close="close(cell)">
-						<div v-route-render="{ alias: cell.alias, parameters: getParameters(cell), mounted: getMountedFor(cell) }"></div>
+						<div v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
 					</n-prompt>
-					<div v-else v-route-render="{ alias: cell.alias, parameters: getParameters(cell), mounted: getMountedFor(cell) }"></div>
+					<div v-else v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
 				</template>
 				
 				<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 					:parameters="parameters"
 					:events="events"
 					:ref="page.name + '_' + cell.id + '_rows'"
+					:local-state="getState(row, cell)"
 					@removeRow="function(row) { cell.rows.splice(cell.rows.indexOf(row), 1) }"/>
 			</div>
 			<n-sidebar v-if="configuring == row.id" @close="configuring = null" class="settings">
@@ -143,6 +155,18 @@
 					<n-collapsible title="Row Settings">
 						<n-form-text label="Row Id" v-model="row.customId"/>
 						<n-form-text label="Class" v-model="row.class"/>
+					</n-collapsible>
+					<n-collapsible title="Repeat" class="list" v-if="$services.page.getAllArrays(page, row.id).length">
+						<div class="list-actions" v-if="!Object.keys(row.instances).length">
+							<button @click="addInstance(row)">Add Repeat</button>
+						</div>
+						<n-collapsible class="list-item" :title="key" v-for="key in Object.keys(row.instances)">
+							<n-form-text :value="key" label="Name" :required="true" :timeout="600" @input="function(value) { renameInstance(row, key, value) }"/>
+							<n-form-combo v-model="row.instances[key]" label="Array" :filter="function() { return $services.page.getAllArrays(page, row.id) }" />
+							<div class="list-item-actions">
+								<button @click="removeInstance(row, key)"><span class="n-icon n-icon-trash"></span></button>
+							</div>
+						</n-collapsible>
 					</n-collapsible>
 				</n-form>
 			</n-sidebar>

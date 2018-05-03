@@ -1,3 +1,20 @@
+if (!nabu) { var nabu = {} };
+if (!nabu.page) { nabu.page = {}}
+
+nabu.page.provide = function(spec, implementation) {
+	if (!nabu.page.state) {
+		nabu.page.state = { providers: [] }
+	}
+	if (!nabu.page.state.providers[spec]) {
+		nabu.page.state.providers[spec] = [];
+	}
+	nabu.page.state.providers[spec].push(implementation);
+}
+
+nabu.page.providers = function(spec) {
+	return nabu.page.state && nabu.page.state.providers[spec] ? nabu.page.state.providers[spec] : [];
+}
+
 nabu.services.VueService(Vue.extend({
 	services: ["user", "swagger"],
 	data: function() {
@@ -92,12 +109,33 @@ nabu.services.VueService(Vue.extend({
 		})
 	},
 	methods: {
+		classes: function(clazz) {
+			var result = [];
+			var sheets = document.styleSheets;
+			for (var l = 0; l < sheets.length; l++) {
+				var rules = sheets.item(l).rules || sheets.item(l).cssRules;
+				for (var i = 0; i < rules.length; i++) {
+					var rule = rules.item(i);
+					if (rule.selectorText) {
+						if (rule.selectorText.match(new RegExp(".*\\." + clazz + "\\.([\\w-]+)\\b.*", "g"))) {
+							var match = rule.selectorText.replace(new RegExp(".*\\." + clazz + "\\.([\\w-]+)\\b.*", "g"), "$1");
+							if (result.indexOf(match) < 0) {
+								result.push(match);
+							}
+						}
+					}
+				}
+			}
+			return result;
+		},
 		getSimpleKeysFor: function(definition, includeComplex, keys, path) {
 			var self = this;
+			var sort = false;
 			if (!keys) {
 				keys = [];
+				sort = true;
 			}
-			if (definition.properties) {
+			if (definition && definition.properties) {
 				Object.keys(definition.properties).map(function(key) {
 					// arrays can not be chosen, you need to bind them first
 					if (definition.properties[key].type != "array") {
@@ -107,12 +145,14 @@ nabu.services.VueService(Vue.extend({
 						}
 						// if it is complex, recurse
 						if (definition.properties[key].properties) {
-							self.getKeysFor(definition.properties[key], keys, childPath);
+							self.getSimpleKeysFor(definition.properties[key], includeComplex, keys, childPath);
 						}
 					}
 				});
 			}
-			keys.sort();
+			if (sort) {
+				keys.sort();
+			}
 			return keys;
 		},
 		saveConfiguration: function() {
@@ -412,30 +452,173 @@ nabu.services.VueService(Vue.extend({
 			return content;
 		},
 		getRouteParameters: function(route) {
-			var parameters = [];
+			var result = {
+				properties: {}
+			};
 			if (route.url) {
-				nabu.utils.arrays.merge(parameters, this.pathParameters(route.url));
+				this.pathParameters(route.url).map(function(key) {
+					result.properties[key] = {
+						type: "string"
+					}
+				});
 			}
 			if (route.query) {
-				nabu.utils.arrays.merge(parameters, route.query);
+				route.query.map(function(key) {
+					// the key could already be a complex definition (though unlikely)
+					result.properties[key] = typeof(key) == "string" ? {type: "string"} : key;
+				});
 			}
+			// we assume a parameters object that has the json-esque definitions
 			if (route.parameters) {
-				nabu.utils.arrays.merge(parameters, route.parameters);
+				nabu.utils.objects.merge(result.properties, route.parameters);
 			}
-			parameters.sort();
-			return parameters;
+			return result;
 		},
-		getStateParameters: function(page) {
-			
+		getArrays: function(definition, path, arrays) {
+			if (!arrays) {
+				arrays = [];
+			}
+			if (definition.properties) {
+				var keys = Object.keys(definition.properties);
+				for (var i = 0; i < keys.length; i++) {
+					var property = definition.properties[keys[i]];
+					var childPath = (path ? path + "." : "") + keys[i];
+					if (property.type == "array") {
+						arrays.push(childPath);
+					}
+					else if (property.properties) {
+						this.getArrays(property, childPath, arrays);
+					}
+				}
+			}
+			return arrays;
+		},
+		getAvailableParameters: function(page, cell) {
+			var result = {};
+			// if we have an event-driven cell, we can access the events in the page
+			if (cell && cell.on) {
+				var pageInstance = this.instances[page.name];
+				// the available events
+				var available = pageInstance.getEvents();
+				if (cell.on) {
+					result[cell.on] = available[cell.on];
+				}
+			}
+			var self = this;
+			// the available state
+			page.content.states.map(function(state) {
+				if (self.$services.swagger.operation(state.operation).responses && self.$services.swagger.operation(state.operation).responses["200"]) {
+					result[state.name] = self.$services.swagger.resolve(self.$services.swagger.operation(state.operation).responses["200"]).schema;
+				}
+			});
+			// and the page itself
+			result.page = this.getPageParameters(page);
+			return result;	
+		},
+		getAllArrays: function(page, targetId) {
+			var self = this;
+			var arrays = [];
+			// get all the arrays available in the page itself
+			// TODO: filter events that you are not registered on?
+			var parameters = this.getAvailableParameters(page);
+			Object.keys(parameters).map(function(key) {
+				nabu.utils.arrays.merge(arrays, self.getArrays(parameters[key]).map(function(x) { return key + "." + x }));
+			});
+			// get all arrays available in parent rows/cells
+			var path = this.getTargetPath(targetId);
+			if (path.length) {
+				path.map(function(entry) {
+					if (entry.instances) {
+						Object.keys(entry.instances).map(function(key) {
+							var mapping = entry.instances[key];
+							var index = mapping.indexOf(".");
+							var variable = mapping.substring(0, index);
+							var path = mapping.substring(index + 1);
+							var definition = self.getChildDefinition(parameters[variable], path);
+							nabu.utils.arrays.merge(arrays, self.getArrays(definition).map(function(x) { return variable + "." + x }));
+						});
+					}
+				});
+			}
+			return arrays;
+		},
+		getChildDefinition: function(definition, path, parts, index) {
+			if (!parts) {
+				parts = path.split(".");
+				index = 0;
+			}
+			var properties = definition.type == "array" ? definition.items.properties : definition.properties;
+			if (properties) {
+				var child = properties[parts[index]];
+				if (index == parts.length - 1) {
+					return child;
+				}
+				else {
+					return this.getDefinition(child, path, parts, index + 1);
+				}
+			}
+			return null;
 		},
 		getPageParameters: function(page) {
-			var parameters = [];
-			nabu.utils.arrays.merge(parameters, this.pathParameters(page.content.path));
-			if (page.content.query) {
-				nabu.utils.arrays.merge(parameters, page.content.query);
+			var parameters = {
+				properties: {}
+			};
+			if (page.content.path) {
+				this.pathParameters(page.content.path).map(function(x) {
+					parameters.properties[x] = {
+						type: "string"
+					}
+				})
 			}
-			parameters.sort();
+			if (page.content.query) {
+				page.content.query.map(function(x) {
+					parameters.properties[x] = {
+						type: "string"
+					}
+				});
+			}
 			return parameters;
+		},
+		// retrieves the path of rows/cells to get to the targetId, this can be used to resolve instances for example
+		getTargetPath: function(rowContainer, targetId, path) {
+			var reverse = false;
+			if (!path) {
+				path = [];
+				// we manage the complete path at this level, reverse when everything is done as the path contains everything in the reverse order
+				reverse = true;
+			}
+			if (rowContainer.rows) {
+				for (var i = 0; i < rowContainer.rows.length; i++) {
+					var row = rowContainer.rows[i];
+					if (row.id == targetId) {
+						path.push(row);
+					}
+					else {
+						for (var j = 0; j < row.cells.length; j++) {
+							var cell = row.cells[j];
+							if (cell.id == targetId) {
+								path.push(cell);
+								path.push(row);
+							}
+							else if (cell.rows) {
+								getTargetPath(cell, targetId, path);
+							}
+							if (path.length) {
+								path.push(cell);
+								path.push(row);
+								break;
+							}
+						}
+					}
+					if (path.length) {
+						break;
+					}
+				}
+			}
+			if (reverse) {
+				path.reverse();
+			}
+			return path;
 		}
 	},
 	watch: {

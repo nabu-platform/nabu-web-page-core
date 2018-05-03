@@ -8,7 +8,6 @@ Vue.component("n-page-mapper", {
 		},
 		// contains the definitions of the fields we can map to
 		to: {
-			type: Array,
 			required: true
 		},
 		// the resulting bindings are in here
@@ -18,38 +17,37 @@ Vue.component("n-page-mapper", {
 		}
 	},
 	computed: {
+		// for the label dropdown
 		sources: function() {
 			return Object.keys(this.from);
+		}
+	},
+	data: function() {
+		return {
+			fieldsToMap: []
+		}
+	},
+	created: function() {
+		console.log("created with to", this.to,  this.$services.page.getSimpleKeysFor(this.to));
+		if (this.to instanceof Array) {
+			nabu.utils.arrays.merge(this.fieldsToMap, this.to);
+		}
+		else if (this.to) {
+			nabu.utils.arrays.merge(this.fieldsToMap, this.$services.page.getSimpleKeysFor(this.to));
 		}
 	},
 	methods: {
 		// get the possible field names for this label
 		fieldsFrom: function(value, label, fields) {
-			var self = this;
-			if (!fields) {
-				fields = [];
+			var fields = this.$services.page.getSimpleKeysFor(this.from[label]);
+			if (value) {
+				fields = fields.filter(function(x) { x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
 			}
-			if (!label) {
-				Object.keys(this.from).map(function(label) {
-					self.fieldsFrom(value, label, fields);
-				});
-			}
-			else {
-				this.from[label].filter(function(x) {
-					return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
-				}).map(function(x) {
-					//x = label + "." + x;
-					if (fields.indexOf(x) < 0) {
-						fields.push(x);
-					}
-				})
-			}
-			fields.sort();
 			return fields;
 		},
 		getValueFor: function(field) {
 			return this.value[field]
-				? this.value[field].split(".")[1]
+				? this.value[field].substring(this.value[field].indexOf(".") + 1)
 				: null;
 		},
 		getLabelFor: function(field) {

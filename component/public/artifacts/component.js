@@ -34,6 +34,20 @@ window.addEventListener("load", function() {
 			}
 		});
 		
+		$services.router.register({
+			alias: "page-fields",
+			enter: function(parameters) {
+				return new nabu.views.cms.PageFields({propsData: parameters});
+			}
+		});
+		
+		$services.router.register({
+			alias: "page-tabs",
+			enter: function(parameters) {
+				return new nabu.views.cms.PageTabs({propsData: parameters});
+			}
+		});
+		
 		return $services.$register({
 			page: nabu.services.cms.Page
 		});

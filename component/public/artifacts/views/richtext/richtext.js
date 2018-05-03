@@ -20,16 +20,19 @@ nabu.views.page.Richtext = Vue.extend({
 		edit: {
 			type: Boolean,
 			required: true
+		},
+		localState: {
+			type: Object,
+			required: false
 		}
 	},
 	created: function() {
 		this.normalize(this.cell.state);
-		Vue.set(this, "state", this.$services.page.instances[this.page.name].variables);
 	},
 	data: function() {
 		return {
 			configuring: false,
-			state: null
+			state: {}
 		}
 	},
 	methods: {
