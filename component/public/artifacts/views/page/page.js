@@ -301,8 +301,12 @@ nabu.views.cms.Page = Vue.extend({
 				self.subscriptions[event].splice(self.subscriptions[event].indexOf(handler), 1);
 			};
 		},
+		reset: function(name) {
+			Vue.delete(this.variables, name);
+		},
 		emit: function(name, value) {
-			this.variables[name] = value;
+			// used to be a regular assign and that seemed to work as well?
+			Vue.set(this.variables, name, value);
 			var self = this;
 			
 			var promises = [];

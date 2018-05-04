@@ -41,6 +41,24 @@ nabu.views.cms.PageTabs = Vue.component("page-tabs", {
 		}
 	},
 	methods: {
+		getEvents: function(actions, result) {
+			var self = this;
+			if (!result) {
+				result = {};
+			}
+			if (!actions) {
+				actions = this.cell.state.actions;
+			}
+			actions.map(function(action) {
+				if (action.event) {
+					result[action.event] = self.cell.on ? self.cell.on : {};
+				}
+				if (action.actions) {
+					self.getEvents(action.actions, result);
+				}
+			});
+			return result;
+		},
 		getActions: function() {
 			return this.actions ? this.actions : this.cell.state.actions;	
 		},
@@ -75,6 +93,7 @@ nabu.views.cms.PageTabs = Vue.component("page-tabs", {
 			this.getActions().push({
 				label: null,
 				route: null,
+				event: null,
 				anchor: null,
 				mask: false,
 				condition: null,
@@ -103,6 +122,27 @@ nabu.views.cms.PageTabs = Vue.component("page-tabs", {
 				});
 				this.$services.router.route(action.route, parameters, action.anchor, action.mask);
 			}
+			else if (action.event) {
+				// if you are working event-based, you are using events to show parts of the screen
+				// currently we assume only one event should be "active" at a time, so we unset all other events this tab provider can emit
+				this.unsetEvent(this.cell.state.actions);
+				
+				var pageInstance = this.$services.page.instances[this.page.name];
+				var content = this.cell.on ? pageInstance.get(this.cell.on) : null;
+				pageInstance.emit(action.event, content ? content : {});
+			}
+		},
+		unsetEvent: function(actions) {
+			var pageInstance = this.$services.page.instances[this.page.name];
+			var self = this;
+			actions.map(function(action) {
+				if (action.event) {
+					pageInstance.reset(action.event);
+				}
+				if (action.actions) {
+					self.unsetEvent(action.actions);
+				}
+			});
 		},
 		configureAction: function(action) {
 			var key = "action_" + this.getActions().indexOf(action);

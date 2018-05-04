@@ -13,9 +13,10 @@
 						</div>
 						<n-collapsible class="list-item" :title="action.label" v-for="action in getActions()">
 							<n-form-text v-model="action.label" label="Label"/>
-							<n-form-combo v-model="action.route" :filter="listRoutes" label="Route"/>
-							<n-form-text v-model="action.anchor" label="Anchor"/>
-							<n-form-switch v-model="action.mask" label="Mask"/>
+							<n-form-text v-model="action.event" v-if="!action.route" label="Event"/>
+							<n-form-combo v-model="action.route" v-if="!action.event" :filter="listRoutes" label="Route"/>
+							<n-form-text v-model="action.anchor" label="Anchor" v-if="action.route"/>
+							<n-form-switch v-model="action.mask" label="Mask" v-if="action.route"/>
 							<n-page-mapper v-if="action.route" :to="$services.page.getRouteParameters($services.router.get(action.route))"
 								:from="$services.page.getAvailableParameters(page, cell)" 
 								v-model="action.bindings"/>
@@ -30,8 +31,8 @@
 				@mouseover="show(action)" @mouseout="hide(action)">
 			<span v-if="edit" class="n-icon n-icon-cog" @click="configureAction(action)"></span>
 			<a auto-close-tabs class="page-tab-action page-tab-entry" href="javascript:void(0)" 
-				@click="handle(action)" v-if="action.route">{{ action.label }}</a>
-			<span class="page-tab-entry" v-if="!action.route">{{ action.label }}</span>
+				@click="handle(action)" v-if="action.route || action.event">{{ action.label }}</a>
+			<span class="page-tab-entry" v-else>{{ action.label }}</span>
 			<page-tabs :ref="'action_' + getActions().indexOf(action)"
 				:cell="cell"
 				:page="page"
