@@ -1,0 +1,77 @@
+.page-rows {
+	.page-row {
+		display: flex;
+		.page-row-menu {
+			margin: auto;
+			margin-right: 0;
+			padding: 1rem;
+			button {
+				display: block;
+				&+button {
+					margin-top: 0.3rem;
+				}
+			}
+		}
+		.page-cell-menu {
+			padding: 0.3rem 1rem;
+			background-color: #eaeaea;
+			button {
+				background-color: transparent;
+				box-shadow: none;
+				border: none;
+				color: #333;
+				cursor: pointer;
+			}
+		}
+		.page-cell {
+			flex-grow: 1;
+			flex-basis: 0;
+		}
+	}
+}
+
+.page {
+	position: relative;
+	.custom-row {
+		width: 100%;
+	}
+	.page-menu {
+		background-color: steelblue;
+		text-align: center;
+		button {
+			background-color: transparent;
+			box-shadow: none;
+			border: none;
+			color: #fff;
+			cursor: pointer;
+		}
+		padding: 0.3rem 1rem;
+		.path {
+			display: inline-block;
+		}
+	}
+	.query {
+		display: flex;
+		align-items: center;
+	}
+	.page-edit {
+		padding: 0.3rem;
+		position: absolute;
+		top: 0rem;
+		z-index: 100;
+		background-color: #333;
+		color: #fff;
+		border: $border;
+		span {
+			font-size: 0.8rem;
+			text-transform: uppercase;
+			margin: 0 1rem;
+			display: inline-block;
+			cursor: pointer;
+		}
+	}
+	&.edit {
+		.page-row {
+		}
+	}
+}

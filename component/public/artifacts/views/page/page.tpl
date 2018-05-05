@@ -1,17 +1,17 @@
 <template id="nabu-cms-page">
 	<div class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
 		<div class="page-menu" v-if="edit">
-			<button @click="configuring = !configuring"><span class="n-icon n-icon-cog" title="Configure"></span></button>
-			<button @click="addRow(page.content)"><span class="n-icon n-icon-plus" title="Add Row"></span></button>
-			<button @click="$services.page.update(page)"><span class="n-icon n-icon-save" title="Save"></span></button>
-			<button @click="edit = false"><span class="n-icon n-icon-sign-out" title="Stop Editing"></span></button>
+			<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
+			<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
+			<button @click="$services.page.update(page)"><span class="fa fa-save" title="Save"></span></button>
+			<button @click="edit = false"><span class="fa fa-sign-out" title="Stop Editing"></span></button>
 		</div>
 		<div class="page-edit" v-else-if="$services.page.canEdit()" :draggable="true" 
 				@dragstart="dragMenu($event)"
 				:style="{'top': page.content.menuY ? page.content.menuY + 'px' : '0px', 'left': page.content.menuX ? page.content.menuX + 'px' : '0px'}">
 			<span>{{page.name}}</span>
-			<span class="n-icon n-icon-pencil" @click="edit = !edit"></span>
-			<span class="n-icon n-icon-files-o" v-route:pages></span>
+			<span class="fa fa-pencil" @click="edit = !edit"></span>
+			<span class="fa fa-files-o" v-route:pages></span>
 			<span class="n-icon" :class="'n-icon-' + $services.page.cssStep" v-if="false && $services.page.cssStep"></span>
 		</div>
 		<n-sidebar v-if="configuring" @close="configuring = false" class="settings">
@@ -32,7 +32,7 @@
 							:from="{page:$services.page.getPageParameters(page)}" 
 							v-model="state.bindings"/>
 						<div class="list-item-actions">
-							<button @click="page.content.states.splice(page.content.states.indexOf(state), 1)"><span class="n-icon n-icon-trash"></span></button>
+							<button @click="page.content.states.splice(page.content.states.indexOf(state), 1)"><span class="fa fa-trash"></span></button>
 						</div>
 					</n-collapsible>
 				</n-collapsible>
@@ -42,7 +42,7 @@
 					</div>
 					<n-form-section class="list-row" v-for="i in Object.keys(page.content.query)">
 						<n-form-text v-model="page.content.query[i]"/>
-						<button @click="removeQuery(i)"><span class="n-icon n-icon-trash"></span></button>
+						<button @click="removeQuery(i)"><span class="fa fa-trash"></span></button>
 					</n-form-section>
 				</n-collapsible>
 				<n-collapsible title="Actions" class="list">
@@ -63,7 +63,7 @@
 							:from="availableParameters" 
 							v-model="action.bindings"/>
 						<div class="list-item-actions">
-							<button @click="page.content.actions.splice(page.content.actions.indexOf(action), 1)"><span class="n-icon n-icon-trash"></span></button>
+							<button @click="page.content.actions.splice(page.content.actions.indexOf(action), 1)"><span class="fa fa-trash"></span></button>
 						</div>
 					</n-collapsible>
 				</n-collapsible>
@@ -79,9 +79,10 @@
 
 <template id="nabu-cms-page-rows">
 	<div class="page-rows">
-		<div v-for="row in getCalculatedRows()" class="page-row" :id="page.name + '_' + row.id" :class="['page-row-' + row.cells.length, row.class ? row.class : null ]" :key="row.id">
+		<div v-for="row in getCalculatedRows()" class="page-row" :id="page.name + '_' + row.id" :class="['page-row-' + row.cells.length, row.class ? row.class : null ]" :key="row.id"
+				v-if="edit || $services.page.isCondition(row.condition, getState(row))">
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-			<div :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="edit || shouldRenderCell(cell) || cell.rows.length" :id="page.name + '_' + row.id + '_' + cell.id" :class="[{'page-cell': edit || !cell.target || cell.target == 'page'}, cell.class ? cell.class : null ]" :key="cell.id">
+			<div :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="edit || shouldRenderCell(row, cell) || cell.rows.length" :id="page.name + '_' + row.id + '_' + cell.id" :class="[{'page-cell': edit || !cell.target || cell.target == 'page'}, cell.class ? cell.class : null ]" :key="cell.id">
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				<n-sidebar v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings">
 					<n-form class="layout2" key="cell-form">
@@ -96,7 +97,7 @@
 									:from="getAvailableParameters(cell)" 
 									v-model="cell.bindings"/>
 							</n-collapsible>
-							<n-collapsible title="Repeat" class="list" v-if="$services.page.getAllArrays(page, cell.id).length">
+							<n-collapsible title="Repeat" class="list" v-if="cell.instances && $services.page.getAllArrays(page, cell.id).length">
 								<div class="list-actions" v-if="!Object.keys(cell.instances).length">
 									<button @click="addInstance(cell)">Add Repeat</button>
 								</div>
@@ -104,7 +105,7 @@
 									<n-form-text :value="key" label="Name" :required="true" :timeout="600" @input="function(value) { renameInstance(cell, key, value) }"/>
 									<n-form-combo v-model="cell.instances[key]" label="Array" :filter="function() { return $services.page.getAllArrays(page, cell.id) }" />
 									<div class="list-item-actions">
-										<button @click="removeInstance(cell, key)"><span class="n-icon n-icon-trash"></span></button>
+										<button @click="removeInstance(cell, key)"><span class="fa fa-trash"></span></button>
 									</div>
 								</n-collapsible>
 							</n-collapsible>
@@ -113,6 +114,7 @@
 								<n-form-text label="Cell Width (flex)" v-model="cell.width"/>
 								<n-form-text label="Cell Height (any)" v-model="cell.height"/>
 								<n-form-text label="Class" v-model="cell.class"/>
+								<n-form-text label="Condition" v-model="cell.condition"/>
 							</n-collapsible>
 							<n-collapsible title="Eventing" key="cell-events">
 								<n-form-combo label="Show On" v-model="cell.on" :items="getAvailableEvents()"/>
@@ -122,18 +124,18 @@
 					</n-form>
 				</n-sidebar>
 				<div class="page-cell-menu n-page-menu" v-if="edit">
-					<button @click="configuring = cell.id"><span class="n-icon n-icon-magic" title="Set Cell Content"></span></button>
-					<button @click="configure(cell)" v-if="cell.alias"><span class="n-icon n-icon-cog" title="Configure Cell Content"></span></button>
-					<button @click="left(row, cell)"><span class="n-icon n-icon-chevron-circle-left"></span></button>
-					<button @click="right(row, cell)"><span class="n-icon n-icon-chevron-circle-right"></span></button>
-					<button @click="cellUp(row, cell)"><span class="n-icon n-icon-chevron-circle-up"></span></button>
-					<button @click="cellDown(row, cell)"><span class="n-icon n-icon-chevron-circle-down"></span></button>
-					<button @click="addRow(cell)"><span class="n-icon n-icon-plus" title="Add Row"></span></button>
-					<button @click="removeCell(row.cells, cell)"><span class="n-icon n-icon-times" title="Remove Cell"></span></button>
+					<button @click="configuring = cell.id"><span class="fa fa-magic" title="Set Cell Content"></span></button>
+					<button @click="configure(cell)" v-if="cell.alias"><span class="fa fa-cog" title="Configure Cell Content"></span></button>
+					<button @click="left(row, cell)"><span class="fa fa-chevron-circle-left"></span></button>
+					<button @click="right(row, cell)"><span class="fa fa-chevron-circle-right"></span></button>
+					<button @click="cellUp(row, cell)"><span class="fa fa-chevron-circle-up"></span></button>
+					<button @click="cellDown(row, cell)"><span class="fa fa-chevron-circle-down"></span></button>
+					<button @click="addRow(cell)"><span class="fa fa-plus" title="Add Row"></span></button>
+					<button @click="removeCell(row.cells, cell)"><span class="fa fa-times" title="Remove Cell"></span></button>
 				</div>
 				
 				<div v-if="edit && cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
-				<template v-else-if="shouldRenderCell(cell)">
+				<template v-else-if="shouldRenderCell(row, cell)">
 					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)">
 						<div v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
 					</n-sidebar>
@@ -147,7 +149,7 @@
 					:parameters="parameters"
 					:events="events"
 					:ref="page.name + '_' + cell.id + '_rows'"
-					:local-state="getState(row, cell)"
+					:local-state="getLocalState(row, cell)"
 					@removeRow="function(row) { cell.rows.splice(cell.rows.indexOf(row), 1) }"/>
 			</div>
 			<n-sidebar v-if="configuring == row.id" @close="configuring = null" class="settings">
@@ -155,8 +157,9 @@
 					<n-collapsible title="Row Settings">
 						<n-form-text label="Row Id" v-model="row.customId"/>
 						<n-form-text label="Class" v-model="row.class"/>
+						<n-form-text label="Condition" v-model="row.condition"/>
 					</n-collapsible>
-					<n-collapsible title="Repeat" class="list" v-if="$services.page.getAllArrays(page, row.id).length">
+					<n-collapsible title="Repeat" class="list" v-if="row.instances && $services.page.getAllArrays(page, row.id).length">
 						<div class="list-actions" v-if="!Object.keys(row.instances).length">
 							<button @click="addInstance(row)">Add Repeat</button>
 						</div>
@@ -164,18 +167,18 @@
 							<n-form-text :value="key" label="Name" :required="true" :timeout="600" @input="function(value) { renameInstance(row, key, value) }"/>
 							<n-form-combo v-model="row.instances[key]" label="Array" :filter="function() { return $services.page.getAllArrays(page, row.id) }" />
 							<div class="list-item-actions">
-								<button @click="removeInstance(row, key)"><span class="n-icon n-icon-trash"></span></button>
+								<button @click="removeInstance(row, key)"><span class="fa fa-trash"></span></button>
 							</div>
 						</n-collapsible>
 					</n-collapsible>
 				</n-form>
 			</n-sidebar>
 			<div class="page-row-menu n-page-menu" v-if="edit">
-				<button @click="configuring = row.id"><span class="n-icon n-icon-cog"></span></button>
-				<button @click="up(row)"><span class="n-icon n-icon-chevron-circle-up"></span></button>
-				<button @click="down(row)"><span class="n-icon n-icon-chevron-circle-down"></span></button>
-				<button @click="addCell(row)"><span class="n-icon n-icon-plus" title="Add Cell"></span></button>
-				<button @click="$emit('removeRow', row)"><span class="n-icon n-icon-times" title="Remove Row"></span></button>
+				<button @click="configuring = row.id"><span class="fa fa-cog"></span></button>
+				<button @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button>
+				<button @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button>
+				<button @click="addCell(row)"><span class="fa fa-plus" title="Add Cell"></span></button>
+				<button @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
 			</div>
 		</div>
 	</div>

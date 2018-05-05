@@ -78,21 +78,20 @@ nabu.services.VueService(Vue.extend({
 				if (configuration.title) {
 					self.title = configuration.title;
 				}
-				if (self.canEdit()) {
+				if (self.canEdit() && false) {
 					self.$services.swagger.execute("nabu.cms.page.rest.style.list", { applicationId: configuration.applicationId }).then(function(list) {
-						if (list.pages) {
-							list.pages.sort(function(a, b) {
-								return a.priority - b.priority;
-							});
-							nabu.utils.arrays.merge(self.styles, list.pages);
+						if (list.custom) {
+							nabu.utils.arrays.merge(self.styles, list.custom);
 						}
 						Vue.nextTick(function() {
 							self.loading = false;
 						});
 						done();
+						/*
 						if (self.canEdit()) {
 							self.compileCss();
 						}
+						*/
 					});
 				}
 				else {
@@ -101,14 +100,48 @@ nabu.services.VueService(Vue.extend({
 					});
 					done();
 					// start a compilation sequence, you may have new stuff pending that is not yet saved
+					/*
 					if (self.canEdit()) {
 						self.compileCss();
 					}
+					*/
 				}
 			});
 		})
 	},
 	methods: {
+		getSimpleClasses: function(value) {
+			var classes = ["primary", "secondary", "info", "success", "warning", "danger"];
+			if (value) {
+				classes = classes.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				});
+			}
+			// the class itself is allowed
+			classes.push(value);
+			return classes;
+		},
+		getDynamicClasses: function(styles, state) {
+			if (!styles) {
+				return [];
+			}
+			var self = this;
+			return styles.filter(function(style) {
+				return self.isCondition(style.condition, state);
+			}).map(function(style) {
+				return style.class;
+			});
+		},
+		isCondition: function(condition, state) {
+			if (!condition) {
+				return true;
+			}
+			var result = eval(condition);
+			if (result instanceof Function) {
+				result = result(state);
+			}
+			return result == true;
+		},
 		classes: function(clazz) {
 			var result = [];
 			var sheets = document.styleSheets;
@@ -201,7 +234,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		createStyle: function() {
 			var self = this;
-			this.$services.swagger.execute("nabu.cms.page.rest.style.create", {applicationId: this.applicationId, body: {
+			this.$services.swagger.execute("nabu.cms.page.rest.style.create", { applicationId: this.applicationId, body: {
 				name: "unnamed",
 				title: "page",
 				description: ""
@@ -212,10 +245,10 @@ nabu.services.VueService(Vue.extend({
 		updateCss: function(style, rebuild) {
 			var self = this;
 			this.$services.swagger.execute("nabu.cms.page.rest.style.update", {
-				styleId: style.id,
+				applicationId: configuration.applicationId,
 				body: style
 			}).then(function() {
-				if (rebuild) {
+				if (rebuild && false) {
 					self.compileCss();
 				}	
 			});

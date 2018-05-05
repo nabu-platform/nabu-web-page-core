@@ -24,7 +24,7 @@
 				<div class="list-row" v-for="property in $services.page.properties">
 					<n-form-text v-model="property.name" label="Key" :timeout="600" @input="$services.page.updateProperty(property)"/>
 					<n-form-text v-model="property.content" label="Value" :timeout="600" @input="$services.page.updateProperty(property)"/>
-					<button @click="$services.page.deleteProperty(property)"><span class="n-icon n-icon-trash"></span></button>
+					<button @click="$services.page.deleteProperty(property)"><span class="fa fa-trash"></span></button>
 				</div>
 			</n-form-section>
 		</n-collapsible>
@@ -33,7 +33,7 @@
 				<button @click="create">Create New Page</button>
 			</footer>
 			<div v-for="category in categories" :key="category" :ref="'category_' + category">
-				<h2>{{category ? category : 'Uncategorized'}} <span class="n-icon n-icon-clipboard" @click="copyCategory(category)"></span></h2>
+				<h2>{{category ? category : 'Uncategorized'}} <span class="fa fa-clipboard" @click="copyCategory(category)"></span></h2>
 				<n-collapsible :title="page.name" v-for="page in getPagesFor(category)" class="page-cell layout2 list-item" :key="page.id">
 					<h2 @click="opened = category">{{page.name}}</h2>
 					<n-form-section>
@@ -51,11 +51,11 @@
 				</n-collapsible>
 			</div>
 		</n-collapsible>
-		<n-collapsible title="Styling" class="list">
+		<n-collapsible title="Styling" class="list" v-if="false" comment="enable at a later date when it is clearer how all the files will work">
 			<footer class="list-actions">
 				<button @click="$services.page.createStyle">Create New Page</button>
-				<button @click="$services.page.compileCss">Compile New Css</button>
-				<button @click="$services.page.saveCompiledCss" :disabled="!$services.page.lastCompiled">Save New Css</button>
+				<button @click="$services.page.compileCss" v-if="false">Compile New Css</button>
+				<button @click="$services.page.saveCompiledCss" v-if="false" :disabled="!$services.page.lastCompiled">Save New Css</button>
 			</footer>
 			<n-collapsible :title="style.name ? style.name : 'Unnamed'" v-for="style in $services.page.styles" class="page-cell layout2 list-item" :key="style.id">
 				<n-form-text :required="true" v-model="style.name" label="Name" @input="$services.page.updateCss(style)" :timeout="600"/>

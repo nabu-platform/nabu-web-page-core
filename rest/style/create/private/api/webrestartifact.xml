@@ -5,11 +5,10 @@
     <role>$user</role>
     <permissionContext>=input/path/applicationId</permissionContext>
     <permissionAction>style.create</permissionAction>
-    <input>nabu.cms.page.types.rest.page</input>
-    <output>nabu.cms.page.types.rest.page</output>
+    <input>nabu.cms.page.types.rest.style</input>
     <configurationType>nabu.cms.core.configuration</configurationType>
     <lenient>false</lenient>
-    <webApplicationId>false</webApplicationId>
+    <webApplicationId>true</webApplicationId>
     <language>false</language>
     <allowFormBinding>false</allowFormBinding>
     <caseInsensitive>false</caseInsensitive>

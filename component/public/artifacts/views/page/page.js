@@ -41,7 +41,7 @@ Vue.mixin({
 // methods in cell instances:
 // - configure: start configuration for the cell content
 // - getEvents: return event definitions
-// - getState: return the state definition for this level (e.g. because of for loop or variable scoping)
+// - getLocalState: return the state definition for this level (e.g. because of for loop or variable scoping)
 nabu.views.cms.Page = Vue.extend({
 	template: "#nabu-cms-page",
 	props: {
@@ -254,7 +254,8 @@ nabu.views.cms.Page = Vue.extend({
 				cells: [],
 				class: null,
 				customId: null,
-				instances: {}
+				instances: {},
+				condition: null
 			});
 		},
 		removeRow: function(row) { 
@@ -307,6 +308,7 @@ nabu.views.cms.Page = Vue.extend({
 		emit: function(name, value) {
 			// used to be a regular assign and that seemed to work as well?
 			Vue.set(this.variables, name, value);
+			console.log("set", name, value);
 			var self = this;
 			
 			var promises = [];
@@ -320,6 +322,7 @@ nabu.views.cms.Page = Vue.extend({
 					Object.keys(action.bindings).map(function(key) {
 						parameters[key] = self.get(action.bindings[key]);	
 					});
+					console.log("using parameters", parameters);
 					if (action.confirmation) {
 						self.$confirm({message:action.confirmation}).then(function() {
 							if (action.route) {
@@ -379,6 +382,27 @@ nabu.views.cms.Page = Vue.extend({
 				var parts = name.split(".");
 				return this.variables[parts[0]] ? this.variables[parts[0]][parts[1]] : null;
 			}
+		},
+		set: function(name, value) {
+			var target = null;
+			var parts = null;
+			// update something in the page parameters
+			if (name.indexOf("page.") == 0) {
+				target = this.parameters;
+				parts = name.substring("page.".length).split(".");
+				// TODO: update the URL? what if it is masked?
+			}
+			else {
+				parts = name.split(".");
+				target = this.variables;
+			}
+			for (var i = 0; i < parts.length - 1; i++) {
+				if (!target[parts[i]]) {
+					target[parts[i]] = {};
+				}
+				target = target[parts[i]];
+			}
+			target[parts[parts.length - 1]] = value;
 		}
 	},
 	watch: {
@@ -433,6 +457,17 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 	},
 	methods: {
 		getState: function(row, cell) {
+			var self = this;
+			var localState = this.getLocalState(row, cell);
+			var pageInstance = self.$services.page.instances[self.page.name];
+			Object.keys(pageInstance.variables).map(function(key) {
+				if (typeof(localState[key]) == "undefined") {
+					localState[key] = pageInstance.variables[key];
+				}
+			});
+			return localState;
+		},
+		getLocalState: function(row, cell) {
 			var state = {};
 			// inherit state from above
 			if (this.localState) {
@@ -441,13 +476,13 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 				})
 			}
 			// add local state of row
-			if (row.data) {
+			if (row && row.data) {
 				Object.keys(row.data).map(function(key) {
 					state[key] = row.data[key];
 				})
 			}
 			// add local state of cell
-			if (cell.data) {
+			if (cell && cell.data) {
 				Object.keys(cell.data).map(function(key) {
 					state[key] = cell.data[key];
 				})
@@ -631,12 +666,17 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 			var pageInstance = this.$services.page.instances[this.page.name];
 			Vue.set(pageInstance.closed, cell.id, cell.on);
 		},
-		shouldRenderCell: function(cell) {
+		shouldRenderCell: function(row, cell) {
 			if (!cell.alias) {
 				return false;
 			}
 			else if (this.edit) {
 				return true;
+			}
+			if (cell.condition) {
+				if (!this.$services.page.isCondition(cell.condition, this.getState(row, cell))) {
+					return false;
+				}
 			}
 			var self = this;
 			var pageInstance = self.$services.page.instances[self.page.name];
@@ -681,7 +721,7 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 			});
 		},
 		getMountedFor: function(cell, row) {
-			return this.mounted.bind(this, cell, row, this.getState(row, cell));
+			return this.mounted.bind(this, cell, row, this.getLocalState(row, cell));
 		},
 	/*	renderAll: function(changedValues) {
 			var self = this;
@@ -733,7 +773,7 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 				//state: pageInstance.variables,
 				// if we are in edit mode, the local state does not matter
 				// and if we add it, we retrigger a redraw everytime we change something
-				localState: this.edit ? null : this.getState(row, cell)
+				localState: this.edit ? null : this.getLocalState(row, cell)
 			};
 			// if we have a trigger event, add it explicitly to trigger a redraw if needed
 			if (cell.on) {
@@ -778,7 +818,8 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 				// flex width
 				width: 1,
 				height: null,
-				instances: {}
+				instances: {},
+				condition: null
 			});
 		},
 		addInstance: function(target) {
@@ -808,7 +849,8 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 				// you can map an instance of an array to a row
 				// for instance if you have an array of "contracts", you could map it to the variable "contract"
 				// the key is the local name, the value is the name of the object in the page
-				instances: {}
+				instances: {},
+				condition: null
 			});
 		},
 		removeCell: function(cells, cell) {

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <restInterface>
     <method>PUT</method>
-    <path>/style/{styleId}</path>
+    <path>/{applicationId}/style/{path: .*}</path>
     <role>$user</role>
-    <permissionContext>=input/path/styleId</permissionContext>
+    <permissionContext>=input/path/applicationId</permissionContext>
     <permissionAction>style.update</permissionAction>
-    <input>nabu.cms.page.types.rest.page</input>
+    <input>nabu.cms.page.types.rest.style</input>
     <configurationType>nabu.cms.core.configuration</configurationType>
     <lenient>false</lenient>
-    <webApplicationId>false</webApplicationId>
+    <webApplicationId>true</webApplicationId>
     <language>false</language>
     <allowFormBinding>false</allowFormBinding>
     <caseInsensitive>false</caseInsensitive>

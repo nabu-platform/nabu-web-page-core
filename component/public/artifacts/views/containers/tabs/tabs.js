@@ -98,11 +98,13 @@ nabu.views.cms.PageTabs = Vue.component("page-tabs", {
 				mask: false,
 				condition: null,
 				bindings: {},
-				actions: []
+				actions: [],
+				icons: null,
+				class: null
 			});
 		},
 		isVisible: function(action) {
-			return this.edit || true;
+			return this.edit || !action.condition || this.$services.page.isCondition(action.condition, this.state);
 		},
 		handle: function(action) {
 			if (action.route) {
@@ -147,6 +149,24 @@ nabu.views.cms.PageTabs = Vue.component("page-tabs", {
 		configureAction: function(action) {
 			var key = "action_" + this.getActions().indexOf(action);
 			this.$refs[key][0].configure();
+		},
+		up: function(action) {
+			var actions = this.getActions();
+			var index = actions.indexOf(action);
+			if (index > 0) {
+				var replacement = actions[index - 1];
+				actions.splice(index - 1, 1, actions[index]);
+				actions.splice(index, 1, replacement);
+			}
+		},
+		down: function(action) {
+			var actions = this.getActions();
+			var index = actions.indexOf(action);
+			if (index < actions.length - 1) {
+				var replacement = actions[index + 1];
+				actions.splice(index + 1, 1, actions[index]);
+				actions.splice(index, 1, replacement);
+			}
 		}
 	}
 });

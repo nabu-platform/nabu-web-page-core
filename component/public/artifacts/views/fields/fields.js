@@ -17,6 +17,10 @@ nabu.views.cms.PageFieldsEdit = Vue.component("nabu-page-fields-edit", {
 			type: Boolean,
 			required: false,
 			default: true
+		},
+		keys: {
+			type: Array,
+			required: false
 		}
 	},
 	created: function() {
@@ -28,6 +32,64 @@ nabu.views.cms.PageFieldsEdit = Vue.component("nabu-page-fields-edit", {
 		}
 	},
 	methods: {
+		normalize: function() {
+			this.cell.state.fields.map(function(field) {
+				if (!field.label) {
+					Vue.set(field, "label", null);
+				}
+				if (!field.fragments) {
+					Vue.set(field, "fragments", []);
+				}
+				if (!field.styles) {
+					Vue.set(field, "styles", []);
+				}
+				field.fragments.map(function(fragment) {
+					if (!fragment.type) {
+						Vue.set(fragment, "type", "data");
+					}
+					if (!fragment.content) {
+						Vue.set(fragment, "content", null);
+					}
+					if (!fragment.format) {
+						Vue.set(fragment, "format", null);
+					}
+					if (!fragment.javascript) {
+						Vue.set(fragment, "javascript", null);
+					}
+					if (!fragment.template) {
+						Vue.set(fragment, "template", null);
+					}
+					if (!fragment.class) {
+						Vue.set(fragment, "class", null);
+					}
+					if (!fragment.key) {
+						Vue.set(fragment, "key", null);
+					}
+				});
+			});
+		},
+		addStyle: function(field) {
+			field.styles.push({
+				class: null,
+				condition: null
+			});
+		},
+		fieldUp: function(field) {
+			var index = this.cell.state.fields.indexOf(field);
+			if (index > 0) {
+				var replacement = this.cell.state.fields[index - 1];
+				this.cell.state.fields.splice(index - 1, 1, field);
+				this.cell.state.fields.splice(index, 1, replacement);
+			}
+		},
+		fieldDown: function(field) {
+			var index = this.cell.state.fields.indexOf(field);
+			if (index < this.cell.state.fields.length - 1) {
+				var replacement = this.cell.state.fields[index + 1];
+				this.cell.state.fields.splice(index + 1, 1, field);
+				this.cell.state.fields.splice(index, 1, replacement);
+			}
+		},
 		up: function(field, fragment) {
 			var index = field.fragments.indexOf(fragment);
 			if (index > 0) {
@@ -47,8 +109,8 @@ nabu.views.cms.PageFieldsEdit = Vue.component("nabu-page-fields-edit", {
 		addField: function() {
 			this.cell.state.fields.push({
 				label: null,
-				class: null,
-				fragments: []
+				fragments: [],
+				styles: []
 			});
 			// already add a fragment, a field is generally useless without it...
 			this.addFragment(this.cell.state.fields[this.cell.state.fields.length - 1]);
@@ -66,6 +128,11 @@ nabu.views.cms.PageFieldsEdit = Vue.component("nabu-page-fields-edit", {
 			})
 		},
 		getKeys: function(value) {
+			// you can provide external keys
+			if (this.keys) {
+				return this.keys;
+			}
+			// otherwise we just try to get the default ones available to you
 			var parameters = this.$services.page.getAvailableParameters(this.page, this.cell);
 			var keys = this.$services.page.getSimpleKeysFor({properties:parameters});
 			return value ? keys.filter(function(x) { x.toLowerCase().indexOf(value.toLowerCase()) >= 0 }) : keys;
@@ -91,6 +158,17 @@ nabu.views.cms.PageFields = Vue.component("nabu-page-fields", {
 		edit: {
 			type: Boolean,
 			required: true
+		},
+		data: {
+			required: false
+		},
+		style: {
+			type: Boolean,
+			required: false
+		},
+		label: {
+			type: Boolean,
+			required: false
 		}
 	},
 	data: function() {
@@ -107,8 +185,21 @@ nabu.views.cms.PageFields = Vue.component("nabu-page-fields", {
 
 Vue.component("nabu-page-field", {
 	template: "#nabu-page-field",
-	props: ["data", "field"],
+	props: ["data", "field", "style", "label"],
 	methods: {
+		getDynamicClasses: function(field) {
+			var classes = null;
+			if (this.style) {
+				classes = this.$services.page.getDynamicClasses(field.styles, this.data);
+			}
+			else {
+				classes = [];
+			}
+			if (this.label) {
+				classes.push("with-label");
+			}
+			return classes;
+		},
 		format: function(fragment) {
 			if (fragment.key) {
 				var parts = fragment.key.split(".");

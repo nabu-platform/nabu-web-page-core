@@ -1,0 +1,88 @@
+.n-prompt-container {
+	//min-height: 80vh !important;
+	&[template~="cms-page"] {
+		overflow: visible !important;
+	}
+}
+.cms-page {
+	&.n-form {
+		background-color: #fff;
+		padding: 2rem;
+	}
+}
+
+.settings {
+	i {
+		&.n-icon {
+			font-style: normal;
+		}
+	}
+	main {
+		padding: 0;
+	}
+	.list-item {
+		.n-collapsible-title {
+			background-color: #eaeaea;
+			color: #000;
+		}
+	}
+	.list-sub-item {
+		.n-collapsible-title {
+			background-color: #fafafa;
+			color: #000;
+		}
+	}
+	button {
+		background-color: steelblue;
+		color: #fff;
+		font-size: 0.8rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		border: none;
+		box-shadow: none;
+		padding: 0.5rem 1rem;
+	}
+	.list-item-actions {
+		text-align: right;
+		padding: 1rem;
+	}
+	.n-collapsible-title {
+		background-color: steelblue;
+		color: #fff;
+		font-size: 1rem;
+		padding: 1rem;
+		margin: 0;
+		.n-collapsible-title-content {
+			display: inline-block;
+			margin-left: 1rem;
+		}
+	}	
+	.n-collapsible-content {
+		padding: 1rem 2rem;
+	}
+	.list-actions {
+		text-align: center;
+		padding: 1rem;
+	}
+	.list-row {
+		display: flex;
+		align-items: center;
+		button {
+			padding: 0.5rem;
+			font-weight: normal;
+		}
+	}
+	.list {
+		.n-collapsible-content {
+			padding: 0;
+			.list-item {
+				.n-collapsible-content {
+					padding: 1rem 2rem;
+				}
+			}
+		}
+	}
+	.n-input-combo {
+		margin: 0;
+	}
+}

@@ -1,0 +1,3 @@
+<structure name="styleList">
+    <structure definition="nabu.cms.page.types.rest.style" maxOccurs="unbounded" minOccurs="0" name="custom"/>
+</structure>
