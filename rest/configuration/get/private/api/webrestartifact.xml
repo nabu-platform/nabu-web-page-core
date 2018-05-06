@@ -2,6 +2,8 @@
 <restInterface>
     <method>GET</method>
     <path>/configuration</path>
+    <permissionContext>=input/webApplicationId</permissionContext>
+    <permissionAction>configure</permissionAction>
     <output>nabu.cms.page.types.rest.configuration</output>
     <configurationType>nabu.cms.core.configuration</configurationType>
     <lenient>false</lenient>

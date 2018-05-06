@@ -5,11 +5,6 @@
     <webFragments>nabu.cms.page.rest.page.update</webFragments>
     <webFragments>nabu.cms.page.rest.page.delete</webFragments>
     <webFragments>nabu.cms.page.rest.configuration.get</webFragments>
-    <webFragments>nabu.cms.page.rest.style.create</webFragments>
-    <webFragments>nabu.cms.page.rest.style.delete</webFragments>
-    <webFragments>nabu.cms.page.rest.style.list</webFragments>
-    <webFragments>nabu.cms.page.rest.style.update</webFragments>
-    <webFragments>nabu.cms.page.rest.style.compile</webFragments>
     <webFragments>nabu.cms.page.rest.configuration.update</webFragments>
     <webFragments>nabu.cms.page.rest.configuration.property.create</webFragments>
     <webFragments>nabu.cms.page.rest.configuration.property.delete</webFragments>
