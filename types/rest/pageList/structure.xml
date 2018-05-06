@@ -1,3 +1,3 @@
 <structure name="pageList">
-    <structure comment="Parameters not contained in the path are found in the content (and most likely query parameters but also direct input)" definition="nabu.cms.page.types.rest.page" maxOccurs="unbounded" minOccurs="0" name="pages"/>
+    <structure comment="Parameters not contained in the path are found in the content (and most likely query parameters but also direct input)" definition="nabu.web.page.core.types.rest.page" maxOccurs="unbounded" minOccurs="0" name="pages"/>
 </structure>

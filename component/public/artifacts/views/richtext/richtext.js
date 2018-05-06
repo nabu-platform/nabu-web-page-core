@@ -1,8 +1,8 @@
-if (!nabu) { var nabu = {} };
-if (!nabu.views) { nabu.views = {} };
-if (!nabu.views.page) { nabu.views.page = {} };
+if (!nabu) { var nabu = {} }
+if (!nabu.page) { nabu.page = {} }
+if (!nabu.page.views) { nabu.page.views = {} }
 
-nabu.views.page.Richtext = Vue.extend({
+nabu.page.views.Richtext = Vue.extend({
 	template: "#page-richtext",
 	props: {
 		page: {

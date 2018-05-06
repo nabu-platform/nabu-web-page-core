@@ -1,5 +1,5 @@
-<template id="cms-page-add-cell">
-	<n-form class="layout2 cms-page">
+<template id="page-add-cell">
+	<n-form class="layout2 page">
 		<n-form-section>
 			<n-form-combo label="Show On" v-model="on" :items="availableEvents"/>
 			<n-form-combo label="Route" :filter="filterRoutes" v-model="route"

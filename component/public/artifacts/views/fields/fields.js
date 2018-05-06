@@ -1,9 +1,9 @@
 if (!nabu) { var nabu = {} }
-if (!nabu.views) { nabu.views = {} }
-if (!nabu.views.cms) { nabu.views.cms = {} }
+if (!nabu.page) { nabu.page = {} }
+if (!nabu.page.views) { nabu.page.views = {} }
 
-nabu.views.cms.PageFieldsEdit = Vue.component("nabu-page-fields-edit", {
-	template: "#nabu-page-fields-edit",
+nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
+	template: "#page-fields-edit",
 	props: {
 		page: {
 			type: Object,
@@ -140,8 +140,8 @@ nabu.views.cms.PageFieldsEdit = Vue.component("nabu-page-fields-edit", {
 	}
 });
 
-nabu.views.cms.PageFields = Vue.component("nabu-page-fields", {
-	template: "#nabu-page-fields",
+nabu.page.views.PageFields = Vue.component("nabu-page-fields", {
+	template: "#page-fields",
 	props: {
 		page: {
 			type: Object,

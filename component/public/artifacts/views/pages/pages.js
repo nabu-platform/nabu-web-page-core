@@ -1,9 +1,9 @@
 if (!nabu) { var nabu = {} }
-if (!nabu.views) { nabu.views = {} }
-if (!nabu.views.cms) { nabu.views.cms = {} }
+if (!nabu.page) { nabu.page = {} }
+if (!nabu.page.views) { nabu.page.views = {} }
 
-nabu.views.cms.Pages = Vue.extend({
-	template: "#nabu-cms-pages",
+nabu.page.views.Pages = Vue.extend({
+	template: "#pages",
 	data: function() {
 		return {
 			parameters: {},

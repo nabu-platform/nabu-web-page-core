@@ -60,8 +60,8 @@ nabu.services.VueService(Vue.extend({
 			});
 			return promise;
 		}
-		
-		self.$services.swagger.execute("nabu.cms.page.rest.configuration.get").then(function(configuration) {
+
+		self.$services.swagger.execute("nabu.web.page.core.rest.configuration.get").then(function(configuration) {
 			self.editable = configuration.editable;
 			if (configuration.pages) {
 				nabu.utils.arrays.merge(self.pages, configuration.pages);
@@ -176,7 +176,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		saveConfiguration: function() {
 			var self = this;
-			return this.$services.swagger.execute("nabu.cms.page.rest.configuration.update", {
+			return this.$services.swagger.execute("nabu.web.page.core.rest.configuration.update", {
 				body: {
 					title: this.title,
 					properties: self.properties
@@ -184,7 +184,7 @@ nabu.services.VueService(Vue.extend({
 			});
 		},
 		saveCompiledCss: function() {
-			this.$services.swagger.execute("nabu.cms.page.rest.style.compile", {
+			this.$services.swagger.execute("nabu.web.page.core.rest.style.compile", {
 				applicationId: this.applicationId,
 				body: {
 					compiled: this.lastCompiled
@@ -193,7 +193,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		createStyle: function() {
 			var self = this;
-			this.$services.swagger.execute("nabu.cms.page.rest.style.create", { applicationId: this.applicationId, body: {
+			this.$services.swagger.execute("nabu.web.page.core.rest.style.create", { applicationId: this.applicationId, body: {
 				name: "unnamed",
 				title: "page",
 				description: ""
@@ -203,7 +203,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		updateCss: function(style, rebuild) {
 			var self = this;
-			this.$services.swagger.execute("nabu.cms.page.rest.style.update", {
+			this.$services.swagger.execute("nabu.web.page.core.rest.style.update", {
 				applicationId: configuration.applicationId,
 				body: style
 			}).then(function() {
@@ -342,7 +342,7 @@ nabu.services.VueService(Vue.extend({
 			});
 		},
 		removeByName: function(name) {
-			return this.$services.swagger.execute("nabu.cms.page.rest.page.delete", {name: name});
+			return this.$services.swagger.execute("nabu.web.page.core.rest.page.delete", {name: name});
 		},
 		create: function(name) {
 			return this.update({
@@ -355,7 +355,7 @@ nabu.services.VueService(Vue.extend({
 				page.content = {};
 			}
 			page.marshalled = JSON.stringify(page.content);
-			return this.$services.swagger.execute("nabu.cms.page.rest.page.update", { body: page }).then(function() {
+			return this.$services.swagger.execute("nabu.web.page.core.rest.page.update", { body: page }).then(function() {
 				// add it to the pages if it isn't there yet (e.g. create)
 				if (self.pages.indexOf(page) < 0) {
 					self.normalize(page.content);
@@ -395,7 +395,7 @@ nabu.services.VueService(Vue.extend({
 								});
 							}
 						}
-						return new nabu.views.cms.Page({propsData: {page: page, parameters: parameters }});
+						return new nabu.page.views.Page({propsData: {page: page, parameters: parameters }});
 					},
 					initial: page.content.initial,
 					slow: !page.content.initial && page.content.slow
@@ -578,6 +578,16 @@ nabu.services.VueService(Vue.extend({
 			if (page.content.query) {
 				page.content.query.map(function(x) {
 					parameters.properties[x] = {
+						type: "string"
+					}
+				});
+			}
+			// you can set parameters much like swagger input parameters
+			// that means you can set a name
+			// you can also set a default value and other stuff
+			if (page.content.parameters) {
+				page.content.parameters.map(function(x) {
+					parameters.properties[x.name] = {
 						type: "string"
 					}
 				});

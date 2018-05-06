@@ -1,6 +1,6 @@
 if (!nabu) { var nabu = {} }
-if (!nabu.views) { nabu.views = {} }
-if (!nabu.views.cms) { nabu.views.cms = {} }
+if (!nabu.page) { nabu.page = {} }
+if (!nabu.page.views) { nabu.page.views = {} }
 
 // on created, we want to inject the state of the page into this component so we can access all the data
 Vue.mixin({
@@ -42,8 +42,8 @@ Vue.mixin({
 // - configure: start configuration for the cell content
 // - getEvents: return event definitions
 // - getLocalState: return the state definition for this level (e.g. because of for loop or variable scoping)
-nabu.views.cms.Page = Vue.extend({
-	template: "#nabu-cms-page",
+nabu.page.views.Page = Vue.extend({
+	template: "#page",
 	props: {
 		page: {
 			type: Object,
@@ -421,8 +421,8 @@ nabu.views.cms.Page = Vue.extend({
 	}
 });
 
-nabu.views.cms.PageRows = Vue.component("n-page-rows", {
-	template: "#nabu-cms-page-rows",
+nabu.page.views.PageRows = Vue.component("n-page-rows", {
+	template: "#page-rows",
 	props: {
 		page: {
 			type: Object,
@@ -862,7 +862,7 @@ nabu.views.cms.PageRows = Vue.component("n-page-rows", {
 		setContent: function(cell) {
 			var self = this;
 			this.$prompt(function() {
-				return new nabu.views.cms.PageAddCell({propsData: {
+				return new nabu.page.views.PageAddCell({propsData: {
 					page: self.page
 				}});
 			}).then(function(content) {

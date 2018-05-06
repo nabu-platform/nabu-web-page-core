@@ -2,7 +2,7 @@
 <restInterface>
     <method>GET</method>
     <path>/configuration</path>
-    <output>nabu.cms.page.types.rest.configuration</output>
+    <output>nabu.web.page.core.types.rest.configuration</output>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
     <language>false</language>

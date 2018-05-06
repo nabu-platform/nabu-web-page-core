@@ -1,5 +1,5 @@
-<template id="nabu-page-fields-edit">
-	<n-collapsible title="Fields" class="nabu-page-fields list">
+<template id="page-fields-edit">
+	<n-collapsible title="Fields" class="page-fields list">
 		<div class="list-actions" v-if="allowMultiple">
 			<button @click="addField">Add Field</button>
 		</div>
@@ -39,10 +39,10 @@
 	</n-collapsible>
 </template>
 
-<template id="nabu-page-field">
-	<div class="nabu-field" :class="getDynamicClasses(field)">
+<template id="page-field">
+	<div class="page-field" :class="getDynamicClasses(field)">
 		<label v-if="label && field.label">{{field.label}}</label>
-		<div class="nabu-field-fragment" :class="fragment.class" v-for="fragment in field.fragments">
+		<div class="page-field-fragment" :class="fragment.class" v-for="fragment in field.fragments">
 			<span v-if="fragment.type == 'data'">{{ format(fragment) }}</span>
 			<div v-else-if="fragment.type == 'richtext'" v-content.compile.sanitize="fragment.content"></div>
 			<div v-else-if="fragment.type == 'area'" v-content.compile.plain="fragment.content"></div>
@@ -51,13 +51,13 @@
 	</div>
 </template>
 
-<template id="nabu-page-fields">
-	<div class="nabu-fields">
+<template id="page-fields">
+	<div class="page-fields">
 		<n-sidebar @close="configuring = false" v-if="configuring" class="settings">
 			<n-form class="layout2">
-				<nabu-page-fields-edit :cell="cell" :allow-multiple="true" :page="page" :data="data" :style="style"/>
+				<page-fields-edit :cell="cell" :allow-multiple="true" :page="page" :data="data" :style="style"/>
 			</n-form>
 		</n-sidebar>
-		<nabu-page-field v-for="field in cell.state.fields" :field="field" :data="data ? data : state" :label="label"/>
+		<page-field v-for="field in cell.state.fields" :field="field" :data="data ? data : state" :label="label"/>
 	</div>
 </template>

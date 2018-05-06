@@ -1,8 +1,8 @@
 if (!nabu) { var nabu = {} }
-if (!nabu.views) { nabu.views = {} }
-if (!nabu.views.cms) { nabu.views.cms = {} }
+if (!nabu.page) { nabu.page = {} }
+if (!nabu.page.views) { nabu.page.views = {} }
 
-nabu.views.cms.PageActions = Vue.component("page-actions", {
+nabu.page.views.PageActions = Vue.component("page-actions", {
 	template: "#page-actions",
 	props: {
 		page: {
@@ -51,7 +51,12 @@ nabu.views.cms.PageActions = Vue.component("page-actions", {
 			}
 			actions.map(function(action) {
 				if (action.event) {
-					result[action.event] = self.cell.on ? self.cell.on : {};
+					if (action.eventState) {
+						result[action.event] = self.$services.page.getAvailableParameters(self.page, self.cell)[action.eventState];
+					}
+					else {
+						result[action.event] = self.cell.on ? self.cell.on : {};
+					}
 				}
 				if (action.actions) {
 					self.getEvents(action.actions, result);
@@ -97,6 +102,7 @@ nabu.views.cms.PageActions = Vue.component("page-actions", {
 				label: null,
 				route: null,
 				event: null,
+				eventState: null,
 				anchor: null,
 				mask: false,
 				condition: null,

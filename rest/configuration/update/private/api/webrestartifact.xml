@@ -4,7 +4,7 @@
     <path>/configuration</path>
     <permissionContext>=input/webApplicationId</permissionContext>
     <permissionAction>page.edit</permissionAction>
-    <input>nabu.cms.page.types.configuration</input>
+    <input>nabu.web.page.core.types.configuration</input>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
     <language>false</language>

@@ -16,6 +16,8 @@
 							<n-form-text v-model="action.icon" label="Icon"/>
 							<n-form-combo v-model="action.class" label="Class" :filter="$services.page.getSimpleClasses"/>
 							<n-form-text v-model="action.event" v-if="!action.route" label="Event"/>
+							<n-form-combo v-model="action.eventState" v-if="action.event" label="Event State"
+								:filter="function() { return Object.keys($services.page.getAvailableParameters(page, cell)) }"/>
 							<n-form-combo v-model="action.route" v-if="!action.event" :filter="listRoutes" label="Route"/>
 							<n-form-text v-model="action.anchor" label="Anchor" v-if="action.route"/>
 							<n-form-switch v-model="action.mask" label="Mask" v-if="action.route"/>
@@ -37,14 +39,14 @@
 			</n-form>
 		</n-sidebar>
 		<li v-for="action in getActions()" v-if="isVisible(action)"
-				class="page-tab"
+				class="page-action"
 				:class="[{ 'has-children': action.actions.length }, action.class]" 
 				@mouseover="show(action)" @mouseout="hide(action)">
 			<span v-if="edit" class="fa fa-cog" @click="configureAction(action)"></span>
 			<span v-if="action.icon" class="icon fa" :class="'fa-' + action.icon" @click="handle(action)"></span>
-			<a auto-close-actions class="page-tab-action page-tab-entry" href="javascript:void(0)" 
+			<a auto-close-actions class="page-action-link page-action-entry" href="javascript:void(0)" 
 				@click="handle(action)" v-if="action.route || action.event">{{ action.label }}</a>
-			<span class="page-tab-entry" v-else>{{ action.label }}</span>
+			<span class="page-action-entry" v-else>{{ action.label }}</span>
 			<page-actions :ref="'action_' + getActions().indexOf(action)"
 				:cell="cell"
 				:page="page"

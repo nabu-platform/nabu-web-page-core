@@ -1,5 +1,5 @@
-<template id="nabu-cms-pages">
-	<n-form class="layout2 nabu-pages settings">
+<template id="pages">
+	<n-form class="layout2 settings pages">
 		<n-prompt v-if="showing">
 			<n-form class="layout2">
 				<n-form-section>

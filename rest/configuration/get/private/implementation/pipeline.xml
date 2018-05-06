@@ -3,7 +3,7 @@
     <structure name="output"/>
     <structure collectionName="Nodes" definition="nabu.cms.core.types.model.core.Node" name="application" namespace="nabu.cms.core.types.model.core"/>
     <structure collectionName="Components" definition="nabu.cms.core.types.model.core.Component" name="component" namespace="nabu.cms.core.types.model.core"/>
-    <structure definition="nabu.cms.page.types.configuration" name="configuration"/>
+    <structure definition="nabu.web.page.core.types.configuration" name="configuration"/>
     <structure definition="be.nabu.libs.resources.api.ResourceProperties" maxOccurs="unbounded" minOccurs="0" name="pages"/>
-    <structure comment="Parameters not contained in the path are found in the content (and most likely query parameters but also direct input)" definition="nabu.cms.page.types.rest.page" name="resultPage"/>
+    <structure comment="Parameters not contained in the path are found in the content (and most likely query parameters but also direct input)" definition="nabu.web.page.core.types.rest.page" name="resultPage"/>
 </structure>

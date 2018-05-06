@@ -1,9 +1,9 @@
 if (!nabu) { var nabu = {} }
-if (!nabu.views) { nabu.views = {} }
-if (!nabu.views.cms) { nabu.views.cms = {} }
+if (!nabu.page) { nabu.page = {} }
+if (!nabu.page.views) { nabu.page.views = {} }
 
-nabu.views.cms.PageAddCell = Vue.extend({
-	template: "#cms-page-add-cell",
+nabu.page.views.PageAddCell = Vue.extend({
+	template: "#page-add-cell",
 	props: {
 		page: {
 			type: Object,

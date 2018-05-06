@@ -5,7 +5,7 @@
     <role>$user</role>
     <permissionContext>=input/path/applicationId</permissionContext>
     <permissionAction>style.get</permissionAction>
-    <output>nabu.cms.page.types.rest.styleList</output>
+    <output>nabu.web.page.core.types.rest.styleList</output>
     <configurationType>nabu.cms.core.configuration</configurationType>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>

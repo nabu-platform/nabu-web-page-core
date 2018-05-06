@@ -1,17 +1,17 @@
-<template id="nabu-cms-page">
+<template id="page">
 	<div class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
 		<div class="page-menu" v-if="edit">
 			<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
 			<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
 			<button @click="$services.page.update(page)"><span class="fa fa-save" title="Save"></span></button>
-			<button @click="edit = false"><span class="fa fa-sign-out" title="Stop Editing"></span></button>
+			<button @click="edit = false"><span class="fa fa-sign-out-alt" title="Stop Editing"></span></button>
 		</div>
 		<div class="page-edit" v-else-if="$services.page.canEdit()" :draggable="true" 
 				@dragstart="dragMenu($event)"
 				:style="{'top': page.content.menuY ? page.content.menuY + 'px' : '0px', 'left': page.content.menuX ? page.content.menuX + 'px' : '0px'}">
 			<span>{{page.name}}</span>
-			<span class="fa fa-pencil" @click="edit = !edit"></span>
-			<span class="fa fa-files-o" v-route:pages></span>
+			<span class="fa fa-pencil-alt" @click="edit = !edit"></span>
+			<span class="fa fa-copy" v-route:pages></span>
 			<span class="n-icon" :class="'n-icon-' + $services.page.cssStep" v-if="false && $services.page.cssStep"></span>
 		</div>
 		<n-sidebar v-if="configuring" @close="configuring = false" class="settings">
@@ -77,7 +77,7 @@
 	</div>
 </template>
 
-<template id="nabu-cms-page-rows">
+<template id="page-rows">
 	<div class="page-rows">
 		<div v-for="row in getCalculatedRows()" class="page-row" :id="page.name + '_' + row.id" :class="['page-row-' + row.cells.length, row.class ? row.class : null ]" :key="row.id"
 				v-if="edit || $services.page.isCondition(row.condition, getState(row))">
