@@ -6,7 +6,7 @@
 		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" id="b231104f-895e-4fb4-8139-de193e90349f">
-		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="092dc840-3f92-4eb0-9e05-bb495153675a" invocationOrder="0" temporaryMapping="true" serviceId="nabu.utils.Resource.write" resultName="result026606d2bdc94e26a3d96602c6533740" y="111" x="154">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="092dc840-3f92-4eb0-9e05-bb495153675a" serviceId="nabu.utils.Resource.write" resultName="result026606d2bdc94e26a3d96602c6533740" invocationOrder="0" temporaryMapping="true" y="111" x="154">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="3c08b7df-f242-4120-92b6-eba943427d1d" fixedValue="true" optional="false" mask="false">
 				<from>="repository:" + input/webApplicationId + ":/public/artifacts/pages/" + input/content/name + ".json"</from>
 				<to>uri</to>
