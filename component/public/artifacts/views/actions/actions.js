@@ -2,8 +2,8 @@ if (!nabu) { var nabu = {} }
 if (!nabu.views) { nabu.views = {} }
 if (!nabu.views.cms) { nabu.views.cms = {} }
 
-nabu.views.cms.PageTabs = Vue.component("page-tabs", {
-	template: "#page-tabs",
+nabu.views.cms.PageActions = Vue.component("page-actions", {
+	template: "#page-actions",
 	props: {
 		page: {
 			type: Object,
@@ -84,8 +84,11 @@ nabu.views.cms.PageTabs = Vue.component("page-tabs", {
 				this.showing.push(action);
 			}
 		},
-		listRoutes: function() {
+		listRoutes: function(value) {
 			var routes = this.$services.router.list().map(function(x) { return x.alias });
+			if (value) {
+				routes = routes.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+			}
 			routes.sort();
 			return routes;
 		},

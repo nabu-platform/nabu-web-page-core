@@ -1,4 +1,4 @@
 <structure name="style">
-    <field name="path" type="java.lang.String"/>
-    <field name="content" type="java.lang.String"/>
+    <field name="name" type="java.lang.String"/>
+    <field minOccurs="0" name="content" type="java.lang.String"/>
 </structure>

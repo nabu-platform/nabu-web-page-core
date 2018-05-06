@@ -42,14 +42,14 @@ window.addEventListener("load", function() {
 		});
 		
 		$services.router.register({
-			alias: "page-tabs",
+			alias: "page-actions",
 			enter: function(parameters) {
-				return new nabu.views.cms.PageTabs({propsData: parameters});
+				return new nabu.views.cms.PageActions({propsData: parameters});
 			}
 		});
 		
 		return $services.$register({
-			page: nabu.services.cms.Page
+			page: nabu.services.Page
 		});
 	});
 });

@@ -19,12 +19,12 @@
 			<n-form-section>
 				<n-form-text v-model="$services.page.title" label="Website Title" :timeout="600" @input="$services.page.saveConfiguration"/>
 				<div class="list-actions">
-					<button @click="$services.page.createProperty">Add property</button>
+					<button @click="$services.page.properties.push({key:null,value:null})">Add property</button>
 				</div>
 				<div class="list-row" v-for="property in $services.page.properties">
-					<n-form-text v-model="property.name" label="Key" :timeout="600" @input="$services.page.updateProperty(property)"/>
-					<n-form-text v-model="property.content" label="Value" :timeout="600" @input="$services.page.updateProperty(property)"/>
-					<button @click="$services.page.deleteProperty(property)"><span class="fa fa-trash"></span></button>
+					<n-form-text v-model="property.key" label="Key" :timeout="600" @input="$services.page.saveConfiguration"/>
+					<n-form-text v-model="property.value" label="Value" :timeout="600" @input="$services.page.saveConfiguration"/>
+					<button @click="$services.page.properties.splice($services.page.properties.indexOf(property), 1); $services.page.saveConfiguration()"><span class="fa fa-trash"></span></button>
 				</div>
 			</n-form-section>
 		</n-collapsible>
@@ -34,10 +34,9 @@
 			</footer>
 			<div v-for="category in categories" :key="category" :ref="'category_' + category">
 				<h2>{{category ? category : 'Uncategorized'}} <span class="fa fa-clipboard" @click="copyCategory(category)"></span></h2>
-				<n-collapsible :title="page.name" v-for="page in getPagesFor(category)" class="page-cell layout2 list-item" :key="page.id">
-					<h2 @click="opened = category">{{page.name}}</h2>
+				<n-collapsible :title="page.name" v-for="page in getPagesFor(category)" class="layout2 list-item" :key="page.id">
 					<n-form-section>
-						<n-form-text v-model="page.name" label="Name" :required="true" :timeout="600" @input="save(page)"/>
+						<n-form-text :value="page.name" label="Name" :required="true" :timeout="600" @input="function(newValue) { $services.page.rename(page, newValue) }"/>
 						<n-form-text v-model="page.content.category" label="Category" :timeout="600" @input="save(page)"/>
 						<n-form-switch label="Is initial" v-model="page.content.initial" @input="save(page)"/>
 						<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow" @input="save(page)"/>

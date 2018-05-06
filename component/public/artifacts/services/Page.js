@@ -16,10 +16,9 @@ nabu.page.providers = function(spec) {
 }
 
 nabu.services.VueService(Vue.extend({
-	services: ["user", "swagger"],
+	services: ["swagger"],
 	data: function() {
 		return {
-			applicationId: null,
 			title: null,
 			pages: [],
 			loading: true,
@@ -31,16 +30,17 @@ nabu.services.VueService(Vue.extend({
 			styles: [],
 			lastCompiled: null,
 			customStyle: null,
-			cssStep: null
+			cssStep: null,
+			editable: false
 		}
 	},
 	activate: function(done) {
 		var self = this;
 		
-		var promise = this.$services.q.defer();
+		var injectJavascript = function() {
+			var promise = self.$services.q.defer();
 		
-		// inject some javascript stuff if we are in edit mode
-		if (this.canEdit()) {
+			// inject some javascript stuff if we are in edit mode
 			//self.inject("https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.js");
 			// inject ace editor
 			// check out https://cdnjs.com/libraries/ace/
@@ -58,56 +58,36 @@ nabu.services.VueService(Vue.extend({
 					});
 				});
 			});
-		}
-		else {
-			promise.resolve();
+			return promise;
 		}
 		
-		promise.then(function() {
-			self.$services.swagger.execute("nabu.cms.page.rest.configuration.get").then(function(configuration) {
-				if (configuration.pages) {
-					nabu.utils.arrays.merge(self.pages, configuration.pages);
-					self.loadPages(self.pages);
-				}
-				if (configuration.applicationId) {
-					self.applicationId = configuration.applicationId;
-				}
-				if (configuration.properties) {
-					nabu.utils.arrays.merge(self.properties, configuration.properties);
-				}
-				if (configuration.title) {
-					self.title = configuration.title;
-				}
-				if (self.canEdit() && false) {
-					self.$services.swagger.execute("nabu.cms.page.rest.style.list", { applicationId: configuration.applicationId }).then(function(list) {
-						if (list.custom) {
-							nabu.utils.arrays.merge(self.styles, list.custom);
-						}
-						Vue.nextTick(function() {
-							self.loading = false;
-						});
-						done();
-						/*
-						if (self.canEdit()) {
-							self.compileCss();
-						}
-						*/
-					});
-				}
-				else {
+		self.$services.swagger.execute("nabu.cms.page.rest.configuration.get").then(function(configuration) {
+			self.editable = configuration.editable;
+			if (configuration.pages) {
+				nabu.utils.arrays.merge(self.pages, configuration.pages);
+				self.loadPages(self.pages);
+			}
+			if (configuration.properties) {
+				nabu.utils.arrays.merge(self.properties, configuration.properties);
+			}
+			if (configuration.title) {
+				self.title = configuration.title;
+			}
+			if (self.canEdit()) {
+				injectJavascript().then(function() {
 					Vue.nextTick(function() {
 						self.loading = false;
 					});
 					done();
-					// start a compilation sequence, you may have new stuff pending that is not yet saved
-					/*
-					if (self.canEdit()) {
-						self.compileCss();
-					}
-					*/
-				}
-			});
-		})
+				});
+			}
+			else {
+				Vue.nextTick(function() {
+					self.loading = false;
+				});
+				done();
+			}
+		});
 	},
 	methods: {
 		getSimpleClasses: function(value) {
@@ -118,7 +98,9 @@ nabu.services.VueService(Vue.extend({
 				});
 			}
 			// the class itself is allowed
-			classes.push(value);
+			if (classes.indexOf(value) < 0) {
+				classes.push(value);
+			}
 			return classes;
 		},
 		getDynamicClasses: function(styles, state) {
@@ -159,6 +141,10 @@ nabu.services.VueService(Vue.extend({
 					}
 				}
 			}
+			// the class itself is allowed
+			if (result.indexOf(clazz) < 0) {
+				result.push(clazz);
+			}
 			return result;
 		},
 		getSimpleKeysFor: function(definition, includeComplex, keys, path) {
@@ -189,39 +175,12 @@ nabu.services.VueService(Vue.extend({
 			return keys;
 		},
 		saveConfiguration: function() {
+			var self = this;
 			return this.$services.swagger.execute("nabu.cms.page.rest.configuration.update", {
-				applicationId: this.applicationId,
 				body: {
-					title: this.title
+					title: this.title,
+					properties: self.properties
 				}
-			});
-		},
-		createProperty: function() {
-			var self = this;
-			this.$services.swagger.execute("nabu.cms.page.rest.configuration.property.create", {
-				applicationId: this.applicationId,
-				body: {
-					name: "unnamed",
-					content: "<empty>"
-				}
-			}).then(function(property) {
-				self.properties.push(property);
-			});
-		},
-		updateProperty: function(property) {
-			return this.$services.swagger.execute("nabu.cms.page.rest.configuration.property.update", {
-				applicationId: this.applicationId,
-				propertyId: property.id,
-				body: property
-			});
-		},
-		deleteProperty: function(property) {
-			var self = this;
-			this.$services.swagger.execute("nabu.cms.page.rest.configuration.property.delete", {
-				applicationId: this.applicationId,
-				propertyId: property.id
-			}).then(function() {
-				self.properties.splice(self.properties.indexOf(property), 1)
 			});
 		},
 		saveCompiledCss: function() {
@@ -354,7 +313,7 @@ nabu.services.VueService(Vue.extend({
 			document.head.appendChild(script);
 		},
 		canEdit: function() {
-			return this.$services.user.hasAction("page.admin");	
+			return this.editable;	
 		},
 		pathParameters: function(url) {
 			if (!url) {
@@ -366,36 +325,49 @@ nabu.services.VueService(Vue.extend({
 			});
 		},
 		alias: function(page) {
-			return "cms-page-" + page.name;
+			return "page-" + page.name;
+		},
+		rename: function(page, name) {
+			var oldName = page.name;
+			page.name = name;
+			var self = this;
+			this.update(page).then(function() {
+				self.removeByName(oldName);
+			})	
 		},
 		remove: function(page) {
 			var self = this;
-			this.$services.swagger.execute("nabu.cms.page.rest.page.delete", {pageId: page.id}).then(function() {
+			this.removeByName(page.name).then(function() {
 				self.pages.splice(self.pages.indexOf(page), 1);
 			});
 		},
+		removeByName: function(name) {
+			return this.$services.swagger.execute("nabu.cms.page.rest.page.delete", {name: name});
+		},
 		create: function(name) {
-			var self = this;
-			var page = typeof(name) == "string" ? {
-				name: name,
-				path: "/page/" + name
-			} : name;
-			return this.$services.swagger.execute("nabu.cms.page.rest.page.create", {
-				applicationId: this.applicationId,
-				body: page
-			}).then(function(page) {
-				self.pages.push(page);
-			})
+			return this.update({
+				name: name
+			});
 		},
 		update: function(page) {
-			page.description = JSON.stringify(page.content);
-			return this.$services.swagger.execute("nabu.cms.page.rest.page.update", { pageId: page.id, body: page });
+			var self = this;
+			if (!page.content) {
+				page.content = {};
+			}
+			page.marshalled = JSON.stringify(page.content);
+			return this.$services.swagger.execute("nabu.cms.page.rest.page.update", { body: page }).then(function() {
+				// add it to the pages if it isn't there yet (e.g. create)
+				if (self.pages.indexOf(page) < 0) {
+					self.normalize(page.content);
+					self.pages.push(page);
+				}
+			});
 		},
 		loadPages: function(pages) {
 			var self = this;
 			pages.map(function(page) {
 				if (!page.content) {
-					Vue.set(page, "content", self.normalize(page.description ? JSON.parse(page.description) : {}));
+					Vue.set(page, "content", self.normalize(page.marshalled ? JSON.parse(page.marshalled) : {}));
 				}
 				
 				var existingRoute = self.$services.router.get(self.alias(page));
@@ -664,4 +636,4 @@ nabu.services.VueService(Vue.extend({
 			document.title = newValue;
 		}
 	}
-}), { name: "nabu.services.cms.Page" });
+}), { name: "nabu.services.Page" });

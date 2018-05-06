@@ -1,6 +1,4 @@
-<structure name="configuration">
-    <field minOccurs="0" name="applicationId" pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[0-9a-fA-F]{32}" type="java.util.UUID"/>
-    <field minOccurs="0" name="title" type="java.lang.String"/>
-    <structure definition="nabu.cms.core.types.property" maxOccurs="unbounded" minOccurs="0" name="properties"/>
+<structure name="configuration" superType="nabu.cms.page.types.configuration">
     <structure comment="Parameters not contained in the path are found in the content (and most likely query parameters but also direct input)" definition="nabu.cms.page.types.rest.page" maxOccurs="unbounded" minOccurs="0" name="pages"/>
+    <field name="editable" type="java.lang.Boolean"/>
 </structure>

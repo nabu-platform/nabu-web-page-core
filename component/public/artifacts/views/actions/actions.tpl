@@ -1,11 +1,11 @@
-<template id="page-tabs">
-	<ul class="page-tabs" :class="cell.state.class" v-auto-close.tabs="function() { showing.splice(0, showing.length) }">
+<template id="page-actions">
+	<ul class="page-actions" :class="cell.state.class" v-auto-close.actions="function() { showing.splice(0, showing.length) }">
 		<n-sidebar v-if="configuring" @close="configuring = false" class="settings">
 			<n-form class="layout2">
 				<n-form-section>
-					<n-collapsible title="Tab Settings" v-if="!actions">
+					<n-collapsible title="Action Settings" v-if="!actions">
 						<n-form-combo v-model="cell.state.class" label="Class" 
-							:filter="function(value) { return $services.page.classes('page-tabs').filter(function(x) { return !value || x.toLowerCase().indexOf(x.toLowerCase()) >= 0 }) }"/>
+							:filter="function(value) { return $services.page.classes('page-actions').filter(function(x) { return !value || x.toLowerCase().indexOf(x.toLowerCase()) >= 0 }) }"/>
 					</n-collapsible>
 					<n-collapsible title="Actions" class="list">
 						<div class="list-actions">
@@ -41,11 +41,11 @@
 				:class="[{ 'has-children': action.actions.length }, action.class]" 
 				@mouseover="show(action)" @mouseout="hide(action)">
 			<span v-if="edit" class="fa fa-cog" @click="configureAction(action)"></span>
-			<span v-if="action.icon" class="icon fa" :class="'fa-' + action.icon"></span>
-			<a auto-close-tabs class="page-tab-action page-tab-entry" href="javascript:void(0)" 
+			<span v-if="action.icon" class="icon fa" :class="'fa-' + action.icon" @click="handle(action)"></span>
+			<a auto-close-actions class="page-tab-action page-tab-entry" href="javascript:void(0)" 
 				@click="handle(action)" v-if="action.route || action.event">{{ action.label }}</a>
 			<span class="page-tab-entry" v-else>{{ action.label }}</span>
-			<page-tabs :ref="'action_' + getActions().indexOf(action)"
+			<page-actions :ref="'action_' + getActions().indexOf(action)"
 				:cell="cell"
 				:page="page"
 				:parameters="parameters"
