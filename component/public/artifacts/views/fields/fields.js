@@ -21,6 +21,11 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 		keys: {
 			type: Array,
 			required: false
+		},
+		allowForm: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	created: function() {
@@ -29,6 +34,16 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 		}
 		if (!this.allowMultiple && !this.cell.state.fields.length) {
 			this.addField();
+		}
+		this.normalize();
+	},
+	computed: {
+		fragmentTypes: function() {
+			var types = ['data', 'text', 'area', 'richtext'];
+			if (this.allowForm) {
+				types.push("form");
+			}
+			return types;
 		}
 	},
 	methods: {
@@ -64,6 +79,9 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 					}
 					if (!fragment.key) {
 						Vue.set(fragment, "key", null);
+					}
+					if (!fragment.form) {
+						Vue.set(fragment, "form", {});
 					}
 				});
 			});
@@ -124,7 +142,8 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 				javascript: null,
 				template: null,
 				class: null,
-				key: null
+				key: null,
+				form: {}
 			})
 		},
 		getKeys: function(value) {
@@ -140,7 +159,7 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 	}
 });
 
-nabu.page.views.PageFields = Vue.component("nabu-page-fields", {
+nabu.page.views.PageFields = Vue.component("page-fields", {
 	template: "#page-fields",
 	props: {
 		page: {
@@ -183,9 +202,28 @@ nabu.page.views.PageFields = Vue.component("nabu-page-fields", {
 	}
 });
 
-Vue.component("nabu-page-field", {
-	template: "#nabu-page-field",
-	props: ["data", "field", "style", "label"],
+Vue.component("page-field", {
+	template: "#page-field",
+	props: {
+		data: {
+			type: Object,
+			required: true
+		},
+		field: {
+			type: Object,
+			required: true
+		},
+		style: {
+			type: Boolean,
+			required: false,
+			default: true
+		},
+		label: {
+			type: Boolean,
+			required: false,
+			default: true
+		}
+	},
 	methods: {
 		getDynamicClasses: function(field) {
 			var classes = null;
@@ -238,6 +276,15 @@ Vue.component("nabu-page-field", {
 				}
 				return value;
 			}
+		},
+		formValue: function(fragment) {
+			if (fragment.form.name) {
+				return this.data[fragment.form.name];
+			}
+		},
+		updateForm: function(fragment, newValue) {
+			Vue.set(this.data, fragment.form.name, newValue);
+			this.$emit("updated", fragment.form.name);
 		}
 	},
 	formatJavascript: function(fragment, key, value, data) {

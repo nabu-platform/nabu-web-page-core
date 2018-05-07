@@ -48,6 +48,13 @@ window.addEventListener("load", function() {
 			}
 		});
 		
+		$services.router.register({
+			alias: "page-form",
+			enter: function(parameters) {
+				return new nabu.page.views.PageForm({propsData: parameters});
+			}
+		});
+		
 		return $services.$register({
 			page: nabu.services.Page
 		});

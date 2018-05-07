@@ -90,6 +90,19 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		getOperations: function(accept) {
+			var result = [];
+			var operations = this.$services.swagger.operations;
+			Object.keys(operations).map(function(operationId) {
+				if (accept(operations[operationId])) {
+					result.push(operations[operationId]);
+				}
+			});
+			result.sort(function(a, b) {
+				return a.id.localeCompare(b.id);
+			});
+			return result;
+		},
 		getSimpleClasses: function(value) {
 			var classes = ["primary", "secondary", "info", "success", "warning", "danger"];
 			if (value) {

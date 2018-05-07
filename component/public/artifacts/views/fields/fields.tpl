@@ -12,7 +12,7 @@
 				<button v-if="allowMultiple" @click="fieldDown(field)"><span class="fa fa-chevron-circle-down"></span></button>
 			</div>
 			<div v-for="fragment in field.fragments">
-				<n-form-combo v-model="fragment.type" label="Fragment Type" :items="['data', 'text', 'area', 'richtext']"/>
+				<n-form-combo v-model="fragment.type" label="Fragment Type" :items="fragmentTypes"/>
 				<n-form-richtext v-if="fragment.type == 'richtext'" v-model="fragment.content"/>
 				<n-form-text label="Text" v-else-if="fragment.type == 'text' || fragment.type == 'area'" :type="fragment.type" v-model="fragment.content"/>
 				<n-form-combo v-if="fragment.type == 'data'" v-model="fragment.key" label="Data Key" :filter="getKeys"/>
@@ -21,6 +21,9 @@
 				<n-form-text v-model="fragment.class" label="Fragment Class"/>
 				<n-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
 				<n-ace v-if="fragment.format == 'template'" mode="html" v-model="fragment.template"/>
+				<page-form-configure-single :field="fragment.form" v-if="fragment.type == 'form'" :possible-fields="keys"
+					:allow-label="false"
+					:allow-description="false"/>
 				<div class="list-item-actions" v-if="allowMultiple">
 					<button @click="up(field, fragment)"><span class="fa fa-chevron-circle-up"></span></button>
 					<button @click="down(field, fragment)"><span class="fa fa-chevron-circle-down"></span></button>
@@ -47,6 +50,10 @@
 			<div v-else-if="fragment.type == 'richtext'" v-content.compile.sanitize="fragment.content"></div>
 			<div v-else-if="fragment.type == 'area'" v-content.compile.plain="fragment.content"></div>
 			<span v-else-if="fragment.type == 'text'" v-content.compile.plain="fragment.content"></span>
+			<page-form-field v-else-if="fragment.type == 'form'" :key="fragment.form.name + '_value'" :field="fragment.form" 
+				:value="formValue(fragment)"
+				@input="function(newValue) { updateForm(fragment, newValue) }"
+				:label="false"/>
 		</div>
 	</div>
 </template>
