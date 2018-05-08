@@ -6,8 +6,7 @@ window.addEventListener("load", function() {
 			enter: function(parameters) {
 				return new nabu.page.views.Pages({propsData:parameters});
 			},
-			url: "/pages",
-			actions: ["page.edit"]
+			url: "/pages"
 		});
 		
 		$services.router.register({
@@ -16,8 +15,7 @@ window.addEventListener("load", function() {
 				return new nabu.page.views.Pages({propsData:parameters});
 			},
 			priority: -5,
-			url: "/",
-			actions: ["page.edit"]
+			url: "/"
 		});
 		
 		$services.router.register({

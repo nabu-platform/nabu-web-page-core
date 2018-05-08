@@ -52,7 +52,7 @@
 					<n-collapsible class="list-item" :title="action.name" v-for="action in page.content.actions">
 						<n-form-text v-model="action.name" label="Name" :required="true"/>
 						<n-form-text v-model="action.confirmation" label="Confirmation Message"/>
-						<n-form-combo v-model="action.on" label="Trigger On" :items="getAvailableEvents()"/>
+						<n-form-combo v-model="action.on" label="Trigger On" :filter="getAvailableEvents"/>
 						<n-form-combo v-model="action.route" v-if="!action.operation" label="Redirect" :filter="filterRoutes"/>
 						<n-form-text v-model="action.anchor" v-if="action.route" label="Anchor"/>
 						<n-form-combo v-model="action.operation" v-if="!action.route" label="Operation" :filter="getOperations" />
@@ -117,7 +117,7 @@
 								<n-form-text label="Condition" v-model="cell.condition"/>
 							</n-collapsible>
 							<n-collapsible title="Eventing" key="cell-events">
-								<n-form-combo label="Show On" v-model="cell.on" :items="getAvailableEvents()"/>
+								<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents"/>
 								<n-form-combo label="Target" v-if="cell.on" :items="['page', 'sidebar', 'prompt']" v-model="cell.target"/>
 							</n-collapsible>
 						</n-form-section>

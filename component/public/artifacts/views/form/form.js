@@ -82,7 +82,7 @@ nabu.page.views.PageForm = Vue.extend({
 		if (this.cell.bindings) {
 			Object.keys(this.cell.bindings).map(function(key) {
 				if (self.cell.bindings[key]) {
-					self.result[key] = pageInstance.get(self.cell.bindings[key]);
+					Vue.set(self.result, key, pageInstance.get(self.cell.bindings[key]));
 				}
 			});
 		}
@@ -183,6 +183,23 @@ nabu.page.views.PageForm = Vue.extend({
 							: null;
 					}
 				});
+			}
+			// if we are event driven, do a best-effort mapping if the fields match
+			if (this.cell.on) {
+				var self = this;
+				var pageInstance = this.$services.page.instances[this.page.name];
+				var event = pageInstance.getEvents()[this.cell.on];
+				if (event) {
+					Object.keys(bindings).map(function(key) {
+						var field = key;
+						if (field.indexOf("body.") == 0) {
+							field = field.substring("body.".length);
+						}
+						if (event.properties[field]) {
+							bindings[key] = self.cell.on + "." + field;
+						}
+					});
+				}
 			}
 			// TODO: is it OK that we simply remove all bindings?
 			// is the table the only one who sets bindings here?
@@ -373,6 +390,16 @@ Vue.component("page-form-field", {
 			type: Boolean,
 			required: false,
 			default: true
+		},
+		timeout: {
+			type: Number,
+			required: false,
+			default: 600
+		},
+		isDisabled: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	created: function() {

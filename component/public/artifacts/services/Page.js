@@ -338,7 +338,7 @@ nabu.services.VueService(Vue.extend({
 			});
 		},
 		alias: function(page) {
-			return "page-" + page.name;
+			return page.name;
 		},
 		rename: function(page, name) {
 			var oldName = page.name;
@@ -518,9 +518,7 @@ nabu.services.VueService(Vue.extend({
 				var pageInstance = this.instances[page.name];
 				// the available events
 				var available = pageInstance.getEvents();
-				if (cell.on) {
-					result[cell.on] = available[cell.on];
-				}
+				result[cell.on] = available[cell.on];
 			}
 			var self = this;
 			// the available state
@@ -605,6 +603,12 @@ nabu.services.VueService(Vue.extend({
 					}
 				});
 			}
+			// and you can set parameters at the web application level that are accessible to any page
+			this.properties.map(function(property) {
+				parameters.properties[property.key] = {
+					type: "string"
+				}
+			});
 			return parameters;
 		},
 		// retrieves the path of rows/cells to get to the targetId, this can be used to resolve instances for example

@@ -143,8 +143,10 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 				template: null,
 				class: null,
 				key: null,
+				disabled: null,
+				hidden: null,
 				form: {}
-			})
+			});
 		},
 		getKeys: function(value) {
 			// you can provide external keys
@@ -187,7 +189,8 @@ nabu.page.views.PageFields = Vue.component("page-fields", {
 		},
 		label: {
 			type: Boolean,
-			required: false
+			required: false,
+			default: true
 		}
 	},
 	data: function() {
@@ -237,6 +240,12 @@ Vue.component("page-field", {
 				classes.push("with-label");
 			}
 			return classes;
+		},
+		isHidden: function(fragment) {
+			if (fragment.hidden) {
+				return this.$services.page.isCondition(fragment.hidden, {record:this.data}); 
+			}
+			return false;
 		},
 		format: function(fragment) {
 			if (fragment.key) {

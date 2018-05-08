@@ -32,14 +32,16 @@
 									v-if="getField(field.name + '.' + key)">
 								<page-form-field :key="field.name + '_value' + i + '_' + key" :field="getField(field.name + '.' + key)" 
 									:schema="getSchemaFor(field.name + '.' + key)" v-model="result[field.name][i][key]"
-									@input="changed"/>
+									@input="changed"
+									:timeout="cell.state.immediate ? 600 : 0"/>
 							</n-form-section>
 							<button @click="result[field.name].splice(i, 1)">Remove {{field.label ? field.label : field.name}}</button>	
 						</n-form-section>
 					</n-form-section>
 				</n-form-section>
 				<page-form-field v-else :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
-					@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"/>
+					@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
+					:timeout="cell.state.immediate ? 600 : 0"/>
 			</n-form-section>
 			<footer class="global-actions" v-if="!cell.state.immediate">
 				<a class="cancel" href="javascript:void(0)" @click="$emit('close')" v-if="cell.state.cancel">{{cell.state.cancel}}</a>
@@ -56,25 +58,30 @@
 			@input="function(newValue) { $emit('input', newValue) }"
 			:label="fieldLabel"
 			:value="value"
-			:timeout="600"/>
+			:timeout="timeout"
+			:disabled="isDisabled"/>
 		<n-form-date v-if="field.type == 'date'"
 			@input="function(newValue) { $emit('input', newValue) }"
 			:label="fieldLabel"
 			:value="value"
-			:timeout="600"/>
+			:timeout="timeout"
+			:disabled="isDisabled"/>
 		<n-form-combo v-if="field.type == 'enumeration'" :items="field.enumeration"
 			@input="function(newValue) { $emit('input', newValue) }"
 			:label="fieldLabel"
-			:value="value"/>
+			:value="value"
+			:disabled="isDisabled"/>
 		<n-form-combo v-if="field.type == 'enumerationOperation'" :filter="filterEnumeration"
 			:formatter="function(x) { return field.enumerationOperationLabel ? x[field.enumerationOperationLabel] : x }"
 			v-model="currentEnumerationValue"
-			:timeout="600"
-			:label="fieldLabel"/>
+			:timeout="timeout"
+			:label="fieldLabel"
+			:disabled="isDisabled"/>
 		<n-form-switch v-if="field.type == 'boolean'" 
 			:value="value"
 			:label="fieldLabel"
-			@input="function(newValue) { $emit('input', newValue) }"/>
+			@input="function(newValue) { $emit('input', newValue) }"
+			:disabled="isDisabled"/>
 	</n-form-section>
 </template>
 

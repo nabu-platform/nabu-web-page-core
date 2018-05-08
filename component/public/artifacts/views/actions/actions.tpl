@@ -21,7 +21,7 @@
 							<n-form-combo v-model="action.route" v-if="!action.event" :filter="listRoutes" label="Route"/>
 							<n-form-text v-model="action.anchor" label="Anchor" v-if="action.route"/>
 							<n-form-switch v-model="action.mask" label="Mask" v-if="action.route"/>
-							<n-page-mapper v-if="action.route" :to="$services.page.getRouteParameters($services.router.get(action.route))"
+							<n-page-mapper v-if="action.route && $services.router.get(action.route)" :to="$services.page.getRouteParameters($services.router.get(action.route))"
 								:from="$services.page.getAvailableParameters(page, cell)" 
 								v-model="action.bindings"/>
 							<div class="n-form-component">

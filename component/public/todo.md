@@ -1,20 +1,18 @@
-web application is currently an instance in db, idea is to add stuff to it like images
-	> however, this can be a concern of the cms image uploader, not the page builder...
+- dynamic components...
 
-
-allow images to be dropped in resources folder (for static images)
+- mapping voorzien voor enumeration service (als extra input parameters buiten q)
+- 
+- allow images to be dropped in resources folder (for static images)
 	> have a tiny gallery of images available in the folder (and deletability)
 
+
+- switch from eval() to function (see mdn for eval entry)
 --------------
 
 page builder as form input option (lightweight!)
 rich text as form input
 
 form input that triggers "on change" > can make it part of a table
-
-V condition renders on cells (e.g. only render something if the state has some value)
-
-V centralize condition resolution, need to switch from eval() to function asap
 
 row styling that makes it a table
 	> aponet

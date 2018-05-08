@@ -13,6 +13,7 @@
 			</div>
 			<div v-for="fragment in field.fragments">
 				<n-form-combo v-model="fragment.type" label="Fragment Type" :items="fragmentTypes"/>
+				<n-form-text v-model="fragment.hidden" label="Hide fragment if"/>
 				<n-form-richtext v-if="fragment.type == 'richtext'" v-model="fragment.content"/>
 				<n-form-text label="Text" v-else-if="fragment.type == 'text' || fragment.type == 'area'" :type="fragment.type" v-model="fragment.content"/>
 				<n-form-combo v-if="fragment.type == 'data'" v-model="fragment.key" label="Data Key" :filter="getKeys"/>
@@ -24,6 +25,7 @@
 				<page-form-configure-single :field="fragment.form" v-if="fragment.type == 'form'" :possible-fields="keys"
 					:allow-label="false"
 					:allow-description="false"/>
+				<n-form-text v-model="fragment.disabled" v-if="fragment.type == 'form'" label="Disabled If"/>
 				<div class="list-item-actions" v-if="allowMultiple">
 					<button @click="up(field, fragment)"><span class="fa fa-chevron-circle-up"></span></button>
 					<button @click="down(field, fragment)"><span class="fa fa-chevron-circle-down"></span></button>
@@ -45,7 +47,7 @@
 <template id="page-field">
 	<div class="page-field" :class="getDynamicClasses(field)">
 		<label v-if="label && field.label">{{field.label}}</label>
-		<div class="page-field-fragment" :class="fragment.class" v-for="fragment in field.fragments">
+		<div class="page-field-fragment" :class="fragment.class" v-for="fragment in field.fragments" v-if="!isHidden(fragment)">
 			<span v-if="fragment.type == 'data'">{{ format(fragment) }}</span>
 			<div v-else-if="fragment.type == 'richtext'" v-content.compile.sanitize="fragment.content"></div>
 			<div v-else-if="fragment.type == 'area'" v-content.compile.plain="fragment.content"></div>
@@ -53,7 +55,8 @@
 			<page-form-field v-else-if="fragment.type == 'form'" :key="fragment.form.name + '_value'" :field="fragment.form" 
 				:value="formValue(fragment)"
 				@input="function(newValue) { updateForm(fragment, newValue) }"
-				:label="false"/>
+				:label="false"
+				:is-disabled="!!fragment.disabled && $services.page.isCondition(fragment.disabled, {record:data})"/>
 		</div>
 	</div>
 </template>

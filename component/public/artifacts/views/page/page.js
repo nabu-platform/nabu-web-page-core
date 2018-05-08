@@ -120,9 +120,9 @@ nabu.page.views.Page = Vue.extend({
 			var routes = this.$services.router.list().filter(function(x) {
 				return x.alias && (!value || x.alias.toLowerCase().indexOf(value.toLowerCase()) >= 0);
 			});
-			routes.sort(function(a, b) {
+			/*routes.sort(function(a, b) {
 				return a.alias.localeCompare(b.alias);
-			});
+			});*/
 			return routes.map(function(x) { return x.alias });
 		},
 		getStateOperations: function() {
@@ -194,6 +194,8 @@ nabu.page.views.Page = Vue.extend({
 			this.page.content.query.splice(index, 1);	
 		},
 		mounted: function(cell, row, state, component) {
+			// reset event cache
+			this.cachedEvents = null;
 			this.components[cell.id] = component;
 			
 			// we want to inject all the data into the component so it can be used easily
@@ -261,36 +263,39 @@ nabu.page.views.Page = Vue.extend({
 		removeRow: function(row) { 
 			this.page.content.rows.splice(this.page.content.rows(indexOf(row), 1))
 		},
-		/*rerender: function(changedValues) {
-			if (changedValues && changedValues.length) {
-				this.$refs[this.page.name + '_rows'].renderAll(changedValues);
-			}
-		},*/
 		getEvents: function() {
-			var events = {};
-			var self = this;
-			Object.keys(this.components).map(function(cellId) {
-				if (self.components[cellId].getEvents) {
-					var cellEvents = self.components[cellId].getEvents();
-					if (cellEvents) {
-						nabu.utils.objects.merge(events, cellEvents);
+			// non-watched cache property
+			// we have too many problems with update loops that are triggered by this method
+			// and in general the result should only change if we route new content
+			if (!this.cachedEvents) {
+				var events = {};
+				var self = this;
+				Object.keys(this.components).map(function(cellId) {
+					if (self.components[cellId].getEvents) {
+						var cellEvents = self.components[cellId].getEvents();
+						if (cellEvents) {
+							Object.keys(cellEvents).map(function(key) {
+								events[key] = cellEvents[key];
+							});
+						}
 					}
-				}
-			});
-			Object.keys(events).map(function(name) {
-				// because events can reference one another in circular fashion, we allow for event references
-				// this means if the value is a string rather than an array of fields, we assume it is the name of another event and we should use those parameters
-				if (typeof(events[name]) == "string") {
-					if (events[events[name]]) {
-						events[name] = events[events[name]];
+				});
+				Object.keys(events).map(function(name) {
+					// because events can reference one another in circular fashion, we allow for event references
+					// this means if the value is a string rather than an array of fields, we assume it is the name of another event and we should use those parameters
+					if (typeof(events[name]) == "string") {
+						if (events[events[name]]) {
+							events[name] = events[events[name]];
+						}
+						else {
+							console.warn("Can not find event: " + events[events[name]]);
+							events[name] = {};
+						}
 					}
-					else {
-						console.warn("Can not find event: " + events[events[name]]);
-						events[name] = {};
-					}
-				}
-			});
-			return events;
+				});
+				this.cachedEvents = events;
+			}
+			return this.cachedEvents;
 		},
 		subscribe: function(event, handler) {
 			if (!this.subscriptions[event]) {
@@ -308,7 +313,6 @@ nabu.page.views.Page = Vue.extend({
 		emit: function(name, value) {
 			// used to be a regular assign and that seemed to work as well?
 			Vue.set(this.variables, name, value);
-			console.log("set", name, value);
 			var self = this;
 			
 			var promises = [];
@@ -322,7 +326,6 @@ nabu.page.views.Page = Vue.extend({
 					Object.keys(action.bindings).map(function(key) {
 						parameters[key] = self.get(action.bindings[key]);	
 					});
-					console.log("using parameters", parameters);
 					if (action.confirmation) {
 						self.$confirm({message:action.confirmation}).then(function() {
 							if (action.route) {
@@ -368,7 +371,16 @@ nabu.page.views.Page = Vue.extend({
 				return this.parameters;
 			}
 			else if (name.indexOf("page.") == 0) {
-				return this.parameters[name.substring("page.".length)];	
+				var name = name.substring("page.".length);
+				var applicationProperty = this.$services.page.properties.filter(function(property) {
+					return property.key == name;
+				})[0];
+				if (applicationProperty) {
+					return applicationProperty.value;
+				}
+				else {
+					return this.parameters[name];
+				}
 			}
 			// we want an entire event
 			else if (name.indexOf(".") < 0) {
@@ -616,9 +628,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			var routes = this.$services.router.list().filter(function(x) {
 				return x.alias && (!value || x.alias.toLowerCase().indexOf(value.toLowerCase()) >= 0);
 			});
-			routes.sort(function(a, b) {
+			/*routes.sort(function(a, b) {
 				return a.alias.localeCompare(b.alias);
-			});
+			});*/
 			return routes.map(function(x) { return x.alias });
 		},
 		getRouteParameters: function(cell) {
@@ -627,24 +639,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		},
 		getAvailableParameters: function(cell) {
 			return this.$services.page.getAvailableParameters(this.page, cell);
-			// there are all the events
-			var result = {};
-			var pageInstance = this.$services.page.instances[this.page.name];
-			// the available events
-			var available = pageInstance.getEvents();
-			if (cell.on) {
-				result[cell.on] = available[cell.on];
-			}
-			var self = this;
-			// the available state
-			this.page.content.states.map(function(state) {
-				if (self.$services.swagger.operation(state.operation).responses && self.$services.swagger.operation(state.operation).responses["200"]) {
-					result[state.name] = self.$services.swagger.resolve(self.$services.swagger.operation(state.operation).responses["200"]).schema;
-				}
-			});
-			// and the page itself
-			result.page = this.$services.page.getPageParameters(this.page);
-			return result;
 		},
 		getAvailableEvents: function() {
 			var available = nabu.utils.objects.clone(this.$services.page.instances[this.page.name].getEvents());
