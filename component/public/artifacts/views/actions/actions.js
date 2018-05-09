@@ -37,7 +37,19 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		return {
 			configuring: false,
 			state: {},
-			showing: []
+			showing: [],
+			lastAction: null
+		}
+	},
+	ready: function() {
+		var self = this;
+		if (this.cell.state.defaultAction) {
+			var action = this.cell.state.actions.filter(function(action) {
+				return action.label == self.cell.state.defaultAction;
+			})[0];
+			if (action) {
+				this.handle(action);
+			}
 		}
 	},
 	methods: {
@@ -77,6 +89,43 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			if (!state.actions) {
 				Vue.set(state, "actions", []);
 			}
+			if (!state.activeClass) {
+				Vue.set(state, "activeClass", "primary");
+			}
+			if (!state.defaultAction) {
+				Vue.set(state, "defaultAction", null);
+			}
+			if (!state.useButtons) {
+				Vue.set(state, "useButtons", false);	
+			}
+			state.actions.map(function(action) {
+				if (!action.activeRoutes) {
+					Vue.set(action, "activeRoutes", []);
+				}	
+			});
+		},
+		getDynamicClasses: function(action) {
+			var classes = [];
+			if (this.cell.state.activeClass && this.lastAction == action) {
+				classes.push(this.cell.state.activeClass);
+			}
+			else if (this.cell.state.activeClass && this.$services.vue.route) {
+				var self = this;
+				if (this.$services.vue.route == action.route) {
+					classes.push(this.cell.state.activeClass);
+				}
+				else if (action.activeRoutes) {
+					var match = action.activeRoutes.filter(function(route) {
+						if (route && (route == self.$services.vue.route || self.$services.vue.route.match(route))) {
+							return true;
+						}
+					}).length > 0;
+					if (match) {
+						classes.push(this.cell.state.activeClass);
+					}
+				}
+			}
+			return classes;
 		},
 		hide: function(action) {
 			var index = this.showing.indexOf(action);
@@ -89,12 +138,15 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				this.showing.push(action);
 			}
 		},
-		listRoutes: function(value) {
+		listRoutes: function(value, includeValue) {
 			var routes = this.$services.router.list().map(function(x) { return x.alias });
 			if (value) {
 				routes = routes.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
 			}
 			routes.sort();
+			if (value && includeValue) {
+				routes.unshift(value);
+			}
 			return routes;
 		},
 		addAction: function() {
@@ -109,6 +161,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				bindings: {},
 				actions: [],
 				icons: null,
+				activeRoutes: [],
 				class: null
 			});
 		},
@@ -141,6 +194,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				var pageInstance = this.$services.page.instances[this.page.name];
 				var content = this.cell.on ? pageInstance.get(this.cell.on) : null;
 				pageInstance.emit(action.event, content ? content : {});
+				this.lastAction = action;
 			}
 		},
 		unsetEvent: function(actions) {

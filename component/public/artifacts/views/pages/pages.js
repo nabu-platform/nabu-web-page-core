@@ -89,11 +89,12 @@ nabu.page.views.Pages = Vue.extend({
 		route: function(page) {
 			this.pageToRoute = page;
 			var parameters = this.$services.page.getPageParameters(page);
-			if (parameters.length) {
+			console.log("paramteers", page, parameters);
+			if (Object.keys(parameters.properties).length) {
 				var result = {};
-				parameters.map(function(parameter) {
-					result[parameter] = null;
-				});
+				Object.keys(parameters.properties).map(function(key) {
+					result[key] = null;
+				})
 				Vue.set(this, "parameters", result);
 				this.showing = true;
 			}

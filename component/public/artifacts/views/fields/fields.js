@@ -26,6 +26,10 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		localState: {
+			type: Object,
+			required: false
 		}
 	},
 	created: function() {
@@ -155,6 +159,7 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 			}
 			// otherwise we just try to get the default ones available to you
 			var parameters = this.$services.page.getAvailableParameters(this.page, this.cell);
+			console.log("parameters are", parameters, this.localState);
 			var keys = this.$services.page.getSimpleKeysFor({properties:parameters});
 			return value ? keys.filter(function(x) { x.toLowerCase().indexOf(value.toLowerCase()) >= 0 }) : keys;
 		}
@@ -191,6 +196,10 @@ nabu.page.views.PageFields = Vue.component("page-fields", {
 			type: Boolean,
 			required: false,
 			default: true
+		},
+		localState: {
+			type: Object,
+			required: false
 		}
 	},
 	data: function() {
@@ -198,9 +207,17 @@ nabu.page.views.PageFields = Vue.component("page-fields", {
 			configuring: false
 		}
 	},
+	created: function() {
+		this.normalize(this.cell.state);
+	},
 	methods: {
 		configure: function() {
 			this.configuring = true;	
+		},
+		normalize: function(state) {
+			if (!state.class) {
+				Vue.set(state, "class", null);
+			}
 		}
 	}
 });

@@ -17,9 +17,10 @@
 		<n-sidebar v-if="configuring" @close="configuring = false" class="settings">
 			<n-form class="layout2">
 				<n-collapsible title="Page Settings">
-					<n-form-text v-model="page.name" label="Name"/>
-					<n-form-text v-model="page.path" label="Path"/>
+					<n-form-text v-model="page.content.category" label="Category" />
+					<n-form-text v-model="page.content.path" label="Path"/>
 					<n-form-text v-model="page.content.class" label="Class"/>
+					<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow"/>
 				</n-collapsible>
 				<n-collapsible title="Initial State" class="list">
 					<div class="list-actions">
@@ -28,7 +29,7 @@
 					<n-collapsible class="list-item" :title="state.name" v-for="state in page.content.states">
 						<n-form-text v-model="state.name" label="Name" :required="true"/>
 						<n-form-combo :value="state.operation" :filter="getStateOperations" label="Operation" @input="function(newValue) { setStateOperation(state, newValue) }"/>
-						<n-page-mapper v-if="state.operation && $services.page.getPageParameters(page).length" :to="getOperationParameters(state.operation)"
+						<n-page-mapper v-if="state.operation && Object.keys($services.page.getPageParameters(page)).length" :to="getOperationParameters(state.operation)"
 							:from="{page:$services.page.getPageParameters(page)}" 
 							v-model="state.bindings"/>
 						<div class="list-item-actions">
@@ -44,6 +45,25 @@
 						<n-form-text v-model="page.content.query[i]"/>
 						<button @click="removeQuery(i)"><span class="fa fa-trash"></span></button>
 					</n-form-section>
+				</n-collapsible>
+				<n-collapsible title="Page Parameters" class="list">
+					<div class="list-actions">
+						<button @click="addPageParameter">Add Page Parameter</button>
+					</div>
+					<n-collapsible class="list-item" v-for="parameter in page.content.parameters" :title="parameter.name">
+						<n-form-text v-model="parameter.name" :required="true" label="Name"/>
+						<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :items="['string', 'boolean', 'number', 'integer']"/>
+						<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
+						<n-form-text v-model="parameter.default" label="Default Value"/>
+						<div class="list-row" v-for="i in Object.keys(parameter.listeners)">
+							<n-form-combo v-model="parameter.listeners[i]" :filter="function() { return $services.page.getAllAvailableKeys(page) }"/>
+							<button @click="parameter.listeners.splice(i, 1)"><span class="fa fa-trash"></span></button>
+						</div>
+						<div class="list-item-actions">
+							<button @click="parameter.listeners.push('')">Add Listener</button>
+							<button @click="page.content.parameters.splice(page.content.parameters.indexOf(parameter), 1)"><span class="fa fa-trash"></span></button>	
+						</div>
+					</n-collapsible>
 				</n-collapsible>
 				<n-collapsible title="Actions" class="list">
 					<div class="list-actions">
@@ -80,9 +100,10 @@
 <template id="page-rows">
 	<div class="page-rows">
 		<div v-for="row in getCalculatedRows()" class="page-row" :id="page.name + '_' + row.id" :class="['page-row-' + row.cells.length, row.class ? row.class : null ]" :key="row.id"
-				v-if="edit || $services.page.isCondition(row.condition, getState(row))">
+				v-if="edit || shouldRenderRow(row)"
+				:style="rowStyles(row)">
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-			<div :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="edit || shouldRenderCell(row, cell) || cell.rows.length" :id="page.name + '_' + row.id + '_' + cell.id" :class="[{'page-cell': edit || !cell.target || cell.target == 'page'}, cell.class ? cell.class : null ]" :key="cell.id">
+			<div :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell) || cell.rows.length" :id="page.name + '_' + row.id + '_' + cell.id" :class="[{'page-cell': edit || !cell.target || cell.target == 'page'}, cell.class ? cell.class : null ]" :key="cell.id">
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				<n-sidebar v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings">
 					<n-form class="layout2" key="cell-form">
@@ -135,7 +156,7 @@
 				</div>
 				
 				<div v-if="edit && cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
-				<template v-else-if="shouldRenderCell(row, cell)">
+				<template v-else-if="cell.alias && shouldRenderCell(row, cell)">
 					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)">
 						<div v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
 					</n-sidebar>
@@ -156,8 +177,12 @@
 				<n-form class="layout2">
 					<n-collapsible title="Row Settings">
 						<n-form-text label="Row Id" v-model="row.customId"/>
+						<n-form-text label="Row Name" v-model="row.name"/>
+						<n-form-combo label="Show On" v-model="row.on" :filter="getAvailableEvents"/>
 						<n-form-text label="Class" v-model="row.class"/>
 						<n-form-text label="Condition" v-model="row.condition"/>
+						<n-form-combo label="Direction" v-model="row.direction" :items="['horizontal', 'vertical']"/>
+						<n-form-combo label="Alignment" v-model="row.align" :items="['center', 'flex-start', 'flex-end', 'stretch', 'baseline']"/>
 					</n-collapsible>
 					<n-collapsible title="Repeat" class="list" v-if="row.instances && $services.page.getAllArrays(page, row.id).length">
 						<div class="list-actions" v-if="!Object.keys(row.instances).length">
@@ -174,11 +199,13 @@
 				</n-form>
 			</n-sidebar>
 			<div class="page-row-menu n-page-menu" v-if="edit">
-				<button @click="configuring = row.id"><span class="fa fa-cog"></span></button>
-				<button @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button>
-				<button @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button>
-				<button @click="addCell(row)"><span class="fa fa-plus" title="Add Cell"></span></button>
-				<button @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
+				<label>{{row.name}}</label>
+				<button :style="rowButtonStyle(row)" @click="configuring = row.id"><span class="fa fa-cog"></span></button>
+				<button :style="rowButtonStyle(row)" @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button>
+				<button :style="rowButtonStyle(row)" @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button>
+				<button :style="rowButtonStyle(row)" @click="addCell(row)"><span class="fa fa-plus" title="Add Cell"></span></button>
+				<button :style="rowButtonStyle(row)" @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
+				<button :style="rowButtonStyle(row)" @click="row.collapsed = !row.collapsed"><span class="fa" :class="{'fa-minus-square': !row.collapsed, 'fa-plus-square': row.collapsed }"></span></button>
 			</div>
 		</div>
 	</div>

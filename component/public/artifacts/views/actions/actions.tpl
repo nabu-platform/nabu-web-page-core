@@ -5,7 +5,11 @@
 				<n-form-section>
 					<n-collapsible title="Action Settings" v-if="!actions">
 						<n-form-combo v-model="cell.state.class" label="Class" 
-							:filter="function(value) { return $services.page.classes('page-actions').filter(function(x) { return !value || x.toLowerCase().indexOf(x.toLowerCase()) >= 0 }) }"/>
+							:filter="function(value) { return $services.page.classes('page-actions', value) }"/>
+						<n-form-text v-model="cell.state.activeClass" label="Active Class"/>
+						<n-form-switch v-model="cell.state.useButtons" label="Use Buttons"/>
+						<n-form-combo v-model="cell.state.defaultAction" label="Default Action"
+							:filter="function() { return cell.state.actions.map(function(x) { return x.label }) }"/>
 					</n-collapsible>
 					<n-collapsible title="Actions" class="list">
 						<div class="list-actions">
@@ -28,7 +32,12 @@
 								<label class="n-form-label">Condition</label>
 								<n-ace mode="javascript" v-model="action.condition"/>
 							</div>
+							<div class="list-row" v-for="i in Object.keys(action.activeRoutes)">
+								<n-form-combo v-model="action.activeRoutes[i]" label="Active Route" :filter="function(value) { return listRoutes(value, true) }"/>
+								<button @click="action.activeRoutes.splice(i, 1)"><span class="fa fa-trash"></span></button>
+							</div>
 							<div class="list-item-actions">
+								<button @click="action.activeRoutes.push('')">Add Active Route</button>
 								<button @click="up(action)"><span class="fa fa-chevron-circle-up"></span></button>
 								<button @click="down(action)"><span class="fa fa-chevron-circle-down"></span></button>
 								<button @click="getActions().splice(getActions().indexOf(action), 1)"><span class="fa fa-trash"></span></button>
@@ -43,9 +52,13 @@
 				:class="[{ 'has-children': action.actions.length }, action.class]" 
 				@mouseover="show(action)" @mouseout="hide(action)">
 			<span v-if="edit" class="fa fa-cog" @click="configureAction(action)"></span>
-			<span v-if="action.icon" class="icon fa" :class="'fa-' + action.icon" @click="handle(action)"></span>
-			<a auto-close-actions class="page-action-link page-action-entry" href="javascript:void(0)" 
-				@click="handle(action)" v-if="action.route || action.event">{{ action.label }}</a>
+			<span v-if="action.icon" class="icon fa" :class="action.icon" @click="handle(action)"></span>
+			<a auto-close-actions class="page-action-link page-action-entry" href="javascript:void(0)"
+				:class="getDynamicClasses(action)"
+				@click="handle(action)" v-if="!cell.state.useButtons && (action.route || action.event)">{{ action.label }}</a>
+			<button auto-close-actions class="page-action-button page-action-entry"
+				:class="getDynamicClasses(action)"
+				@click="handle(action)" v-else-if="cell.state.useButtons && (action.route || action.event)">{{ action.label }}</button>
 			<span class="page-action-entry" v-else>{{ action.label }}</span>
 			<page-actions :ref="'action_' + getActions().indexOf(action)"
 				:cell="cell"

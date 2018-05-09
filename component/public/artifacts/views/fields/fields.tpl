@@ -46,8 +46,8 @@
 
 <template id="page-field">
 	<div class="page-field" :class="getDynamicClasses(field)">
-		<label v-if="label && field.label">{{field.label}}</label>
-		<div class="page-field-fragment" :class="fragment.class" v-for="fragment in field.fragments" v-if="!isHidden(fragment)">
+		<dt v-if="label && field.label">{{field.label}}</dt>
+		<dd class="page-field-fragment" :class="fragment.class" v-for="fragment in field.fragments" v-if="!isHidden(fragment)">
 			<span v-if="fragment.type == 'data'">{{ format(fragment) }}</span>
 			<div v-else-if="fragment.type == 'richtext'" v-content.compile.sanitize="fragment.content"></div>
 			<div v-else-if="fragment.type == 'area'" v-content.compile.plain="fragment.content"></div>
@@ -57,17 +57,20 @@
 				@input="function(newValue) { updateForm(fragment, newValue) }"
 				:label="false"
 				:is-disabled="!!fragment.disabled && $services.page.isCondition(fragment.disabled, {record:data})"/>
-		</div>
+		</dd>
 	</div>
 </template>
 
 <template id="page-fields">
-	<div class="page-fields">
+	<dl class="page-fields" :class="cell.state.class">
 		<n-sidebar @close="configuring = false" v-if="configuring" class="settings">
 			<n-form class="layout2">
+				<n-collapsible title="Field Settings">
+					<n-form-text v-model="cell.state.class" label="Class"/>
+				</n-collapsible>
 				<page-fields-edit :cell="cell" :allow-multiple="true" :page="page" :data="data" :style="style"/>
 			</n-form>
 		</n-sidebar>
 		<page-field v-for="field in cell.state.fields" :field="field" :data="data ? data : state" :label="label"/>
-	</div>
+	</dl>
 </template>

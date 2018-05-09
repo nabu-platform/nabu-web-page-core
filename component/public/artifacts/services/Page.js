@@ -137,7 +137,7 @@ nabu.services.VueService(Vue.extend({
 			}
 			return result == true;
 		},
-		classes: function(clazz) {
+		classes: function(clazz, value) {
 			var result = [];
 			var sheets = document.styleSheets;
 			for (var l = 0; l < sheets.length; l++) {
@@ -154,9 +154,14 @@ nabu.services.VueService(Vue.extend({
 					}
 				}
 			}
-			// the class itself is allowed
-			if (result.indexOf(clazz) < 0) {
-				result.push(clazz);
+			if (value) {
+				result = result.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				});
+				// allow the (partial) value itself
+				if (result.indexOf(value) < 0) {
+					result.push(value);	
+				}
 			}
 			return result;
 		},
@@ -511,15 +516,14 @@ nabu.services.VueService(Vue.extend({
 			}
 			return arrays;
 		},
-		getAvailableParameters: function(page, cell) {
+		// this simply returns all available parameters, regardless of whether you listen on it or not
+		// currently not cell specific, so does not take into account repeats
+		getAllAvailableParameters: function(page) {
 			var result = {};
-			// if we have an event-driven cell, we can access the events in the page
-			if (cell && cell.on) {
-				var pageInstance = this.instances[page.name];
-				// the available events
-				var available = pageInstance.getEvents();
-				result[cell.on] = available[cell.on];
-			}
+			
+			var pageInstance = this.instances[page.name];
+			var self = this;
+			
 			var self = this;
 			// the available state
 			page.content.states.map(function(state) {
@@ -529,6 +533,63 @@ nabu.services.VueService(Vue.extend({
 			});
 			// and the page itself
 			result.page = this.getPageParameters(page);
+			
+			// and map all events
+			var available = pageInstance.getEvents();
+			Object.keys(available).map(function(key) {
+				result[key] = available[key];
+			});
+			return result;
+		},
+		getAllAvailableKeys: function(page) {
+			var keys = [];
+			var self = this;
+			var parameters = this.getAllAvailableParameters(page);
+			Object.keys(parameters).map(function(key) {
+				nabu.utils.arrays.merge(keys, self.getSimpleKeysFor(parameters[key]).map(function(x) {
+					return key + "." + x;
+				}));
+			});
+			return keys;
+		},
+		getAvailableParameters: function(page, cell) {
+			var result = {};
+			
+			var pageInstance = this.instances[page.name];
+			var self = this;
+			
+			var self = this;
+			// the available state
+			page.content.states.map(function(state) {
+				if (self.$services.swagger.operation(state.operation).responses && self.$services.swagger.operation(state.operation).responses["200"]) {
+					result[state.name] = self.$services.swagger.resolve(self.$services.swagger.operation(state.operation).responses["200"]).schema;
+				}
+			});
+			// and the page itself
+			result.page = this.getPageParameters(page);
+			
+			if (cell) {
+				// the available events
+				var available = pageInstance.getEvents();
+				var targetPath = this.getTargetPath(page.content, cell.id);
+				if (targetPath && targetPath.length) {
+					targetPath.map(function(part) {
+						if (part.on) {
+							result[part.on] = available[part.on];
+						}
+						if (part.instances) {
+							Object.keys(part.instances).map(function(key) {
+								var array = part.instances[key];
+								var variable = array.substring(0, array.indexOf("."));
+								var rest = array.substring(array.indexOf(".") + 1);
+								if (result[variable]) {
+									result[key] = self.getChildDefinition(result[variable], rest).items;
+								}
+							})
+						}
+					});
+				}
+			}
 			return result;	
 		},
 		getAllArrays: function(page, targetId) {
@@ -541,7 +602,7 @@ nabu.services.VueService(Vue.extend({
 				nabu.utils.arrays.merge(arrays, self.getArrays(parameters[key]).map(function(x) { return key + "." + x }));
 			});
 			// get all arrays available in parent rows/cells
-			var path = this.getTargetPath(targetId);
+			var path = this.getTargetPath(page.content, targetId);
 			if (path.length) {
 				path.map(function(entry) {
 					if (entry.instances) {
@@ -605,22 +666,23 @@ nabu.services.VueService(Vue.extend({
 			}
 			// and you can set parameters at the web application level that are accessible to any page
 			this.properties.map(function(property) {
-				parameters.properties[property.key] = {
-					type: "string"
-				}
+				parameters.properties[property.key] = property;
 			});
 			return parameters;
 		},
 		// retrieves the path of rows/cells to get to the targetId, this can be used to resolve instances for example
-		getTargetPath: function(rowContainer, targetId, path) {
+		getTargetPath: function(rowContainer, targetId, recursive) {
 			var reverse = false;
-			if (!path) {
-				path = [];
+			if (!recursive) {
+				recursive = true;
 				// we manage the complete path at this level, reverse when everything is done as the path contains everything in the reverse order
 				reverse = true;
 			}
+			var self = this;
+			var path = null;
 			if (rowContainer.rows) {
 				for (var i = 0; i < rowContainer.rows.length; i++) {
+					path = [];
 					var row = rowContainer.rows[i];
 					if (row.id == targetId) {
 						path.push(row);
@@ -633,11 +695,14 @@ nabu.services.VueService(Vue.extend({
 								path.push(row);
 							}
 							else if (cell.rows) {
-								getTargetPath(cell, targetId, path);
+								var subPath = self.getTargetPath(cell, targetId, recursive);
+								if (subPath && subPath.length) {
+									nabu.utils.arrays.merge(path, subPath);
+									path.push(cell);
+									path.push(row);
+								}
 							}
 							if (path.length) {
-								path.push(cell);
-								path.push(row);
 								break;
 							}
 						}
@@ -647,7 +712,7 @@ nabu.services.VueService(Vue.extend({
 					}
 				}
 			}
-			if (reverse) {
+			if (path && reverse) {
 				path.reverse();
 			}
 			return path;

@@ -62,9 +62,18 @@ nabu.page.views.Page = Vue.extend({
 				Object.keys(state.bindings).map(function(key) {
 					parameters[key] = self.get(state.bindings[key]);
 				});
-				return self.$services.swagger.execute(state.operation, parameters).then(function(result) {
-					Vue.set(self.variables, state.name, result ? result : null);
-				});
+				try {
+					// can throw hard errors
+					return self.$services.swagger.execute(state.operation, parameters).then(function(result) {
+						Vue.set(self.variables, state.name, result ? result : null);
+					});
+				}
+				catch (exception) {
+					console.error("Could not execute", state.operation, exception);
+					var promise = self.$services.q.defer();
+					promise.reject(exception);
+					return promise;
+				}
 			});
 			this.$services.q.all(promises).then(done, done);
 		}
@@ -76,6 +85,14 @@ nabu.page.views.Page = Vue.extend({
 		this.$services.page.instances[this.page.name] = this;
 		// keep a stringified copy of the last parameters so we can diff
 		this.lastParameters = JSON.stringify(this.parameters);
+		if (this.page.content.parameters) {
+			var self = this;
+			this.page.content.parameters.map(function(x) {
+				if (!!x.default && !!x.name) {
+					Vue.set(self.variables, x.name, x.default);
+				}
+			});
+		}
 	},
 	computed: {
 		events: function() {
@@ -120,14 +137,17 @@ nabu.page.views.Page = Vue.extend({
 			var routes = this.$services.router.list().filter(function(x) {
 				return x.alias && (!value || x.alias.toLowerCase().indexOf(value.toLowerCase()) >= 0);
 			});
-			/*routes.sort(function(a, b) {
+			routes.sort(function(a, b) {
 				return a.alias.localeCompare(b.alias);
-			});*/
+			});
 			return routes.map(function(x) { return x.alias });
 		},
-		getStateOperations: function() {
+		getStateOperations: function(value) {
 			var self = this;
 			return Object.keys(this.$services.swagger.operations).filter(function(operationId) {
+				if (value && operationId.toLowerCase().indexOf(value.toLowerCase()) < 0) {
+					return false;
+				}
 				var operation = self.$services.swagger.operations[operationId];
 				// must be a get
 				return operation.method.toLowerCase() == "get"
@@ -257,7 +277,26 @@ nabu.page.views.Page = Vue.extend({
 				class: null,
 				customId: null,
 				instances: {},
-				condition: null
+				condition: null,
+				direction: null,
+				align: null,
+				on: null,
+				collapsed: false,
+				name: null
+			});
+		},
+		addPageParameter: function() {
+			if (!this.page.content.parameters) {
+				Vue.set(this.page.content, "parameters", []);
+			}
+			this.page.content.parameters.push({
+				name: null,
+				type: 'string',
+				format: null,
+				default: null,
+				// we can listen to events and take a value from them to update the current value
+				// e.g. we could update a search parameter if you select something
+				listeners: []
 			});
 		},
 		removeRow: function(row) { 
@@ -311,9 +350,37 @@ nabu.page.views.Page = Vue.extend({
 			Vue.delete(this.variables, name);
 		},
 		emit: function(name, value) {
+			var self = this;
+
 			// used to be a regular assign and that seemed to work as well?
 			Vue.set(this.variables, name, value);
-			var self = this;
+			
+			// check parameters that may listen to the given value
+			if (this.page.content.parameters) {
+				this.page.content.parameters.map(function(parameter) {
+					parameter.listeners.map(function(listener) {
+						var parts = listener.split(".");
+						// we are setting the variable we are interested in
+						console.log("interested in", parts[0], name);
+						if (parts[0] == name) {
+							var interested = value;
+							for (var i = 1; i < parts.length; i++) {
+								if (interested) {
+									interested = interested[parts[i]];
+								}
+							}
+							console.log("updating", parameter.name, interested);
+							if (!interested) {
+								Vue.delete(self.variables, parameter.name);
+							}
+							else {
+								Vue.set(self.variables, parameter.name, interested);
+							}
+						}
+					})
+				})
+			}
+			
 			
 			var promises = [];
 			
@@ -367,6 +434,10 @@ nabu.page.views.Page = Vue.extend({
 			return this.$services.q.all(promises);
 		},
 		get: function(name) {
+			// probably not filled in the value yet
+			if (!name) {
+				return null;
+			}
 			if (name == "page") {
 				return this.parameters;
 			}
@@ -375,8 +446,14 @@ nabu.page.views.Page = Vue.extend({
 				var applicationProperty = this.$services.page.properties.filter(function(property) {
 					return property.key == name;
 				})[0];
+				var pageParameter = this.page.content.parameters ? this.page.content.parameters.filter(function(parameter) {
+					return parameter.name == name;
+				})[0] : null;
 				if (applicationProperty) {
 					return applicationProperty.value;
+				}
+				else if (pageParameter) {
+					return this.variables[pageParameter.name];
 				}
 				else {
 					return this.parameters[name];
@@ -628,9 +705,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			var routes = this.$services.router.list().filter(function(x) {
 				return x.alias && (!value || x.alias.toLowerCase().indexOf(value.toLowerCase()) >= 0);
 			});
-			/*routes.sort(function(a, b) {
+			routes.sort(function(a, b) {
 				return a.alias.localeCompare(b.alias);
-			});*/
+			});
 			return routes.map(function(x) { return x.alias });
 		},
 		getRouteParameters: function(cell) {
@@ -660,12 +737,32 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			var pageInstance = this.$services.page.instances[this.page.name];
 			Vue.set(pageInstance.closed, cell.id, cell.on);
 		},
-		shouldRenderCell: function(row, cell) {
-			if (!cell.alias) {
-				return false;
-			}
-			else if (this.edit) {
+		shouldRenderRow: function(row) {
+			if (this.edit) {
 				return true;
+			}
+			if (!!row.condition) {
+				if (!this.$services.page.isCondition(row.condition, getState(row))) {
+					return false;
+				}
+			}
+			var pageInstance = this.$services.page.instances[this.page.name];
+			if (row.on) {
+				if (!pageInstance.get(row.on)) {
+					return false;
+				}
+			}
+			return true;
+		},
+		shouldRenderCell: function(row, cell) {
+			if (this.edit) {
+				if (row.collapsed) {
+					return false;
+				}
+				return true;
+			}
+			else if (!cell.alias) {
+				return false;
 			}
 			if (cell.condition) {
 				if (!this.$services.page.isCondition(cell.condition, this.getState(row, cell))) {
@@ -779,6 +876,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 					// only set the value if it actually has some value
 					// otherwise we might accidently trigger a redraw with no actual new value
 					// if we remove a value that was there before, it will still redraw as the parameters will have fewer keys
+					// and adding something "should" trigger redraw anyway
 					if (typeof(value) != "undefined" && value != null) {
 						result[key] = pageInstance.get(cell.bindings[key]);
 					}
@@ -844,7 +942,12 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				// for instance if you have an array of "contracts", you could map it to the variable "contract"
 				// the key is the local name, the value is the name of the object in the page
 				instances: {},
-				condition: null
+				condition: null,
+				direction: null,
+				align: null,
+				on: null,
+				collapsed: false,
+				name: null
 			});
 		},
 		removeCell: function(cells, cell) {
@@ -862,6 +965,26 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}).then(function(content) {
 				nabu.utils.objects.merge(cell, content);
 			});
+		},
+		rowStyles: function(row) {
+			var styles = [];
+			if (row.direction == "horizontal") {
+				styles.push({"flex-direction": "row"})
+			}
+			else if (row.direction == "vertical") {
+				styles.push({"flex-direction": "column"})
+			}
+			if (!!row.align) {
+				styles.push({"align-items": row.align});
+			}
+			return styles;
+		},
+		rowButtonStyle: function(row) {
+			var styles = [];
+			if (row.direction == "vertical") {
+				styles.push({"display": "inline-block"})
+			}
+			return styles;
 		}
 	}
 });
