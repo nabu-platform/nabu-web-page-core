@@ -1,7 +1,10 @@
 nabu.services.VueService(Vue.extend({
 	methods: {
 		format: function(value, properties) {
-			if (properties.format == "date") {
+			if (!properties.format) {
+				return value;
+			}
+			else if (properties.format == "date") {
 				return this.date(value, properties.dateFormat);
 			}
 			// backwards compatibility

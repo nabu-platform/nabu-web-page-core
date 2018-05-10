@@ -349,10 +349,25 @@ Vue.component("page-formatted-configure", {
 		fragment: {
 			type: Object,
 			required: true
+		},
+		allowHtml: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	created: function() {
 		this.normalize(this.fragment);
+	},
+	computed: {
+		types: function() {
+			var types = ['date', 'number', 'masterdata', 'javascript'];
+			if (this.allowHtml) {
+				types.push('link');
+				types.push('html');
+			}
+			return types;
+		}	
 	},
 	methods: {
 		normalize: function(fragment) {
