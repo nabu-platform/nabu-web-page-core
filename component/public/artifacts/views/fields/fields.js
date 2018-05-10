@@ -264,6 +264,20 @@ Vue.component("page-field", {
 			}
 			return false;
 		},
+		getValue: function(fragment) {
+			if (fragment.key) {
+				var parts = fragment.key.split(".");
+				var value = this.data;
+				parts.map(function(part) {
+					if (value) {
+						value = value[part];
+					}
+				});
+				return value;
+			}
+			return null;
+		},
+		// deprecated
 		format: function(fragment) {
 			if (fragment.key) {
 				var parts = fragment.key.split(".");
@@ -336,6 +350,25 @@ Vue.component("page-formatted-configure", {
 			type: Object,
 			required: true
 		}
+	},
+	created: function() {
+		this.normalize(this.fragment);
+	},
+	methods: {
+		normalize: function(fragment) {
+			if (!fragment.dateFormat) {
+				Vue.set(fragment, "dateFormat", null);
+			}
+			if (!fragment.html) {
+				Vue.set(fragment, "html", null);
+			}
+			if (!fragment.javascript) {
+				Vue.set(fragment, "javascript", null);
+			}
+			if (!fragment.amountOfDecimals) {
+				Vue.set(fragment, "amountOfDecimals", null);
+			}
+		}
 	}
 });
 
@@ -345,24 +378,28 @@ Vue.component("page-formatted", {
 		value: {
 			required: false
 		},
-		properties: {
+		fragment: {
 			type: Object,
 			required: true
 		}
 	},
 	computed: {
 		formatted: function() {
-			if (!value) {
+			if (!this.value) {
 				return null;
 			}
-			else if (this.properties.format == "html") {
+			// formatting is optional
+			else if (!this.fragment.format) {
 				return this.value;
 			}
-			else if (this.properties.format == "link") {
+			else if (this.fragment.format == "html") {
+				return this.fragment.html;
+			}
+			else if (this.fragment.format == "link") {
 				return "<a target='_blank' ref='noopener noreferrer nofollow' href='" + value + "'>" + value.replace(/http[s]*:\/\/([^/]+).*/, "$1") + "</a>";
 			}
 			else {
-				return this.$services.formatter.format(this.value, this.properties);
+				return this.$services.formatter.format(this.value, this.fragment);
 			}
 		}
 	}

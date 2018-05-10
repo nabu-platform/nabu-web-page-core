@@ -17,11 +17,8 @@
 				<n-form-richtext v-if="fragment.type == 'richtext'" v-model="fragment.content"/>
 				<n-form-text label="Text" v-else-if="fragment.type == 'text' || fragment.type == 'area'" :type="fragment.type" v-model="fragment.content"/>
 				<n-form-combo v-if="fragment.type == 'data'" v-model="fragment.key" label="Data Key" :filter="getKeys"/>
-				<n-form-combo v-if="fragment.type == 'data'" v-model="fragment.format" :label="'Format ' + fragment.key + ' as'"
-					:items="['link', 'date', 'dateTime', 'time', 'masterdata', 'template', 'javascript']"/>
+				<page-formatted-configure v-if="fragment.type == 'data'" :fragment="fragment"/>
 				<n-form-text v-model="fragment.class" label="Fragment Class"/>
-				<n-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
-				<n-ace v-if="fragment.format == 'template'" mode="html" v-model="fragment.template"/>
 				<page-form-configure-single :field="fragment.form" v-if="fragment.type == 'form'" :possible-fields="keys"
 					:allow-label="false"
 					:allow-description="false"/>
@@ -49,9 +46,9 @@
 		<n-form-combo v-model="fragment.format" label="Format as"
 			:items="['link', 'date', 'number', 'masterdata', 'html', 'javascript']"/>
 		<n-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
-		<n-ace v-if="fragment.format == 'html'" mode="html" v-model="fragment.template"/>
+		<n-ace v-if="fragment.format == 'html'" mode="html" v-model="fragment.html"/>
 		<n-form-text v-if="fragment.format == 'number'" v-model="fragment.amountOfDecimals" label="Amount of decimals"/>
-		<n-form-combo v-if="fragment.format == 'date'" v-model="fragment.dateFormat" :filter="function(value) { return [value, 'date', 'dateTime'] }"/>
+		<n-form-combo label="Date Format" v-if="fragment.format == 'date'" v-model="fragment.dateFormat" :filter="function(value) { return [value, 'date', 'dateTime'] }"/>
 	</div>
 </template>
 
@@ -59,7 +56,7 @@
 	<div class="page-field" :class="getDynamicClasses(field)">
 		<dt v-if="label && field.label">{{field.label}}</dt>
 		<dd class="page-field-fragment" :class="fragment.class" v-for="fragment in field.fragments" v-if="!isHidden(fragment)">
-			<span v-if="fragment.type == 'data'">{{ format(fragment) }}</span>
+			<page-formatted v-if="fragment.type == 'data'" :value="getValue(fragment)" :fragment="fragment"/>
 			<div v-else-if="fragment.type == 'richtext'" v-content.compile.sanitize="fragment.content"></div>
 			<div v-else-if="fragment.type == 'area'" v-content.compile.plain="fragment.content"></div>
 			<span v-else-if="fragment.type == 'text'" v-content.compile.plain="fragment.content"></span>

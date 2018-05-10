@@ -81,4 +81,4 @@ nabu.services.VueService(Vue.extend({
             return typeof(input) === "number" ? input.toFixed(amountOfDecimals) : input;
 		}
 	}
-}), { name: "nabu.page.services.Formatter" };
+}), { name: "nabu.page.services.Formatter" });
