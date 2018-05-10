@@ -44,6 +44,17 @@
 	</n-collapsible>
 </template>
 
+<template id="page-formatted-configure">
+	<div class="page-formatted-configure">
+		<n-form-combo v-model="fragment.format" label="Format as"
+			:items="['link', 'date', 'number', 'masterdata', 'html', 'javascript']"/>
+		<n-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
+		<n-ace v-if="fragment.format == 'html'" mode="html" v-model="fragment.template"/>
+		<n-form-text v-if="fragment.format == 'number'" v-model="fragment.amountOfDecimals" label="Amount of decimals"/>
+		<n-form-combo v-if="fragment.format == 'date'" v-model="fragment.dateFormat" :filter="function(value) { return [value, 'date', 'dateTime'] }"/>
+	</div>
+</template>
+
 <template id="page-field">
 	<div class="page-field" :class="getDynamicClasses(field)">
 		<dt v-if="label && field.label">{{field.label}}</dt>

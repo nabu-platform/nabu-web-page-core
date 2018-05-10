@@ -600,38 +600,41 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				}
 				else {
 					var key = Object.keys(entry.instances)[0];
-					var parts = entry.instances[key].split(".");
-					var parent = self.$parent;
-					var value = null;
-					var found = false;
-					while (parent) {
-						if (parent.data && parent.data[parts[0]]) {
-							found = true;
-							value = parent.data;
-							parts.map(function(single) {
-								if (value) {
-									value = value[single];
-								}
-							});
-							break;
+					// it is possible that you have not yet filled in a field here
+					if (entry.instances[key]) {
+						var parts = entry.instances[key].split(".");
+						var parent = self.$parent;
+						var value = null;
+						var found = false;
+						while (parent) {
+							if (parent.data && parent.data[parts[0]]) {
+								found = true;
+								value = parent.data;
+								parts.map(function(single) {
+									if (value) {
+										value = value[single];
+									}
+								});
+								break;
+							}
+							parent = parent.$parent;
 						}
-						parent = parent.$parent;
-					}
-					if (!found) {
-						value = pageInstance.get(entry.instances[key]);
-					}
-					if (value instanceof Array) {
-						var counter = 0;
-						value.map(function(single) {
-							var newEntry = {};
-							Object.keys(entry).map(function(key) {
-								newEntry[key] = entry[key];
-							});
-							newEntry.data = {};
-							newEntry.data[key] = single;
-							newEntry.id += "-" + counter++;
-							result.push(newEntry);
-						})
+						if (!found) {
+							value = pageInstance.get(entry.instances[key]);
+						}
+						if (value instanceof Array) {
+							var counter = 0;
+							value.map(function(single) {
+								var newEntry = {};
+								Object.keys(entry).map(function(key) {
+									newEntry[key] = entry[key];
+								});
+								newEntry.data = {};
+								newEntry.data[key] = single;
+								newEntry.id += "-" + counter++;
+								result.push(newEntry);
+							})
+						}
 					}
 				}
 			});

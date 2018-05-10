@@ -370,14 +370,16 @@ nabu.services.VueService(Vue.extend({
 		update: function(page) {
 			var self = this;
 			if (!page.content) {
-				page.content = {};
+				page.content = self.normalize({});
 			}
 			page.marshalled = JSON.stringify(page.content);
 			return this.$services.swagger.execute("nabu.web.page.core.rest.page.update", { body: page }).then(function() {
 				// add it to the pages if it isn't there yet (e.g. create)
-				if (self.pages.indexOf(page) < 0) {
-					self.normalize(page.content);
-					self.pages.push(page);
+				var index = self.pages.indexOf(page);
+				// re-add to trigger a reregister (if necessary)
+				if (index >= 0) {
+					self.pages.splice(index, 1, page);
+					//self.pages.push(page);
 				}
 			});
 		},
@@ -387,8 +389,6 @@ nabu.services.VueService(Vue.extend({
 				if (!page.content) {
 					Vue.set(page, "content", self.normalize(page.marshalled ? JSON.parse(page.marshalled) : {}));
 				}
-				
-				var existingRoute = self.$services.router.get(self.alias(page));
 				
 				var route = {
 					alias: self.alias(page),
@@ -419,10 +419,8 @@ nabu.services.VueService(Vue.extend({
 					slow: !page.content.initial && page.content.slow
 				};
 				
+				self.$services.router.unregister(self.alias(page));
 				self.$services.router.register(route);
-				if (existingRoute) {
-					self.$services.router.unregister(existingRoute);
-				}
 			});
 		},
 		normalize: function(content) {
@@ -580,10 +578,12 @@ nabu.services.VueService(Vue.extend({
 						if (part.instances) {
 							Object.keys(part.instances).map(function(key) {
 								var array = part.instances[key];
-								var variable = array.substring(0, array.indexOf("."));
-								var rest = array.substring(array.indexOf(".") + 1);
-								if (result[variable]) {
-									result[key] = self.getChildDefinition(result[variable], rest).items;
+								if (array) {
+									var variable = array.substring(0, array.indexOf("."));
+									var rest = array.substring(array.indexOf(".") + 1);
+									if (result[variable]) {
+										result[key] = self.getChildDefinition(result[variable], rest).items;
+									}
 								}
 							})
 						}
@@ -608,11 +608,13 @@ nabu.services.VueService(Vue.extend({
 					if (entry.instances) {
 						Object.keys(entry.instances).map(function(key) {
 							var mapping = entry.instances[key];
-							var index = mapping.indexOf(".");
-							var variable = mapping.substring(0, index);
-							var path = mapping.substring(index + 1);
-							var definition = self.getChildDefinition(parameters[variable], path);
-							nabu.utils.arrays.merge(arrays, self.getArrays(definition).map(function(x) { return variable + "." + x }));
+							if (mapping) {
+								var index = mapping.indexOf(".");
+								var variable = mapping.substring(0, index);
+								var path = mapping.substring(index + 1);
+								var definition = self.getChildDefinition(parameters[variable], path);
+								nabu.utils.arrays.merge(arrays, self.getArrays(definition).map(function(x) { return variable + "." + x }));
+							}
 						});
 					}
 				});
@@ -728,4 +730,4 @@ nabu.services.VueService(Vue.extend({
 			document.title = newValue;
 		}
 	}
-}), { name: "nabu.services.Page" });
+}), { name: "nabu.page.services.Page" });

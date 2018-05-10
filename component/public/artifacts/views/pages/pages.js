@@ -89,7 +89,7 @@ nabu.page.views.Pages = Vue.extend({
 		route: function(page) {
 			this.pageToRoute = page;
 			var parameters = this.$services.page.getPageParameters(page);
-			console.log("paramteers", page, parameters);
+			console.log("parameters", page, parameters);
 			if (Object.keys(parameters.properties).length) {
 				var result = {};
 				Object.keys(parameters.properties).map(function(key) {
@@ -103,6 +103,7 @@ nabu.page.views.Pages = Vue.extend({
 			}
 		},
 		doRoute: function() {
+			console.log("routing page", this.pageToRoute, this.$services.router.get(this.$services.page.alias(this.pageToRoute)));
 			this.$services.router.route(this.$services.page.alias(this.pageToRoute), this.parameters);
 		}
 	}

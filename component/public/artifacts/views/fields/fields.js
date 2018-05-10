@@ -327,4 +327,43 @@ Vue.component("page-field", {
 			}
 		}
 	}
-})
+});
+
+Vue.component("page-formatted-configure", {
+	template: "#page-formatted-configure",
+	props: {
+		fragment: {
+			type: Object,
+			required: true
+		}
+	}
+});
+
+Vue.component("page-formatted", {
+	template: "<div v-content.sanitize.compile='formatted'></div>",
+	props: {
+		value: {
+			required: false
+		},
+		properties: {
+			type: Object,
+			required: true
+		}
+	},
+	computed: {
+		formatted: function() {
+			if (!value) {
+				return null;
+			}
+			else if (this.properties.format == "html") {
+				return this.value;
+			}
+			else if (this.properties.format == "link") {
+				return "<a target='_blank' ref='noopener noreferrer nofollow' href='" + value + "'>" + value.replace(/http[s]*:\/\/([^/]+).*/, "$1") + "</a>";
+			}
+			else {
+				return this.$services.formatter.format(this.value, this.properties);
+			}
+		}
+	}
+});

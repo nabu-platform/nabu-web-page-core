@@ -36,7 +36,7 @@
 				<h2>{{category ? category : 'Uncategorized'}} <span class="fa fa-clipboard" @click="copyCategory(category)"></span></h2>
 				<n-collapsible :title="page.name" v-for="page in getPagesFor(category)" class="layout2 list-item" :key="page.id">
 					<n-form-section>
-						<n-form-text :value="page.name" label="Name" :required="true" :timeout="600" @input="function(newValue) { $services.page.rename(page, newValue) }"/>
+						<n-form-text :value="page.name" label="Name (camelCase only!)" :required="true" :timeout="600" @input="function(newValue) { $services.page.rename(page, newValue) }"/>
 						<n-form-text v-model="page.content.category" label="Category" :timeout="600" @input="save(page)"/>
 						<n-form-switch label="Is initial" v-model="page.content.initial" @input="save(page)"/>
 						<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow" @input="save(page)"/>

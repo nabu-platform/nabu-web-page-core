@@ -54,7 +54,8 @@ window.addEventListener("load", function() {
 		});
 		
 		return $services.$register({
-			page: nabu.services.Page
+			page: nabu.page.services.Page,
+			formatter: nabu.page.services.Formatter
 		});
 	});
 });
