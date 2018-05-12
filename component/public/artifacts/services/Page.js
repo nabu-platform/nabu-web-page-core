@@ -90,6 +90,39 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		getInputBindings: function(operation) {
+			var self = this;
+			var bindings = {};
+			if (operation.parameters) {
+				var self = this;
+				operation.parameters.map(function(parameter) {
+					if (parameter.in == "body") {
+						var type = self.$services.swagger.resolve(parameter);
+						if (type.schema.properties) {
+							Object.keys(type.schema.properties).map(function(key) {
+								// 1-level recursion (currently)
+								// always add the element itself if it is a list (need to be able to add/remove it)
+								if (type.schema.properties[key].type != "object") {
+									var newKey = "body." + key;
+									bindings[newKey] = null;
+								}
+								if (type.schema.properties[key].type == "object" || type.schema.properties[key].type == "array") {
+									var properties = type.schema.properties[key].type == "array" ? type.schema.properties[key].items.properties : type.schema.properties[key].properties;
+									Object.keys(properties).map(function(key2) {
+										var newKey = "body." + key + "." + key2;
+										bindings[newKey] = null;	
+									});
+								}
+							});
+						}
+					}
+					else {
+						bindings[parameter.name] = null;
+					}
+				});
+			}
+			return bindings;
+		},
 		getOperations: function(accept) {
 			var result = [];
 			var operations = this.$services.swagger.operations;
@@ -523,14 +556,26 @@ nabu.services.VueService(Vue.extend({
 			var self = this;
 			
 			var self = this;
+
+			var provided = this.getProvidedParameters();
+			Object.keys(provided.properties).map(function(key) {
+				result[key] = provided.properties[key];	
+			});
+			
+			var application = this.getApplicationParameters();
+			if (Object.keys(application.properties).length) {
+				result.application = application;
+			}
+
+			// and the page itself
+			result.page = this.getPageParameters(page);
+			
 			// the available state
 			page.content.states.map(function(state) {
 				if (self.$services.swagger.operation(state.operation).responses && self.$services.swagger.operation(state.operation).responses["200"]) {
 					result[state.name] = self.$services.swagger.resolve(self.$services.swagger.operation(state.operation).responses["200"]).schema;
 				}
 			});
-			// and the page itself
-			result.page = this.getPageParameters(page);
 			
 			// and map all events
 			var available = pageInstance.getEvents();
@@ -557,15 +602,28 @@ nabu.services.VueService(Vue.extend({
 			var self = this;
 			
 			var self = this;
-			// the available state
+			
+			var provided = this.getProvidedParameters();
+			Object.keys(provided.properties).map(function(key) {
+				result[key] = provided.properties[key];	
+			});
+			
+			var application = this.getApplicationParameters();
+			if (Object.keys(application.properties).length) {
+				result.application = application;
+			}
+			
+			// and the page itself
+			result.page = this.getPageParameters(page);
+
+			// the available state, page state overrides page parameters & application parameters if relevant
 			page.content.states.map(function(state) {
 				if (self.$services.swagger.operation(state.operation).responses && self.$services.swagger.operation(state.operation).responses["200"]) {
 					result[state.name] = self.$services.swagger.resolve(self.$services.swagger.operation(state.operation).responses["200"]).schema;
 				}
-			});
-			// and the page itself
-			result.page = this.getPageParameters(page);
+			});			
 			
+			// cell specific stuff overwrites everything else
 			if (cell) {
 				// the available events
 				var available = pageInstance.getEvents();
@@ -666,9 +724,29 @@ nabu.services.VueService(Vue.extend({
 					}
 				});
 			}
+			return parameters;
+		},
+		getApplicationParameters: function() {
+			var parameters = {
+				properties: {}
+			};
 			// and you can set parameters at the web application level that are accessible to any page
 			this.properties.map(function(property) {
 				parameters.properties[property.key] = property;
+			});
+			return parameters;
+		},
+		getProvidedParameters: function() {
+			var parameters = {
+				properties: {}
+			};
+			nabu.page.providers("page-bindings").map(function(provider) {
+				var result = provider();
+				if (result && result.definition) {
+					Object.keys(result.definition).map(function(key) {
+						parameters.properties[key] = result.definition[key];	
+					});
+				}
 			});
 			return parameters;
 		},

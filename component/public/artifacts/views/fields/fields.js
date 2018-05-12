@@ -225,6 +225,14 @@ nabu.page.views.PageFields = Vue.component("page-fields", {
 Vue.component("page-field", {
 	template: "#page-field",
 	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
 		data: {
 			type: Object,
 			required: true

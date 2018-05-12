@@ -459,17 +459,30 @@ nabu.page.views.Page = Vue.extend({
 					return this.parameters[name];
 				}
 			}
-			// we want an entire event
+			// we want an entire variable
 			else if (name.indexOf(".") < 0) {
 				return this.variables[name];
 			}
-			// we still want an entire event
+			// we still want an entire variable
 			else if (name.indexOf(".$all") >= 0) {
 				return this.variables[name.substring(0, name.indexOf(".$all"))];
 			}
 			else {
 				var parts = name.split(".");
-				return this.variables[parts[0]] ? this.variables[parts[0]][parts[1]] : null;
+				if (this.variables[parts[0]]) {
+					return this.variables[parts[0]][parts[1]];
+				}
+				else {
+					var result = null;
+					// check if there is a provider for it
+					nabu.page.providers("page-bindings").map(function(provider) {
+						var provided = provider();
+						if (Object.keys(provided.definition).indexOf(parts[0]) >= 0) {
+							result = provided.resolve(name.substring(name.indexOf(".") + 1));
+						}
+					});
+					return result;
+				}
 			}
 		},
 		set: function(name, value) {

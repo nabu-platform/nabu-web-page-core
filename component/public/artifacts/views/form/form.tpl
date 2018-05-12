@@ -18,7 +18,9 @@
 					<n-page-mapper :to="Object.keys(cell.bindings)" :from="availableParameters" 
 						v-model="cell.bindings"/>
 				</n-collapsible>
-				<page-form-configure title="Fields" :fields="cell.state.fields" :is-list="isList" :possible-fields="fieldsToAdd"/>
+				<page-form-configure title="Fields" :fields="cell.state.fields" :is-list="isList" :possible-fields="fieldsToAdd"
+					:page="page"
+					:cell="cell"/>
 			</n-form>
 		</n-sidebar>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
@@ -33,7 +35,9 @@
 								<page-form-field :key="field.name + '_value' + i + '_' + key" :field="getField(field.name + '.' + key)" 
 									:schema="getSchemaFor(field.name + '.' + key)" v-model="result[field.name][i][key]"
 									@input="changed"
-									:timeout="cell.state.immediate ? 600 : 0"/>
+									:timeout="cell.state.immediate ? 600 : 0"
+									:page="page"
+									:cell="cell"/>
 							</n-form-section>
 							<button @click="result[field.name].splice(i, 1)">Remove {{field.label ? field.label : field.name}}</button>	
 						</n-form-section>
@@ -41,7 +45,9 @@
 				</n-form-section>
 				<page-form-field v-else :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
 					@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
-					:timeout="cell.state.immediate ? 600 : 0"/>
+					:timeout="cell.state.immediate ? 600 : 0"
+					:page="page"
+					:cell="cell"/>
 			</n-form-section>
 			<footer class="global-actions" v-if="!cell.state.immediate">
 				<a class="cancel" href="javascript:void(0)" @click="$emit('close')" v-if="cell.state.cancel">{{cell.state.cancel}}</a>
@@ -74,7 +80,7 @@
 		<n-form-combo v-if="field.type == 'enumerationOperation'" :filter="filterEnumeration"
 			:formatter="function(x) { return field.enumerationOperationLabel ? x[field.enumerationOperationLabel] : x }"
 			v-model="currentEnumerationValue"
-			:timeout="timeout"
+			:timeout="600"
 			:label="fieldLabel"
 			:disabled="isDisabled"/>
 		<n-form-switch v-if="field.type == 'boolean'" 
@@ -92,7 +98,9 @@
 		</div>
 		<n-collapsible class="field list-item" v-for="field in fields" :title="field.label ? field.label : field.name">
 			<page-form-configure-single :field="field" :possible-fields="possibleFields"
-				:is-list="isList"/>
+				:is-list="isList"
+				:page="page"
+				:cell="cell"/>
 			<div class="list-item-actions">
 				<button @click="up(field)"><span class="fa fa-chevron-circle-up"></span></button>
 				<button @click="down(field)"><span class="fa fa-chevron-circle-down"></span></button>
@@ -126,6 +134,10 @@
 				:filter="function() { return getEnumerationFields(field.enumerationOperation) }"/>
 			<n-form-combo v-if="field.enumerationOperation" v-model="field.enumerationOperationQuery" label="Enumeration Query"
 				:filter="function() { return getEnumerationParameters(field.enumerationOperation) }"/>
+			<n-page-mapper v-if="field.enumerationOperation && hasMappableEnumerationParameters(field)"
+				v-model="field.enumerationOperationBinding"
+				:from="$services.page.getAvailableParameters(page, cell)"
+				:to="getMappableEnumerationParameters(field)"/>
 		</n-form-section>
 	</div>
 </template>

@@ -36,10 +36,13 @@ nabu.services.VueService(Vue.extend({
 				return result;
 			}
 		},
-		template: function(value, template) {
-				
-		},
 		date: function(date, format) {
+			if (!date) {
+				return null;
+			}
+			else if (typeof(date) == "string") {
+				date = new Date(date);
+			}
 			if (!format || format == "date") {
 				format = "yyyy-MM-dd";
 			}

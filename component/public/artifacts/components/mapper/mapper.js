@@ -19,7 +19,9 @@ Vue.component("n-page-mapper", {
 	computed: {
 		// for the label dropdown
 		sources: function() {
-			return Object.keys(this.from);
+			var sources = Object.keys(this.from);
+			sources.sort();
+			return sources;
 		}
 	},
 	data: function() {
@@ -28,7 +30,6 @@ Vue.component("n-page-mapper", {
 		}
 	},
 	created: function() {
-		console.log("created with to", this.to,  this.$services.page.getSimpleKeysFor(this.to));
 		if (this.to instanceof Array) {
 			nabu.utils.arrays.merge(this.fieldsToMap, this.to);
 		}

@@ -21,7 +21,9 @@
 				<n-form-text v-model="fragment.class" label="Fragment Class"/>
 				<page-form-configure-single :field="fragment.form" v-if="fragment.type == 'form'" :possible-fields="keys"
 					:allow-label="false"
-					:allow-description="false"/>
+					:allow-description="false"
+					:page="page"
+					:cell="cell"/>
 				<n-form-text v-model="fragment.disabled" v-if="fragment.type == 'form'" label="Disabled If"/>
 				<div class="list-item-actions" v-if="allowMultiple">
 					<button @click="up(field, fragment)"><span class="fa fa-chevron-circle-up"></span></button>
@@ -63,6 +65,8 @@
 				:value="formValue(fragment)"
 				@input="function(newValue) { updateForm(fragment, newValue) }"
 				:label="false"
+				:page="page"
+				:cell="cell"
 				:is-disabled="!!fragment.disabled && $services.page.isCondition(fragment.disabled, {record:data})"/>
 		</dd>
 	</div>
@@ -78,6 +82,8 @@
 				<page-fields-edit :cell="cell" :allow-multiple="true" :page="page" :data="data" :style="style"/>
 			</n-form>
 		</n-sidebar>
-		<page-field v-for="field in cell.state.fields" :field="field" :data="data ? data : state" :label="label"/>
+		<page-field v-for="field in cell.state.fields" :field="field" :data="data ? data : state" :label="label"
+			:page="page"
+			:cell="cell"/>
 	</dl>
 </template>

@@ -54,13 +54,7 @@ nabu.page.views.PageForm = Vue.extend({
 			return {};
 		},
 		availableParameters: function() {
-			var parameters = this.$services.page.instances[this.page.name].availableParameters;
-			var result = {};
-			result.page = parameters.page;
-			if (this.cell.on) {
-				result[this.cell.on] = parameters[this.cell.on];
-			}
-			return result;
+			return this.$services.page.getAvailableParameters(this.page, this.cell);
 		},
 		fieldsToAdd: function() {
 			var fields = [];
@@ -189,7 +183,7 @@ nabu.page.views.PageForm = Vue.extend({
 				var self = this;
 				var pageInstance = this.$services.page.instances[this.page.name];
 				var event = pageInstance.getEvents()[this.cell.on];
-				if (event) {
+				if (event && event.properties) {
 					Object.keys(bindings).map(function(key) {
 						var field = key;
 						if (field.indexOf("body.") == 0) {
@@ -280,7 +274,8 @@ nabu.page.views.PageForm = Vue.extend({
 				enumerationOperation: null,
 				enumerationOperationLabel: null,
 				enumerationOperationValue: null,
-				enumerationOperationQuery: null
+				enumerationOperationQuery: null,
+				enumerationOperationBinding: {}
 			})
 		},
 		addInstanceOfField: function(field) {
@@ -375,6 +370,14 @@ nabu.page.views.PageForm = Vue.extend({
 Vue.component("page-form-field", {
 	template: "#page-form-field",
 	props: {
+		page: {
+			type: Object,
+			required: false
+		},
+		cell: {
+			type: Object,
+			required: false,
+		},
 		schema: {
 			type: Object,
 			required: false
@@ -435,6 +438,22 @@ Vue.component("page-form-field", {
 			if (this.field.enumerationOperationQuery) {
 				parameters[this.field.enumerationOperationQuery] = value;
 			}
+			// map any additional bindings
+			if (this.field.enumerationOperationBinding) {
+				var self = this;
+				var pageInstance = this.$services.page.instances[this.page.name];
+				Object.keys(this.field.enumerationOperationBinding).map(function(key) {
+					var target = parameters;
+					var parts = key.split(".");
+					for (var i = 0; i < parts.length - 1; i++) {
+						if (!target[parts[i]]) {
+							target[parts[i]] = {};
+						}
+						target = target[parts[i]];
+					}
+					target[parts[parts.length - 1]] = pageInstance.get(self.field.enumerationOperationBinding[key]);
+				});
+			}
 			return this.$services.swagger.execute(this.field.enumerationOperation, parameters, function(response) {
 				var result = null;
 				if (response) {
@@ -444,7 +463,7 @@ Vue.component("page-form-field", {
 						}
 					});
 				}
-				return result;
+				return result ? result : [];
 			});
 		},
 		validate: function(soft) {
@@ -492,6 +511,14 @@ Vue.component("page-form-field", {
 Vue.component("page-form-configure", {
 	template: "#page-form-configure",
 	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
 		title: {
 			type: String,
 			required: true
@@ -539,7 +566,8 @@ Vue.component("page-form-configure", {
 				enumerationOperation: null,
 				enumerationOperationLabel: null,
 				enumerationOperationValue: null,
-				enumerationOperationQuery: null
+				enumerationOperationQuery: null,
+				enumerationOperationBinding: {}
 			})
 		}
 	}
@@ -548,6 +576,14 @@ Vue.component("page-form-configure", {
 Vue.component("page-form-configure-single", {
 	template: "#page-form-configure-single",
 	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
 		field: {
 			type: Object,
 			required: true
@@ -606,6 +642,9 @@ Vue.component("page-form-configure-single", {
 			if (!field.enumerationOperationQuery) {
 				Vue.set(field, "enumerationOperationQuery", null);
 			}
+			if (!field.enumerationOperationBinding) {
+				Vue.set(field, "enumerationOperationBinding", {});
+			}
 		},
 		// copy/pasted from the table getOperations
 		getEnumerationServices: function() {
@@ -648,6 +687,23 @@ Vue.component("page-form-configure-single", {
 		getEnumerationParameters: function(operationId) {
 			var parameters = this.$services.swagger.operations[operationId].parameters;
 			return parameters ? parameters.map(function(x) { return x.name }) : [];
+		},
+		getMappableEnumerationParameters: function(field) {
+			var result = {
+				properties: {}
+			};
+			Object.keys(this.$services.page.getInputBindings(this.$services.swagger.operations[field.enumerationOperation])).map(function(key) {
+				if (key != field.enumerationOperationQuery) {
+					result.properties[key] = {
+						type: "string"
+					}
+				}
+			});
+			return result;
+		},
+		hasMappableEnumerationParameters: function(field) {
+			var amount = Object.keys(this.getMappableEnumerationParameters(field).properties).length;
+			return amount > 0;
 		}
 	}
 });
