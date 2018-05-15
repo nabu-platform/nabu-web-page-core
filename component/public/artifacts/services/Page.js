@@ -90,6 +90,19 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		getValue: function(data, field) {
+			if (field) {
+				var parts = field.split(".");
+				var value = data;
+				parts.map(function(part) {
+					if (value) {
+						value = value[part];
+					}
+				});
+				return value;
+			}
+			return null;
+		},
 		getInputBindings: function(operation) {
 			var self = this;
 			var bindings = {};

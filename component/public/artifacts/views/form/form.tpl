@@ -72,7 +72,7 @@
 			:value="value"
 			:timeout="timeout"
 			:disabled="isDisabled"/>
-		<n-form-combo v-if="field.type == 'enumeration'" :items="field.enumeration"
+		<n-form-combo v-if="field.type == 'enumeration'" :items="field.enumerations"
 			@input="function(newValue) { $emit('input', newValue) }"
 			:label="fieldLabel"
 			:value="value"

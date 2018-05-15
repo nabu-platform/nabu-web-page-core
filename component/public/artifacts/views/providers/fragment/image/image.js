@@ -38,7 +38,7 @@ Vue.component("page-field-fragment-image-configure", {
 });
 
 Vue.component("page-field-fragment-image", {
-	template: "<div class='image' :style=\"{'background-image': 'url(' + (fragment.imageHref ? data[fragment.imageHref] : null) + ')', height: fragment.imageHeight ? fragment.imageHeight : 'inherit', 'background-size': fragment.imageSize }\"></div>",
+	template: "<div class='image' :style=\"{'background-image': 'url(' + (fragment.imageHref ? $services.page.getValue(data, fragment.imageHref) : null) + ')', height: fragment.imageHeight ? fragment.imageHeight : 'inherit', 'background-size': fragment.imageSize }\"></div>",
 	props: {
 		cell: {
 			type: Object,

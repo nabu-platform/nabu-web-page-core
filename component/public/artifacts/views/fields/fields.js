@@ -22,7 +22,7 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 			type: Array,
 			required: false
 		},
-		allowForm: {
+		allowEditable: {
 			type: Boolean,
 			required: false,
 			default: false
@@ -43,22 +43,19 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 	},
 	computed: {
 		fragmentTypes: function() {
-			var types = ['data', 'text', 'area', 'richtext'];
-			if (this.allowForm) {
-				types.push("form");
+			var provided = nabu.page.providers("page-field-fragment");
+			// if we don't allow editable fields (because we have nowhere to update them to), ignore the update types (e.g. form)
+			if (!this.allowEditable) {
+				provided = provided.filter(function(x) { return !x.editable });
 			}
-			// provided
-			nabu.utils.arrays.merge(types, nabu.page.providers("page-field-fragment").map(function(x) {
+			provided = provided.map(function(x) {
 				 return x.name;
-			}));
-			return types;
+			});
+			provided.sort();
+			return provided;
 		}
 	},
 	methods: {
-		isProvided: function(fragmentType) {
-			var types = ['data', 'text', 'area', 'richtext', 'form'];
-			return fragmentType && types.indexOf(fragmentType) < 0;
-		},
 		getProvidedConfiguration: function(fragmentType) {
 			var provided = nabu.page.providers("page-field-fragment").filter(function(x) {
 				 return x.name == fragmentType;
@@ -280,10 +277,6 @@ Vue.component("page-field", {
 			}
 			return classes;
 		},
-		isProvided: function(fragmentType) {
-			var types = ['data', 'text', 'area', 'richtext', 'form'];
-			return fragmentType && types.indexOf(fragmentType) < 0;
-		},
 		getProvidedComponent: function(fragmentType) {
 			var provided = nabu.page.providers("page-field-fragment").filter(function(x) {
 				 return x.name == fragmentType;
@@ -295,82 +288,6 @@ Vue.component("page-field", {
 				return this.$services.page.isCondition(fragment.hidden, {record:this.data}); 
 			}
 			return false;
-		},
-		getValue: function(fragment) {
-			if (fragment.key) {
-				var parts = fragment.key.split(".");
-				var value = this.data;
-				parts.map(function(part) {
-					if (value) {
-						value = value[part];
-					}
-				});
-				return value;
-			}
-			return null;
-		},
-		// deprecated
-		format: function(fragment) {
-			if (fragment.key) {
-				var parts = fragment.key.split(".");
-				var value = this.data;
-				parts.map(function(part) {
-					if (value) {
-						value = value[part];
-					}
-				});
-				if (value) {
-					var format = fragment.format;
-					if (format == "link") {
-						if (value.indexOf("http://") == 0 || value.indexOf("https://") == 0) {
-							return "<a target='_blank' href='" + value + "'>" + value.replace(/http[s]*:\/\/([^/]+).*/, "$1") + "</a>";
-						}
-					}
-					else if (format == "dateTime") {
-						value = new Date(value).toLocaleString();
-					}
-					else if (format == "date") {
-						value = new Date(value).toLocaleDateString();
-					}
-					else if (format == "time") {
-						value = new Date(value).toLocaleTimeString();
-					}
-					else if (format == "masterdata") {
-						value = this.$services.masterdata.resolve(value);
-					}
-					else if (format == "javascript") {
-						value = this.formatJavascript(fragment.key, value, this.data);
-					}
-					else if (typeof(value) == "string") {
-						value = value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-							.replace(/\n/g, "<br/>").replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
-					}
-				}
-				return value;
-			}
-		},
-		formValue: function(fragment) {
-			if (fragment.form.name) {
-				return this.data[fragment.form.name];
-			}
-		},
-		updateForm: function(fragment, newValue) {
-			Vue.set(this.data, fragment.form.name, newValue);
-			this.$emit("updated", fragment.form.name);
-		}
-	},
-	formatJavascript: function(fragment, key, value, data) {
-		if (fragment.javascript) {
-			try {
-				var result = eval(fragment.javascript);
-				if (result instanceof Function) {
-					result = result(key, value, data);	
-				}
-				return result;
-			}
-			catch (exception) {
-				return exception.message;
-			}
 		}
 	}
 });
@@ -406,6 +323,9 @@ Vue.component("page-formatted-configure", {
 			if (!fragment.dateFormat) {
 				Vue.set(fragment, "dateFormat", null);
 			}
+			if (!fragment.tag) {
+				Vue.set(fragment, "tag", null);
+			}
 			if (!fragment.html) {
 				Vue.set(fragment, "html", null);
 			}
@@ -420,7 +340,7 @@ Vue.component("page-formatted-configure", {
 });
 
 Vue.component("page-formatted", {
-	template: "<div v-content.sanitize.compile='formatted'></div>",
+	template: "<component :is='tag' v-content.sanitize.compile='formatted'/>",
 	props: {
 		value: {
 			required: false
@@ -431,6 +351,14 @@ Vue.component("page-formatted", {
 		}
 	},
 	computed: {
+		tag: function() {
+			if (this.fragment.tag) {
+				return this.fragment.tag;	
+			}
+			else {
+				return "div";
+			}
+		},
 		formatted: function() {
 			if (!this.value) {
 				return null;

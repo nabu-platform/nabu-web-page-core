@@ -54,10 +54,32 @@ window.addEventListener("load", function() {
 			}
 		});
 		
+		// fragment providers
+		nabu.page.provide("page-field-fragment", { 
+			component: "page-field-fragment-data", 
+			configure: "page-field-fragment-data-configure", 
+			name: "data" 
+		});
+		nabu.page.provide("page-field-fragment", { 
+			component: "page-field-fragment-text", 
+			configure: "page-field-fragment-text-configure", 
+			name: "text" 
+		});
 		nabu.page.provide("page-field-fragment", { 
 			component: "page-field-fragment-image", 
 			configure: "page-field-fragment-image-configure", 
 			name: "image" 
+		});
+		nabu.page.provide("page-field-fragment", { 
+			component: "page-field-fragment-richtext", 
+			configure: "page-field-fragment-richtext-configure", 
+			name: "richtext" 
+		});
+		nabu.page.provide("page-field-fragment", { 
+			component: "page-field-fragment-form", 
+			configure: "page-field-fragment-form-configure", 
+			name: "form",
+			editable: true
 		});
 		
 		return $services.$register({
