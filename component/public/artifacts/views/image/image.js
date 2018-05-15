@@ -20,6 +20,10 @@ nabu.page.views.Image = Vue.extend({
 		edit: {
 			type: Boolean,
 			required: true
+		},
+		href: {
+			type: String,
+			required: false
 		}
 	},
 	created: function() {

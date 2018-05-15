@@ -1,0 +1,6 @@
+<structure interface="$self:api" name="pipeline">
+    <structure name="input"/>
+    <structure name="output"/>
+    <structure definition="be.nabu.libs.resources.api.ResourceProperties" maxOccurs="unbounded" minOccurs="0" name="images"/>
+    <structure definition="nabu.web.page.core.types.rest.image" name="result"/>
+</structure>

@@ -47,10 +47,24 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 			if (this.allowForm) {
 				types.push("form");
 			}
+			// provided
+			nabu.utils.arrays.merge(types, nabu.page.providers("page-field-fragment").map(function(x) {
+				 return x.name;
+			}));
 			return types;
 		}
 	},
 	methods: {
+		isProvided: function(fragmentType) {
+			var types = ['data', 'text', 'area', 'richtext', 'form'];
+			return fragmentType && types.indexOf(fragmentType) < 0;
+		},
+		getProvidedConfiguration: function(fragmentType) {
+			var provided = nabu.page.providers("page-field-fragment").filter(function(x) {
+				 return x.name == fragmentType;
+			})[0];
+			return provided ? provided.configure : null;
+		},
 		normalize: function() {
 			this.cell.state.fields.map(function(field) {
 				if (!field.label) {
@@ -265,6 +279,16 @@ Vue.component("page-field", {
 				classes.push("with-label");
 			}
 			return classes;
+		},
+		isProvided: function(fragmentType) {
+			var types = ['data', 'text', 'area', 'richtext', 'form'];
+			return fragmentType && types.indexOf(fragmentType) < 0;
+		},
+		getProvidedComponent: function(fragmentType) {
+			var provided = nabu.page.providers("page-field-fragment").filter(function(x) {
+				 return x.name == fragmentType;
+			})[0];
+			return provided ? provided.component : null;
 		},
 		isHidden: function(fragment) {
 			if (fragment.hidden) {

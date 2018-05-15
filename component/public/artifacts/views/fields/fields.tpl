@@ -25,6 +25,11 @@
 					:page="page"
 					:cell="cell"/>
 				<n-form-text v-model="fragment.disabled" v-if="fragment.type == 'form'" label="Disabled If"/>
+				
+				<component v-if="isProvided(fragment.type)" :cell="cell" :page="page" :keys="getKeys()"
+					:fragment="fragment"
+					:is="getProvidedConfiguration(fragment.type)"/>
+					
 				<div class="list-item-actions" v-if="allowMultiple">
 					<button @click="up(field, fragment)"><span class="fa fa-chevron-circle-up"></span></button>
 					<button @click="down(field, fragment)"><span class="fa fa-chevron-circle-down"></span></button>
@@ -68,6 +73,13 @@
 				:page="page"
 				:cell="cell"
 				:is-disabled="!!fragment.disabled && $services.page.isCondition(fragment.disabled, {record:data})"/>
+				
+			<component v-else-if="isProvided(fragment.type)" 
+				:is="getProvidedComponent(fragment.type)"
+				:page="page" 
+				:cell="cell"
+				:data="data"
+				:fragment="fragment"/>
 		</dd>
 	</div>
 </template>

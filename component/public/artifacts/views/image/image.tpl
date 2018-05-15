@@ -14,6 +14,7 @@
 				</n-form-section>
 			</n-form>
 		</n-sidebar>
-		<div v-if="cell.state.href" class="image" :style="{'background-image': 'url(' + cell.state.href + ')', height: cell.state.height ? cell.state.height : 'inherit', 'background-size': cell.state.size }"></div>
+		<div v-if="cell.state.href || href" class="image" 
+			:style="{'background-image': 'url(' + (cell.state.href ? cell.state.href : href) + ')', height: cell.state.height ? cell.state.height : 'inherit', 'background-size': cell.state.size }"></div>
 	</div>
 </template>

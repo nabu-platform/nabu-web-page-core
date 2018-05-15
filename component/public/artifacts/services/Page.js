@@ -405,14 +405,16 @@ nabu.services.VueService(Vue.extend({
 			if (!page.content) {
 				page.content = self.normalize({});
 			}
-			page.marshalled = JSON.stringify(page.content);
+			page.marshalled = JSON.stringify(page.content, null, "\t");
 			return this.$services.swagger.execute("nabu.web.page.core.rest.page.update", { body: page }).then(function() {
 				// add it to the pages if it isn't there yet (e.g. create)
 				var index = self.pages.indexOf(page);
 				// re-add to trigger a reregister (if necessary)
 				if (index >= 0) {
 					self.pages.splice(index, 1, page);
-					//self.pages.push(page);
+				}
+				else {
+					self.pages.push(page);
 				}
 			});
 		},
@@ -588,6 +590,18 @@ nabu.services.VueService(Vue.extend({
 			var keys = [];
 			var self = this;
 			var parameters = this.getAllAvailableParameters(page);
+			Object.keys(parameters).map(function(key) {
+				nabu.utils.arrays.merge(keys, self.getSimpleKeysFor(parameters[key]).map(function(x) {
+					return key + "." + x;
+				}));
+			});
+			return keys;
+		},
+		getAvailableKeys: function(page, cell) {
+			var keys = [];
+			var self = this;
+			var parameters = this.getAvailableParameters(page, cell);
+			console.log("available parametesr", parameters);
 			Object.keys(parameters).map(function(key) {
 				nabu.utils.arrays.merge(keys, self.getSimpleKeysFor(parameters[key]).map(function(x) {
 					return key + "." + x;

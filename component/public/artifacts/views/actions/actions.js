@@ -63,8 +63,14 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			}
 			actions.map(function(action) {
 				if (action.event) {
-					if (action.eventState) {
-						result[action.event] = self.$services.page.getAvailableParameters(self.page, self.cell)[action.eventState];
+					if (action.eventState || action.eventFixedState) {
+						result[action.event] = {
+							properties: {
+								value: {
+									type: "string"
+								}
+							}
+						};
 					}
 					else {
 						result[action.event] = self.cell.on ? self.cell.on : {};
@@ -90,7 +96,13 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				Vue.set(state, "actions", []);
 			}
 			if (!state.activeClass) {
-				Vue.set(state, "activeClass", "primary");
+				Vue.set(state, "activeClass", null);
+			}
+			if (!state.disabledClass) {
+				Vue.set(state, "disabledClass", null);
+			}
+			if (!state.pastClass) {
+				Vue.set(state, "pastClass", null);
 			}
 			if (!state.defaultAction) {
 				Vue.set(state, "defaultAction", null);
@@ -106,13 +118,15 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		},
 		getDynamicClasses: function(action) {
 			var classes = [];
-			if (this.cell.state.activeClass && this.lastAction == action) {
-				classes.push(this.cell.state.activeClass);
+			// set the active class if applicable
+			var activeClass = this.cell.state.activeClass ? this.cell.state.activeClass : "is-active";
+			if (this.lastAction == action) {
+				classes.push(activeClass);
 			}
-			else if (this.cell.state.activeClass && this.$services.vue.route) {
+			else if (this.$services.vue.route) {
 				var self = this;
 				if (this.$services.vue.route == action.route) {
-					classes.push(this.cell.state.activeClass);
+					classes.push(activeClass);
 				}
 				else if (action.activeRoutes) {
 					var match = action.activeRoutes.filter(function(route) {
@@ -121,8 +135,23 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 						}
 					}).length > 0;
 					if (match) {
-						classes.push(this.cell.state.activeClass);
+						classes.push(activeClass);
 					}
+				}
+			}
+			// set the disabled class if applicable
+			var disabledClass = this.cell.state.disabledClass ? this.cell.state.disabledClass : "is-disabled";
+			if (this.isDisabled(action)) {
+				classes.push(disabledClass);
+			}
+			
+			// we use this to highlight steps that are already done in a wizard-like step process
+			var pastClass = this.cell.state.pastClass ? this.cell.state.pastClass : "is-past";
+			if (this.lastAction) {
+				var lastIndex = this.getActions().indexOf(this.lastAction);
+				var actionIndex = this.getActions().indexOf(action);
+				if (actionIndex < lastIndex) {
+					classes.push(pastClass);
 				}
 			}
 			return classes;
@@ -155,9 +184,12 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				route: null,
 				event: null,
 				eventState: null,
+				eventFixedState: null,
+				hasFixedState: false,
 				anchor: null,
 				mask: false,
 				condition: null,
+				disabled: null,
 				bindings: {},
 				actions: [],
 				icons: null,
@@ -167,6 +199,9 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		},
 		isVisible: function(action) {
 			return this.edit || !action.condition || this.$services.page.isCondition(action.condition, this.state);
+		},
+		isDisabled: function(action) {
+			return action.disabled && this.$services.page.isCondition(action.disabled, this.state);
 		},
 		handle: function(action) {
 			if (action.route) {
@@ -192,7 +227,20 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				this.unsetEvent(this.cell.state.actions);
 				
 				var pageInstance = this.$services.page.instances[this.page.name];
-				var content = this.cell.on ? pageInstance.get(this.cell.on) : null;
+				var content = null;
+				if (action.hasFixedState && action.eventFixedState) {
+					content = {
+						value: action.eventFixedState
+					}
+				}
+				else if (action.eventState) {
+					content = {
+						value: pageInstance.get(action.eventState)
+					}
+				}
+				else if (this.cell.on) {
+					content = pageInstance.get(this.cell.on);
+				}
 				pageInstance.emit(action.event, content ? content : {});
 				this.lastAction = action;
 			}

@@ -1,3 +1,12 @@
+when exposing text tag as separate component
+	> allow to set type (h1, h2, ...)
+	> separate class already possible?
+	
+have everything as pluggable, except form
+	have everything in form pluggable as well though
+
+--------------
+
 - dynamic components...
 
 - mapping voorzien voor enumeration service (als extra input parameters buiten q)

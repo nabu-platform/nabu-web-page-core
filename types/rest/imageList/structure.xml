@@ -1,0 +1,3 @@
+<structure name="imageList">
+    <structure definition="nabu.web.page.core.types.rest.image" maxOccurs="unbounded" minOccurs="0" name="images"/>
+</structure>

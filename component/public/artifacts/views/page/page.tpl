@@ -93,7 +93,7 @@
 			:parameters="parameters"
 			:events="events"
 			:ref="page.name + '_rows'"
-			@removeRow="function(row) { page.content.rows.splice(page.content.rows.indexOf(row), 1) }"/>
+			@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
 	</div>
 </template>
 
@@ -171,7 +171,7 @@
 					:events="events"
 					:ref="page.name + '_' + cell.id + '_rows'"
 					:local-state="getLocalState(row, cell)"
-					@removeRow="function(row) { cell.rows.splice(cell.rows.indexOf(row), 1) }"/>
+					@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 			</div>
 			<n-sidebar v-if="configuring == row.id" @close="configuring = null" class="settings">
 				<n-form class="layout2">
@@ -200,11 +200,11 @@
 			</n-sidebar>
 			<div class="page-row-menu n-page-menu" v-if="edit">
 				<label>{{row.name}}</label>
-				<button :style="rowButtonStyle(row)" @click="configuring = row.id"><span class="fa fa-cog"></span></button>
-				<button :style="rowButtonStyle(row)" @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button>
-				<button :style="rowButtonStyle(row)" @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button>
-				<button :style="rowButtonStyle(row)" @click="addCell(row)"><span class="fa fa-plus" title="Add Cell"></span></button>
-				<button :style="rowButtonStyle(row)" @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
+				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="configuring = row.id"><span class="fa fa-cog"></span></button>
+				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button>
+				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button>
+				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="addCell(row)"><span class="fa fa-plus" title="Add Cell"></span></button>
+				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
 				<button :style="rowButtonStyle(row)" @click="row.collapsed = !row.collapsed"><span class="fa" :class="{'fa-minus-square': !row.collapsed, 'fa-plus-square': row.collapsed }"></span></button>
 			</div>
 		</div>

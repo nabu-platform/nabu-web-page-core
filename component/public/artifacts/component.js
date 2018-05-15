@@ -20,6 +20,7 @@ window.addEventListener("load", function() {
 		
 		$services.router.register({
 			alias: "page-static-image",
+			query: ["href"],
 			enter: function(parameters) {
 				return new nabu.page.views.Image({propsData: parameters});
 			}
@@ -53,9 +54,16 @@ window.addEventListener("load", function() {
 			}
 		});
 		
+		nabu.page.provide("page-field-fragment", { 
+			component: "page-field-fragment-image", 
+			configure: "page-field-fragment-image-configure", 
+			name: "image" 
+		});
+		
 		return $services.$register({
 			page: nabu.page.services.Page,
 			formatter: nabu.page.services.Formatter
 		});
 	});
+	
 });

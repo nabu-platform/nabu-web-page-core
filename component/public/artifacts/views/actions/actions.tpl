@@ -20,8 +20,10 @@
 							<n-form-text v-model="action.icon" label="Icon"/>
 							<n-form-combo v-model="action.class" label="Class" :filter="$services.page.getSimpleClasses"/>
 							<n-form-text v-model="action.event" v-if="!action.route" label="Event"/>
-							<n-form-combo v-model="action.eventState" v-if="action.event" label="Event State"
-								:filter="function() { return Object.keys($services.page.getAvailableParameters(page, cell)) }"/>
+							<n-form-switch v-model="action.hasFixedState" v-if="action.event" label="Does the event have a fixed value?"/>
+							<n-form-combo v-model="action.eventState" v-if="action.event && !action.hasFixedValue" label="Event Value"
+								:filter="function() { return $services.page.getAvailableKeys(page, cell) }"/>
+							<n-form-text v-model="action.eventFixedState" v-if="action.event && action.hasFixedValue" label="Event Fixed Value"/>
 							<n-form-combo v-model="action.route" v-if="!action.event" :filter="listRoutes" label="Route"/>
 							<n-form-text v-model="action.anchor" label="Anchor" v-if="action.route"/>
 							<n-form-switch v-model="action.mask" label="Mask" v-if="action.route"/>
@@ -29,7 +31,11 @@
 								:from="$services.page.getAvailableParameters(page, cell)" 
 								v-model="action.bindings"/>
 							<div class="n-form-component">
-								<label class="n-form-label">Condition</label>
+								<label class="n-form-label">Disabled if</label>
+								<n-ace mode="javascript" v-model="action.disabled"/>
+							</div>
+							<div class="n-form-component">
+								<label class="n-form-label">Show if</label>
 								<n-ace mode="javascript" v-model="action.condition"/>
 							</div>
 							<div class="list-row" v-for="i in Object.keys(action.activeRoutes)">
@@ -49,18 +55,29 @@
 		</n-sidebar>
 		<li v-for="action in getActions()" v-if="isVisible(action)"
 				class="page-action"
-				:class="[{ 'has-children': action.actions.length }, action.class]" 
-				@mouseover="show(action)" @mouseout="hide(action)">
+				:class="[{ 'has-children': action.actions.length }, action.class]"
+				@mouseover="show(action)" @mouseout="hide(action)"
+				:sequence="getActions().indexOf(action) + 1">
 			<span v-if="edit" class="fa fa-cog" @click="configureAction(action)"></span>
-			<span v-if="action.icon" class="icon fa" :class="action.icon" @click="handle(action)"></span>
 			<a auto-close-actions class="page-action-link page-action-entry" href="javascript:void(0)"
 				:class="getDynamicClasses(action)"
-				@click="handle(action)" v-if="!cell.state.useButtons && (action.route || action.event)">{{ action.label }}</a>
+				:sequence="getActions().indexOf(action) + 1"
+				@click="handle(action)" v-if="action.label && !cell.state.useButtons && (action.route || action.event)"
+					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
+					><span>{{ action.label }}</span></a>
 			<button auto-close-actions class="page-action-button page-action-entry"
 				:class="getDynamicClasses(action)"
-				@click="handle(action)" v-else-if="cell.state.useButtons && (action.route || action.event)">{{ action.label }}</button>
-			<span class="page-action-entry" v-else>{{ action.label }}</span>
+				:sequence="getActions().indexOf(action) + 1"
+				@click="handle(action)" v-else-if="action.label && cell.state.useButtons && (action.route || action.event)"
+					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
+					><span>{{ action.label }}</span></button>
+			<span class="page-action-label page-action-entry" v-else
+				:class="getDynamicClasses(action)"
+				:sequence="getActions().indexOf(action) + 1"
+					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
+					><span>{{ action.label }}</span></span>
 			<page-actions :ref="'action_' + getActions().indexOf(action)"
+				v-if="action.actions && action.actions.length"
 				:cell="cell"
 				:page="page"
 				:parameters="parameters"

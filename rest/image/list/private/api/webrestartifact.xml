@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<restInterface>
+    <method>GET</method>
+    <path>/image</path>
+    <permissionContext>=input/webApplicationId</permissionContext>
+    <permissionAction>image.edit</permissionAction>
+    <output>nabu.web.page.core.types.rest.imageList</output>
+    <lenient>false</lenient>
+    <webApplicationId>true</webApplicationId>
+    <language>false</language>
+    <allowFormBinding>false</allowFormBinding>
+    <caseInsensitive>false</caseInsensitive>
+    <cache>false</cache>
+</restInterface>

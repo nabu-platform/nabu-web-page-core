@@ -967,7 +967,11 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			});
 		},
 		removeCell: function(cells, cell) {
-			cells.splice(cells.indexOf(cell), 1);
+			this.$confirm({
+				message: "Are you sure you want to remove this cell?"
+			}).then(function() {
+				cells.splice(cells.indexOf(cell), 1);
+			});
 		},
 		removeRow: function(cell, row) { 
 			cell.rows.splice(cell.rows(indexOf(row), 1));
