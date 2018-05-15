@@ -433,6 +433,12 @@ Vue.component("page-form-field", {
 		}
 	},
 	methods: {
+		getProvidedComponent: function(type) {
+			var provided = nabu.page.providers("page-form-input").filter(function(x) {
+				 return x.name == type;
+			})[0];
+			return provided ? provided.component : null;	
+		},
 		filterEnumeration: function(value) {
 			var parameters = {};
 			if (this.field.enumerationOperationQuery) {
@@ -610,7 +616,22 @@ Vue.component("page-form-configure-single", {
 	created: function() {
 		this.normalize(this.field);
 	},
+	computed: {
+		types: function() {
+			var provided = ['text', 'area', 'enumeration', 'enumerationOperation', 'date', 'number', 'fixed', 'boolean'];
+			nabu.utils.arrays.merge(provided, nabu.page.providers("page-form-input").map(function(x) { return x.name }));
+			provided.sort();
+			console.log("form types are", provided);
+			return provided;
+		}
+	},
 	methods: {
+		getProvidedConfiguration: function(type) {
+			var provided = nabu.page.providers("page-form-input").filter(function(x) {
+				 return x.name == type;
+			})[0];
+			return provided ? provided.configure : null;
+		},
 		normalize: function(field) {
 			if (!field.name) {
 				Vue.set(field, "name", null);

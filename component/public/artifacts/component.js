@@ -82,6 +82,13 @@ window.addEventListener("load", function() {
 			editable: true
 		});
 		
+		// form providers
+		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-richtext", 
+			configure: "page-form-input-richtext-configure", 
+			name: "richtext" 
+		});
+		
 		return $services.$register({
 			page: nabu.page.services.Page,
 			formatter: nabu.page.services.Formatter

@@ -66,27 +66,38 @@
 			:value="value"
 			:timeout="timeout"
 			:disabled="isDisabled"/>
-		<n-form-date v-if="field.type == 'date'"
+		<n-form-date v-else-if="field.type == 'date'"
 			@input="function(newValue) { $emit('input', newValue) }"
 			:label="fieldLabel"
 			:value="value"
 			:timeout="timeout"
 			:disabled="isDisabled"/>
-		<n-form-combo v-if="field.type == 'enumeration'" :items="field.enumerations"
+		<n-form-combo v-else-if="field.type == 'enumeration'" :items="field.enumerations"
 			@input="function(newValue) { $emit('input', newValue) }"
 			:label="fieldLabel"
 			:value="value"
 			:disabled="isDisabled"/>
-		<n-form-combo v-if="field.type == 'enumerationOperation'" :filter="filterEnumeration"
+		<n-form-combo v-else-if="field.type == 'enumerationOperation'" :filter="filterEnumeration"
 			:formatter="function(x) { return field.enumerationOperationLabel ? x[field.enumerationOperationLabel] : x }"
 			v-model="currentEnumerationValue"
 			:timeout="600"
 			:label="fieldLabel"
 			:disabled="isDisabled"/>
-		<n-form-switch v-if="field.type == 'boolean'" 
+		<n-form-switch v-else-if="field.type == 'boolean'" 
 			:value="value"
 			:label="fieldLabel"
 			@input="function(newValue) { $emit('input', newValue) }"
+			:disabled="isDisabled"/>
+			
+		<component v-else 
+			:is="getProvidedComponent(field.type)"
+			:value="value"
+			:page="page"
+			:cell="cell"
+			:field="field"
+			@input="function(newValue) { $emit('input', newValue) }"
+			:label="fieldLabel"
+			:timeout="timeout"
 			:disabled="isDisabled"/>
 	</n-form-section>
 </template>
@@ -115,7 +126,7 @@
 		<n-form-combo v-model="field.name" label="Field Name" :items="possibleFields"/>
 		<n-form-text v-model="field.label" label="Label" v-if="allowLabel" />
 		<n-form-text v-model="field.description" label="Description" v-if="allowDescription" />
-		<n-form-combo v-model="field.type" v-if="!isList || !isList(field.name)" label="Type" :items="['text', 'area', 'enumeration', 'enumerationOperation', 'date', 'number', 'fixed', 'boolean']"/>
+		<n-form-combo v-model="field.type" v-if="!isList || !isList(field.name)" label="Type" :items="types"/>
 		<button v-if="field.type == 'enumeration'" @click="field.enumerations.push('')">Add enumeration</button>
 		<n-form-section class="enumeration" v-if="field.type == 'enumeration'" v-for="i in Object.keys(field.enumerations)" :key="field.name + 'enumeration_' + i">
 			<n-form-text v-model="field.enumerations[i]"/>
@@ -139,5 +150,12 @@
 				:from="$services.page.getAvailableParameters(page, cell)"
 				:to="getMappableEnumerationParameters(field)"/>
 		</n-form-section>
+		
+		<component v-if="field.type && ['text', 'area', 'enumeration', 'enumerationOperation', 'date', 'number', 'fixed', 'boolean'].indexOf(field.type) < 0"
+			:is="getProvidedConfiguration(field.type)"
+			:page="page"
+			:cell="cell"
+			:field="field"/>
+			
 	</div>
 </template>
