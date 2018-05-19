@@ -58,35 +58,65 @@ window.addEventListener("load", function() {
 		nabu.page.provide("page-field-fragment", { 
 			component: "page-field-fragment-data", 
 			configure: "page-field-fragment-data-configure", 
-			name: "data" 
+			name: "data",
+			namespace: "nabu.page"
 		});
 		nabu.page.provide("page-field-fragment", { 
 			component: "page-field-fragment-text", 
 			configure: "page-field-fragment-text-configure", 
-			name: "text" 
+			name: "text",
+			namespace: "nabu.page"
 		});
 		nabu.page.provide("page-field-fragment", { 
 			component: "page-field-fragment-image", 
 			configure: "page-field-fragment-image-configure", 
-			name: "image" 
+			name: "image",
+			namespace: "nabu.page"
 		});
 		nabu.page.provide("page-field-fragment", { 
 			component: "page-field-fragment-richtext", 
 			configure: "page-field-fragment-richtext-configure", 
-			name: "richtext" 
+			name: "richtext",
+			namespace: "nabu.page"
 		});
 		nabu.page.provide("page-field-fragment", { 
 			component: "page-field-fragment-form", 
 			configure: "page-field-fragment-form-configure", 
 			name: "form",
-			editable: true
+			editable: true,
+			namespace: "nabu.page"
 		});
 		
 		// form providers
 		nabu.page.provide("page-form-input", { 
 			component: "page-form-input-richtext", 
 			configure: "page-form-input-richtext-configure", 
-			name: "richtext" 
+			name: "richtext",
+			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-text", 
+			configure: "page-form-input-text-configure", 
+			name: "text",
+			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-date", 
+			configure: "page-form-input-date-configure", 
+			name: "date",
+			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-switch", 
+			configure: "page-form-input-switch-configure", 
+			name: "switch",
+			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-enumeration", 
+			configure: "page-form-input-enumeration-configure", 
+			name: "enumeration",
+			namespace: "nabu.page"
 		});
 		
 		return $services.$register({

@@ -309,16 +309,30 @@ Vue.component("page-formatted-configure", {
 		this.normalize(this.fragment);
 	},
 	computed: {
-		types: function() {
+		nativeTypes: function() {
 			var types = ['date', 'number', 'masterdata', 'javascript'];
 			if (this.allowHtml) {
 				types.push('link');
 				types.push('html');
 			}
 			return types;
+		},
+		types: function() {
+			var types = [];
+			nabu.utils.arrays.merge(types, this.nativeTypes);
+			nabu.utils.arrays.merge(types, nabu.page.providers("page-format").map(function(x) { return x.name }));
+			types.sort();
+			return types;
 		}	
 	},
 	methods: {
+		isProvided: function(type) {
+			return this.nativeTypes.indexOf(type) < 0;
+		},
+		getConfiguration: function(type) {
+			var provider = nabu.page.providers("page-format").filter(function(x) { return x.name == type })[0];
+			return provider ? provider.configure : null;
+		},
 		normalize: function(fragment) {
 			if (!fragment.dateFormat) {
 				Vue.set(fragment, "dateFormat", null);
@@ -351,6 +365,14 @@ Vue.component("page-formatted", {
 		}
 	},
 	computed: {
+		nativeTypes: function() {
+			var types = ['date', 'number', 'masterdata', 'javascript'];
+			if (this.allowHtml) {
+				types.push('link');
+				types.push('html');
+			}
+			return types;
+		},
 		tag: function() {
 			if (this.fragment.tag) {
 				return this.fragment.tag;	
@@ -360,7 +382,7 @@ Vue.component("page-formatted", {
 			}
 		},
 		formatted: function() {
-			if (!this.value) {
+			if (this.value == null || typeof(this.value) == "undefined") {
 				return null;
 			}
 			// formatting is optional
@@ -373,8 +395,15 @@ Vue.component("page-formatted", {
 			else if (this.fragment.format == "link") {
 				return "<a target='_blank' ref='noopener noreferrer nofollow' href='" + value + "'>" + value.replace(/http[s]*:\/\/([^/]+).*/, "$1") + "</a>";
 			}
-			else {
+			// if it is native, format it that way
+			else if (this.nativeTypes.indexOf(this.fragment.format) >= 0) {
 				return this.$services.formatter.format(this.value, this.fragment);
+			}
+			// otherwise we are using a provider
+			else {
+				var self = this;
+				return nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0]
+					.format(this.value, this.fragment);
 			}
 		}
 	}

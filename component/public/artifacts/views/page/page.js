@@ -189,6 +189,10 @@ nabu.page.views.Page = Vue.extend({
 			this.$services.page.update(this.page);
 		},
 		getOperationParameters: function(operation) {
+			// could be an invalid operation?
+			if (!this.$services.swagger.operations[operation]) {
+				 return [];
+			}
 			var parameters = this.$services.swagger.operations[operation].parameters;
 			return parameters ? parameters.map(function(x) { return x.name }) : [];
 		},
@@ -217,6 +221,13 @@ nabu.page.views.Page = Vue.extend({
 			// reset event cache
 			this.cachedEvents = null;
 			this.components[cell.id] = component;
+			
+			// we subscribe to a very specific event that will reset all the registered events
+			// this is because it is cached...
+			var self = this;
+			component.$on("updatedEvents", function() {
+				self.resetEvents();
+			});
 			
 			// we want to inject all the data into the component so it can be used easily
 			var data = {};
@@ -302,6 +313,9 @@ nabu.page.views.Page = Vue.extend({
 		removeRow: function(row) { 
 			this.page.content.rows.splice(this.page.content.rows(indexOf(row), 1))
 		},
+		resetEvents: function() {
+			this.cachedEvents = null;
+		},
 		getEvents: function() {
 			// non-watched cache property
 			// we have too many problems with update loops that are triggered by this method
@@ -363,12 +377,7 @@ nabu.page.views.Page = Vue.extend({
 						// we are setting the variable we are interested in
 						console.log("interested in", parts[0], name);
 						if (parts[0] == name) {
-							var interested = value;
-							for (var i = 1; i < parts.length; i++) {
-								if (interested) {
-									interested = interested[parts[i]];
-								}
-							}
+							var interested = self.get(listener);
 							console.log("updating", parameter.name, interested);
 							if (!interested) {
 								Vue.delete(self.variables, parameter.name);
@@ -381,14 +390,13 @@ nabu.page.views.Page = Vue.extend({
 				})
 			}
 			
-			
 			var promises = [];
 			
-			var promise = this.$services.q.defer();
-			promises.push(promise);
 			// check all the actions to see if we need to run something
 			this.page.content.actions.map(function(action) {
 				if (action.on == name) {
+					var promise = self.$services.q.defer();
+					promises.push(promise);
 					var parameters = {};
 					Object.keys(action.bindings).map(function(key) {
 						parameters[key] = self.get(action.bindings[key]);	
@@ -396,7 +404,15 @@ nabu.page.views.Page = Vue.extend({
 					if (action.confirmation) {
 						self.$confirm({message:action.confirmation}).then(function() {
 							if (action.route) {
-								self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
+								if (action.anchor == "$blank") {
+									window.open(self.$services.router.template(action.route, parameters));
+								}
+								else if (action.anchor == "$window") {
+									window.location = self.$services.router.template(action.route, parameters);
+								}
+								else {
+									self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
+								}
 							}
 							else {
 								self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
@@ -407,7 +423,15 @@ nabu.page.views.Page = Vue.extend({
 					}
 					else {
 						if (action.route) {
-							self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
+							if (action.anchor == "$blank") {
+								window.open(self.$services.router.template(action.route, parameters));
+							}
+							else if (action.anchor == "$window") {
+								window.location = self.$services.router.template(action.route, parameters);
+							}
+							else {
+								self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
+							}
 						}
 						else {
 							self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
@@ -470,7 +494,18 @@ nabu.page.views.Page = Vue.extend({
 			else {
 				var parts = name.split(".");
 				if (this.variables[parts[0]]) {
-					return this.variables[parts[0]][parts[1]];
+					var value = this.variables[parts[0]];
+					for (var i = 1; i < parts.length; i++) {
+						if (value) {
+							if (value instanceof Array) {
+								value = value.map(function(x) { return x[parts[i]] });
+							}
+							else {
+								value = value[parts[i]];
+							}
+						}
+					}
+					return value;
 				}
 				else {
 					var result = null;
@@ -594,6 +629,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		// can't be a computed cause we depend on the $parent to resolve some variables
 		// and that's not reactive...
 		getCalculatedRows: function() {
+			console.log("calculated rows");
 			// if we are in edit mode, we don't actually calculate rows
 			if (this.edit) {
 				return this.rows;
@@ -669,6 +705,15 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 			return styles;
 		},
+		hasPageRoute: function(cell) {
+			if (cell.alias) {
+				var route = this.$services.router.get(cell.alias);
+				if (route && route.isPage) {
+					return true;
+				}
+			}
+			return false;
+		},
 		up: function(row) {
 			var index = this.rows.indexOf(row);
 			if (index > 0) {
@@ -734,7 +779,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			return this.$services.page.getAvailableParameters(this.page, cell);
 		},
 		getAvailableEvents: function() {
-			var available = nabu.utils.objects.clone(this.$services.page.instances[this.page.name].getEvents());
+			var available = this.$services.page.instances[this.page.name].getEvents();
 			return Object.keys(available);
 		},
 		canConfigure: function(cell) {

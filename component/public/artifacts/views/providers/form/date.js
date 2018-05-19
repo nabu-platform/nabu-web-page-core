@@ -1,4 +1,4 @@
-Vue.component("page-form-input-richtext-configure", {
+Vue.component("page-form-input-date-configure", {
 	template: "<div/>",
 	props: {
 		cell: {
@@ -17,8 +17,14 @@ Vue.component("page-form-input-richtext-configure", {
 	}
 });
 
-Vue.component("page-form-input-richtext", {
-	template: "<n-form-richtext :value='value' @input=\"function(value) { $emit('input', value) }\" :schema='schema'/>",
+Vue.component("page-form-input-date", {
+	template: "<n-form-date"
+			+ "		:schema='schema'"
+			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		:label='label'"
+			+ "		:value='value'"
+			+ "		:timeout='timeout'"
+			+ "		:disabled='disabled'/>",
 	props: {
 		cell: {
 			type: Object,

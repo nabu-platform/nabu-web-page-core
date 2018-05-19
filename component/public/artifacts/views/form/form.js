@@ -509,7 +509,8 @@ Vue.component("page-form-field", {
 	},
 	watch: {
 		currentEnumerationValue: function(newValue) {
-			this.$emit('input', this.field.enumerationOperationValue ? newValue[this.field.enumerationOperationValue] : newValue);
+			//this.$emit('input', this.field.enumerationOperationValue ? newValue[this.field.enumerationOperationValue] : newValue);
+			this.$emit('input', newValue);
 		}
 	}
 });
@@ -618,10 +619,9 @@ Vue.component("page-form-configure-single", {
 	},
 	computed: {
 		types: function() {
-			var provided = ['text', 'area', 'enumeration', 'enumerationOperation', 'date', 'number', 'fixed', 'boolean'];
+			var provided = ['enumerationOperation', 'fixed'];
 			nabu.utils.arrays.merge(provided, nabu.page.providers("page-form-input").map(function(x) { return x.name }));
 			provided.sort();
-			console.log("form types are", provided);
 			return provided;
 		}
 	},

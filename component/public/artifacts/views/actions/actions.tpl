@@ -18,12 +18,13 @@
 						<n-collapsible class="list-item" :title="action.label" v-for="action in getActions()">
 							<n-form-text v-model="action.label" label="Label"/>
 							<n-form-text v-model="action.icon" label="Icon"/>
-							<n-form-combo v-model="action.class" label="Class" :filter="$services.page.getSimpleClasses"/>
+							<n-form-text v-model="action.class" label="Class" />
+							<n-form-combo v-model="action.buttonClass" label="Button Class" :filter="$services.page.getSimpleClasses"/>
 							<n-form-text v-model="action.event" v-if="!action.route" label="Event"/>
 							<n-form-switch v-model="action.hasFixedState" v-if="action.event" label="Does the event have a fixed value?"/>
-							<n-form-combo v-model="action.eventState" v-if="action.event && !action.hasFixedValue" label="Event Value"
+							<n-form-combo v-model="action.eventState" v-if="action.event && !action.hasFixedState" label="Event Value"
 								:filter="function() { return $services.page.getAvailableKeys(page, cell) }"/>
-							<n-form-text v-model="action.eventFixedState" v-if="action.event && action.hasFixedValue" label="Event Fixed Value"/>
+							<n-form-text v-model="action.eventFixedState" v-if="action.event && action.hasFixedState" label="Event Fixed Value"/>
 							<n-form-combo v-model="action.route" v-if="!action.event" :filter="listRoutes" label="Route"/>
 							<n-form-text v-model="action.anchor" label="Anchor" v-if="action.route"/>
 							<n-form-switch v-model="action.mask" label="Mask" v-if="action.route"/>
@@ -62,12 +63,14 @@
 			<a auto-close-actions class="page-action-link page-action-entry" href="javascript:void(0)"
 				:class="getDynamicClasses(action)"
 				:sequence="getActions().indexOf(action) + 1"
+				:disabled="isDisabled(action)"
 				@click="handle(action)" v-if="action.label && !cell.state.useButtons && (action.route || action.event)"
 					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
 					><span>{{ action.label }}</span></a>
 			<button auto-close-actions class="page-action-button page-action-entry"
 				:class="getDynamicClasses(action)"
 				:sequence="getActions().indexOf(action) + 1"
+				:disabled="isDisabled(action)"
 				@click="handle(action)" v-else-if="action.label && cell.state.useButtons && (action.route || action.event)"
 					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
 					><span>{{ action.label }}</span></button>

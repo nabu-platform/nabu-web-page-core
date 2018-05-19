@@ -177,7 +177,13 @@ nabu.services.VueService(Vue.extend({
 			if (!condition) {
 				return true;
 			}
-			var result = eval(condition);
+			try {
+				var result = eval(condition);
+			}
+			catch (exception) {
+				console.error("Could not evaluate", condition, exception);
+				return false;
+			}
 			if (result instanceof Function) {
 				result = result(state);
 			}
@@ -463,6 +469,8 @@ nabu.services.VueService(Vue.extend({
 						}
 						return new nabu.page.views.Page({propsData: {page: page, parameters: parameters }});
 					},
+					// ability to recognize page routes
+					isPage: true,
 					initial: page.content.initial,
 					slow: !page.content.initial && page.content.slow
 				};
@@ -648,7 +656,7 @@ nabu.services.VueService(Vue.extend({
 				if (self.$services.swagger.operation(state.operation).responses && self.$services.swagger.operation(state.operation).responses["200"]) {
 					result[state.name] = self.$services.swagger.resolve(self.$services.swagger.operation(state.operation).responses["200"]).schema;
 				}
-			});			
+			});
 			
 			// cell specific stuff overwrites everything else
 			if (cell) {

@@ -48,7 +48,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				return action.label == self.cell.state.defaultAction;
 			})[0];
 			if (action) {
-				this.handle(action);
+				this.handle(action, true);
 			}
 		}
 	},
@@ -68,6 +68,14 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 							properties: {
 								value: {
 									type: "string"
+								},
+								// the sequence of the event
+								sequence: {
+									type: "integer"
+								},
+								// the amount of events (works with the sequence)
+								length: {
+									type: "integer"
 								}
 							}
 						};
@@ -118,6 +126,9 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		},
 		getDynamicClasses: function(action) {
 			var classes = [];
+			if (action.buttonClass) {
+				classes.push(action.buttonClass);
+			}
 			// set the active class if applicable
 			var activeClass = this.cell.state.activeClass ? this.cell.state.activeClass : "is-active";
 			if (this.lastAction == action) {
@@ -194,7 +205,8 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				actions: [],
 				icons: null,
 				activeRoutes: [],
-				class: null
+				class: null,
+				buttonClass: null
 			});
 		},
 		isVisible: function(action) {
@@ -203,46 +215,56 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		isDisabled: function(action) {
 			return action.disabled && this.$services.page.isCondition(action.disabled, this.state);
 		},
-		handle: function(action) {
-			if (action.route) {
-				var parameters = {};
-				var self = this;
-				Object.keys(action.bindings).map(function(key) {
-					var parts = action.bindings[key].split(".");
-					var value = self.state;
-					parts.map(function(part) {
+		handle: function(action, force) {
+			if (force || !this.isDisabled(action)) {
+				if (action.route) {
+					var parameters = {};
+					var self = this;
+					Object.keys(action.bindings).map(function(key) {
+						var parts = action.bindings[key].split(".");
+						var value = self.state;
+						parts.map(function(part) {
+							if (value) {
+								value = value[part];
+							}
+						});
 						if (value) {
-							value = value[part];
+							parameters[key] = value;
 						}
 					});
-					if (value) {
-						parameters[key] = value;
-					}
-				});
-				this.$services.router.route(action.route, parameters, action.anchor, action.mask);
-			}
-			else if (action.event) {
-				// if you are working event-based, you are using events to show parts of the screen
-				// currently we assume only one event should be "active" at a time, so we unset all other events this tab provider can emit
-				this.unsetEvent(this.cell.state.actions);
-				
-				var pageInstance = this.$services.page.instances[this.page.name];
-				var content = null;
-				if (action.hasFixedState && action.eventFixedState) {
-					content = {
-						value: action.eventFixedState
-					}
+					this.$services.router.route(action.route, parameters, action.anchor, action.mask);
 				}
-				else if (action.eventState) {
-					content = {
-						value: pageInstance.get(action.eventState)
+				else if (action.event) {
+					// if you are working event-based, you are using events to show parts of the screen
+					// currently we assume only one event should be "active" at a time, so we unset all other events this tab provider can emit
+					this.unsetEvent(this.cell.state.actions);
+					
+					var pageInstance = this.$services.page.instances[this.page.name];
+					var content = null;
+					var addDefaults = false;
+					if (action.hasFixedState && action.eventFixedState) {
+						content = {
+							value: action.eventFixedState
+						}
+						addDefaults = true;
 					}
+					else if (action.eventState) {
+						content = {
+							value: pageInstance.get(action.eventState)
+						}
+						addDefaults = true;
+					}
+					else if (this.cell.on) {
+						content = pageInstance.get(this.cell.on);
+					}
+					if (addDefaults) {
+						content.sequence = this.getActions().indexOf(action) + 1;
+						content.length = this.getActions().length;
+						content.actor = this.cell.id;
+					}
+					pageInstance.emit(action.event, content ? content : {});
+					this.lastAction = action;
 				}
-				else if (this.cell.on) {
-					content = pageInstance.get(this.cell.on);
-				}
-				pageInstance.emit(action.event, content ? content : {});
-				this.lastAction = action;
 			}
 		},
 		unsetEvent: function(actions) {

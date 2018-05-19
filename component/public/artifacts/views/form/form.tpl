@@ -59,34 +59,13 @@
 
 <template id="page-form-field">
 	<n-form-section class="page-form-field">
-		<n-form-text v-if="field.type == 'text' || field.type == 'number' || field.type == 'area'" :type="field.type"
-			:schema="schema"
-			@input="function(newValue) { $emit('input', newValue) }"
-			:label="fieldLabel"
-			:value="value"
-			:timeout="timeout"
-			:disabled="isDisabled"/>
-		<n-form-date v-else-if="field.type == 'date'"
-			@input="function(newValue) { $emit('input', newValue) }"
-			:label="fieldLabel"
-			:value="value"
-			:timeout="timeout"
-			:disabled="isDisabled"/>
-		<n-form-combo v-else-if="field.type == 'enumeration'" :items="field.enumerations"
-			@input="function(newValue) { $emit('input', newValue) }"
-			:label="fieldLabel"
-			:value="value"
-			:disabled="isDisabled"/>
-		<n-form-combo v-else-if="field.type == 'enumerationOperation'" :filter="filterEnumeration"
+		<n-form-combo v-if="field.type == 'enumerationOperation'" :filter="filterEnumeration"
 			:formatter="function(x) { return field.enumerationOperationLabel ? x[field.enumerationOperationLabel] : x }"
 			v-model="currentEnumerationValue"
 			:timeout="600"
 			:label="fieldLabel"
-			:disabled="isDisabled"/>
-		<n-form-switch v-else-if="field.type == 'boolean'" 
-			:value="value"
-			:label="fieldLabel"
-			@input="function(newValue) { $emit('input', newValue) }"
+			:extracter="function(x) { return field.enumerationOperationValue ? x[field.enumerationOperationValue] : x }"
+			@input="function(value) { $window.console.log('new value is', value) }"
 			:disabled="isDisabled"/>
 			
 		<component v-else 
@@ -98,6 +77,7 @@
 			@input="function(newValue) { $emit('input', newValue) }"
 			:label="fieldLabel"
 			:timeout="timeout"
+			:schema="schema"
 			:disabled="isDisabled"/>
 	</n-form-section>
 </template>
@@ -127,11 +107,6 @@
 		<n-form-text v-model="field.label" label="Label" v-if="allowLabel" />
 		<n-form-text v-model="field.description" label="Description" v-if="allowDescription" />
 		<n-form-combo v-model="field.type" v-if="!isList || !isList(field.name)" label="Type" :items="types"/>
-		<button v-if="field.type == 'enumeration'" @click="field.enumerations.push('')">Add enumeration</button>
-		<n-form-section class="enumeration" v-if="field.type == 'enumeration'" v-for="i in Object.keys(field.enumerations)" :key="field.name + 'enumeration_' + i">
-			<n-form-text v-model="field.enumerations[i]"/>
-			<button @click="field.enumerations.splice(i, 1)">Remove Enumeration</button>
-		</n-form-section>
 		<n-form-text v-model="field.value" v-if="field.type == 'fixed'" label="Fixed Value"/>
 		<n-form-section class="enumeration" v-if="field.type == 'enumerationOperation'">
 			<n-form-combo :value="field.enumerationOperation ? $services.swagger.operations[field.enumerationOperation] : null"
@@ -151,7 +126,7 @@
 				:to="getMappableEnumerationParameters(field)"/>
 		</n-form-section>
 		
-		<component v-if="field.type && ['text', 'area', 'enumeration', 'enumerationOperation', 'date', 'number', 'fixed', 'boolean'].indexOf(field.type) < 0"
+		<component v-if="field.type && ['enumerationOperation', 'fixed'].indexOf(field.type) < 0"
 			:is="getProvidedConfiguration(field.type)"
 			:page="page"
 			:cell="cell"

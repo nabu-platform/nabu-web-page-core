@@ -47,6 +47,11 @@
 		<n-form-text v-if="fragment.format == 'number'" v-model="fragment.amountOfDecimals" label="Amount of decimals"/>
 		<n-form-combo label="Date Format" v-if="fragment.format == 'date'" v-model="fragment.dateFormat" :filter="function(value) { return [value, 'date', 'dateTime'] }"/>
 		<n-form-combo label="Type" v-model="fragment.tag" :items="['span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div']"/>
+		<component v-if="isProvided(fragment.format) && getConfiguration(fragment.format)"
+			:is="getConfiguration(fragment.format)"
+			:page="page" 
+			:cell="cell"
+			:fragment="fragment"/>
 	</div>
 </template>
 
