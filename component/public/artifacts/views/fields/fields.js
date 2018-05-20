@@ -170,7 +170,6 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 			}
 			// otherwise we just try to get the default ones available to you
 			var parameters = this.$services.page.getAvailableParameters(this.page, this.cell);
-			console.log("parameters are", parameters, this.localState);
 			var keys = this.$services.page.getSimpleKeysFor({properties:parameters});
 			return value ? keys.filter(function(x) { x.toLowerCase().indexOf(value.toLowerCase()) >= 0 }) : keys;
 		}
@@ -310,7 +309,7 @@ Vue.component("page-formatted-configure", {
 	},
 	computed: {
 		nativeTypes: function() {
-			var types = ['date', 'number', 'masterdata', 'javascript'];
+			var types = ['date', 'number', 'masterdata', 'javascript', 'text'];
 			if (this.allowHtml) {
 				types.push('link');
 				types.push('html');
@@ -354,7 +353,7 @@ Vue.component("page-formatted-configure", {
 });
 
 Vue.component("page-formatted", {
-	template: "<component :is='tag' v-content.sanitize.compile='formatted'/>",
+	template: "<component :is='tag' v-content.compile.parameterized=\"{value:formatted,plain:fragment.format == 'text', sanitize: fragment.format != 'text'}\"/>",
 	props: {
 		value: {
 			required: false
@@ -386,7 +385,7 @@ Vue.component("page-formatted", {
 				return null;
 			}
 			// formatting is optional
-			else if (!this.fragment.format) {
+			else if (!this.fragment.format || this.fragment.format == "text") {
 				return this.value;
 			}
 			else if (this.fragment.format == "html") {

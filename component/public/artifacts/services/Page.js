@@ -31,7 +31,8 @@ nabu.services.VueService(Vue.extend({
 			lastCompiled: null,
 			customStyle: null,
 			cssStep: null,
-			editable: false
+			editable: false,
+			wantEdit: false
 		}
 	},
 	activate: function(done) {
@@ -80,6 +81,11 @@ nabu.services.VueService(Vue.extend({
 					});
 					done();
 				});
+				document.addEventListener("keydown", function(event) {
+					if (event.ctrlKey && event.keyCode == 88) {
+						self.wantEdit = !self.wantEdit;
+					}
+				});
 			}
 			else {
 				Vue.nextTick(function() {
@@ -89,7 +95,33 @@ nabu.services.VueService(Vue.extend({
 			}
 		});
 	},
+	computed: {
+		enumerators: function() {
+			var providers = {};
+			nabu.page.providers("page-enumerate").map(function(x) {
+				providers[x.name] = x;
+			});
+			return providers;
+		}
+	},
 	methods: {
+		getBindingValue: function(pageInstance, bindingValue) {
+			var enumerators = this.enumerators;
+			// allow for fixed values
+			var value = bindingValue.indexOf("fixed") == 0 ? bindingValue.substring("fixed.".length) : pageInstance.get(bindingValue);
+			var key = bindingValue.split(".")[0];
+			// allow for enumerated values, if there is a provider with that name, check it
+			if (!value && enumerators[key]) {
+				var label = bindingValue.substring(key.length + 1);
+				var enumeration = enumerators[key].enumerate().filter(function(x) {
+					return enumerators[key].label ? x[enumerators[key].label] == label : x == label;
+				})[0];
+				if (enumeration != null && typeof(enumeration) != "undefined") {
+					value = enumerators[key].value ? enumeration[enumerators[key].value] : enumeration;
+				}
+			}
+			return value;
+		},
 		getValue: function(data, field) {
 			if (field) {
 				var parts = field.split(".");
@@ -622,7 +654,6 @@ nabu.services.VueService(Vue.extend({
 			var keys = [];
 			var self = this;
 			var parameters = this.getAvailableParameters(page, cell);
-			console.log("available parametesr", parameters);
 			Object.keys(parameters).map(function(key) {
 				nabu.utils.arrays.merge(keys, self.getSimpleKeysFor(parameters[key]).map(function(x) {
 					return key + "." + x;

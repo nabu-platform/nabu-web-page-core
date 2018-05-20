@@ -20,6 +20,12 @@ Vue.component("n-page-mapper", {
 		// for the label dropdown
 		sources: function() {
 			var sources = Object.keys(this.from);
+			// allow fixed values
+			sources.push("fixed");
+			// allow enumerations
+			nabu.utils.arrays.merge(sources, nabu.page.providers("page-enumerate").map(function(x) {
+				return x.name;
+			}));
 			sources.sort();
 			return sources;
 		}
@@ -40,6 +46,17 @@ Vue.component("n-page-mapper", {
 	methods: {
 		// get the possible field names for this label
 		fieldsFrom: function(value, label, fields) {
+			if (label == "fixed") {
+				return value ? [value] : [];
+			}
+			var provider = nabu.page.providers("page-enumerate").filter(function(x) { return x.name == label })[0];
+			if (provider) {
+				var enumerations = provider.enumerate();
+				if (provider.label) {
+					enumerations = enumerations.map(function(x) { return x[provider.label ]});
+				}
+				return enumerations;
+			}
 			var fields = this.$services.page.getSimpleKeysFor(this.from[label]);
 			if (value) {
 				fields = fields.filter(function(x) { x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });

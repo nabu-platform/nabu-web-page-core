@@ -414,8 +414,18 @@ nabu.page.views.Page = Vue.extend({
 									self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
 								}
 							}
+							else if (action.operation) {
+								var operation = self.$services.swagger.operations[action.operation];
+								if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
+									window.location = self.$services.swagger.parameters(action.operation, parameters).url;
+									promise.resolve();
+								}
+								else {
+									self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
+								}
+							}
 							else {
-								self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
+								promise.resolve();
 							}
 						}, function() {
 							promise.reject();
@@ -433,8 +443,19 @@ nabu.page.views.Page = Vue.extend({
 								self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
 							}
 						}
+						else if (action.operation) {
+							var operation = self.$services.swagger.operations[action.operation];
+							console.log("operation is", operation);
+							if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
+								window.location = self.$services.swagger.parameters(action.operation, parameters).url;
+								promise.resolve();
+							}
+							else {
+								self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
+							}
+						}
 						else {
-							self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
+							promise.resolve();
 						}
 					}
 				}
@@ -585,12 +606,23 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		localState: {
 			type: Object,
 			required: false
+		},
+		root: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	data: function() {
 		return {
 			configuring: null
 		}
+	},
+	created: function() {
+		var self = this;
+		this.$on("close", function() {
+			self.$parent.$emit("close");
+		});
 	},
 	methods: {
 		getState: function(row, cell) {
@@ -796,7 +828,12 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		},
 		close: function(cell) {
 			var pageInstance = this.$services.page.instances[this.page.name];
-			Vue.set(pageInstance.closed, cell.id, cell.on);
+			if (cell.on) {
+				Vue.set(pageInstance.closed, cell.id, cell.on);
+			}
+			else {
+				this.$parent.$emit("close");
+			}
 		},
 		shouldRenderRow: function(row) {
 			if (this.edit) {
@@ -822,7 +859,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				}
 				return true;
 			}
-			else if (!cell.alias) {
+			else if (!cell.alias && !cell.rows.length) {
 				return false;
 			}
 			if (cell.condition) {
@@ -843,7 +880,19 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 					return false;
 				}
 			}
+			var providers = [];
+			nabu.page.providers("page-enumerate").map(function(x) {
+				providers.push(x.name);
+			});
 			return Object.keys(cell.bindings).reduce(function(consensus, name) {
+				// fixed values are always ok
+				if (cell.bindings[name] && cell.bindings[name].indexOf("fixed") == 0) {
+					return consensus;
+				}
+				// always allow enumerated values
+				else if (cell.bindings[name] && providers.indexOf(cell.bindings[name].split(".")[0]) >= 0) {
+					return consensus;
+				}
 				// if we have a bound value and it does not originate from the (ever present) page, it must come from an event
 				// check that the event has occurred
 				if (cell.bindings[name] && cell.bindings[name].indexOf("page.") != 0) {
@@ -931,15 +980,16 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			if (cell.on) {
 				result[cell.on] = pageInstance.variables[cell.on];
 			}
+			var self = this;
 			Object.keys(cell.bindings).map(function(key) {
 				if (cell.bindings[key]) {
-					var value = pageInstance.get(cell.bindings[key]);
+					var value = self.$services.page.getBindingValue(pageInstance, cell.bindings[key]);
 					// only set the value if it actually has some value
 					// otherwise we might accidently trigger a redraw with no actual new value
 					// if we remove a value that was there before, it will still redraw as the parameters will have fewer keys
 					// and adding something "should" trigger redraw anyway
 					if (typeof(value) != "undefined" && value != null) {
-						result[key] = pageInstance.get(cell.bindings[key]);
+						result[key] = value;
 					}
 				}
 			});

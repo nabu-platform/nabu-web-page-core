@@ -62,7 +62,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				actions = this.cell.state.actions;
 			}
 			actions.map(function(action) {
-				if (action.event) {
+				if (action.event && action.event != "$close") {
 					if (action.eventState || action.eventFixedState) {
 						result[action.event] = {
 							properties: {
@@ -233,6 +233,9 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 						}
 					});
 					this.$services.router.route(action.route, parameters, action.anchor, action.mask);
+				}
+				else if (action.event == "$close") {
+					this.$emit("close");
 				}
 				else if (action.event) {
 					// if you are working event-based, you are using events to show parts of the screen

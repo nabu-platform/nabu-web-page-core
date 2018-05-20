@@ -6,7 +6,7 @@
 			<button @click="$services.page.update(page)"><span class="fa fa-save" title="Save"></span></button>
 			<button @click="edit = false"><span class="fa fa-sign-out-alt" title="Stop Editing"></span></button>
 		</div>
-		<div class="page-edit" v-else-if="$services.page.canEdit()" :draggable="true" 
+		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit" :draggable="true" 
 				@dragstart="dragMenu($event)"
 				:style="{'top': page.content.menuY ? page.content.menuY + 'px' : '0px', 'left': page.content.menuX ? page.content.menuX + 'px' : '0px'}">
 			<span>{{page.name}}</span>
@@ -93,6 +93,7 @@
 			:parameters="parameters"
 			:events="events"
 			:ref="page.name + '_rows'"
+			:root="true"
 			@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
 	</div>
 </template>
@@ -103,7 +104,7 @@
 				v-if="edit || shouldRenderRow(row)"
 				:style="rowStyles(row)">
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-			<div :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell) || cell.rows.length" :id="page.name + '_' + row.id + '_' + cell.id" :class="[{'page-cell': edit || !cell.target || cell.target == 'page'}, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell)} ]" :key="cell.id">
+			<div :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" :id="page.name + '_' + row.id + '_' + cell.id" :class="[{'page-cell': edit || !cell.target || cell.target == 'page'}, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root} ]" :key="cell.id">
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				<n-sidebar v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings">
 					<n-form class="layout2" key="cell-form">
@@ -155,23 +156,44 @@
 					<button @click="removeCell(row.cells, cell)"><span class="fa fa-times" title="Remove Cell"></span></button>
 				</div>
 				
-				<div v-if="edit && cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return false } }"></div>
-				<template v-else-if="cell.alias && shouldRenderCell(row, cell)">
+				<div v-if="edit">
+					<div v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return false } }"></div>
+					<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
+						:parameters="parameters"
+						:events="events"
+						:ref="page.name + '_' + cell.id + '_rows'"
+						:local-state="getLocalState(row, cell)"
+						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
+				</div>
+				<template v-else-if="shouldRenderCell(row, cell)">
 					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)">
-						<div v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+						<div v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
+							:parameters="parameters"
+							:events="events"
+							:ref="page.name + '_' + cell.id + '_rows'"
+							:local-state="getLocalState(row, cell)"
+							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-sidebar>
 					<n-prompt v-if="cell.target == 'prompt'" @close="close(cell)">
-						<div v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+						<div v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
+							:parameters="parameters"
+							:events="events"
+							:ref="page.name + '_' + cell.id + '_rows'"
+							:local-state="getLocalState(row, cell)"
+							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-prompt>
-					<div v-else v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+					<template v-else>
+						<div v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
+							:parameters="parameters"
+							:events="events"
+							:ref="page.name + '_' + cell.id + '_rows'"
+							:local-state="getLocalState(row, cell)"
+							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
+					</template>
 				</template>
-				
-				<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
-					:parameters="parameters"
-					:events="events"
-					:ref="page.name + '_' + cell.id + '_rows'"
-					:local-state="getLocalState(row, cell)"
-					@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 			</div>
 			<n-sidebar v-if="configuring == row.id" @close="configuring = null" class="settings">
 				<n-form class="layout2">

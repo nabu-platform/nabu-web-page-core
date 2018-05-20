@@ -20,7 +20,7 @@
 							<n-form-text v-model="action.icon" label="Icon"/>
 							<n-form-text v-model="action.class" label="Class" />
 							<n-form-combo v-model="action.buttonClass" label="Button Class" :filter="$services.page.getSimpleClasses"/>
-							<n-form-text v-model="action.event" v-if="!action.route" label="Event"/>
+							<n-form-combo v-model="action.event" v-if="!action.route" label="Event" :filter="function(value) { return value ? [value, '$close'] : ['$close'] }"/>
 							<n-form-switch v-model="action.hasFixedState" v-if="action.event" label="Does the event have a fixed value?"/>
 							<n-form-combo v-model="action.eventState" v-if="action.event && !action.hasFixedState" label="Event Value"
 								:filter="function() { return $services.page.getAvailableKeys(page, cell) }"/>
@@ -64,17 +64,20 @@
 				:class="getDynamicClasses(action)"
 				:sequence="getActions().indexOf(action) + 1"
 				:disabled="isDisabled(action)"
-				@click="handle(action)" v-if="action.label && !cell.state.useButtons && (action.route || action.event)"
+				@click="handle(action)" 
+				v-if="!cell.state.useButtons && (action.route || action.event)"
 					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
 					><span>{{ action.label }}</span></a>
 			<button auto-close-actions class="page-action-button page-action-entry"
 				:class="getDynamicClasses(action)"
 				:sequence="getActions().indexOf(action) + 1"
 				:disabled="isDisabled(action)"
-				@click="handle(action)" v-else-if="action.label && cell.state.useButtons && (action.route || action.event)"
+				@click="handle(action)" 
+				v-else-if="cell.state.useButtons && (action.route || action.event)"
 					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
 					><span>{{ action.label }}</span></button>
-			<span class="page-action-label page-action-entry" v-else
+			<span class="page-action-label page-action-entry" 
+				v-else
 				:class="getDynamicClasses(action)"
 				:sequence="getActions().indexOf(action) + 1"
 					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
@@ -86,7 +89,8 @@
 				:parameters="parameters"
 				:edit="edit"
 				:local-state="localState"
-				:actions="action.actions" 
+				:actions="action.actions"
+				@close="$emit('close')"
 				v-show="edit || showing.indexOf(action) >= 0"/>
 		</li>
 	</ul>
