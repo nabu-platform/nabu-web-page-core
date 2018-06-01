@@ -77,7 +77,7 @@
 						<n-form-combo v-model="action.route" v-if="!action.operation" label="Redirect" :filter="filterRoutes"/>
 						<n-form-combo v-model="action.anchor" v-if="action.route" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 						<n-form-combo v-model="action.operation" v-if="!action.route" label="Operation" :filter="getOperations" />
-						<n-form-text v-model="action.event" label="Success Event" :timeout="600" @input="$emit('updatedEvents')"/>
+						<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" :timeout="600" @input="resetEvents()"/>
 						<n-page-mapper v-if="action.operation && !action.route" :to="getOperationParameters(action.operation)"
 							:from="availableParameters" 
 							v-model="action.bindings"/>

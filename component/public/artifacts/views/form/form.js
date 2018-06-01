@@ -114,16 +114,12 @@ nabu.page.views.PageForm = Vue.extend({
 		getEvents: function() {
 			var result = {};
 			if (this.operation && this.cell.state.event) {
-				var parameters = [];
-				var schema = this.operation.responses["200"] ? this.operation.responses["200"].schema : null;
-				if (schema) {
-					var definition = this.$services.swagger.definition(schema["$ref"]);
-					Object.keys(definition.properties).map(function(key) {
-						parameters.push(key);
-						// TODO: we have more metadata about the field here, might want to pass it along?
-					});
+				var response = this.operation.responses["200"];
+				var schema = null;
+				if (response && response.schema) {
+					schema = this.$services.swagger.resolve(response.schema);
 				}
-				result[this.cell.state.event] = parameters;
+				result[this.cell.state.event] = schema ? schema : {};
 			}
 			return result;
 		},

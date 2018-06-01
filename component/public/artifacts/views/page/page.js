@@ -344,8 +344,13 @@ nabu.page.views.Page = Vue.extend({
 				
 				// your page actions can trigger success events
 				if (this.page.content.actions) {
-					this.page.content.actions.filter(function(x) { return x.event }).map(function(action) {
-						// TODO
+					this.page.content.actions.filter(function(x) { return x.event && x.operation }).map(function(action) {
+						var response = self.$services.swagger.operations[action.operation].responses["200"];
+						var schema = null;
+						if (response && response.schema) {
+							schema = self.$services.swagger.resolve(response.schema);
+						}
+						events[action.event] = schema ? schema : {};
 					});
 				}
 				
