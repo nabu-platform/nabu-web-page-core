@@ -198,7 +198,7 @@ nabu.page.views.PageFields = Vue.component("page-fields", {
 		data: {
 			required: false
 		},
-		style: {
+		shouldStyle: {
 			type: Boolean,
 			required: false
 		},
@@ -251,21 +251,19 @@ Vue.component("page-field", {
 			type: Object,
 			required: true
 		},
-		style: {
+		shouldStyle: {
 			type: Boolean,
-			required: false,
-			default: true
+			required: false
 		},
 		label: {
 			type: Boolean,
-			required: false,
-			default: true
+			required: false
 		}
 	},
 	methods: {
 		getDynamicClasses: function(field) {
 			var classes = null;
-			if (this.style) {
+			if (this.shouldStyle) {
 				classes = this.$services.page.getDynamicClasses(field.styles, this.data);
 			}
 			else {

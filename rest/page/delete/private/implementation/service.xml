@@ -1,7 +1,7 @@
 <sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" disabled="false" id="cf4b643b-d63f-43e5-b08f-f5314eb293de">
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" id="bf803105-58d9-46dd-853a-308df6febf7f">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="76865c2d-5214-4eff-bb21-498ce8097d42" serviceId="nabu.utils.Resource.delete" resultName="resultbc95e01d4f524387a0ad5530cd96a360" invocationOrder="0" temporaryMapping="true" y="88" x="70">
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="75be963c-0985-46bf-b7d8-936253470578" optional="false" mask="false" fixedValue="true">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="75be963c-0985-46bf-b7d8-936253470578" fixedValue="true" optional="false" mask="false">
 				<from>="repository:" + input/webApplicationId + ":/public/artifacts/pages/" + input/path/name + ".json"</from>
 				<to>uri</to>
 			</steps>

@@ -77,12 +77,13 @@
 				<n-collapsible title="Field Settings">
 					<n-form-text v-model="cell.state.class" label="Class"/>
 				</n-collapsible>
-				<page-fields-edit :cell="cell" :allow-multiple="true" :page="page" :data="data" :style="style"/>
+				<page-fields-edit :cell="cell" :allow-multiple="true" :page="page" :data="data" :should-style="shouldStyle"/>
 			</n-form>
 		</n-sidebar>
 		<page-field v-for="field in cell.state.fields" :field="field" :data="data ? data : state" :label="label"
 			:page="page"
 			:cell="cell"
+			:should-style="shouldStyle"
 			@updated="function(value) { $emit('updated', value) }"/>
 	</dl>
 </template>

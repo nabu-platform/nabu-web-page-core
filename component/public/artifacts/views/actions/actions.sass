@@ -21,90 +21,84 @@
 
 
 // menu 1
-.page-actions {
-	&.menu1 {
-		margin: 0;
-		padding: 0;
-		position: relative;
-		background-color: $alpha-accent-color;
-		border: $alpha-border solid 1px;
-		border-style: none none solid none;
-		.icon {
-			margin-right: 0.3rem;
-		}
+.menu1 {
+	margin: 0;
+	padding: 0;
+	position: relative;
+	background-color: $alpha-accent-color;
+	border: $alpha-border solid 1px;
+	border-style: none none solid none;
+	.icon {
+		margin-right: 0.3rem;
+	}
+	.page-actions {
+		z-index: 10;
+		position: absolute;
+		left: 0;
+		top: 100%;
 		.page-actions {
-			z-index: 10;
-			position: absolute;
-			left: 0;
-			top: 100%;
-			.page-actions {
-				left: 100%;
-				top: 0;
-			}
+			left: 100%;
+			top: 0;
 		}
-		li.page-action {
-			white-space: nowrap;
+	}
+	li.page-action {
+		white-space: nowrap;
+		color: $alpha-accent-contrast;
+		font-size: 0.8rem;
+		display: inline-block;
+		cursor: pointer;
+		position: relative;
+		list-style: none;
+		padding: 0.7rem;
+		&:hover {
+			background-color: lighten($alpha-accent-color, 10%);
+		}
+		> span, > a {
 			color: $alpha-accent-contrast;
-			font-size: 0.8rem;
+			white-space: nowrap;
 			display: inline-block;
-			cursor: pointer;
-			position: relative;
-			list-style: none;
-			padding: 0.7rem;
-			&:hover {
-				background-color: lighten($alpha-accent-color, 10%);
-			}
-			> span, > a {
-				color: $alpha-accent-contrast;
-				white-space: nowrap;
-				display: inline-block;
-			}
-			li {
-				display: block;
-			}
+		}
+		li {
+			display: block;
 		}
 	}
 }
 
 // menu 2
-.page-actions {
-	&.menu2 {
-		margin: 0;
-		padding: 0;
-		position: relative;
-		display: flex;
-		.right {
-			margin-left: auto;
-		}
-		li.page-action {
-			list-style: none;
-			white-space: nowrap;
-		}
+.menu2 {
+	margin: 0;
+	padding: 0;
+	position: relative;
+	display: flex;
+	.right {
+		margin-left: auto;
+	}
+	li.page-action {
+		list-style: none;
+		white-space: nowrap;
+	}
+	.page-actions {
+		z-index: 10;
+		position: absolute;
+		right: 0;
+		top: 100%;
 		.page-actions {
-			z-index: 10;
-			position: absolute;
-			right: 0;
-			top: 100%;
-			.page-actions {
-				left: 100%;
-				top: 0;
-			}
+			left: 100%;
+			top: 0;
 		}
 	}
 }
 
 // choices 1
-.page-actions {
-	&.choices1 {
-		margin: 0;
-		padding: 0;
-		position: relative;
-		li.page-action {
-			display: inline-block;
-			list-style: none;
-			white-space: nowrap;
-			margin: 0.5rem;
-			padding: 2rem;
-		}
+.choices1 {
+	margin: 0;
+	padding: 0;
+	position: relative;
+	li.page-action {
+		display: inline-block;
+		list-style: none;
+		white-space: nowrap;
+		margin: 0.5rem;
+		padding: 2rem;
 	}
 }

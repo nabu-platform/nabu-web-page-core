@@ -83,7 +83,7 @@
 					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
 					><span>{{ action.label }}</span></span>
 			<page-actions :ref="'action_' + getActions().indexOf(action)"
-				v-if="action.actions && action.actions.length"
+				v-if="(action.actions && action.actions.length) || configuringAction == action"
 				:cell="cell"
 				:page="page"
 				:parameters="parameters"

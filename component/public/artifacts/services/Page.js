@@ -26,13 +26,19 @@ nabu.services.VueService(Vue.extend({
 			instances: {},
 			// application properties
 			properties: [],
+			// the devices for this application
+			devices: [],
 			// application styles
 			styles: [],
 			lastCompiled: null,
 			customStyle: null,
 			cssStep: null,
 			editable: false,
-			wantEdit: false
+			wantEdit: false,
+			copiedRow: null,
+			copiedCell: null,
+			useEval: false,
+			cssLastModified: null
 		}
 	},
 	activate: function(done) {
@@ -71,6 +77,9 @@ nabu.services.VueService(Vue.extend({
 			if (configuration.properties) {
 				nabu.utils.arrays.merge(self.properties, configuration.properties);
 			}
+			if (configuration.devices) {
+				nabu.utils.arrays.merge(self.devices, configuration.devices);
+			}
 			if (configuration.title) {
 				self.title = configuration.title;
 			}
@@ -79,6 +88,8 @@ nabu.services.VueService(Vue.extend({
 					Vue.nextTick(function() {
 						self.loading = false;
 					});
+					// start reloading the css at fixed intervals to pull in any relevant changes
+					self.reloadCss();
 					done();
 				});
 				document.addEventListener("keydown", function(event) {
@@ -95,6 +106,23 @@ nabu.services.VueService(Vue.extend({
 			}
 		});
 	},
+	created: function() {
+		var self = this;
+		window.addEventListener("paste", function(event) {
+			console.log("paste listener triggered!!", event);
+			var data = event.clipboardData.getData("text/plain");
+			if (data) {
+				var parsed = JSON.parse(data);
+				if (parsed && parsed.type == "page-row") {
+					self.copiedRow = parsed.content;
+				}
+				else if (parsed && parsed.type == "page-cell") {
+					self.copiedCell = parsed.content;
+				}
+			}
+		});
+		this.isServerRendering = navigator.userAgent.match(/Nabu-Renderer/);
+	},
 	computed: {
 		enumerators: function() {
 			var providers = {};
@@ -105,6 +133,37 @@ nabu.services.VueService(Vue.extend({
 		}
 	},
 	methods: {
+		destroy: function(component) {
+			if (component.page && component.cell) {
+				var pageInstance = this.instances[component.page.name];
+				Vue.set(pageInstance.components, component.cell.id, null);
+			}	
+		},
+		reloadCss: function() {
+			var self = this;
+			nabu.utils.ajax({url:"${server.root()}page/v1/api/css-modified"}).then(function(response) {
+				if (response.responseText) {
+					var date = new Date(response.responseText);
+					if (!self.cssLastModified) {
+						self.cssLastModified = date;
+					}
+					else if (date.getTime() > self.cssLastModified.getTime()) {
+						// actually reload
+						var links = document.head.getElementsByTagName("link");
+						for (var i = 0; i < links.length; i++) {
+							var original = links[i].getAttribute("original");
+							if (!original) {
+								original = links[i].href;
+								links[i].setAttribute("original", original);
+							}
+							links[i].setAttribute("href", original + "&loadTime=" + date.getTime());
+						}
+						self.cssLastModified = date;
+					}
+				}
+				setTimeout(self.reloadCss, 2000);
+			});
+		},
 		getBindingValue: function(pageInstance, bindingValue) {
 			var enumerators = this.enumerators;
 			// allow for fixed values
@@ -209,17 +268,32 @@ nabu.services.VueService(Vue.extend({
 			if (!condition) {
 				return true;
 			}
-			try {
-				var result = eval(condition);
+			if (this.useEval) {
+				try {
+					var result = eval(condition);
+				}
+				catch (exception) {
+					console.error("Could not evaluate", condition, exception);
+					return false;
+				}
+				if (result instanceof Function) {
+					result = result(state);
+				}
+				return result == true;
 			}
-			catch (exception) {
-				console.error("Could not evaluate", condition, exception);
-				return false;
+			else {
+				try {
+					var result = Function('"use strict";return (function(state, $services) { return ' + condition + ' })')()(state, this.$services);
+				}
+				catch (exception) {
+					console.error("Could not evaluate", condition, exception);
+					return false;
+				}
+				if (result instanceof Function) {
+					result = result(state);
+				}
+				return result == true;
 			}
-			if (result instanceof Function) {
-				result = result(state);
-			}
-			return result == true;
 		},
 		classes: function(clazz, value) {
 			var result = [];
@@ -281,7 +355,8 @@ nabu.services.VueService(Vue.extend({
 			return this.$services.swagger.execute("nabu.web.page.core.rest.configuration.update", {
 				body: {
 					title: this.title,
-					properties: self.properties
+					properties: self.properties,
+					devices: self.devices
 				}
 			});
 		},
@@ -415,7 +490,7 @@ nabu.services.VueService(Vue.extend({
 			document.head.appendChild(script);
 		},
 		canEdit: function() {
-			return this.editable;	
+			return !this.isServerRendering && this.editable;	
 		},
 		pathParameters: function(url) {
 			if (!url) {
@@ -564,6 +639,9 @@ nabu.services.VueService(Vue.extend({
 			var result = {
 				properties: {}
 			};
+			if (!route) {
+				return result;
+			}
 			if (route.url) {
 				this.pathParameters(route.url).map(function(key) {
 					result.properties[key] = {
@@ -661,13 +739,19 @@ nabu.services.VueService(Vue.extend({
 			});
 			return keys;
 		},
-		getAvailableParameters: function(page, cell) {
+		getAvailableParameters: function(page, cell, includeAllEvents) {
 			var result = {};
-			
+
 			var pageInstance = this.instances[page.name];
 			var self = this;
 			
-			var self = this;
+			// the available events
+			var available = pageInstance.getEvents();
+			if (includeAllEvents) {
+				Object.keys(available).map(function(key) {
+					result[key] = available[key];
+				});
+			}
 			
 			var provided = this.getProvidedParameters();
 			Object.keys(provided.properties).map(function(key) {
@@ -684,15 +768,16 @@ nabu.services.VueService(Vue.extend({
 
 			// the available state, page state overrides page parameters & application parameters if relevant
 			page.content.states.map(function(state) {
-				if (self.$services.swagger.operation(state.operation).responses && self.$services.swagger.operation(state.operation).responses["200"]) {
-					result[state.name] = self.$services.swagger.resolve(self.$services.swagger.operation(state.operation).responses["200"]).schema;
+				if (state.operation) {
+					var operation = self.$services.swagger.operation(state.operation);
+					if (operation && operation.responses && operation.responses["200"]) {
+						result[state.name] = self.$services.swagger.resolve(operation.responses["200"]).schema;
+					}
 				}
 			});
 			
 			// cell specific stuff overwrites everything else
 			if (cell) {
-				// the available events
-				var available = pageInstance.getEvents();
 				var targetPath = this.getTargetPath(page.content, cell.id);
 				if (targetPath && targetPath.length) {
 					targetPath.map(function(part) {

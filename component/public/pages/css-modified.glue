@@ -1,0 +1,12 @@
+boolean development = environment("development")
+
+if (development)
+	latest = null
+	target = "repository:" + environment("webApplicationId") + ":/public"
+	for (file : file.list(fileRegex: ".*\.(sass|scss)$", target: target, recursive: true))
+		current = modified(target + "/" + file)
+		if (latest == null || current > latest)
+			latest = current
+	echo(latest)
+else
+	response.code(404)

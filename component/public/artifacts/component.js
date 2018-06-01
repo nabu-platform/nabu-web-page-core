@@ -127,6 +127,7 @@ window.addEventListener("load", function() {
 		
 		return $services.$register({
 			page: nabu.page.services.Page,
+			resizer: nabu.page.services.Resizer,
 			formatter: nabu.page.services.Formatter
 		});
 	});

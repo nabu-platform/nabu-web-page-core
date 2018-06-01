@@ -1,6 +1,6 @@
 <sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" disabled="false" id="0f31efa7-07e1-4135-8883-8f0ac7494ee0">
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" id="a80153b0-2533-4426-80bf-92bf3d741113">
-		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="3d97b1e4-d504-429d-b2db-d8ce6683390a" invocationOrder="0" temporaryMapping="true" serviceId="nabu.utils.Resource.write" resultName="resultc98e766bb14a41dd96b38b0c1b0b8340" y="89" x="99">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="3d97b1e4-d504-429d-b2db-d8ce6683390a" serviceId="nabu.utils.Resource.write" resultName="resultc98e766bb14a41dd96b38b0c1b0b8340" invocationOrder="0" temporaryMapping="true" y="89" x="99">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="ae72600b-0129-4d8c-84c4-49ed85b54ad0" fixedValue="true" optional="false" mask="false">
 				<from>="repository:" + input/webApplicationId + ":/public/artifacts/compiled.css"</from>
 				<to>uri</to>

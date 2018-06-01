@@ -4,6 +4,7 @@
 			<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
 			<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
 			<button @click="$services.page.update(page)"><span class="fa fa-save" title="Save"></span></button>
+			<button @click="pasteRow" v-if="$services.page.copiedRow"><span class="fa fa-paste"></span></button>
 			<button @click="edit = false"><span class="fa fa-sign-out-alt" title="Stop Editing"></span></button>
 		</div>
 		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit" :draggable="true" 
@@ -76,6 +77,7 @@
 						<n-form-combo v-model="action.route" v-if="!action.operation" label="Redirect" :filter="filterRoutes"/>
 						<n-form-combo v-model="action.anchor" v-if="action.route" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 						<n-form-combo v-model="action.operation" v-if="!action.route" label="Operation" :filter="getOperations" />
+						<n-form-text v-model="action.event" label="Success Event" :timeout="600" @input="$emit('updatedEvents')"/>
 						<n-page-mapper v-if="action.operation && !action.route" :to="getOperationParameters(action.operation)"
 							:from="availableParameters" 
 							v-model="action.bindings"/>
@@ -133,10 +135,22 @@
 							</n-collapsible>
 							<n-collapsible title="Cell Settings" key="cell-settings">
 								<n-form-text label="Cell Id" v-model="cell.customId"/>
+								<n-form-text label="Cell Name" v-model="cell.name"/>
 								<n-form-text label="Cell Width (flex)" v-model="cell.width"/>
 								<n-form-text label="Cell Height (any)" v-model="cell.height"/>
 								<n-form-text label="Class" v-model="cell.class"/>
 								<n-form-text label="Condition" v-model="cell.condition"/>
+								<div class="list-actions">
+									<button @click="addDevice(cell)">Add device rule</button>
+								</div>
+								<div v-if="cell.devices">
+									<div class="list-row" v-for="device in cell.devices">
+										<n-form-combo v-model="device.operator" :items="['>', '>=', '<', '<=', '==']"/>
+										<n-form-combo v-model="device.name" 
+											:filter="suggestDevices"/>
+										<button @click="cell.devices.splice(cell.devices.indexOf(device), 1)"><span class="fa fa-trash"></span></button>
+									</div>
+								</div>
 							</n-collapsible>
 							<n-collapsible title="Eventing" key="cell-events">
 								<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents"/>
@@ -146,6 +160,7 @@
 					</n-form>
 				</n-sidebar>
 				<div class="page-cell-menu n-page-menu" v-if="edit">
+					<span v-if="cell.name">{{cell.name}}</span>
 					<button @click="configuring = cell.id"><span class="fa fa-magic" title="Set Cell Content"></span></button>
 					<button @click="configure(cell)" v-if="cell.alias"><span class="fa fa-cog" title="Configure Cell Content"></span></button>
 					<button @click="left(row, cell)"><span class="fa fa-chevron-circle-left"></span></button>
@@ -154,10 +169,12 @@
 					<button @click="cellDown(row, cell)"><span class="fa fa-chevron-circle-down"></span></button>
 					<button @click="addRow(cell)"><span class="fa fa-plus" title="Add Row"></span></button>
 					<button @click="removeCell(row.cells, cell)"><span class="fa fa-times" title="Remove Cell"></span></button>
+					<button @click="copyCell(cell)"><span class="fa fa-copy" title="Copy Cell"></span></button>
+					<button @click="pasteRow(cell)" v-if="$services.page.copiedRow"><span class="fa fa-paste" title="Paste Row"></span></button>
 				</div>
 				
 				<div v-if="edit">
-					<div v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return false } }"></div>
+					<div v-if="cell.alias" :key="'rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return false } }"></div>
 					<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 						:parameters="parameters"
 						:events="events"
@@ -167,7 +184,7 @@
 				</div>
 				<template v-else-if="shouldRenderCell(row, cell)">
 					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)">
-						<div v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+						<div :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"
@@ -176,7 +193,7 @@
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-sidebar>
 					<n-prompt v-if="cell.target == 'prompt'" @close="close(cell)">
-						<div v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+						<div :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"
@@ -185,7 +202,7 @@
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-prompt>
 					<template v-else>
-						<div v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+						<div :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"
@@ -205,6 +222,17 @@
 						<n-form-text label="Condition" v-model="row.condition"/>
 						<n-form-combo label="Direction" v-model="row.direction" :items="['horizontal', 'vertical']"/>
 						<n-form-combo label="Alignment" v-model="row.align" :items="['center', 'flex-start', 'flex-end', 'stretch', 'baseline']"/>
+						<div class="list-actions">
+							<button @click="addDevice(row)">Add device rule</button>
+						</div>
+						<div v-if="row.devices">
+							<div class="list-row" v-for="device in row.devices">
+								<n-form-combo v-model="device.operator" :items="['>', '>=', '<', '<=', '==']"/>
+								<n-form-combo v-model="device.name" 
+									:filter="suggestDevices"/>
+								<button @click="row.devices.splice(row.devices.indexOf(device), 1)"><span class="fa fa-trash"></span></button>
+							</div>
+						</div>
 					</n-collapsible>
 					<n-collapsible title="Repeat" class="list" v-if="row.instances && $services.page.getAllArrays(page, row.id).length">
 						<div class="list-actions" v-if="!Object.keys(row.instances).length">
@@ -226,6 +254,8 @@
 				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button>
 				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button>
 				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="addCell(row)"><span class="fa fa-plus" title="Add Cell"></span></button>
+				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="copyRow(row)"><span class="fa fa-copy" title="Copy Row"></span></button>
+				<button v-if="!row.collapsed && $services.page.copiedCell" :style="rowButtonStyle(row)" @click="pasteCell(row)"><span class="fa fa-paste" title="Paste Cell"></span></button>
 				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
 				<button @click="row.collapsed = !row.collapsed"><span class="fa" :class="{'fa-minus-square': !row.collapsed, 'fa-plus-square': row.collapsed }"></span></button>
 			</div>

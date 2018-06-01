@@ -38,7 +38,8 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			configuring: false,
 			state: {},
 			showing: [],
-			lastAction: null
+			lastAction: null,
+			configuringAction: null
 		}
 	},
 	ready: function() {
@@ -141,7 +142,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				}
 				else if (action.activeRoutes) {
 					var match = action.activeRoutes.filter(function(route) {
-						if (route && (route == self.$services.vue.route || self.$services.vue.route.match(route))) {
+						if (route && (route == self.$services.vue.route || self.$services.vue.route.match("^" + route + "$"))) {
 							return true;
 						}
 					}).length > 0;
@@ -283,8 +284,13 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			});
 		},
 		configureAction: function(action) {
-			var key = "action_" + this.getActions().indexOf(action);
-			this.$refs[key][0].configure();
+			this.configuringAction = action;
+			var self = this;
+			// give it time to render and resolve the $ref
+			Vue.nextTick(function() {
+				var key = "action_" + self.getActions().indexOf(action);
+				self.$refs[key][0].configure();
+			});
 		},
 		up: function(action) {
 			var actions = this.getActions();

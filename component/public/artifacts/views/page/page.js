@@ -1,6 +1,7 @@
 if (!nabu) { var nabu = {} }
 if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
+if (!nabu.page.mixins) { nabu.page.mixins = {} }
 
 // on created, we want to inject the state of the page into this component so we can access all the data
 Vue.mixin({
@@ -94,6 +95,9 @@ nabu.page.views.Page = Vue.extend({
 			});
 		}
 	},
+/*	beforeDestroy: function() {
+		Vue.set(this.$services.page.instances, this.page.name, null);	
+	},*/
 	computed: {
 		events: function() {
 			return this.getEvents();
@@ -133,6 +137,10 @@ nabu.page.views.Page = Vue.extend({
 		}
 	},
 	methods: {
+		pasteRow: function() {
+			this.page.content.rows.push(this.$services.page.copiedRow);
+			this.$services.page.copiedRow = null;
+		},
 		filterRoutes: function(value) {
 			var routes = this.$services.router.list().filter(function(x) {
 				return x.alias && (!value || x.alias.toLowerCase().indexOf(value.toLowerCase()) >= 0);
@@ -196,8 +204,14 @@ nabu.page.views.Page = Vue.extend({
 			var parameters = this.$services.swagger.operations[operation].parameters;
 			return parameters ? parameters.map(function(x) { return x.name }) : [];
 		},
-		getOperations: function() {
-			return Object.keys(this.$services.swagger.operations);
+		getOperations: function(value) {
+			var options = Object.keys(this.$services.swagger.operations);
+			if (value) {
+				options = options.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				})
+			}
+			return options;
 		},
 		getAvailableEvents: function() {
 			var available = this.getEvents();
@@ -210,6 +224,7 @@ nabu.page.views.Page = Vue.extend({
 				confirmation: null,
 				operation: null,
 				route: null,
+				event: null,
 				anchor: null,
 				bindings: {}
 			});
@@ -218,13 +233,16 @@ nabu.page.views.Page = Vue.extend({
 			this.page.content.query.splice(index, 1);	
 		},
 		mounted: function(cell, row, state, component) {
+			var self = this;
+			component.$on("hook:beforeDestroy", function() {
+				self.$services.page.destroy(component);
+			});
 			// reset event cache
 			this.cachedEvents = null;
 			this.components[cell.id] = component;
 			
 			// we subscribe to a very specific event that will reset all the registered events
 			// this is because it is cached...
-			var self = this;
 			component.$on("updatedEvents", function() {
 				self.resetEvents();
 			});
@@ -323,9 +341,18 @@ nabu.page.views.Page = Vue.extend({
 			if (!this.cachedEvents) {
 				var events = {};
 				var self = this;
+				
+				// your page actions can trigger success events
+				if (this.page.content.actions) {
+					this.page.content.actions.filter(function(x) { return x.event }).map(function(action) {
+						// TODO
+					});
+				}
+				
 				Object.keys(this.components).map(function(cellId) {
-					if (self.components[cellId].getEvents) {
-						var cellEvents = self.components[cellId].getEvents();
+					var component = self.components[cellId];
+					if (component && component.getEvents) {
+						var cellEvents = component.getEvents();
 						if (cellEvents) {
 							Object.keys(cellEvents).map(function(key) {
 								events[key] = cellEvents[key];
@@ -556,11 +583,12 @@ nabu.page.views.Page = Vue.extend({
 			}
 			for (var i = 0; i < parts.length - 1; i++) {
 				if (!target[parts[i]]) {
-					target[parts[i]] = {};
+					Vue.set(target, parts[i], {});
 				}
 				target = target[parts[i]];
 			}
-			target[parts[parts.length - 1]] = value;
+			console.log("updating", target[parts[parts.length - 1]],parts[parts.length - 1],  value);
+			Vue.set(target, parts[parts.length - 1], value);
 		}
 	},
 	watch: {
@@ -625,6 +653,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		});
 	},
 	methods: {
+		getInstance: function() {
+			return this.$services.page.instances[this.name];	
+		},
 		getState: function(row, cell) {
 			var self = this;
 			var localState = this.getLocalState(row, cell);
@@ -805,7 +836,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		},
 		getRouteParameters: function(cell) {
 			var route = this.$services.router.get(cell.alias);
-			return this.$services.page.getRouteParameters(route);
+			return route ? this.$services.page.getRouteParameters(route) : {};
 		},
 		getAvailableParameters: function(cell) {
 			return this.$services.page.getAvailableParameters(this.page, cell);
@@ -839,6 +870,12 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			if (this.edit) {
 				return true;
 			}
+			// if we have width limitations, check those first
+			if (row.devices) {
+				if (!this.isDevice(row.devices)) {
+					return false;
+				}
+			}
 			if (!!row.condition) {
 				if (!this.$services.page.isCondition(row.condition, getState(row))) {
 					return false;
@@ -848,6 +885,46 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			if (row.on) {
 				if (!pageInstance.get(row.on)) {
 					return false;
+				}
+			}
+			return true;
+		},
+		isDevice: function(devices) {
+			var actual = this.$services.resizer.width;
+			for (var i = 0; i < devices.length; i++) {
+				if (devices[i].operator) {
+					var operator = devices[i].operator;
+					var width = 0;
+					if (devices[i].name.match(/[0-9]+/)) {
+						width = parseInt(devices[i].name);
+					}
+					else {
+						var device = this.$services.page.devices.filter(function(x) { return x.name == devices[i].name })[0];
+						if (device && device.width) {
+							width = parseInt(device.width);
+						}
+					}
+					// infinitely big, so matches any query requesting larger
+					if (width == 0) {
+						if (operator != ">" && operator != ">=") {
+							return false;
+						}
+					}
+					else if (operator == "<" && actual >= width) {
+						return false;
+					}
+					else if (operator == "<=" && actual > width) {
+						return false;
+					}
+					else if (operator == ">" && actual <= width) {
+						return false;
+					}
+					else if (operator == ">=" && actual < width) {
+						return false;
+					}
+					else if (operator == "==" && actual != width) {
+						return false;
+					}
 				}
 			}
 			return true;
@@ -862,6 +939,13 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			else if (!cell.alias && !cell.rows.length) {
 				return false;
 			}
+			// if we have width limitations, check those first
+			if (cell.devices) {
+				if (!this.isDevice(cell.devices)) {
+					return false;
+				}
+			}
+			
 			if (cell.condition) {
 				if (!this.$services.page.isCondition(cell.condition, this.getState(row, cell))) {
 					return false;
@@ -895,13 +979,16 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				}
 				// if we have a bound value and it does not originate from the (ever present) page, it must come from an event
 				// check that the event has occurred
-				if (cell.bindings[name] && cell.bindings[name].indexOf("page.") != 0) {
+				// use the cell.on to define this?
+				// sometimes need to always show an empty table or whatever
+				// may need to allow an array in cell.on?
+				/*if (cell.bindings[name] && cell.bindings[name].indexOf("page.") != 0) {
 					var parts = cell.bindings[name].split(".");
 					// if the event does not exist yet, stop
 					if (!pageInstance.variables[parts[0]]) {
 						return false;
 					}
-				}
+				}*/
 				return consensus;
 			}, true);
 		},
@@ -995,6 +1082,19 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			});
 			return result;
 		},
+		addDevice: function(cell) {
+			if (!cell.devices) {
+				Vue.set(cell, "devices", []);
+			}
+			cell.devices.push({name: null, operator: '>'});
+		},
+		suggestDevices: function(value) {
+			var devices = this.$services.page.devices.map(function(x) { return x.name }); 
+			if (value && value.match(/[0-9]+/)) { 
+				devices.unshift(value) 
+			}
+			return devices;
+		},
 		addCell: function(target) {
 			if (!target.cells) {
 				Vue.set(target, "cells", []);
@@ -1007,6 +1107,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				// the route may have input parameters (path + query), these are the relevant bindings
 				// the binding variable contains keys for each path/query parameter in the route
 				bindings: {},
+				name: null,
 				// state that is maintained by the cell owner (the route alias)
 				// for example it might offer additional configuration
 				state: {},
@@ -1022,7 +1123,8 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				width: 1,
 				height: null,
 				instances: {},
-				condition: null
+				condition: null,
+				devices: []
 			});
 		},
 		addInstance: function(target) {
@@ -1100,6 +1202,26 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				styles.push({"display": "inline-block"})
 			}
 			return styles;
+		},
+		copyCell: function(cell) {
+			nabu.utils.objects.copy({
+				type: "page-cell",
+				content: cell
+			});
+		},
+		copyRow: function(row) {
+			nabu.utils.objects.copy({
+				type: "page-row",
+				content: row
+			});
+		},
+		pasteCell: function(row) {
+			row.cells.push(this.$services.page.copiedCell);
+			this.$services.page.copiedCell = null;
+		},
+		pasteRow: function(cell) {
+			cell.rows.push(this.$services.page.copiedRow);
+			this.$services.page.copiedRow = null;
 		}
 	}
 });

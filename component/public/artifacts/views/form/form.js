@@ -96,7 +96,7 @@ nabu.page.views.PageForm = Vue.extend({
 				Vue.set(state, "fields", []);
 			}
 			if (!state.class) {
-				Vue.set(state, "class", "layout2");
+				Vue.set(state, "class", null);
 			}
 			if (!state.ok) {
 				Vue.set(state, "ok", "Ok");
@@ -304,15 +304,30 @@ nabu.page.views.PageForm = Vue.extend({
 					}
 					tmp = tmp[parts[i]];
 				}
-				Vue.set(tmp, parts[parts.length - 1], result[name]);	
+				Vue.set(tmp, parts[parts.length - 1], result[name]);
+				// if it is a complex field, set the string value as well
+				// this makes it easier to check later on if it has been set or not
+				if (name.indexOf(".") > 0) {
+					// set the full name field as well
+					transformed[name] = result[name];
+				}
 			});
 			var self = this;
+			// no need, this is bound in the created() hook into this.result so picked up in the above mapping (unless overwritten)
 			var pageInstance = this.$services.page.instances[this.page.name];
 			// bind additional stuff from the page
 			Object.keys(this.cell.bindings).map(function(name) {
 				// don't overwrite manually set values
 				if (self.cell.bindings[name] && !transformed[name]) {
-					transformed[name] = pageInstance.get(self.cell.bindings[name]);
+					var parts = name.split(".");
+					var tmp = transformed;
+					for (var i = 0; i < parts.length - 1; i++) {
+						if (!tmp[parts[i]]) {
+							Vue.set(tmp, parts[i], {});
+						}
+						tmp = tmp[parts[i]];
+					}
+					Vue.set(tmp, parts[parts.length - 1], pageInstance.get(self.cell.bindings[name]));
 				}
 			});
 			return transformed;
@@ -336,7 +351,7 @@ nabu.page.views.PageForm = Vue.extend({
 					// if we want to synchronize the values, do so
 					if (self.cell.state.synchronize) {
 						Object.keys(self.cell.bindings).map(function(name) {
-							pageInstance.set(self.cell.bindings[name], result[name]);
+							pageInstance.set(self.cell.bindings[name], self.result[name]);
 						});
 					}
 					if (self.cell.state.event) {

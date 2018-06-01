@@ -28,6 +28,18 @@
 				</div>
 			</n-form-section>
 		</n-collapsible>
+		<n-collapsible title="Devices" class="main">
+			<n-form-section>
+				<div class="list-actions">
+					<button @click="$services.page.devices.push({name:null,width:0})">Add device</button>
+				</div>
+				<div class="list-row" v-for="device in $services.page.devices">
+					<n-form-text v-model="device.name" :required="true" label="Device Name" :timeout="600" @input="$services.page.saveConfiguration"/>
+					<n-form-text v-model="device.width" type="number" label="Width" :timeout="600" @input="$services.page.saveConfiguration"/>
+					<button @click="$services.page.properties.splice($services.page.devices.indexOf(device), 1); $services.page.saveConfiguration()"><span class="fa fa-trash"></span></button>
+				</div>
+			</n-form-section>
+		</n-collapsible>
 		<n-collapsible title="Pages" class="list">
 			<footer class="list-actions">
 				<button @click="create">Create New Page</button>

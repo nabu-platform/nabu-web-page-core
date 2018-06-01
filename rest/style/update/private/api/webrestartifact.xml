@@ -2,7 +2,7 @@
 <restInterface>
     <method>PUT</method>
     <path>/{applicationId}/style/{path: .*}</path>
-    <role>$user</role>
+    <role>editor</role>
     <permissionContext>=input/path/applicationId</permissionContext>
     <permissionAction>style.update</permissionAction>
     <input>nabu.web.page.core.types.rest.style</input>

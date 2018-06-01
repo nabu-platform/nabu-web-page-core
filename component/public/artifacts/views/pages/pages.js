@@ -39,7 +39,6 @@ nabu.page.views.Pages = Vue.extend({
 			var data = event.clipboardData.getData("text/plain");
 			if (data) {
 				var parsed = JSON.parse(data);
-				console.log("pasted", parsed);
 				if (parsed && parsed.type == "page-category") {
 					self.$confirm({ 
 						message: "Are you sure you want to add the category '" + parsed.category + "' to this website?", 
@@ -47,7 +46,7 @@ nabu.page.views.Pages = Vue.extend({
 						ok: 'Add'
 					}).then(function() {
 						parsed.pages.map(function(page) {
-							self.$services.page.create(page);
+							self.$services.page.update(page);
 						})
 					});
 				}

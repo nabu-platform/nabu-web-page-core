@@ -11,7 +11,7 @@
 					<n-form-switch v-model="cell.state.immediate" label="Save On Change"/>
 					<n-form-text v-model="cell.state.cancel" v-if="!cell.state.immediate" label="Cancel Label"/>
 					<n-form-text v-model="cell.state.ok" v-if="!cell.state.immediate" label="Ok Label"/>
-					<n-form-text v-model="cell.state.event" label="Success Event"/>
+					<n-form-text v-model="cell.state.event" label="Success Event" :timeout="600" @input="$emit('updatedEvents')"/>
 					<n-form-switch v-model="cell.state.synchronize" label="Synchronize Changes"/>
 				</n-collapsible>
 				<n-collapsible title="Value Binding">
@@ -59,15 +59,6 @@
 
 <template id="page-form-field">
 	<n-form-section class="page-form-field">
-		<n-form-combo v-if="field.type == 'enumerationOperation'" :filter="filterEnumeration"
-			:formatter="function(x) { return field.enumerationOperationLabel ? x[field.enumerationOperationLabel] : x }"
-			v-model="currentEnumerationValue"
-			:timeout="600"
-			:label="fieldLabel"
-			:extracter="function(x) { return field.enumerationOperationValue ? x[field.enumerationOperationValue] : x }"
-			@input="function(value) { $window.console.log('new value is', value) }"
-			:disabled="isDisabled"/>
-			
 		<component v-else 
 			:is="getProvidedComponent(field.type)"
 			:value="value"

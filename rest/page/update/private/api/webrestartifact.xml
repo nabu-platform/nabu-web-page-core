@@ -2,6 +2,7 @@
 <restInterface>
     <method>PUT</method>
     <path>/page</path>
+    <role>editor</role>
     <permissionContext>=input/webApplicationId</permissionContext>
     <permissionAction>page.edit</permissionAction>
     <input>nabu.web.page.core.types.rest.page</input>
