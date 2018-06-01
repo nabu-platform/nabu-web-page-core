@@ -59,7 +59,7 @@
 
 <template id="page-form-field">
 	<n-form-section class="page-form-field">
-		<component v-else 
+		<component
 			:is="getProvidedComponent(field.type)"
 			:value="value"
 			:page="page"
@@ -99,25 +99,8 @@
 		<n-form-text v-model="field.description" label="Description" v-if="allowDescription" />
 		<n-form-combo v-model="field.type" v-if="!isList || !isList(field.name)" label="Type" :items="types"/>
 		<n-form-text v-model="field.value" v-if="field.type == 'fixed'" label="Fixed Value"/>
-		<n-form-section class="enumeration" v-if="field.type == 'enumerationOperation'">
-			<n-form-combo :value="field.enumerationOperation ? $services.swagger.operations[field.enumerationOperation] : null"
-				label="Enumeration Operation"
-				@input="function(newValue) { field.enumerationOperation = newValue.id }"
-				:formatter="function(x) { return x.id }"
-				:filter="getEnumerationServices"/>
-			<n-form-combo v-if="field.enumerationOperation" v-model="field.enumerationOperationLabel" label="Enumeration Label"
-				:filter="function() { return getEnumerationFields(field.enumerationOperation) }"/>
-			<n-form-combo v-if="field.enumerationOperation" v-model="field.enumerationOperationValue" label="Enumeration Value"
-				:filter="function() { return getEnumerationFields(field.enumerationOperation) }"/>
-			<n-form-combo v-if="field.enumerationOperation" v-model="field.enumerationOperationQuery" label="Enumeration Query"
-				:filter="function() { return getEnumerationParameters(field.enumerationOperation) }"/>
-			<n-page-mapper v-if="field.enumerationOperation && hasMappableEnumerationParameters(field)"
-				v-model="field.enumerationOperationBinding"
-				:from="$services.page.getAvailableParameters(page, cell)"
-				:to="getMappableEnumerationParameters(field)"/>
-		</n-form-section>
 		
-		<component v-if="field.type && ['enumerationOperation', 'fixed'].indexOf(field.type) < 0"
+		<component v-if="field.type && ['fixed'].indexOf(field.type) < 0"
 			:is="getProvidedConfiguration(field.type)"
 			:page="page"
 			:cell="cell"

@@ -429,8 +429,7 @@ Vue.component("page-form-field", {
 	// mostly a copy paste from form-section
 	data: function() {
 		return {
-			labels: [],
-			currentEnumerationValue: null
+			labels: []
 		}
 	},
 	computed: {
@@ -453,39 +452,6 @@ Vue.component("page-form-field", {
 				 return x.name == type;
 			})[0];
 			return provided ? provided.component : null;	
-		},
-		filterEnumeration: function(value) {
-			var parameters = {};
-			if (this.field.enumerationOperationQuery) {
-				parameters[this.field.enumerationOperationQuery] = value;
-			}
-			// map any additional bindings
-			if (this.field.enumerationOperationBinding) {
-				var self = this;
-				var pageInstance = this.$services.page.instances[this.page.name];
-				Object.keys(this.field.enumerationOperationBinding).map(function(key) {
-					var target = parameters;
-					var parts = key.split(".");
-					for (var i = 0; i < parts.length - 1; i++) {
-						if (!target[parts[i]]) {
-							target[parts[i]] = {};
-						}
-						target = target[parts[i]];
-					}
-					target[parts[parts.length - 1]] = pageInstance.get(self.field.enumerationOperationBinding[key]);
-				});
-			}
-			return this.$services.swagger.execute(this.field.enumerationOperation, parameters, function(response) {
-				var result = null;
-				if (response) {
-					Object.keys(response).map(function(key) {
-						if (response[key] instanceof Array) {
-							result = response[key];
-						}
-					});
-				}
-				return result ? result : [];
-			});
 		},
 		validate: function(soft) {
 			var messages = nabu.utils.vue.form.validateChildren(this, soft);
@@ -520,12 +486,6 @@ Vue.component("page-form-field", {
 			else {
 				this.labels.push(null);
 			}
-		}
-	},
-	watch: {
-		currentEnumerationValue: function(newValue) {
-			//this.$emit('input', this.field.enumerationOperationValue ? newValue[this.field.enumerationOperationValue] : newValue);
-			this.$emit('input', newValue);
 		}
 	}
 });
@@ -584,12 +544,7 @@ Vue.component("page-form-configure", {
 				description: null,
 				type: 'text',
 				enumerations: [],
-				value: null,
-				enumerationOperation: null,
-				enumerationOperationLabel: null,
-				enumerationOperationValue: null,
-				enumerationOperationQuery: null,
-				enumerationOperationBinding: {}
+				value: null
 			})
 		}
 	}
@@ -634,7 +589,7 @@ Vue.component("page-form-configure-single", {
 	},
 	computed: {
 		types: function() {
-			var provided = ['enumerationOperation', 'fixed'];
+			var provided = ['fixed'];
 			nabu.utils.arrays.merge(provided, nabu.page.providers("page-form-input").map(function(x) { return x.name }));
 			provided.sort();
 			return provided;
@@ -666,80 +621,6 @@ Vue.component("page-form-configure-single", {
 			if (!field.value) {
 				Vue.set(field, "value", null);
 			}
-			if (!field.enumerationOperation) {
-				Vue.set(field, "enumerationOperation", null);
-			}
-			if (!field.enumerationOperationLabel) {
-				Vue.set(field, "enumerationOperationLabel", null);
-			}
-			if (!field.enumerationOperationValue) {
-				Vue.set(field, "enumerationOperationValue", null);
-			}
-			if (!field.enumerationOperationQuery) {
-				Vue.set(field, "enumerationOperationQuery", null);
-			}
-			if (!field.enumerationOperationBinding) {
-				Vue.set(field, "enumerationOperationBinding", {});
-			}
-		},
-		// copy/pasted from the table getOperations
-		getEnumerationServices: function() {
-			var self = this;
-			return this.$services.page.getOperations(function(operation) {
-				// must be a get
-				var isAllowed = operation.method.toLowerCase() == "get"
-					// and contain the name fragment (if any)
-					&& (!name || operation.id.toLowerCase().indexOf(name.toLowerCase()) >= 0)
-					// must have _a_ response
-					&& operation.responses["200"];
-				// we also need at least _a_ complex array in the results
-				if (isAllowed) {
-					var schema = operation.responses["200"].schema;
-					var definition = self.$services.swagger.definition(schema["$ref"]);
-					// now we need a child in the definition that is a record array
-					// TODO: we currently don't actually check for a complex array, just any array, could be an array of strings...
-					isAllowed = false;
-					if (definition.properties) {
-						Object.keys(definition.properties).map(function(field) {
-							if (definition.properties[field].type == "array") {
-								isAllowed = true;
-							}
-						});
-					}
-				}
-				return isAllowed;
-			});	
-		},
-		getEnumerationFields: function(operationId) {
-			var fields = [];
-			var resolved = this.$services.swagger.resolve(this.$services.swagger.operations[operationId].responses["200"]);
-			Object.keys(resolved.schema.properties).map(function(property) {
-				if (resolved.schema.properties[property].type == "array") {
-					nabu.utils.arrays.merge(fields, Object.keys(resolved.schema.properties[property].items.properties));
-				}
-			});
-			return fields;
-		},
-		getEnumerationParameters: function(operationId) {
-			var parameters = this.$services.swagger.operations[operationId].parameters;
-			return parameters ? parameters.map(function(x) { return x.name }) : [];
-		},
-		getMappableEnumerationParameters: function(field) {
-			var result = {
-				properties: {}
-			};
-			Object.keys(this.$services.page.getInputBindings(this.$services.swagger.operations[field.enumerationOperation])).map(function(key) {
-				if (key != field.enumerationOperationQuery) {
-					result.properties[key] = {
-						type: "string"
-					}
-				}
-			});
-			return result;
-		},
-		hasMappableEnumerationParameters: function(field) {
-			var amount = Object.keys(this.getMappableEnumerationParameters(field).properties).length;
-			return amount > 0;
 		}
 	}
 });

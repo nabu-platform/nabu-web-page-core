@@ -124,6 +124,12 @@ window.addEventListener("load", function() {
 			name: "enumeration-provider",
 			namespace: "nabu.page"
 		});
+		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-enumeration-operation", 
+			configure: "page-form-input-enumeration-operation-configure", 
+			name: "enumeration-operation",
+			namespace: "nabu.page"
+		});
 		
 		return $services.$register({
 			page: nabu.page.services.Page,
