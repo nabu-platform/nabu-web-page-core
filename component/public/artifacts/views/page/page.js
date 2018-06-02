@@ -95,6 +95,9 @@ nabu.page.views.Page = Vue.extend({
 			});
 		}
 	},
+	beforeDestroy: function() {
+		console.log("destroying page", this);	
+	},
 /*	beforeDestroy: function() {
 		Vue.set(this.$services.page.instances, this.page.name, null);	
 	},*/
@@ -407,10 +410,8 @@ nabu.page.views.Page = Vue.extend({
 					parameter.listeners.map(function(listener) {
 						var parts = listener.split(".");
 						// we are setting the variable we are interested in
-						console.log("interested in", parts[0], name);
 						if (parts[0] == name) {
 							var interested = self.get(listener);
-							console.log("updating", parameter.name, interested);
 							if (!interested) {
 								Vue.delete(self.variables, parameter.name);
 							}
@@ -453,7 +454,12 @@ nabu.page.views.Page = Vue.extend({
 									promise.resolve();
 								}
 								else {
-									self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
+									self.$services.swagger.execute(action.operation, parameters).then(function(result) {
+										if (action.event) {
+											self.emit(action.event, result);
+										}
+										promise.resolve(result);
+									}, promise);
 								}
 							}
 							else {
@@ -477,13 +483,17 @@ nabu.page.views.Page = Vue.extend({
 						}
 						else if (action.operation) {
 							var operation = self.$services.swagger.operations[action.operation];
-							console.log("operation is", operation);
 							if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
 								window.location = self.$services.swagger.parameters(action.operation, parameters).url;
 								promise.resolve();
 							}
 							else {
-								self.$services.swagger.execute(action.operation, parameters).then(promise, promise);
+								self.$services.swagger.execute(action.operation, parameters).then(function(result) {
+									if (action.event) {
+										self.emit(action.event, result);
+									}
+									promise.resolve(result);
+								}, promise);
 							}
 						}
 						else {
