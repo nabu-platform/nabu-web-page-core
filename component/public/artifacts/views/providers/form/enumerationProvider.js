@@ -33,7 +33,7 @@ Vue.component("page-form-input-enumeration-provider-configure", {
 });
 
 Vue.component("page-form-input-enumeration-provider", {
-	template: "<n-form-combo :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter'"
+	template: "<n-form-combo ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
@@ -77,15 +77,20 @@ Vue.component("page-form-input-enumeration-provider", {
 		}
 	},
 	created: function() {
-		if (this.field.enumerationProvider) {
-			var self = this;
-			this.provider = nabu.page.providers("page-enumerate").filter(function(x) { return x.name == self.field.enumerationProvider })[0];
-		}
+		this.provider = this.getProvider();
 	},
 	methods: {
+		getProvider: function() {
+			if (this.field.enumerationProvider) {
+				var self = this;
+				return nabu.page.providers("page-enumerate").filter(function(x) { return x.name == self.field.enumerationProvider })[0];
+			}
+			return null;
+		},
 		enumerationFilter: function(value) {
-			if (this.provider) {
-				var values = this.provider.enumerate();
+			var provider = this.provider;
+			if (provider) {
+				var values = provider.enumerate();
 				var self = this;
 				if (value) {
 					values = values.filter(function(x) {
@@ -100,18 +105,26 @@ Vue.component("page-form-input-enumeration-provider", {
 				});
 				return values;
 			}
+			else {
+				return [];
+			}
 		},
 		enumerationFormatter: function(value) {
-			if (value && this.provider && this.provider.label) {
-				return value[this.provider.label];
+			var provider = this.provider;
+			if (value && provider && provider.label) {
+				return value[provider.label];
 			}
 			return value;
 		},
 		enumerationExtracter: function(value) {
-			if (value && this.provider && this.provider.value) {
-				return value[this.provider.value];
+			var provider = this.provider;
+			if (value && provider && provider.value) {
+				return value[provider.value];
 			}
 			return value;
+		},
+		validate: function(soft) {
+			return this.$refs.form.validate(soft);
 		}
 	}
 });

@@ -23,7 +23,7 @@ Vue.component("page-form-input-text-configure", {
 });
 
 Vue.component("page-form-input-text", {
-	template: "<n-form-text :type='textType'"
+	template: "<n-form-text :type='textType' ref='form'"
 			+ "		:schema='schema'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
@@ -65,6 +65,11 @@ Vue.component("page-form-input-text", {
 	computed: {
 		textType: function() {
 			return this.field.textType ? this.field.textType : 'text';
+		}
+	},
+	methods: {
+		validate: function(soft) {
+			return this.$refs.form.validate(soft);
 		}
 	}
 });

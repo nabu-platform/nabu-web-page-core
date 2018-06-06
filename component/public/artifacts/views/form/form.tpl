@@ -11,6 +11,7 @@
 					<n-form-switch v-model="cell.state.immediate" label="Save On Change"/>
 					<n-form-text v-model="cell.state.cancel" v-if="!cell.state.immediate" label="Cancel Label"/>
 					<n-form-text v-model="cell.state.ok" v-if="!cell.state.immediate" label="Ok Label"/>
+					<n-form-text v-model="cell.state.next" v-if="!cell.state.immediate && cell.state.pages.length > 1" label="Next Label"/>
 					<n-form-text v-model="cell.state.event" label="Success Event" :timeout="600" @input="$emit('updatedEvents')"/>
 					<n-form-switch v-model="cell.state.synchronize" label="Synchronize Changes"/>
 				</n-collapsible>
@@ -18,14 +19,27 @@
 					<n-page-mapper :to="Object.keys(cell.bindings)" :from="availableParameters" 
 						v-model="cell.bindings"/>
 				</n-collapsible>
-				<page-form-configure title="Fields" :fields="cell.state.fields" :is-list="isList" :possible-fields="fieldsToAdd"
-					:page="page"
-					:cell="cell"/>
+				<div v-for="page in cell.state.pages">
+					<page-form-configure :title="page.name"
+						:edit-name="true"
+						:fields="page.fields" 
+						:is-list="isList"
+						:possible-fields="fieldsToAdd"
+						:page="page"
+						@input="function(newValue) { page.name = newValue }"
+						:cell="cell"/>
+					<div class="list-actions" v-if="cell.state.pages.length > 1">
+						<button @click="deletePage(page)">Delete {{page.name}}</button>
+					</div>
+				</div>
+				<div class="list-actions">
+					<button @click="addPage">Add Form Page</button>
+				</div>
 			</n-form>
 		</n-sidebar>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
 		<n-form :class="cell.state.class" ref="form">
-			<n-form-section v-for="field in cell.state.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name)">
+			<n-form-section v-for="field in currentPage.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name)">
 				<n-form-section v-if="isList(field.name)">
 					<button @click="addInstanceOfField(field)">Add {{field.label ? field.label : field.name}}</button>
 					<n-form-section v-if="result[field.name]">
@@ -51,7 +65,8 @@
 			</n-form-section>
 			<footer class="global-actions" v-if="!cell.state.immediate">
 				<a class="cancel" href="javascript:void(0)" @click="$emit('close')" v-if="cell.state.cancel">{{cell.state.cancel}}</a>
-				<button class="primary" @click="doIt" v-if="cell.state.ok">{{cell.state.ok}}</button>
+				<button class="primary" @click="nextPage" v-if="cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1">{{cell.state.next}}</button>
+				<button class="primary" @click="doIt" v-else-if="cell.state.ok">{{cell.state.ok}}</button>
 			</footer>
 		</n-form>
 	</div>
@@ -75,6 +90,9 @@
 
 <template id="page-form-configure">
 	<n-collapsible class="list" :title="title">
+		<div class="root-configuration">
+			<n-form-text :value="page.name" label="Page Name" v-if="editName" v-bubble:input/>
+		</div>
 		<div class="list-actions">
 			<button @click="addField" v-if="possibleFields.length">Add</button>
 		</div>

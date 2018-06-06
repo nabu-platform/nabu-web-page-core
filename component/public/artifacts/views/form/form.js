@@ -33,7 +33,8 @@ nabu.page.views.PageForm = Vue.extend({
 	data: function() {
 		return {
 			configuring: false,
-			result: {}
+			result: {},
+			currentPage: null
 		}
 	},
 	computed: {
@@ -72,7 +73,7 @@ nabu.page.views.PageForm = Vue.extend({
 		this.normalize(this.cell.state);
 		
 		var self = this;
-		var pageInstance = this.$services.page.instances[this.page.name];
+		var pageInstance = self.$services.page.getPageInstance(self.page, self);
 		if (this.cell.bindings) {
 			Object.keys(this.cell.bindings).map(function(key) {
 				if (self.cell.bindings[key]) {
@@ -80,8 +81,32 @@ nabu.page.views.PageForm = Vue.extend({
 				}
 			});
 		}
+		
+		// get the first page
+		this.currentPage = this.cell.state.pages[0];
 	},
 	methods: {
+		nextPage: function() {
+			var messages = this.$refs.form.validate();
+			if (!messages.length) {
+				this.currentPage = this.cell.state.pages[this.cell.state.pages.indexOf(this.currentPage) + 1];
+			}
+		},
+		deletePage: function(page) {
+			var self = this;
+			this.$confirm({
+				message: "Are you sure you want to delete the form page '" + page.name + "'?"
+			}).then(function() {
+				self.cell.state.pages.splice(self.cell.state.pages.indexOf(page), 1);
+			});
+		},
+		addPage: function() {
+			this.cell.state.pages.push({
+				name: "Unnamed Page",
+				title: null,
+				fields: []
+			});
+		},
 		configure: function() {
 			this.configuring = true;	
 		},
@@ -92,14 +117,33 @@ nabu.page.views.PageForm = Vue.extend({
 			if (!state.immediate) {
 				Vue.set(state, "immediate", false);
 			}
-			if (!state.fields) {
-				Vue.set(state, "fields", []);
+			if (!state.pages) {
+				Vue.set(state, "pages", []);
+			}
+			// if we still have fields directly in the state, it is actually a form with one page (the old way)
+			if (state.fields) {
+				state.pages.push({
+					name: "Form Fields",
+					title: null,
+					fields: state.fields
+				});
+				Vue.delete(state, "fields");
+			}
+			if (!state.pages.length) {
+				state.pages.push({
+					name: "Form Fields",
+					title: null,
+					fields: []
+				});
 			}
 			if (!state.class) {
 				Vue.set(state, "class", null);
 			}
 			if (!state.ok) {
 				Vue.set(state, "ok", "Ok");
+			}
+			if (!state.next) {
+				Vue.set(state, "next", "Next");
 			}
 			if (!state.cancel) {
 				Vue.set(state, "cancel", "Cancel");
@@ -133,9 +177,14 @@ nabu.page.views.PageForm = Vue.extend({
 			});
 		},
 		getField: function(name) {
-			return this.cell.state.fields.filter(function(x) {
-				return x.name == name;
-			})[0];
+			for (var i = 0; i < this.cell.state.pages.length; i++) {
+				var field = this.cell.state.pages[i].fields.filter(function(x) {
+					return x.name == name;
+				})[0];
+				if (field) {
+					return field;
+				}
+			}
 		},
 		updateOperation: function(operation) {
 			this.cell.state.operation = operation.id;
@@ -177,7 +226,7 @@ nabu.page.views.PageForm = Vue.extend({
 			// if we are event driven, do a best-effort mapping if the fields match
 			if (this.cell.on) {
 				var self = this;
-				var pageInstance = this.$services.page.instances[this.page.name];
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				var event = pageInstance.getEvents()[this.cell.on];
 				if (event && event.properties) {
 					Object.keys(bindings).map(function(key) {
@@ -259,21 +308,6 @@ nabu.page.views.PageForm = Vue.extend({
 			}
 			return false;
 		},
-		addField: function() {
-			this.cell.state.fields.push({
-				name: null,
-				label: null,
-				description: null,
-				type: 'text',
-				enumerations: [],
-				value: null,
-				enumerationOperation: null,
-				enumerationOperationLabel: null,
-				enumerationOperationValue: null,
-				enumerationOperationQuery: null,
-				enumerationOperationBinding: {}
-			})
-		},
 		addInstanceOfField: function(field) {
 			if (!this.result[field.name]) {
 				Vue.set(this.result, field.name, []);
@@ -310,7 +344,7 @@ nabu.page.views.PageForm = Vue.extend({
 			});
 			var self = this;
 			// no need, this is bound in the created() hook into this.result so picked up in the above mapping (unless overwritten)
-			var pageInstance = this.$services.page.instances[this.page.name];
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			// bind additional stuff from the page
 			Object.keys(this.cell.bindings).map(function(name) {
 				// don't overwrite manually set values
@@ -343,7 +377,7 @@ nabu.page.views.PageForm = Vue.extend({
 				var self = this;
 				var result = this.createResult();
 				this.$services.swagger.execute(this.cell.state.operation, result).then(function(returnValue) {
-					var pageInstance = self.$services.page.instances[self.page.name];
+					var pageInstance = self.$services.page.getPageInstance(self.page, self);
 					// if we want to synchronize the values, do so
 					if (self.cell.state.synchronize) {
 						Object.keys(self.cell.bindings).map(function(name) {
@@ -513,6 +547,10 @@ Vue.component("page-form-configure", {
 		},
 		isList: {
 			type: Function,
+			required: false
+		},
+		editName: {
+			type: Boolean,
 			required: false
 		}
 	},

@@ -15,15 +15,16 @@ nabu.page.providers = function(spec) {
 	return nabu.page.state && nabu.page.state.providers[spec] ? nabu.page.state.providers[spec] : [];
 }
 
+nabu.page.instances = {};
+
 nabu.services.VueService(Vue.extend({
 	services: ["swagger"],
 	data: function() {
 		return {
+			counter: 1,
 			title: null,
 			pages: [],
 			loading: true,
-			// contains a reference to the page instances
-			instances: {},
 			// application properties
 			properties: [],
 			// the devices for this application
@@ -109,7 +110,6 @@ nabu.services.VueService(Vue.extend({
 	created: function() {
 		var self = this;
 		window.addEventListener("paste", function(event) {
-			console.log("paste listener triggered!!", event);
 			var data = event.clipboardData.getData("text/plain");
 			if (data) {
 				var parsed = JSON.parse(data);
@@ -133,10 +133,19 @@ nabu.services.VueService(Vue.extend({
 		}
 	},
 	methods: {
+		getPageInstance(page, component) {
+			return nabu.page.instances[page.name];
+		},
+		setPageInstance(page, instance) {
+			nabu.page.instances[page.name] = instance;
+		},
+		destroyPageInstance(page) {
+			delete nabu.page.instances[page.name];
+		},
 		destroy: function(component) {
 			if (component.page && component.cell) {
-				var pageInstance = this.instances[component.page.name];
-				Vue.set(pageInstance.components, component.cell.id, null);
+				var pageInstance = this.$services.page.getPageInstance(component.page, component);
+				Vue.delete(pageInstance.components, component.cell.id, null);
 			}	
 		},
 		reloadCss: function() {
@@ -448,7 +457,6 @@ nabu.services.VueService(Vue.extend({
 			this.styles.filter(function(x) { return x.title != "utility" && x.description }).map(function(x) {
 				scss += "@import '" + x.name + "';\n";
 			});
-			console.log("compiling", scss);
 			Sass.compile(scss, function(result) {
 				if (result.status == 0) {
 					if (self.customStyle) {
@@ -461,7 +469,7 @@ nabu.services.VueService(Vue.extend({
 					self.lastCompiled = result.text;
 				}
 				else {
-					console.log("Compilation failed", result);
+					console.error("Compilation failed", result);
 				}
 			});
 		},
@@ -685,11 +693,9 @@ nabu.services.VueService(Vue.extend({
 		getAllAvailableParameters: function(page) {
 			var result = {};
 			
-			var pageInstance = this.instances[page.name];
 			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			
-			var self = this;
-
 			var provided = this.getProvidedParameters();
 			Object.keys(provided.properties).map(function(key) {
 				result[key] = provided.properties[key];	
@@ -742,8 +748,8 @@ nabu.services.VueService(Vue.extend({
 		getAvailableParameters: function(page, cell, includeAllEvents) {
 			var result = {};
 
-			var pageInstance = this.instances[page.name];
 			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(page, self);
 			
 			// the available events
 			var available = pageInstance.getEvents();

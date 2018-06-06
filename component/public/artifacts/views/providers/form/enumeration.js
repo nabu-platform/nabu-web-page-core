@@ -27,7 +27,7 @@ Vue.component("page-form-input-enumeration-configure", {
 });
 
 Vue.component("page-form-input-enumeration", {
-	template: "<n-form-combo :items='field.enumerations'"
+	template: "<n-form-combo :items='field.enumerations' ref='form'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
@@ -63,6 +63,11 @@ Vue.component("page-form-input-enumeration", {
 		schema: {
 			type: Object,
 			required: false
+		}
+	},
+	methods: {
+		validate: function(soft) {
+			return this.$refs.form.validate(soft);
 		}
 	}
 });

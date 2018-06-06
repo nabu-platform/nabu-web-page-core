@@ -129,7 +129,7 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 });
 
 Vue.component("page-form-input-enumeration-operation", {
-	template: "<n-form-combo :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter'"
+	template: "<n-form-combo ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:timeout='600'"
 			+ "		:label='label'"
@@ -191,7 +191,7 @@ Vue.component("page-form-input-enumeration-operation", {
 			// map any additional bindings
 			if (this.field.enumerationOperationBinding) {
 				var self = this;
-				var pageInstance = this.$services.page.instances[this.page.name];
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				Object.keys(this.field.enumerationOperationBinding).map(function(key) {
 					var target = parameters;
 					var parts = key.split(".");
@@ -240,6 +240,9 @@ Vue.component("page-form-input-enumeration-operation", {
 			else {
 				return value;
 			}
+		},
+		validate: function(soft) {
+			return this.$refs.form.validate(soft);
 		}
 	}
 });

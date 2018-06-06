@@ -61,11 +61,9 @@ Vue.component("n-ace", {
 	},
 	methods: {
 		setMode: function(mode) {
-			console.log("setting mode", mode);
 			this.editor.getSession().setMode("ace/mode/" + mode);
 		},
 		insert: function(text) {
-			console.log("inserting", text);
 			this.editor.insert(text);
 		}
 	},

@@ -18,7 +18,7 @@ Vue.component("page-form-input-switch-configure", {
 });
 
 Vue.component("page-form-input-switch", {
-	template: "<n-form-switch"
+	template: "<n-form-switch ref='form'"
 			+ "		:schema='schema'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
@@ -55,6 +55,11 @@ Vue.component("page-form-input-switch", {
 		schema: {
 			type: Object,
 			required: false
+		}
+	},
+	methods: {
+		validate: function(soft) {
+			return this.$refs.form.validate(soft);
 		}
 	}
 });

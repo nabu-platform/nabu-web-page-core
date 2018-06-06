@@ -13,7 +13,8 @@ Vue.mixin({
 	},
 	data: function() {
 		return {
-			state: {}
+			state: {},
+			runtimeId: null
 		}
 	},
 	created: function() {
@@ -25,7 +26,7 @@ Vue.mixin({
 			});
 		}
 		if (this.page) {
-			var pageInstance = this.$services.page.instances[this.page.name];
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			// when creating the actual page, we do not have an instance yet!
 			// nor is it important...
 			if (pageInstance) {
@@ -83,9 +84,6 @@ nabu.page.views.Page = Vue.extend({
 		}
 	},
 	created: function() {
-		this.$services.page.instances[this.page.name] = this;
-		// keep a stringified copy of the last parameters so we can diff
-		this.lastParameters = JSON.stringify(this.parameters);
 		if (this.page.content.parameters) {
 			var self = this;
 			this.page.content.parameters.map(function(x) {
@@ -95,12 +93,14 @@ nabu.page.views.Page = Vue.extend({
 			});
 		}
 	},
-	beforeDestroy: function() {
-		console.log("destroying page", this);	
+	beforeMount: function() {
+		this.$services.page.setPageInstance(this.page, this);
+		// keep a stringified copy of the last parameters so we can diff
+		this.lastParameters = JSON.stringify(this.parameters);
 	},
-/*	beforeDestroy: function() {
-		Vue.set(this.$services.page.instances, this.page.name, null);	
-	},*/
+	destroyed: function() {
+		this.$services.page.destroyPageInstance(this.page, this);
+	},
 	computed: {
 		events: function() {
 			return this.getEvents();
@@ -189,7 +189,7 @@ nabu.page.views.Page = Vue.extend({
 			event.dataTransfer.setData("page-menu", this.page.name);	
 		},
 		dragOver: function(event) {
-			console.log("over", event);
+			// do nothing?
 		},
 		dropMenu: function(event) {
 			event.preventDefault();
@@ -343,6 +343,7 @@ nabu.page.views.Page = Vue.extend({
 			// and in general the result should only change if we route new content
 			if (!this.cachedEvents) {
 				var events = {};
+				this.cachedEvents = events;
 				var self = this;
 				
 				// your page actions can trigger success events
@@ -381,7 +382,6 @@ nabu.page.views.Page = Vue.extend({
 						}
 					}
 				});
-				this.cachedEvents = events;
 			}
 			return this.cachedEvents;
 		},
@@ -602,7 +602,6 @@ nabu.page.views.Page = Vue.extend({
 				}
 				target = target[parts[i]];
 			}
-			console.log("updating", target[parts[parts.length - 1]],parts[parts.length - 1],  value);
 			Vue.set(target, parts[parts.length - 1], value);
 		}
 	},
@@ -674,7 +673,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		getState: function(row, cell) {
 			var self = this;
 			var localState = this.getLocalState(row, cell);
-			var pageInstance = self.$services.page.instances[self.page.name];
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			Object.keys(pageInstance.variables).map(function(key) {
 				if (typeof(localState[key]) == "undefined") {
 					localState[key] = pageInstance.variables[key];
@@ -707,7 +706,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		// can't be a computed cause we depend on the $parent to resolve some variables
 		// and that's not reactive...
 		getCalculatedRows: function() {
-			console.log("calculated rows");
 			// if we are in edit mode, we don't actually calculate rows
 			if (this.edit) {
 				return this.rows;
@@ -719,7 +717,10 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		mapCalculated: function(list) {
 			var self = this;
 			var result = [];
-			var pageInstance = self.$services.page.instances[self.page.name];
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			if (!pageInstance) {
+				return result;
+			}
 			list.map(function(entry) {
 				// no local state, just push it
 				if (!entry.instances || !Object.keys(entry.instances).length) {
@@ -857,23 +858,25 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			return this.$services.page.getAvailableParameters(this.page, cell);
 		},
 		getAvailableEvents: function() {
-			var available = this.$services.page.instances[this.page.name].getEvents();
+			var available = this.$services.page.getPageInstance(this.page, this).getEvents();
 			return Object.keys(available);
 		},
 		canConfigure: function(cell) {
-			var pageInstance = this.$services.page.instances[this.page.name];
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			var components = pageInstance.components;
 			return components[cell.id] && components[cell.id].configure;
 		},
 		configure: function(cell) {
 			if (this.canConfigure) {
-				var pageInstance = this.$services.page.instances[this.page.name];
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				var cellInstance = pageInstance.components[cell.id];
 				cellInstance.configure();
 			}
 		},
 		close: function(cell) {
-			var pageInstance = this.$services.page.instances[this.page.name];
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			if (cell.on) {
 				Vue.set(pageInstance.closed, cell.id, cell.on);
 			}
@@ -896,7 +899,8 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 					return false;
 				}
 			}
-			var pageInstance = this.$services.page.instances[this.page.name];
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			if (row.on) {
 				if (!pageInstance.get(row.on)) {
 					return false;
@@ -967,7 +971,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				}
 			}
 			var self = this;
-			var pageInstance = self.$services.page.instances[self.page.name];
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			// if we depend on an event and it hasn't happened yet, don't render
 			// not sure if it will rerender if we close it?
 			if (cell.on) {
@@ -1017,8 +1021,8 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}, false);
 		},
 		mounted: function(cell, row, state, component) {
-			this.$services.page.instances[this.page.name].mounted(cell, row, state, component);
 			var self = this;
+			self.$services.page.getPageInstance(self.page, self).mounted(cell, row, state, component);
 			component.$on("close", function() {
 				self.close(cell);
 			});
@@ -1067,7 +1071,8 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			return null;
 		},
 		getParameters: function(row, cell) {
-			var pageInstance = this.$services.page.instances[this.page.name];
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			var result = {
 				page: this.page,
 				parameters: this.parameters,
@@ -1082,7 +1087,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			if (cell.on) {
 				result[cell.on] = pageInstance.variables[cell.on];
 			}
-			var self = this;
 			Object.keys(cell.bindings).map(function(key) {
 				if (cell.bindings[key]) {
 					var value = self.$services.page.getBindingValue(pageInstance, cell.bindings[key]);

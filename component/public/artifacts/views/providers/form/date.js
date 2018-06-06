@@ -18,7 +18,7 @@ Vue.component("page-form-input-date-configure", {
 });
 
 Vue.component("page-form-input-date", {
-	template: "<n-form-date"
+	template: "<n-form-date ref='form'"
 			+ "		:schema='schema'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
@@ -55,6 +55,11 @@ Vue.component("page-form-input-date", {
 		schema: {
 			type: Object,
 			required: false
+		}
+	},
+	methods: {
+		validate: function(soft) {
+			return this.$refs.form.validate(soft);
 		}
 	}
 });

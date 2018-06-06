@@ -243,7 +243,8 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 					// currently we assume only one event should be "active" at a time, so we unset all other events this tab provider can emit
 					this.unsetEvent(this.cell.state.actions);
 					
-					var pageInstance = this.$services.page.instances[this.page.name];
+					var self = this;
+					var pageInstance = self.$services.page.getPageInstance(self.page, self);
 					var content = null;
 					var addDefaults = false;
 					if (action.hasFixedState && action.eventFixedState) {
@@ -272,8 +273,8 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			}
 		},
 		unsetEvent: function(actions) {
-			var pageInstance = this.$services.page.instances[this.page.name];
 			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			actions.map(function(action) {
 				if (action.event) {
 					pageInstance.reset(action.event);
