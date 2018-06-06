@@ -61,10 +61,7 @@ nabu.page.views.PageForm = Vue.extend({
 			var fields = [];
 			var self = this;
 			Object.keys(this.cell.bindings).map(function(key) {
-				// can bind a value that is bound, to update!
-			//	if (!self.cell.bindings[key]) {
-					fields.push(key);
-			//	}
+				fields.push(key);
 			});
 			return fields;
 		}
@@ -204,8 +201,10 @@ nabu.page.views.PageForm = Vue.extend({
 										? self.cell.bindings[newKey]
 										: null;
 								}
-								if (type.schema.properties[key].type == "object" || type.schema.properties[key].type == "array") {
-									var properties = type.schema.properties[key].type == "array" ? type.schema.properties[key].items.properties : type.schema.properties[key].properties;
+								if (type.schema.properties[key].type == "object" || (type.schema.properties[key].type == "array" && type.schema.properties[key].items.properties)) {
+									var properties = type.schema.properties[key].type == "array"
+										? type.schema.properties[key].items.properties 
+										: type.schema.properties[key].properties;
 									Object.keys(properties).map(function(key2) {
 										var newKey = "body." + key + "." + key2;
 										bindings[newKey] = self.cell.bindings && self.cell.bindings[newKey]
@@ -316,10 +315,13 @@ nabu.page.views.PageForm = Vue.extend({
 			if (schema.items) {
 				schema = schema.items;
 			}
-			var result = {};
-			Object.keys(schema.properties).map(function(key) {
-				result[key] = null;
-			});
+			var result = null;
+			if (schema.properties) {
+				result = {};
+				Object.keys(schema.properties).map(function(key) {
+					result[key] = null;
+				});
+			}
 			this.result[field.name].push(result);
 		},
 		createResult: function() {
@@ -576,7 +578,7 @@ Vue.component("page-form-configure", {
 				name: null,
 				label: null,
 				description: null,
-				type: 'text',
+				type: null,
 				enumerations: [],
 				value: null
 			})
@@ -623,8 +625,14 @@ Vue.component("page-form-configure-single", {
 	},
 	computed: {
 		types: function() {
-			var provided = ['fixed'];
-			nabu.utils.arrays.merge(provided, nabu.page.providers("page-form-input").map(function(x) { return x.name }));
+			var provided = [];
+			if (this.isList) {
+				nabu.utils.arrays.merge(provided, nabu.page.providers("page-form-list-input").map(function(x) { return x.name }));
+			}
+			else {
+				provided.push("fixed");
+				nabu.utils.arrays.merge(provided, nabu.page.providers("page-form-input").map(function(x) { return x.name }));
+			}
 			provided.sort();
 			return provided;
 		}
@@ -647,7 +655,7 @@ Vue.component("page-form-configure-single", {
 				Vue.set(field, "description", null);
 			}
 			if (!field.type) {
-				Vue.set(field, "type", "text");
+				Vue.set(field, "type", null);
 			}
 			if (!field.enumerations) {
 				Vue.set(field, "enumerations", []);

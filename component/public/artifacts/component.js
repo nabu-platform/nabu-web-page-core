@@ -131,6 +131,14 @@ window.addEventListener("load", function() {
 			namespace: "nabu.page"
 		});
 		
+		// form list providers
+		nabu.page.provide("page-form-list-input", { 
+			component: "page-form-list-input-dynamic", 
+			configure: "page-form-list-input-dynamic-configure", 
+			name: "dynamic",
+			namespace: "nabu.page"
+		});
+		
 		return $services.$register({
 			page: nabu.page.services.Page,
 			resizer: nabu.page.services.Resizer,
