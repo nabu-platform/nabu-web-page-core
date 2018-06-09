@@ -3,7 +3,7 @@
     <method>POST</method>
     <path>/{applicationId}/style/compiled</path>
     <role>editor</role>
-    <permissionContext>=input/path/applicationId</permissionContext>
+    <permissionContext>="webApplication:" + input/path/applicationId</permissionContext>
     <permissionAction>style.compile</permissionAction>
     <input>nabu.web.page.core.types.rest.compiled</input>
     <lenient>false</lenient>

@@ -80,6 +80,12 @@ window.addEventListener("load", function() {
 			namespace: "nabu.page"
 		});
 		nabu.page.provide("page-field-fragment", { 
+			component: "page-field-fragment-javascript", 
+			configure: "page-field-fragment-javascript-configure", 
+			name: "javascript",
+			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-field-fragment", { 
 			component: "page-field-fragment-form", 
 			configure: "page-field-fragment-form-configure", 
 			name: "form",

@@ -58,8 +58,9 @@ Vue.component("page-form-input-switch", {
 		}
 	},
 	methods: {
-		validate: function(soft) {
+		// currently not implemented for switch
+		/*validate: function(soft) {
 			return this.$refs.form.validate(soft);
-		}
+		}*/
 	}
 });

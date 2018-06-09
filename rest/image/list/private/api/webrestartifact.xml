@@ -3,7 +3,7 @@
     <method>GET</method>
     <path>/image</path>
     <role>editor</role>
-    <permissionContext>=input/webApplicationId</permissionContext>
+    <permissionContext>="webApplication:" + input/webApplicationId</permissionContext>
     <permissionAction>image.edit</permissionAction>
     <output>nabu.web.page.core.types.rest.imageList</output>
     <lenient>false</lenient>

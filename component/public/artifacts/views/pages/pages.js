@@ -54,6 +54,14 @@ nabu.page.views.Pages = Vue.extend({
 		});
 	},
 	methods: {
+		getRoutes: function(newValue) {
+			var routes = this.$services.router.list().filter(function(x) { return !!x.alias }).map(function(x) { return x.alias });
+			if (newValue) {
+				routes = routes.filter(function(x) { return x.toLowerCase().indexOf(newValue.toLowerCase()) >= 0 });
+			}
+			routes.sort();
+			return routes;
+		},
 		copyCategory: function(category) {
 			nabu.utils.objects.copy({
 				type: "page-category",

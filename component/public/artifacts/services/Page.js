@@ -23,6 +23,7 @@ nabu.services.VueService(Vue.extend({
 		return {
 			counter: 1,
 			title: null,
+			home: null,
 			pages: [],
 			loading: true,
 			// application properties
@@ -84,6 +85,9 @@ nabu.services.VueService(Vue.extend({
 			if (configuration.title) {
 				self.title = configuration.title;
 			}
+			if (configuration.home) {
+				self.home = configuration.home;
+			}
 			if (self.canEdit()) {
 				injectJavascript().then(function() {
 					Vue.nextTick(function() {
@@ -109,6 +113,7 @@ nabu.services.VueService(Vue.extend({
 	},
 	created: function() {
 		var self = this;
+		this.title = "%{Loading...}";
 		window.addEventListener("paste", function(event) {
 			var data = event.clipboardData.getData("text/plain");
 			if (data) {
@@ -203,6 +208,17 @@ nabu.services.VueService(Vue.extend({
 			}
 			return null;
 		},
+		setValue: function(data, field, value) {
+			var tmp = data;
+			var parts = field.split(".");
+			for (var i = 0; i < parts.length - 1; i++) {
+				if (!tmp[parts[i]]) {
+					Vue.set(tmp, parts[i], {});
+				}
+				tmp = tmp[parts[i]];
+			}
+			Vue.set(tmp, parts[parts.length - 1], value);
+		},
 		getInputBindings: function(operation) {
 			var self = this;
 			var bindings = {};
@@ -277,6 +293,13 @@ nabu.services.VueService(Vue.extend({
 			if (!condition) {
 				return true;
 			}
+			var result = this.eval(condition, state);
+			return result == true;
+		},
+		eval: function(condition, state) {
+			if (!condition) {
+				return null;
+			}
 			if (this.useEval) {
 				try {
 					var result = eval(condition);
@@ -288,7 +311,7 @@ nabu.services.VueService(Vue.extend({
 				if (result instanceof Function) {
 					result = result(state);
 				}
-				return result == true;
+				return result;
 			}
 			else {
 				try {
@@ -301,24 +324,30 @@ nabu.services.VueService(Vue.extend({
 				if (result instanceof Function) {
 					result = result(state);
 				}
-				return result == true;
+				return result;
 			}
+			return null;
 		},
 		classes: function(clazz, value) {
 			var result = [];
 			var sheets = document.styleSheets;
 			for (var l = 0; l < sheets.length; l++) {
-				var rules = sheets.item(l).rules || sheets.item(l).cssRules;
-				for (var i = 0; i < rules.length; i++) {
-					var rule = rules.item(i);
-					if (rule.selectorText) {
-						if (rule.selectorText.match(new RegExp(".*\\." + clazz + "\\.([\\w-]+)\\b.*", "g"))) {
-							var match = rule.selectorText.replace(new RegExp(".*\\." + clazz + "\\.([\\w-]+)\\b.*", "g"), "$1");
-							if (result.indexOf(match) < 0) {
-								result.push(match);
+				try {
+					var rules = sheets.item(l).rules || sheets.item(l).cssRules;
+					for (var i = 0; i < rules.length; i++) {
+						var rule = rules.item(i);
+						if (rule.selectorText) {
+							if (rule.selectorText.match(new RegExp(".*\\." + clazz + "\\.([\\w-]+)\\b.*", "g"))) {
+								var match = rule.selectorText.replace(new RegExp(".*\\." + clazz + "\\.([\\w-]+)\\b.*", "g"), "$1");
+								if (result.indexOf(match) < 0) {
+									result.push(match);
+								}
 							}
 						}
 					}
+				}
+				catch (exception) {
+					// ignore
 				}
 			}
 			if (value) {
@@ -364,6 +393,7 @@ nabu.services.VueService(Vue.extend({
 			return this.$services.swagger.execute("nabu.web.page.core.rest.configuration.update", {
 				body: {
 					title: this.title,
+					home: this.home,
 					properties: self.properties,
 					devices: self.devices
 				}
@@ -963,6 +993,19 @@ nabu.services.VueService(Vue.extend({
 		},
 		title: function(newValue) {
 			document.title = newValue;
+		},
+		home: function(newValue) {
+			if (newValue) {
+				this.$services.router.unregister("home");
+				var self = this;
+				this.$services.router.register({
+					alias: "home",
+					enter: function() {
+						self.$services.router.route(newValue);
+					},
+					url: "/"
+				});
+			}
 		}
 	}
 }), { name: "nabu.page.services.Page" });

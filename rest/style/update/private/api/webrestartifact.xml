@@ -3,7 +3,7 @@
     <method>PUT</method>
     <path>/{applicationId}/style/{path: .*}</path>
     <role>editor</role>
-    <permissionContext>=input/path/applicationId</permissionContext>
+    <permissionContext>="webApplication:" + input/path/applicationId</permissionContext>
     <permissionAction>style.update</permissionAction>
     <input>nabu.web.page.core.types.rest.style</input>
     <configurationType>nabu.cms.core.configuration</configurationType>

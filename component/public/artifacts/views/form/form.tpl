@@ -40,23 +40,16 @@
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
 		<n-form :class="cell.state.class" ref="form">
 			<n-form-section v-for="field in currentPage.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name)">
-				<n-form-section v-if="isList(field.name)">
-					<button @click="addInstanceOfField(field)">Add {{field.label ? field.label : field.name}}</button>
-					<n-form-section v-if="result[field.name]">
-						<n-form-section v-for="i in Object.keys(result[field.name])" :key="field.name + '_wrapper' + i">
-							<n-form-section v-for="key in Object.keys(result[field.name][i])" :key="field.name + '_wrapper' + i + '_wrapper'"
-									v-if="getField(field.name + '.' + key)">
-								<page-form-field :key="field.name + '_value' + i + '_' + key" :field="getField(field.name + '.' + key)" 
-									:schema="getSchemaFor(field.name + '.' + key)" v-model="result[field.name][i][key]"
-									@input="changed"
-									:timeout="cell.state.immediate ? 600 : 0"
-									:page="page"
-									:cell="cell"/>
-							</n-form-section>
-							<button @click="result[field.name].splice(i, 1)">Remove {{field.label ? field.label : field.name}}</button>	
-						</n-form-section>
-					</n-form-section>
-				</n-form-section>
+				<component v-if="isList(field.name)"
+					:is="getProvidedListComponent(field.type)"
+					:value="result"
+					:page="page"
+					:cell="cell"
+					:edit="edit"
+					:field="field"
+					@changed="changed"
+					:timeout="cell.state.immediate ? 600 : 0"
+					:schema="getSchemaFor(field.name)"/>
 				<page-form-field v-else :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
 					@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
 					:timeout="cell.state.immediate ? 600 : 0"
@@ -115,7 +108,7 @@
 		<n-form-combo v-model="field.name" label="Field Name" :items="possibleFields"/>
 		<n-form-text v-model="field.label" label="Label" v-if="allowLabel" />
 		<n-form-text v-model="field.description" label="Description" v-if="allowDescription" />
-		<n-form-combo v-model="field.type" v-if="!isList || !isList(field.name)" label="Type" :items="types"/>
+		<n-form-combo v-model="field.type" label="Type" :items="types"/>
 		<n-form-text v-model="field.value" v-if="field.type == 'fixed'" label="Fixed Value"/>
 		
 		<component v-if="field.type && ['fixed'].indexOf(field.type) < 0"

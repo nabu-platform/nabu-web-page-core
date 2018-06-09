@@ -73,6 +73,9 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 				if (!field.styles) {
 					Vue.set(field, "styles", []);
 				}
+				if (!field.hidden) {
+					Vue.set(field, "hidden", null);
+				}
 				field.fragments.map(function(fragment) {
 					if (!fragment.type) {
 						Vue.set(fragment, "type", "data");
@@ -143,6 +146,7 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 			this.cell.state.fields.push({
 				label: null,
 				fragments: [],
+				hidden: null,
 				styles: []
 			});
 			// already add a fragment, a field is generally useless without it...
@@ -351,7 +355,7 @@ Vue.component("page-formatted-configure", {
 });
 
 Vue.component("page-formatted", {
-	template: "<component :is='tag' v-content.compile.parameterized=\"{value:formatted,plain:fragment.format == 'text', sanitize: fragment.format != 'text'}\"/>",
+	template: "<component :is='tag' v-content.compile.parameterized=\"{value:formatted,plain:fragment.format == 'text', sanitize: fragment.format != 'html'}\"/>",
 	props: {
 		value: {
 			required: false
@@ -387,7 +391,7 @@ Vue.component("page-formatted", {
 				return this.value;
 			}
 			else if (this.fragment.format == "html") {
-				return this.fragment.html;
+				return this.fragment.html ? this.fragment.html : this.value;
 			}
 			else if (this.fragment.format == "link") {
 				return "<a target='_blank' ref='noopener noreferrer nofollow' href='" + value + "'>" + value.replace(/http[s]*:\/\/([^/]+).*/, "$1") + "</a>";

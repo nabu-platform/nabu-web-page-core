@@ -1,3 +1,5 @@
+// TODO: for simple lists: generate a new page-form-configure-single entity but with isList not filled in
+
 Vue.component("page-form-list-input-dynamic-configure", {
 	template: "<div/>",
 	props: {
@@ -20,27 +22,27 @@ Vue.component("page-form-list-input-dynamic-configure", {
 Vue.component("page-form-list-input-dynamic", {
 	template: "<n-form-section ref='form'>"
 					+ "		<button @click='addInstanceOfField'>%{Add} {{field.label ? field.label : field.name}}</button>"
-					+ "		<n-form-section v-if='result[field.name]'>"
-					+ "			<n-form-section v-for='i in Object.keys(result[field.name])' :key=\"field.name + '_wrapper' + i\">"
+					+ "		<n-form-section v-if='value[field.name]'>"
+					+ "			<n-form-section v-for='i in Object.keys(value[field.name])' :key=\"field.name + '_wrapper' + i\">"
 					+ "				<n-form-section v-if='isSimpleList()'>"
-					+ "					<page-form-field :key=\"field.name + '_value' + i + '_' + key\" :field='field'"
-					+ "						v-model='result[field.name][i]'"
+					+ "					<page-form-field :key=\"field.name + '_value' + i\" :field='getSimpleField()'"
+					+ "						v-model='value[field.name][i]'"
 					+ "						:schema='getSchemaFor()'"
 					+ "						@input=\"$emit('changed')\""
 					+ "						:timeout='timeout'"
 					+ "						:page='page'"
 					+ "						:cell='cell'/>"
 					+ "				</n-form-section><n-form-section v-else>"
-					+ "					<n-form-section v-for='key in Object.keys(result[field.name][i])' :key=\"field.name + '_wrapper' + i + '_wrapper'\""
-					+ "						v-if=\"getField(field.name + '.' + key)\">"
-					+ "					<page-form-field :key=\"field.name + '_value' + i + '_' + key\" :field=\"getField(field.name + '.' + key)\"" 
-					+ "						:schema=\"getSchemaFor(field.name + '.' + key)\" v-model='result[field.name][i][key]'"
-					+ "						@input=\"$emit('changed')\""
-					+ "						:timeout='timeout'"
-					+ "						:page='page'"
-					+ "						:cell='cell'/>"
+					+ "					<n-form-section v-for='key in Object.keys(value[field.name][i])' :key=\"field.name + '_wrapper' + i + '_wrapper'\""
+					+ "							v-if=\"getField(field.name + '.' + key)\">"
+					+ "						<page-form-field :key=\"field.name + '_value' + i + '_' + key\" :field=\"getField(field.name + '.' + key)\"" 
+					+ "							:schema=\"getSchemaFor(field.name + '.' + key)\" v-model='value[field.name][i][key]'"
+					+ "							@input=\"$emit('changed')\""
+					+ "							:timeout='timeout'"
+					+ "							:page='page'"
+					+ "							:cell='cell'/>"
 					+ "			</n-form-section></n-form-section>"
-					+ "		<button @click='result[field.name].splice(i, 1)'>%{Remove} {{field.label ? field.label : field.name}}</button>"
+					+ "		<button @click='value[field.name].splice(i, 1)'>%{Remove} {{field.label ? field.label : field.name}}</button>"
 					+ "	</n-form-section>"
 					+ "</n-form-section>"
 				+ "</n-form-section>",
@@ -80,12 +82,18 @@ Vue.component("page-form-list-input-dynamic", {
 		validate: function(soft) {
 			return this.$refs.form.validate(soft);
 		},
+		// currently we just assume it is a text field, in the to be we can do fancier things
+		getSimpleField: function() {
+			var field = nabu.utils.objects.clone(this.field);
+			field.type = "text";
+			return field;
+		},
 		addInstanceOfField: function() {
 			var field = this.field;
-			if (!this.result[field.name]) {
-				Vue.set(this.result, field.name, []);
+			if (!this.value[field.name]) {
+				Vue.set(this.value, field.name, []);
 			}
-			var schema = this.getSchemaFor(field.name);
+			var schema = this.schema;
 			if (schema.items) {
 				schema = schema.items;
 			}
@@ -96,11 +104,11 @@ Vue.component("page-form-list-input-dynamic", {
 					result[key] = null;
 				});
 			}
-			this.result[field.name].push(result);
+			this.value[field.name].push(result);
 		},
 		isSimpleList: function() {
 			// if the items consist of properties, they are complex, otherwise they are simple
-			return !!this.schema.items.properties;	
+			return !this.schema.items.properties;	
 		},
 		getSchemaFor: function(key) {
 			// we want a single field in a complex list
@@ -110,6 +118,16 @@ Vue.component("page-form-list-input-dynamic", {
 			// we are using a simple list (e.g. strings)
 			else {
 				return this.schema.items;
+			}
+		},
+		getField: function(name) {
+			for (var i = 0; i < this.cell.state.pages.length; i++) {
+				var field = this.cell.state.pages[i].fields.filter(function(x) {
+					return x.name == name;
+				})[0];
+				if (field) {
+					return field;
+				}
 			}
 		}
 	}

@@ -164,7 +164,7 @@ nabu.page.views.PageForm = Vue.extend({
 			}
 			return result;
 		},
-		getOperations: function() {
+		getOperations: function(name) {
 			var self = this;
 			return this.$services.page.getOperations(function(operation) {
 				// must be a put or post
@@ -307,6 +307,12 @@ nabu.page.views.PageForm = Vue.extend({
 			}
 			return false;
 		},
+		getProvidedListComponent: function(type) {
+			var provided = nabu.page.providers("page-form-list-input").filter(function(x) {
+				 return x.name == type;
+			})[0];
+			return provided ? provided.component : null;	
+		},
 		addInstanceOfField: function(field) {
 			if (!this.result[field.name]) {
 				Vue.set(this.result, field.name, []);
@@ -370,6 +376,7 @@ nabu.page.views.PageForm = Vue.extend({
 			}	
 		},
 		doIt: function() {
+			console.log("result is", this.createResult());
 			var messages = this.$refs.form.validate();
 			if (!messages.length) {
 				// commit the form
@@ -626,7 +633,7 @@ Vue.component("page-form-configure-single", {
 	computed: {
 		types: function() {
 			var provided = [];
-			if (this.isList) {
+			if (this.isList && this.isList(this.field.name)) {
 				nabu.utils.arrays.merge(provided, nabu.page.providers("page-form-list-input").map(function(x) { return x.name }));
 			}
 			else {
@@ -639,7 +646,7 @@ Vue.component("page-form-configure-single", {
 	},
 	methods: {
 		getProvidedConfiguration: function(type) {
-			var provided = nabu.page.providers("page-form-input").filter(function(x) {
+			var provided = nabu.page.providers(this.isList ? "page-form-list-input" : "page-form-input").filter(function(x) {
 				 return x.name == type;
 			})[0];
 			return provided ? provided.configure : null;
