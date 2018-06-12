@@ -315,6 +315,7 @@ Vue.component("page-formatted-configure", {
 			if (this.allowHtml) {
 				types.push('link');
 				types.push('html');
+				types.push('checkbox');
 			}
 			return types;
 		},
@@ -355,7 +356,7 @@ Vue.component("page-formatted-configure", {
 });
 
 Vue.component("page-formatted", {
-	template: "<component :is='tag' v-content.compile.parameterized=\"{value:formatted,plain:fragment.format == 'text', sanitize: fragment.format != 'html'}\"/>",
+	template: "<component :is='tag' v-content.compile.parameterized=\"{value:formatted,plain:fragment.format == 'text', sanitize: !isHtml}\"/>",
 	props: {
 		value: {
 			required: false
@@ -371,6 +372,7 @@ Vue.component("page-formatted", {
 			if (this.allowHtml) {
 				types.push('link');
 				types.push('html');
+				types.push('checkbox');
 			}
 			return types;
 		},
@@ -382,9 +384,15 @@ Vue.component("page-formatted", {
 				return "div";
 			}
 		},
+		isHtml: function() {
+			return ["link", "html", "checkbox"].indexOf(this.fragment.format) >= 0;
+		},
 		formatted: function() {
 			if (this.value == null || typeof(this.value) == "undefined") {
 				return null;
+			}
+			else if (this.fragment.format == "checkbox") {
+				return "<n-form-checkbox :value='value' />";
 			}
 			// formatting is optional
 			else if (!this.fragment.format || this.fragment.format == "text") {

@@ -2,14 +2,6 @@ if (!nabu) { var nabu = {} }
 if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 
-/*
-TODO:
-
-- can add support for bound input for enumerations, for example could pass in a contextual id to further limit relevant choices
-	- then we have to choose the field you use to bind "q" input to as there are multiple inputs
-
-*/
-
 nabu.page.views.PageForm = Vue.extend({
 	template: "#page-form",
 	props: {
@@ -83,6 +75,25 @@ nabu.page.views.PageForm = Vue.extend({
 		this.currentPage = this.cell.state.pages[0];
 	},
 	methods: {
+		isHidden: function(field) {
+			return field.hidden && this.$services.page.isCondition(field.hidden, this.createResult());	
+		},
+		getGroupedFields: function(page) {
+			var groupedFields = [];
+			page.fields.map(function(field) {
+				// if we want to join the current group, just do that
+				if (field.joinGroup === true) {
+					if (groupedFields.length == 0) {
+						groupedFields.push({fields:[]});
+					}
+					groupedFields[groupedFields.length - 1].fields.push(field);
+				}
+				else {
+					groupedFields.push({group:field.group, fields:[field]});
+				}
+			});
+			return groupedFields;
+		},
 		nextPage: function() {
 			var messages = this.$refs.form.validate();
 			if (!messages.length) {
@@ -376,7 +387,6 @@ nabu.page.views.PageForm = Vue.extend({
 			}	
 		},
 		doIt: function() {
-			console.log("result is", this.createResult());
 			var messages = this.$refs.form.validate();
 			if (!messages.length) {
 				// commit the form
@@ -561,6 +571,11 @@ Vue.component("page-form-configure", {
 		editName: {
 			type: Boolean,
 			required: false
+		},
+		groupable: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	methods: {
@@ -587,7 +602,9 @@ Vue.component("page-form-configure", {
 				description: null,
 				type: null,
 				enumerations: [],
-				value: null
+				value: null,
+				group: null,
+				joinGroup: false
 			})
 		}
 	}
@@ -625,6 +642,16 @@ Vue.component("page-form-configure-single", {
 		isList: {
 			type: Function,
 			required: false
+		},
+		groupable: {
+			type: Boolean,
+			required: false,
+			default: false
+		},
+		hidable: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	created: function() {
@@ -646,7 +673,7 @@ Vue.component("page-form-configure-single", {
 	},
 	methods: {
 		getProvidedConfiguration: function(type) {
-			var provided = nabu.page.providers(this.isList ? "page-form-list-input" : "page-form-input").filter(function(x) {
+			var provided = nabu.page.providers(this.isList && this.isList(this.field.name) ? "page-form-list-input" : "page-form-input").filter(function(x) {
 				 return x.name == type;
 			})[0];
 			return provided ? provided.configure : null;

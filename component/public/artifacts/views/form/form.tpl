@@ -21,6 +21,7 @@
 				</n-collapsible>
 				<div v-for="page in cell.state.pages">
 					<page-form-configure :title="page.name"
+						:groupable="true"
 						:edit-name="true"
 						:fields="page.fields" 
 						:is-list="isList"
@@ -39,22 +40,24 @@
 		</n-sidebar>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
 		<n-form :class="cell.state.class" ref="form">
-			<n-form-section v-for="field in currentPage.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name)">
-				<component v-if="isList(field.name)"
-					:is="getProvidedListComponent(field.type)"
-					:value="result"
-					:page="page"
-					:cell="cell"
-					:edit="edit"
-					:field="field"
-					@changed="changed"
-					:timeout="cell.state.immediate ? 600 : 0"
-					:schema="getSchemaFor(field.name)"/>
-				<page-form-field v-else :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
-					@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
-					:timeout="cell.state.immediate ? 600 : 0"
-					:page="page"
-					:cell="cell"/>
+			<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">
+				<n-form-section v-for="field in group.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name)">
+					<component v-if="isList(field.name)"
+						:is="getProvidedListComponent(field.type)"
+						:value="result"
+						:page="page"
+						:cell="cell"
+						:edit="edit"
+						:field="field"
+						@changed="changed"
+						:timeout="cell.state.immediate ? 600 : 0"
+						:schema="getSchemaFor(field.name)"/>
+					<page-form-field v-else-if="!isHidden(field)" :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
+						@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
+						:timeout="cell.state.immediate ? 600 : 0"
+						:page="page"
+						:cell="cell"/>
+				</n-form-section>
 			</n-form-section>
 			<footer class="global-actions" v-if="!cell.state.immediate">
 				<a class="cancel" href="javascript:void(0)" @click="$emit('close')" v-if="cell.state.cancel">{{cell.state.cancel}}</a>
@@ -91,6 +94,8 @@
 		</div>
 		<n-collapsible class="field list-item" v-for="field in fields" :title="field.label ? field.label : field.name">
 			<page-form-configure-single :field="field" :possible-fields="possibleFields"
+				:groupable="groupable"
+				:hidable="true"
 				:is-list="isList"
 				:page="page"
 				:cell="cell"/>
@@ -107,6 +112,9 @@
 	<div class="page-form-single-field">
 		<n-form-combo v-model="field.name" label="Field Name" :items="possibleFields"/>
 		<n-form-text v-model="field.label" label="Label" v-if="allowLabel" />
+		<n-form-text v-model="field.hidden" label="Hide field if" v-if="hidable" />
+		<n-form-text v-model="field.group" label="Field Group" v-if="groupable && !field.joinGroup" />
+		<n-form-checkbox v-model="field.joinGroup" label="Join Field Group" v-if="groupable && !field.group" />
 		<n-form-text v-model="field.description" label="Description" v-if="allowDescription" />
 		<n-form-combo v-model="field.type" label="Type" :items="types"/>
 		<n-form-text v-model="field.value" v-if="field.type == 'fixed'" label="Fixed Value"/>

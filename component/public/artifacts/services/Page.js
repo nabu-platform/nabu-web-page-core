@@ -113,7 +113,7 @@ nabu.services.VueService(Vue.extend({
 	},
 	created: function() {
 		var self = this;
-		this.title = "%{Loading...}";
+		document.title = "%{Loading...}";
 		window.addEventListener("paste", function(event) {
 			var data = event.clipboardData.getData("text/plain");
 			if (data) {
@@ -582,6 +582,32 @@ nabu.services.VueService(Vue.extend({
 				}
 			});
 		},
+		findMain: function(rowHolder) {
+			if (rowHolder.rows && rowHolder.rows.length) {
+				for (var i = 0; i < rowHolder.rows.length; i++) {
+					if (rowHolder.rows[i].customId == "main") {
+						return rowHolder.rows[i];
+					}
+					if (rowHolder.rows[i].cells && rowHolder.rows[i].cells.length) {
+						console.log("cells!");
+						for (var j = 0; j < rowHolder.rows[i].cells.length; j++) {
+							var cell = rowHolder.rows[i].cells[j];
+							if (cell.customId == "main") {
+								return cell;
+							}
+							else if (cell.rows) {
+								var main = this.findMain(cell);
+								console.log("found it?", main);
+								if (main) {
+									return main;
+								}
+							}
+						}
+					}
+				}
+			}
+			return null;
+		},
 		loadPages: function(pages) {
 			var self = this;
 			pages.map(function(page) {
@@ -595,14 +621,14 @@ nabu.services.VueService(Vue.extend({
 					query: page.content.query ? page.content.query : [],
 					enter: function(parameters) {
 						if (page.content.initial) {
-							var found = false;
-							// check that there is a row with the default anchor, if not, insert it
-							for (var i = 0; i < page.content.rows.length; i++) {
+							var found = !!self.findMain(page.content);
+							// check that there is a row/cell with the default anchor, if not, insert it
+/*							for (var i = 0; i < page.content.rows.length; i++) {
 								if (page.content.rows[i].customId == "main") {
 									found = true;
 									break;
 								}
-							}
+							}*/
 							if (!found) {
 								page.content.rows.push({
 									id: 0,
