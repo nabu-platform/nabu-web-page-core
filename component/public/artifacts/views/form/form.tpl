@@ -16,21 +16,25 @@
 					<n-form-switch v-model="cell.state.synchronize" label="Synchronize Changes"/>
 				</n-collapsible>
 				<n-collapsible title="Value Binding">
+					<div class="list-row">
+						<n-form-combo :items="Object.keys(availableParameters)" v-model="autoMapFrom"/>
+						<button @click="automap" :disabled="!autoMapFrom">Automap</button>
+					</div>
 					<n-page-mapper :to="Object.keys(cell.bindings)" :from="availableParameters" 
 						v-model="cell.bindings"/>
 				</n-collapsible>
-				<div v-for="page in cell.state.pages">
-					<page-form-configure :title="page.name"
+				<div v-for="cellPage in cell.state.pages">
+					<page-form-configure :title="cellPage.name"
 						:groupable="true"
 						:edit-name="true"
-						:fields="page.fields" 
+						:fields="cellPage.fields" 
 						:is-list="isList"
 						:possible-fields="fieldsToAdd"
 						:page="page"
-						@input="function(newValue) { page.name = newValue }"
+						@input="function(newValue) { cellPage.name = newValue }"
 						:cell="cell"/>
 					<div class="list-actions" v-if="cell.state.pages.length > 1">
-						<button @click="deletePage(page)">Delete {{page.name}}</button>
+						<button @click="deletePage(cellPage)">Delete {{cellPage.name}}</button>
 					</div>
 				</div>
 				<div class="list-actions">
@@ -41,7 +45,7 @@
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
 		<n-form :class="cell.state.class" ref="form">
 			<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">
-				<n-form-section v-for="field in group.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name)">
+				<n-form-section v-for="field in group.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name) && !isHidden(field)">
 					<component v-if="isList(field.name)"
 						:is="getProvidedListComponent(field.type)"
 						:value="result"
@@ -52,7 +56,7 @@
 						@changed="changed"
 						:timeout="cell.state.immediate ? 600 : 0"
 						:schema="getSchemaFor(field.name)"/>
-					<page-form-field v-else-if="!isHidden(field)" :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
+					<page-form-field v-else :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
 						@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
 						:timeout="cell.state.immediate ? 600 : 0"
 						:page="page"
@@ -90,7 +94,7 @@
 			<n-form-text :value="page.name" label="Page Name" v-if="editName" v-bubble:input/>
 		</div>
 		<div class="list-actions">
-			<button @click="addField" v-if="possibleFields.length">Add</button>
+			<button @click="addField">Add Field</button>
 		</div>
 		<n-collapsible class="field list-item" v-for="field in fields" :title="field.label ? field.label : field.name">
 			<page-form-configure-single :field="field" :possible-fields="possibleFields"
@@ -100,8 +104,10 @@
 				:page="page"
 				:cell="cell"/>
 			<div class="list-item-actions">
+				<button @click="upAll(field)"><span class="fa fa-chevron-circle-left"></span></button>
 				<button @click="up(field)"><span class="fa fa-chevron-circle-up"></span></button>
 				<button @click="down(field)"><span class="fa fa-chevron-circle-down"></span></button>
+				<button @click="downAll(field)"><span class="fa fa-chevron-circle-right"></span></button>
 				<button @click="fields.splice(fields.indexOf(field), 1)"><span class="fa fa-trash"></span></button>
 			</div>
 		</n-collapsible>

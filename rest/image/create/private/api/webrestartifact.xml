@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <restInterface>
-    <method>GET</method>
+    <method>POST</method>
     <path>/image</path>
     <role>editor</role>
     <permissionContext>="webApplication:" + input/webApplicationId</permissionContext>
-    <permissionAction>image.read</permissionAction>
-    <output>nabu.web.page.core.types.rest.imageList</output>
+    <permissionAction>image.write</permissionAction>
+    <inputAsStream>true</inputAsStream>
+    <outputAsStream>true</outputAsStream>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
     <language>false</language>

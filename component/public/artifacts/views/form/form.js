@@ -26,7 +26,8 @@ nabu.page.views.PageForm = Vue.extend({
 		return {
 			configuring: false,
 			result: {},
-			currentPage: null
+			currentPage: null,
+			autoMapFrom: null
 		}
 	},
 	computed: {
@@ -75,6 +76,19 @@ nabu.page.views.PageForm = Vue.extend({
 		this.currentPage = this.cell.state.pages[0];
 	},
 	methods: {
+		automap: function() {
+			var source = this.availableParameters[this.autoMapFrom];
+			var self = this;
+			Object.keys(this.cell.bindings).map(function(key) {
+				// only automap those that are not filled in
+				if (!self.cell.bindings[key]) {
+					var keyToCheck = key.indexOf(".") < 0 ? key : key.substring(key.indexOf(".") + 1);
+					if (!!source.properties[keyToCheck]) {
+						Vue.set(self.cell.bindings, key, self.autoMapFrom + "." + keyToCheck);
+					}
+				}
+			});
+		},
 		isHidden: function(field) {
 			return field.hidden && this.$services.page.isCondition(field.hidden, this.createResult());	
 		},
@@ -288,7 +302,7 @@ nabu.page.views.PageForm = Vue.extend({
 				else {
 					for (var i = 0; i < operation.parameters.length; i++) {
 						var parameter = operation.parameters[i];
-						if (parameter.in != "body") {
+						if (parameter.in != "body" && parameter.name == field) {
 							result = parameter;
 						}
 					};
@@ -376,7 +390,7 @@ nabu.page.views.PageForm = Vue.extend({
 						}
 						tmp = tmp[parts[i]];
 					}
-					Vue.set(tmp, parts[parts.length - 1], pageInstance.get(self.cell.bindings[name]));
+					Vue.set(tmp, parts[parts.length - 1], self.$services.page.getBindingValue(pageInstance, self.cell.bindings[name]));
 				}
 			});
 			return transformed;
@@ -425,6 +439,22 @@ nabu.page.views.PageForm = Vue.extend({
 			if (index < this.cell.state.fields.length - 1) {
 				var replacement = this.cell.state.fields[index + 1];
 				this.cell.state.fields.splice(index + 1, 1, this.cell.state.fields[index]);
+				this.cell.state.fields.splice(index, 1, replacement);
+			}
+		},
+		upAll: function(field) {
+			var index = this.cell.state.fields.indexOf(field);
+			if (index > 0) {
+				var replacement = this.cell.state.fields[0];
+				this.cell.state.fields.splice(0, 1, this.cell.state.fields[index]);
+				this.cell.state.fields.splice(index, 1, replacement);
+			}
+		},
+		downAll: function(field) {
+			var index = this.cell.state.fields.indexOf(field);
+			if (index < this.cell.state.fields.length - 1) {
+				var replacement = this.cell.state.fields[this.cell.state.fields.length - 1];
+				this.cell.state.fields.splice(this.cell.state.fields.length - 1, 1, this.cell.state.fields[index]);
 				this.cell.state.fields.splice(index, 1, replacement);
 			}
 		}
@@ -592,6 +622,22 @@ Vue.component("page-form-configure", {
 			if (index < this.fields.length - 1) {
 				var replacement = this.fields[index + 1];
 				this.fields.splice(index + 1, 1, this.fields[index]);
+				this.fields.splice(index, 1, replacement);
+			}
+		},
+		upAll: function(field) {
+			var index = this.fields.indexOf(field);
+			if (index > 0) {
+				var replacement = this.fields[0];
+				this.fields.splice(0, 1, this.fields[index]);
+				this.fields.splice(index, 1, replacement);
+			}
+		},
+		downAll: function(field) {
+			var index = this.fields.indexOf(field);
+			if (index < this.fields.length - 1) {
+				var replacement = this.fields[this.fields.length - 1];
+				this.fields.splice(this.fields.length - 1, 1, this.fields[index]);
 				this.fields.splice(index, 1, replacement);
 			}
 		},

@@ -40,7 +40,7 @@ Vue.component("n-page-mapper", {
 			nabu.utils.arrays.merge(this.fieldsToMap, this.to);
 		}
 		else if (this.to) {
-			nabu.utils.arrays.merge(this.fieldsToMap, this.$services.page.getSimpleKeysFor(this.to));
+			nabu.utils.arrays.merge(this.fieldsToMap, this.$services.page.getSimpleKeysFor(this.to, false, true));
 		}
 	},
 	methods: {

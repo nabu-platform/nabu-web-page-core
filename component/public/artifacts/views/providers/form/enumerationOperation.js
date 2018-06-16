@@ -201,7 +201,7 @@ Vue.component("page-form-input-enumeration-operation", {
 						}
 						target = target[parts[i]];
 					}
-					target[parts[parts.length - 1]] = pageInstance.get(self.field.enumerationOperationBinding[key]);
+					target[parts[parts.length - 1]] = self.$services.page.getBindingValue(pageInstance, self.field.enumerationOperationBinding[key]);
 				});
 			}
 			return this.$services.swagger.execute(this.field.enumerationOperation, parameters, function(response) {

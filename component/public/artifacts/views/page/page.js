@@ -36,6 +36,11 @@ Vue.mixin({
 					}
 				})
 			}
+			var application = {};
+			this.$services.page.properties.map(function(x) {
+				application[x.key] = x.value;
+			});
+			Vue.set(self.state, "application", application);
 		}
 	}
 })
@@ -358,6 +363,11 @@ nabu.page.views.Page = Vue.extend({
 					});
 				}
 				
+				// add the cell events
+				this.page.content.rows.map(function(row) {
+					self.getCellEvents(row, events);
+				});
+				
 				Object.keys(this.components).map(function(cellId) {
 					var component = self.components[cellId];
 					if (component && component.getEvents) {
@@ -384,6 +394,21 @@ nabu.page.views.Page = Vue.extend({
 				});
 			}
 			return this.cachedEvents;
+		},
+		getCellEvents: function(cellContainer, events) {
+			var self = this;
+			if (cellContainer.cells) {
+				cellContainer.cells.map(function(cell) {
+					if (cell.clickEvent) {
+						events[cell.clickEvent] = {};
+					}
+					if (cell.rows) {
+						cell.rows.map(function(row) {
+							self.getCellEvents(row, events);
+						});
+					}
+				});
+			}
 		},
 		subscribe: function(event, handler) {
 			if (!this.subscriptions[event]) {
@@ -1114,6 +1139,16 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 			return devices;
 		},
+		resetEvents: function() {
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			pageInstance.resetEvents();	
+		},
+		clickOnCell: function(cell) {
+			if (cell.clickEvent && !this.edit) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				pageInstance.emit(cell.clickEvent, {});
+			}	
+		},
 		addCell: function(target) {
 			if (!target.cells) {
 				Vue.set(target, "cells", []);
@@ -1143,7 +1178,8 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				height: null,
 				instances: {},
 				condition: null,
-				devices: []
+				devices: [],
+				clickEvent: null
 			});
 		},
 		addInstance: function(target) {

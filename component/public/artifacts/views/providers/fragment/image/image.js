@@ -22,6 +22,9 @@ Vue.component("page-field-fragment-image-configure", {
 		}
 	},
 	created: function() {
+		if (!this.fragment.fixedHref) {
+			Vue.set(this.fragment, "fixedHref", false);
+		}
 		if (!this.fragment.imageHref) {
 			Vue.set(this.fragment, "imageHref", null);
 		}
@@ -38,7 +41,7 @@ Vue.component("page-field-fragment-image-configure", {
 });
 
 Vue.component("page-field-fragment-image", {
-	template: "<div class='image' :style=\"{'background-image': 'url(' + (fragment.imageHref ? $services.page.getValue(data, fragment.imageHref) : null) + ')', height: fragment.imageHeight ? fragment.imageHeight : 'inherit', 'background-size': fragment.imageSize }\"></div>",
+	template: "<div class='image' :style=\"{'background-image': 'url(' + href + ')', height: fragment.imageHeight ? fragment.imageHeight : 'inherit', 'background-size': fragment.imageSize }\"></div>",
 	props: {
 		cell: {
 			type: Object,
@@ -56,6 +59,16 @@ Vue.component("page-field-fragment-image", {
 		data: {
 			type: Object,
 			required: true
+		}
+	},
+	computed: {
+		href: function() {
+			if (this.fragment.fixedHref) {
+				return this.fragment.imageHref;
+			}
+			else if (this.fragment.imageHref) {
+				return this.$services.page.getValue(this.data, this.fragment.imageHref);
+			}
 		}
 	}
 });

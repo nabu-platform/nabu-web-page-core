@@ -117,12 +117,17 @@ nabu.services.VueService(Vue.extend({
 		window.addEventListener("paste", function(event) {
 			var data = event.clipboardData.getData("text/plain");
 			if (data) {
-				var parsed = JSON.parse(data);
-				if (parsed && parsed.type == "page-row") {
-					self.copiedRow = parsed.content;
+				try {
+					var parsed = JSON.parse(data);
+					if (parsed && parsed.type == "page-row") {
+						self.copiedRow = parsed.content;
+					}
+					else if (parsed && parsed.type == "page-cell") {
+						self.copiedCell = parsed.content;
+					}
 				}
-				else if (parsed && parsed.type == "page-cell") {
-					self.copiedCell = parsed.content;
+				catch (exception) {
+					// ignore
 				}
 			}
 		});
@@ -138,13 +143,13 @@ nabu.services.VueService(Vue.extend({
 		}
 	},
 	methods: {
-		getPageInstance(page, component) {
+		getPageInstance: function(page, component) {
 			return nabu.page.instances[page.name];
 		},
-		setPageInstance(page, instance) {
+		setPageInstance: function(page, instance) {
 			nabu.page.instances[page.name] = instance;
 		},
-		destroyPageInstance(page) {
+		destroyPageInstance: function(page) {
 			delete nabu.page.instances[page.name];
 		},
 		destroy: function(component) {
@@ -266,7 +271,7 @@ nabu.services.VueService(Vue.extend({
 			return result;
 		},
 		getSimpleClasses: function(value) {
-			var classes = ["primary", "secondary", "info", "success", "warning", "danger"];
+			var classes = ["primary", "secondary", "info", "success", "warning", "danger", "inline"];
 			if (value) {
 				classes = classes.filter(function(x) {
 					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
@@ -361,7 +366,7 @@ nabu.services.VueService(Vue.extend({
 			}
 			return result;
 		},
-		getSimpleKeysFor: function(definition, includeComplex, keys, path) {
+		getSimpleKeysFor: function(definition, includeComplex, includeArrays, keys, path) {
 			var self = this;
 			var sort = false;
 			if (!keys) {
@@ -371,14 +376,25 @@ nabu.services.VueService(Vue.extend({
 			if (definition && definition.properties) {
 				Object.keys(definition.properties).map(function(key) {
 					// arrays can not be chosen, you need to bind them first
-					if (definition.properties[key].type != "array") {
+					if (definition.properties[key].type != "array" || includeArrays) {
 						var childPath = (path ? path + "." : "") + key;
-						if (includeComplex || !definition.properties[key].properties) {
+						var isArray = definition.properties[key].type == "array";
+						var isComplex = !!definition.properties[key].properties;
+						// if we have an array, it can be a complex array
+						if (!isComplex && definition.properties[key].items) {
+							isComplex = definition.properties[key].items.properties;
+						}
+						if (includeComplex || !isComplex) {
 							keys.push(childPath);
 						}
 						// if it is complex, recurse
-						if (definition.properties[key].properties) {
-							self.getSimpleKeysFor(definition.properties[key], includeComplex, keys, childPath);
+						if (isComplex) {
+							if (isArray) {
+								self.getSimpleKeysFor({properties:definition.properties[key].items}, includeComplex, includeArrays, keys, childPath);
+							}
+							else {
+								self.getSimpleKeysFor(definition.properties[key], includeComplex, includeArrays, keys, childPath);
+							}
 						}
 					}
 				});
@@ -589,7 +605,6 @@ nabu.services.VueService(Vue.extend({
 						return rowHolder.rows[i];
 					}
 					if (rowHolder.rows[i].cells && rowHolder.rows[i].cells.length) {
-						console.log("cells!");
 						for (var j = 0; j < rowHolder.rows[i].cells.length; j++) {
 							var cell = rowHolder.rows[i].cells[j];
 							if (cell.customId == "main") {
@@ -597,7 +612,6 @@ nabu.services.VueService(Vue.extend({
 							}
 							else if (cell.rows) {
 								var main = this.findMain(cell);
-								console.log("found it?", main);
 								if (main) {
 									return main;
 								}
@@ -1026,8 +1040,8 @@ nabu.services.VueService(Vue.extend({
 				var self = this;
 				this.$services.router.register({
 					alias: "home",
-					enter: function() {
-						self.$services.router.route(newValue);
+					enter: function(parameters) {
+						self.$services.router.route(newValue, parameters);
 					},
 					url: "/"
 				});

@@ -6,4 +6,5 @@
     <webFragments>nabu.web.page.core.rest.configuration.get</webFragments>
     <webFragments>nabu.web.page.core.rest.configuration.update</webFragments>
     <webFragments>nabu.web.page.core.rest.image.list</webFragments>
+    <webFragments>nabu.web.page.core.rest.image.create</webFragments>
 </webModule>

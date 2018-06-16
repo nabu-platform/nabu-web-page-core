@@ -9,8 +9,10 @@
 			<div class="list-item-actions">
 				<button @click="addFragment(field)">Add Fragment</button>
 				<button v-if="allowMultiple" @click="cell.state.fields.splice(cell.state.fields.indexOf(field), 1)">Remove Field</button>
+				<button v-if="allowMultiple" @click="fieldBeginning(field)"><span class="fa fa-chevron-circle-left"></span></button>
 				<button v-if="allowMultiple" @click="fieldUp(field)"><span class="fa fa-chevron-circle-up"></span></button>
 				<button v-if="allowMultiple" @click="fieldDown(field)"><span class="fa fa-chevron-circle-down"></span></button>
+				<button v-if="allowMultiple" @click="fieldEnd(field)"><span class="fa fa-chevron-circle-right"></span></button>
 			</div>
 			<n-collapsible :title="fragment.key ? fragment.key : fragment.type" v-for="fragment in field.fragments">
 				<n-form-combo v-model="fragment.type" label="Fragment Type" :items="fragmentTypes"/>
@@ -60,8 +62,9 @@
 	<div class="page-field" :class="getDynamicClasses(field)">
 		<template v-if="label">
 			<dt v-if="label && field.label">{{field.label}}</dt>
-			<dd class="page-field-fragment" :class="fragment.class" v-for="fragment in field.fragments" v-if="!isHidden(fragment)">
-				<component v-if="fragment.type" 
+			<dd class="page-field-fragment">
+				<component v-if="fragment.type && !isHidden(fragment)" 
+					:class="fragment.class" v-for="fragment in field.fragments"
 					:is="getProvidedComponent(fragment.type)"
 					:page="page" 
 					:cell="cell"

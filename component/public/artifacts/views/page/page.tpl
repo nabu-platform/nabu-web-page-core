@@ -1,6 +1,6 @@
 <template id="page">
 	<div class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
-		<div class="page-menu" v-if="edit">
+		<div class="page-menu n-page-menu" v-if="edit">
 			<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
 			<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
 			<button @click="$services.page.update(page)"><span class="fa fa-save" title="Save"></span></button>
@@ -107,8 +107,11 @@
 				v-if="edit || shouldRenderRow(row)"
 				:style="rowStyles(row)">
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-			<div :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" :id="page.name + '_' + row.id + '_' + cell.id" :class="[{'page-cell': edit || !cell.target || cell.target == 'page'}, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root} ]" 
-					:key="cell.id">
+			<div :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" 
+					:id="page.name + '_' + row.id + '_' + cell.id" 
+					:class="[{'clickable': !!cell.clickEvent}, {'page-cell': edit || !cell.target || cell.target == 'page'}, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root} ]" 
+					:key="cell.id"
+					@click="clickOnCell(cell)">
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				<n-sidebar v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings">
 					<n-form class="layout2" key="cell-form">
@@ -140,6 +143,7 @@
 								<n-form-text label="Cell Name" v-model="cell.name"/>
 								<n-form-text label="Cell Width (flex)" v-model="cell.width"/>
 								<n-form-text label="Cell Height (any)" v-model="cell.height"/>
+								<n-form-text label="Click Event" v-model="cell.clickEvent" :timeout="600" @input="resetEvents"/>
 								<n-form-text label="Class" v-model="cell.class"/>
 								<n-form-text label="Condition" v-model="cell.condition"/>
 								<div class="list-actions">

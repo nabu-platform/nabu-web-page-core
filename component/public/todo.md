@@ -1,8 +1,6 @@
 # TODO
 
-- synchronize changes werkt niet meer?
-- page-fields: add form support
-- toggle form fields on events (e.g. in table, toggle form fields for a row, in page fields for the entire bit)
+- fix form switch
 
 ## Longterm
 
