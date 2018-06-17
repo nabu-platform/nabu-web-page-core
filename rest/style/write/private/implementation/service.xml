@@ -1,0 +1,24 @@
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" disabled="false" id="e73897ab-c80d-47de-b7f9-61bbb123884c">
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="true" id="a4c64c22-0048-4e05-8db4-a9299faf3259">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="e0316213-a481-4d78-89f0-646bb06bda80" invocationOrder="0" temporaryMapping="true" serviceId="nabu.utils.Resource.mkdir" resultName="result59a4f480049f49c089cd9a5d308a6504" y="113" x="30">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="174b4aff-575c-4568-801a-436506ce47b0" optional="false" mask="false" fixedValue="true">
+				<from>="repository:" + input/webApplicationId + ":/public/artifacts/styles"</from>
+				<to>uri</to>
+			</steps>
+			<asynchronous>false</asynchronous>
+		</steps>
+	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" id="aff18870-5592-4bdd-975c-b072433bf60f">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="c259962c-0eca-4215-a2be-5c06826194bd" invocationOrder="0" temporaryMapping="true" serviceId="nabu.utils.Resource.write" resultName="result84f2125dfabc46be96cf821ecbf67479" y="116" x="132">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="aa341b7b-cb47-4f75-8c97-fe7284a76b6b" optional="false" mask="false" fixedValue="true">
+				<from>="repository:" + input/webApplicationId + ":/public/artifacts/styles/" + input/path/name + ".scss"</from>
+				<to>uri</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="0e3f72d6-8e74-45e8-8ef3-3d22f2ffbc62" optional="false" mask="false" fixedValue="false">
+				<from>input/content/content</from>
+				<to>stream</to>
+			</steps>
+			<asynchronous>false</asynchronous>
+		</steps>
+	</steps>
+</sequence>

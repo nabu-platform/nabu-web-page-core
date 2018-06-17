@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <restInterface>
     <method>POST</method>
-    <path>/{applicationId}/style</path>
+    <path>/style/{name: .*}</path>
     <role>editor</role>
     <permissionContext>="webApplication:" + input/path/applicationId</permissionContext>
-    <permissionAction>style.create</permissionAction>
-    <input>nabu.web.page.core.types.rest.style</input>
-    <configurationType>nabu.cms.core.configuration</configurationType>
+    <permissionAction>style.write</permissionAction>
+    <input>nabu.web.page.core.types.rest.styleInput</input>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
     <language>false</language>

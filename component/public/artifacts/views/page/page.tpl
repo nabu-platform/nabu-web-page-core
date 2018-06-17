@@ -1,5 +1,5 @@
 <template id="page">
-	<div class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
+	<component :is="pageTag()" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
 		<div class="page-menu n-page-menu" v-if="edit">
 			<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
 			<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
@@ -22,6 +22,7 @@
 					<n-form-text v-model="page.content.path" label="Path"/>
 					<n-form-text v-model="page.content.class" label="Class"/>
 					<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow"/>
+					<n-form-combo label="Page Type" :items="['page', 'email']" v-model="page.content.pageType"/>
 				</n-collapsible>
 				<n-collapsible title="Initial State" class="list">
 					<div class="list-actions">
@@ -97,17 +98,17 @@
 			:ref="page.name + '_rows'"
 			:root="true"
 			@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
-	</div>
+	</component>
 </template>
 
 <template id="page-rows">
 	<div class="page-rows">
-		<div v-for="row in getCalculatedRows()" class="page-row" :id="page.name + '_' + row.id" :class="['page-row-' + row.cells.length, row.class ? row.class : null ]" 
+		<component :is="rowTagFor(row)" v-for="row in getCalculatedRows()" class="page-row" :id="page.name + '_' + row.id" :class="['page-row-' + row.cells.length, row.class ? row.class : null ]" 
 				:key="row.id"
 				v-if="edit || shouldRenderRow(row)"
 				:style="rowStyles(row)">
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-			<div :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" 
+			<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" 
 					:id="page.name + '_' + row.id + '_' + cell.id" 
 					:class="[{'clickable': !!cell.clickEvent}, {'page-cell': edit || !cell.target || cell.target == 'page'}, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root} ]" 
 					:key="cell.id"
@@ -217,7 +218,7 @@
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</template>
 				</template>
-			</div>
+			</component>
 			<n-sidebar v-if="configuring == row.id" @close="configuring = null" class="settings">
 				<n-form class="layout2">
 					<n-collapsible title="Row Settings">
@@ -265,7 +266,7 @@
 				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
 				<button @click="row.collapsed = !row.collapsed"><span class="fa" :class="{'fa-minus-square': !row.collapsed, 'fa-plus-square': row.collapsed }"></span></button>
 			</div>
-		</div>
+		</component>
 	</div>
 </template>
 

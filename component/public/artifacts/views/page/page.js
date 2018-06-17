@@ -125,6 +125,12 @@ nabu.page.views.Page = Vue.extend({
 			if (this.page.content.class) {
 				classes.push(this.page.content.class);
 			}
+			if (this.page.content.pageType) {
+				classes.push("page-type-" + this.page.content.pageType);
+			}
+			else {
+				classes.push("page-type-page");
+			}
 			return classes;
 		}
 	},
@@ -628,6 +634,9 @@ nabu.page.views.Page = Vue.extend({
 				target = target[parts[i]];
 			}
 			Vue.set(target, parts[parts.length - 1], value);
+		},
+		pageTag: function() {
+			return this.page.content.pageType == "email" ? "e-root" : "div";
 		}
 	},
 	watch: {
@@ -692,6 +701,12 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		});
 	},
 	methods: {
+		rowTagFor: function(row) {
+			return this.page.content.pageType == "email" ? "e-row" : "div";
+		},
+		cellTagFor: function(row, cell) {
+			return this.page.content.pageType == "email" ? "e-columns" : "div";	
+		},
 		getInstance: function() {
 			return this.$services.page.instances[this.name];	
 		},

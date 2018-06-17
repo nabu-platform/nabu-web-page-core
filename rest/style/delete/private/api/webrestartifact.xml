@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <restInterface>
     <method>DELETE</method>
-    <path>/{applicationId}/style/{path:.*}</path>
+    <path>/style/{name:.*}</path>
     <role>editor</role>
     <permissionContext>="webApplication:" + input/path/applicationId</permissionContext>
-    <permissionAction>style.delete</permissionAction>
-    <configurationType>nabu.cms.core.configuration</configurationType>
+    <permissionAction>style.write</permissionAction>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
     <language>false</language>

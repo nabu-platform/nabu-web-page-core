@@ -40,7 +40,8 @@ nabu.services.VueService(Vue.extend({
 			copiedRow: null,
 			copiedCell: null,
 			useEval: false,
-			cssLastModified: null
+			cssLastModified: null,
+			cssError: null
 		}
 	},
 	activate: function(done) {
@@ -59,13 +60,13 @@ nabu.services.VueService(Vue.extend({
 				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-html.js");
 				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-language_tools.js");
 				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-whitespace.js");
-				
+				promise.resolve();
 				// inject sass compiler
-				self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.js", function() {
+				/*self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.js", function() {
 					self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.worker.js", function() {
 						promise.resolve();
 					});
-				});
+				});*/
 			});
 			return promise;
 		}
@@ -89,7 +90,16 @@ nabu.services.VueService(Vue.extend({
 				self.home = configuration.home;
 			}
 			if (self.canEdit()) {
-				injectJavascript().then(function() {
+				var promises = [];
+				promises.push(injectJavascript());
+				promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.style.list").then(function(list) {
+					if (list.styles) {
+						nabu.utils.arrays.merge(self.styles, list.styles);
+					}
+				}));
+				console.log("promises are", promises);
+				self.$services.q.all(promises).then(function() {
+					console.log("resolved!");
 					Vue.nextTick(function() {
 						self.loading = false;
 					});
@@ -143,6 +153,23 @@ nabu.services.VueService(Vue.extend({
 		}
 	},
 	methods: {
+		saveStyle: function(style) {
+			var self = this;
+			this.$services.swagger.execute("nabu.page.scss.compile", {body:{content:style.content}}).then(function() {
+				self.cssError = null;
+				return self.$services.swagger.execute("nabu.web.page.core.rest.style.write", {name:style.name, body: {
+					content: style.content
+				}});
+			}, function(error) {
+				var parsed = JSON.parse(error.responseText);
+				if (parsed.description) {
+					self.cssError = parsed.description.replace(/.*CompilationException:([^\n]+).*/sg, "$1");
+				}
+				else {
+					console.error("scss error", error);
+				}
+			});
+		},
 		getPageInstance: function(page, component) {
 			return nabu.page.instances[page.name];
 		},
@@ -425,13 +452,15 @@ nabu.services.VueService(Vue.extend({
 		},
 		createStyle: function() {
 			var self = this;
-			this.$services.swagger.execute("nabu.web.page.core.rest.style.create", { applicationId: this.applicationId, body: {
-				name: "unnamed",
-				title: "page",
-				description: ""
-			}}).then(function(created) {
-				self.styles.push(created);
-			});
+			var name = prompt("Stylesheet Name");
+			if (name && this.styles.map(function(x) { return x.name.toLowerCase() }).indexOf(name.toLowerCase()) < 0) {
+				this.$services.swagger.execute("nabu.web.page.core.rest.style.write", { name:name, body: { content: "" } }).then(function() {
+					self.styles.push({
+						name: name,
+						content: ""
+					});
+				});
+			}
 		},
 		updateCss: function(style, rebuild) {
 			var self = this;

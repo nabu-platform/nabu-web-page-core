@@ -63,17 +63,15 @@
 				</n-collapsible>
 			</div>
 		</n-collapsible>
-		<n-collapsible title="Styling" class="list" v-if="false" comment="enable at a later date when it is clearer how all the files will work">
+		<n-collapsible title="Styling" class="list">
 			<footer class="list-actions">
-				<button @click="$services.page.createStyle">Create New Page</button>
-				<button @click="$services.page.compileCss" v-if="false">Compile New Css</button>
-				<button @click="$services.page.saveCompiledCss" v-if="false" :disabled="!$services.page.lastCompiled">Save New Css</button>
+				<button @click="$services.page.createStyle">Create New Stylesheet</button>
+				<div class="danger message" v-if="$services.page.cssError">{{$services.page.cssError}}</div>
 			</footer>
-			<n-collapsible :title="style.name ? style.name : 'Unnamed'" v-for="style in $services.page.styles" class="page-cell layout2 list-item" :key="style.id">
-				<n-form-text :required="true" v-model="style.name" label="Name" @input="$services.page.updateCss(style)" :timeout="600"/>
-				<n-form-switch :value="style.title == 'utility'" label="Is utility file" @input="function(newValue) { style.title = newValue ? 'utility' : 'page' }"/>
+			<n-collapsible :title="style.name" v-for="style in $services.page.styles" class="page-cell layout2 list-item" :key="style.id">
+				<n-form-text v-if="false" :required="true" v-model="style.name" label="Name" @input="$services.page.updateCss(style)" :timeout="600"/>
 				<n-form-text type="color" v-model="lastColor[style.name]" :timeout="600" @input="function(value) { insertColor(style, value) }" label="Color Picker"/>
-				<n-ace v-model="style.description" :timeout="600" @input="$services.page.updateCss(style, true)" :ref="'editors_' + style.name"/>
+				<n-ace v-model="style.content" :timeout="600" @input="$services.page.saveStyle(style)" :ref="'editors_' + style.name"/>
 			</n-collapsible>
 		</n-collapsible>
 	</n-form>

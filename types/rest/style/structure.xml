@@ -1,4 +1,3 @@
-<structure name="style">
+<structure name="root" superType="nabu.web.page.core.types.rest.styleInput">
     <field name="name" type="java.lang.String"/>
-    <field minOccurs="0" name="content" type="java.lang.String"/>
 </structure>

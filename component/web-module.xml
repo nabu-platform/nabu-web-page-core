@@ -7,4 +7,7 @@
     <webFragments>nabu.web.page.core.rest.configuration.update</webFragments>
     <webFragments>nabu.web.page.core.rest.image.list</webFragments>
     <webFragments>nabu.web.page.core.rest.image.create</webFragments>
+    <webFragments>nabu.web.page.core.rest.style.list</webFragments>
+    <webFragments>nabu.web.page.core.rest.style.write</webFragments>
+    <webFragments>nabu.web.page.core.rest.style.delete</webFragments>
 </webModule>
