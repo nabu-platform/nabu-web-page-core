@@ -90,7 +90,7 @@ nabu.page.views.PageForm = Vue.extend({
 			});
 		},
 		isHidden: function(field) {
-			return field.hidden && this.$services.page.isCondition(field.hidden, this.createResult());	
+			return field.hidden && this.$services.page.isCondition(field.hidden, this.createResult(), this);
 		},
 		getGroupedFields: function(page) {
 			var groupedFields = [];
@@ -381,7 +381,7 @@ nabu.page.views.PageForm = Vue.extend({
 			// bind additional stuff from the page
 			Object.keys(this.cell.bindings).map(function(name) {
 				// don't overwrite manually set values
-				if (self.cell.bindings[name] && !transformed[name]) {
+				if (self.cell.bindings[name] && Object.keys(transformed).indexOf(name) < 0) {
 					var parts = name.split(".");
 					var tmp = transformed;
 					for (var i = 0; i < parts.length - 1; i++) {
@@ -398,7 +398,7 @@ nabu.page.views.PageForm = Vue.extend({
 		changed: function() {
 			if (this.cell.state.immediate) {
 				this.doIt();
-			}	
+			}
 		},
 		doIt: function() {
 			var messages = this.$refs.form.validate();

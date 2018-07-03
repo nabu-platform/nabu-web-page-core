@@ -211,10 +211,10 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			});
 		},
 		isVisible: function(action) {
-			return this.edit || !action.condition || this.$services.page.isCondition(action.condition, this.state);
+			return this.edit || !action.condition || this.$services.page.isCondition(action.condition, this.state, this);
 		},
 		isDisabled: function(action) {
-			return action.disabled && this.$services.page.isCondition(action.disabled, this.state);
+			return action.disabled && this.$services.page.isCondition(action.disabled, this.state, this);
 		},
 		handle: function(action, force) {
 			if (force || !this.isDisabled(action)) {

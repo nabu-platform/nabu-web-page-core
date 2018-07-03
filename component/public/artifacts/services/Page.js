@@ -45,81 +45,10 @@ nabu.services.VueService(Vue.extend({
 		}
 	},
 	activate: function(done) {
-		var self = this;
-		
-		var injectJavascript = function() {
-			var promise = self.$services.q.defer();
-		
-			// inject some javascript stuff if we are in edit mode
-			//self.inject("https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.js");
-			// inject ace editor
-			// check out https://cdnjs.com/libraries/ace/
-			self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ace.js", function() {
-				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-scss.js");
-				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-javascript.js");
-				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-html.js");
-				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-language_tools.js");
-				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-whitespace.js");
-				promise.resolve();
-				// inject sass compiler
-				/*self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.js", function() {
-					self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.worker.js", function() {
-						promise.resolve();
-					});
-				});*/
-			});
-			return promise;
-		}
-
-		self.$services.swagger.execute("nabu.web.page.core.rest.configuration.get").then(function(configuration) {
-			self.editable = configuration.editable;
-			if (configuration.pages) {
-				nabu.utils.arrays.merge(self.pages, configuration.pages);
-				self.loadPages(self.pages);
-			}
-			if (configuration.properties) {
-				nabu.utils.arrays.merge(self.properties, configuration.properties);
-			}
-			if (configuration.devices) {
-				nabu.utils.arrays.merge(self.devices, configuration.devices);
-			}
-			if (configuration.title) {
-				self.title = configuration.title;
-			}
-			if (configuration.home) {
-				self.home = configuration.home;
-			}
-			if (self.canEdit()) {
-				var promises = [];
-				promises.push(injectJavascript());
-				promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.style.list").then(function(list) {
-					if (list.styles) {
-						nabu.utils.arrays.merge(self.styles, list.styles);
-					}
-				}));
-				console.log("promises are", promises);
-				self.$services.q.all(promises).then(function() {
-					console.log("resolved!");
-					Vue.nextTick(function() {
-						self.loading = false;
-					});
-					// start reloading the css at fixed intervals to pull in any relevant changes
-					self.reloadCss();
-					done();
-				});
-				document.addEventListener("keydown", function(event) {
-					if (event.ctrlKey && event.keyCode == 88) {
-						self.wantEdit = !self.wantEdit;
-					}
-				});
-			}
-			else {
-				Vue.nextTick(function() {
-					self.loading = false;
-				});
-				done();
-			}
-		});
+		this.activate(done);
+	},
+	clear: function(done) {
+		this.activate(done ? done : function() {});
 	},
 	created: function() {
 		var self = this;
@@ -153,6 +82,102 @@ nabu.services.VueService(Vue.extend({
 		}
 	},
 	methods: {
+		activate: function(done) {
+			var self = this;
+		
+			var injectJavascript = function() {
+				var promise = self.$services.q.defer();
+			
+				// inject some javascript stuff if we are in edit mode
+				//self.inject("https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.js");
+				// inject ace editor
+				// check out https://cdnjs.com/libraries/ace/
+				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ace.js", function() {
+					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-scss.js");
+					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-javascript.js");
+					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-html.js");
+					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-language_tools.js");
+					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-whitespace.js");
+					promise.resolve();
+					// inject sass compiler
+					/*self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.js", function() {
+						self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.worker.js", function() {
+							promise.resolve();
+						});
+					});*/
+				});
+				return promise;
+			}
+	
+			self.$services.swagger.execute("nabu.web.page.core.rest.configuration.get").then(function(configuration) {
+				self.editable = configuration.editable;
+				self.pages.splice(0, self.pages.length);
+				self.properties.splice(0, self.properties.length);
+				self.devices.splice(0, self.devices.length);
+				if (configuration.pages) {
+					nabu.utils.arrays.merge(self.pages, configuration.pages);
+					self.loadPages(self.pages);
+				}
+				if (configuration.properties) {
+					nabu.utils.arrays.merge(self.properties, configuration.properties);
+				}
+				if (configuration.devices) {
+					nabu.utils.arrays.merge(self.devices, configuration.devices);
+				}
+				if (configuration.title) {
+					self.title = configuration.title;
+				}
+				if (configuration.home) {
+					self.home = configuration.home;
+				}
+				if (self.canEdit()) {
+					var promises = [];
+					promises.push(injectJavascript());
+					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.style.list").then(function(list) {
+						if (list.styles) {
+							nabu.utils.arrays.merge(self.styles, list.styles);
+						}
+					}));
+					self.$services.q.all(promises).then(function() {
+						console.log("resolved!");
+						Vue.nextTick(function() {
+							self.loading = false;
+						});
+						// start reloading the css at fixed intervals to pull in any relevant changes
+						self.reloadCss();
+						done();
+					});
+					document.addEventListener("keydown", function(event) {
+						if (event.ctrlKey && event.keyCode == 88) {
+							self.wantEdit = !self.wantEdit;
+						}
+					});
+				}
+				else {
+					Vue.nextTick(function() {
+						self.loading = false;
+					});
+					done();
+				}
+			});
+		},
+		renumber: function(page, entity) {
+			var self = this;
+			if (entity.id) {
+				entity.id = page.content.counter++;
+			}
+			if (entity.rows) {
+				entity.rows.map(function(row) {
+					self.renumber(row);
+				});
+			}
+			if (entity.cells) {
+				entity.cells.map(function(cell) {
+					self.renumber(cell);
+				});
+			}
+			return entity;
+		},
 		saveStyle: function(style) {
 			var self = this;
 			this.$services.swagger.execute("nabu.page.scss.compile", {body:{content:style.content}}).then(function() {
@@ -163,7 +188,7 @@ nabu.services.VueService(Vue.extend({
 			}, function(error) {
 				var parsed = JSON.parse(error.responseText);
 				if (parsed.description) {
-					self.cssError = parsed.description.replace(/.*CompilationException:([^\n]+).*/sg, "$1");
+					self.cssError = parsed.description.replace(/[\s\S]*CompilationException:([^\n]+)[\s\S]*/g, "$1");
 				}
 				else {
 					console.error("scss error", error);
@@ -177,7 +202,9 @@ nabu.services.VueService(Vue.extend({
 			nabu.page.instances[page.name] = instance;
 		},
 		destroyPageInstance: function(page) {
-			delete nabu.page.instances[page.name];
+			if (nabu.page.instances[page.name] == page) {
+				delete nabu.page.instances[page.name];
+			}
 		},
 		destroy: function(component) {
 			if (component.page && component.cell) {
@@ -310,25 +337,25 @@ nabu.services.VueService(Vue.extend({
 			}
 			return classes;
 		},
-		getDynamicClasses: function(styles, state) {
+		getDynamicClasses: function(styles, state, instance) {
 			if (!styles) {
 				return [];
 			}
 			var self = this;
 			return styles.filter(function(style) {
-				return self.isCondition(style.condition, state);
+				return self.isCondition(style.condition, state, instance);
 			}).map(function(style) {
 				return style.class;
 			});
 		},
-		isCondition: function(condition, state) {
+		isCondition: function(condition, state, instance) {
 			if (!condition) {
 				return true;
 			}
-			var result = this.eval(condition, state);
+			var result = this.eval(condition, state, instance);
 			return result == true;
 		},
-		eval: function(condition, state) {
+		eval: function(condition, state, instance) {
 			if (!condition) {
 				return null;
 			}
@@ -347,7 +374,7 @@ nabu.services.VueService(Vue.extend({
 			}
 			else {
 				try {
-					var result = Function('"use strict";return (function(state, $services) { return ' + condition + ' })')()(state, this.$services);
+					var result = Function('"use strict";return (function(state, $services, $value) { return ' + condition + ' })')()(state, this.$services, instance ? instance.$value : function() { throw "No value function" });
 				}
 				catch (exception) {
 					console.error("Could not evaluate", condition, exception);

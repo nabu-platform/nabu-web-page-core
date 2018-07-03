@@ -65,7 +65,7 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			}
 		},
 		// copy/pasted from the table getOperations
-		getEnumerationServices: function() {
+		getEnumerationServices: function(name) {
 			var self = this;
 			return this.$services.page.getOperations(function(operation) {
 				// must be a get

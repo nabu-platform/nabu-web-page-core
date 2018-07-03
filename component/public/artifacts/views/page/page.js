@@ -42,6 +42,19 @@ Vue.mixin({
 			});
 			Vue.set(self.state, "application", application);
 		}
+	},
+	computed: {
+		$self: function() {
+			return this;
+		}	
+	},
+	methods: {
+		$value: function(path) {
+			if (this.page) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				return this.$services.page.getBindingValue(pageInstance, path);
+			}
+		}
 	}
 })
 
@@ -89,6 +102,7 @@ nabu.page.views.Page = Vue.extend({
 		}
 	},
 	created: function() {
+		this.$services.page.setPageInstance(this.page, this);
 		if (this.page.content.parameters) {
 			var self = this;
 			this.page.content.parameters.map(function(x) {
@@ -152,7 +166,7 @@ nabu.page.views.Page = Vue.extend({
 	},
 	methods: {
 		pasteRow: function() {
-			this.page.content.rows.push(this.$services.page.copiedRow);
+			this.page.content.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
 			this.$services.page.copiedRow = null;
 		},
 		filterRoutes: function(value) {
@@ -818,7 +832,13 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		},
 		getStyles: function(cell) {
 			var width = typeof(cell.width) == "undefined" ? 1 : cell.width;
-			var styles = [{'flex-grow': width}];
+			var styles = [];
+			if (typeof(width) == "number" || (width.match && width.match(/^[0-9.]+$/))) {
+				styles.push({'flex-grow': width});
+			}
+			else {
+				styles.push({'width': width});
+			}
 			if (cell.height) {
 				styles.push({'height': cell.height});
 			}
@@ -935,7 +955,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				}
 			}
 			if (!!row.condition) {
-				if (!this.$services.page.isCondition(row.condition, getState(row))) {
+				if (!this.$services.page.isCondition(row.condition, getState(row), this)) {
 					return false;
 				}
 			}
@@ -1006,7 +1026,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 			
 			if (cell.condition) {
-				if (!this.$services.page.isCondition(cell.condition, this.getState(row, cell))) {
+				if (!this.$services.page.isCondition(cell.condition, this.getState(row, cell), this)) {
 					return false;
 				}
 			}
@@ -1286,11 +1306,11 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			});
 		},
 		pasteCell: function(row) {
-			row.cells.push(this.$services.page.copiedCell);
+			row.cells.push(this.$services.page.renumber(this.page, this.$services.page.copiedCell));
 			this.$services.page.copiedCell = null;
 		},
 		pasteRow: function(cell) {
-			cell.rows.push(this.$services.page.copiedRow);
+			cell.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
 			this.$services.page.copiedRow = null;
 		}
 	}

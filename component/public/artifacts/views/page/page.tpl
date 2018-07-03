@@ -1,5 +1,5 @@
 <template id="page">
-	<component :is="pageTag()" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
+	<component :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
 		<div class="page-menu n-page-menu" v-if="edit">
 			<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
 			<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
@@ -142,7 +142,7 @@
 							<n-collapsible title="Cell Settings" key="cell-settings">
 								<n-form-text label="Cell Id" v-model="cell.customId"/>
 								<n-form-text label="Cell Name" v-model="cell.name"/>
-								<n-form-text label="Cell Width (flex)" v-model="cell.width"/>
+								<n-form-text label="Cell Width (flex or other)" v-model="cell.width"/>
 								<n-form-text label="Cell Height (any)" v-model="cell.height"/>
 								<n-form-text label="Click Event" v-model="cell.clickEvent" :timeout="600" @input="resetEvents"/>
 								<n-form-text label="Class" v-model="cell.class"/>
@@ -190,7 +190,7 @@
 						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 				</div>
 				<template v-else-if="shouldRenderCell(row, cell)">
-					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)">
+					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)" :popout="false">
 						<div :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
@@ -199,7 +199,7 @@
 							:local-state="getLocalState(row, cell)"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-sidebar>
-					<n-prompt v-if="cell.target == 'prompt'" @close="close(cell)">
+					<n-prompt v-else-if="cell.target == 'prompt'" @close="close(cell)">
 						<div :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"

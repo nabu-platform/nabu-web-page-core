@@ -1,5 +1,5 @@
 Vue.component("page-field-fragment-data-configure", {
-	template: "<page-formatted-configure :fragment='fragment' :allow-html='true'/>",
+	template: "<page-formatted-configure :fragment='fragment' :allow-html='true' :cell='cell' :page='page'/>",
 	props: {
 		cell: {
 			type: Object,
@@ -18,7 +18,7 @@ Vue.component("page-field-fragment-data-configure", {
 });
 
 Vue.component("page-field-fragment-data", {
-	template: "<page-formatted :value='$services.page.getValue(data, fragment.key)' :fragment='fragment'/>",
+	template: "<page-formatted :value='$services.page.getValue(data, fragment.key)' :fragment='fragment' :cell='cell' :page='page'/>",
 	props: {
 		cell: {
 			type: Object,

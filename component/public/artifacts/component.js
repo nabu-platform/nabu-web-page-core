@@ -145,8 +145,20 @@ window.addEventListener("load", function() {
 			namespace: "nabu.page"
 		});
 		
+		// formatters
+		nabu.page.provide("page-format", {
+			format: function(id, fragment) {
+				var result = $services.pageResolver.resolve(fragment.resolveOperation, fragment.resolveOperationIds, fragment.resolveOperationId, id);
+				return result && fragment.resolveOperationLabel ? result[fragment.resolveOperationLabel] : result;
+			},
+			configure: "page-format-resolver",
+			name: "resolve",
+			namespace: "nabu.cms"
+		});
+		
 		return $services.$register({
 			page: nabu.page.services.Page,
+			pageResolver: nabu.page.services.PageResolver,
 			resizer: nabu.page.services.Resizer,
 			formatter: nabu.page.services.Formatter
 		});

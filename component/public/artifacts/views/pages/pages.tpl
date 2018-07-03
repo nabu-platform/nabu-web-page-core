@@ -68,7 +68,7 @@
 				<button @click="$services.page.createStyle">Create New Stylesheet</button>
 				<div class="danger message" v-if="$services.page.cssError">{{$services.page.cssError}}</div>
 			</footer>
-			<n-collapsible :title="style.name" v-for="style in $services.page.styles" class="page-cell layout2 list-item" :key="style.id">
+			<n-collapsible :title="style.name" v-for="style in $services.page.styles.filter(function(x) { return x.name.substring(0, 1) != '$' })" class="page-cell layout2 list-item" :key="style.id">
 				<n-form-text v-if="false" :required="true" v-model="style.name" label="Name" @input="$services.page.updateCss(style)" :timeout="600"/>
 				<n-form-text type="color" v-model="lastColor[style.name]" :timeout="600" @input="function(value) { insertColor(style, value) }" label="Color Picker"/>
 				<n-ace v-model="style.content" :timeout="600" @input="$services.page.saveStyle(style)" :ref="'editors_' + style.name"/>

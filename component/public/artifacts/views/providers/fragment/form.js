@@ -40,7 +40,7 @@ Vue.component("page-field-fragment-form", {
 				+ "		:label='false'"
 				+ "		:page='page'"
 				+ "		:cell='cell'"
-				+ "		:is-disabled='!!fragment.disabled && $services.page.isCondition(fragment.disabled, {record:data})'/>",
+				+ "		:is-disabled='!!fragment.disabled && $services.page.isCondition(fragment.disabled, {record:data}, $self)'/>",
 	props: {
 		cell: {
 			type: Object,

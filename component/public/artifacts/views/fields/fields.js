@@ -284,7 +284,7 @@ Vue.component("page-field", {
 		getDynamicClasses: function(field) {
 			var classes = null;
 			if (this.shouldStyle) {
-				classes = this.$services.page.getDynamicClasses(field.styles, this.data);
+				classes = this.$services.page.getDynamicClasses(field.styles, this.data, this);
 			}
 			else {
 				classes = [];
@@ -302,7 +302,7 @@ Vue.component("page-field", {
 		},
 		isHidden: function(fragment) {
 			if (fragment.hidden) {
-				return this.$services.page.isCondition(fragment.hidden, {record:this.data}); 
+				return this.$services.page.isCondition(fragment.hidden, {record:this.data}, this); 
 			}
 			return false;
 		}
@@ -312,6 +312,14 @@ Vue.component("page-field", {
 Vue.component("page-formatted-configure", {
 	template: "#page-formatted-configure",
 	props: {
+		page: {
+			type: Object,
+			required: true,
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
 		fragment: {
 			type: Object,
 			required: true
@@ -401,22 +409,22 @@ Vue.component("page-formatted", {
 			}
 		},
 		isHtml: function() {
-			if (!this.fragment.type) {
+			if (!this.fragment.format) {
 				return false;
 			}
-			if (this.nativeTypes.indexOf(this.fragment.type) >= 0) {
-				return ["link", "html", "checkbox"].indexOf(this.fragment.format) >= 0;
+			if (["link", "html", "checkbox"].indexOf(this.fragment.format) >= 0) {
+				return true;
 			}
 			var self = this;
 			var formatter = nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0];
 			return formatter && formatter.html;
 		},
 		formatted: function() {
-			if (this.value == null || typeof(this.value) == "undefined") {
-				return null;
-			}
-			else if (this.fragment.format == "checkbox") {
+			if (this.fragment.format == "checkbox") {
 				return "<n-form-checkbox :value='value' />";
+			}
+			else if (this.value == null || typeof(this.value) == "undefined") {
+				return null;
 			}
 			// formatting is optional
 			else if (!this.fragment.format || this.fragment.format == "text") {
@@ -426,7 +434,7 @@ Vue.component("page-formatted", {
 				return this.fragment.html ? this.fragment.html : this.value;
 			}
 			else if (this.fragment.format == "link") {
-				return "<a target='_blank' ref='noopener noreferrer nofollow' href='" + value + "'>" + value.replace(/http[s]*:\/\/([^/]+).*/, "$1") + "</a>";
+				return "<a target='_blank' ref='noopener noreferrer nofollow' href='" + this.value + "'>" + this.value.replace(/http[s]*:\/\/([^/]+).*/, "$1") + "</a>";
 			}
 			// if it is native, format it that way
 			else if (this.nativeTypes.indexOf(this.fragment.format) >= 0) {

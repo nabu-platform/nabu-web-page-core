@@ -49,10 +49,6 @@ nabu.services.VueService(Vue.extend({
 			else if (format == "dateTime") {
 				format = "yyyy-MM-ddTHH:mm:ss.SSS";
 			}
-			format = format.replace(/MMMM/g, nabu.utils.dates.months()[date.getMonth()]);
-			format = format.replace(/MMM/g, nabu.utils.dates.months()[date.getMonth()].substring(0, 3));
-			format = format.replace(/MM/g, (date.getMonth() < 9 ? "0" : "") + (date.getMonth() + 1));
-			format = format.replace(/M/g, date.getMonth() + 1);
 			format = format.replace(/yyyy/g, date.getFullYear());
 			format = format.replace(/yy/g, ("" + date.getFullYear()).substring(2, 4));
 			format = format.replace(/dd/g, (date.getDate() < 10 ? "0" : "") + date.getDate());
@@ -66,6 +62,12 @@ nabu.services.VueService(Vue.extend({
 			format = format.replace(/[S]+/g, date.getMilliseconds());
 			// we get an offset in minutes
 			format = format.replace(/[X]+/g, Math.floor(date.getTimezoneOffset() / 60) + ":" + date.getTimezoneOffset() % 60);
+			// do months last as they can introduce named months which might conflict with expressions in the above
+			// e.g. "Sep" could trigger the millisecond replacement
+			format = format.replace(/MMMM/g, nabu.utils.dates.months()[date.getMonth()]);
+			format = format.replace(/MMM/g, nabu.utils.dates.months()[date.getMonth()].substring(0, 3));
+			format = format.replace(/MM/g, (date.getMonth() < 9 ? "0" : "") + (date.getMonth() + 1));
+			format = format.replace(/M/g, date.getMonth() + 1);
 			return format;
 		},
 		masterdata: function(id) {

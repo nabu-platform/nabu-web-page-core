@@ -50,7 +50,7 @@ Vue.component("page-field-fragment-javascript", {
 	},
 	computed: {
 		value: function() {
-			return this.$services.page.eval(this.fragment.content, this.data);
+			return this.$services.page.eval(this.fragment.content, this.data, this);
 		},
 		tag: function() {
 			if (this.fragment.tag) {

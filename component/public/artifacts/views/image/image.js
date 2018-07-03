@@ -59,6 +59,7 @@ nabu.page.views.Image = Vue.extend({
 			var self = this;
 			this.$services.swagger.execute("nabu.web.page.core.rest.image.create", { body: this.files[0] }).then(function() {
 				self.load();
+				self.files.splice(0, self.files.length);
 			});
 		},
 		configure: function() {
