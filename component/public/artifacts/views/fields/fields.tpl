@@ -97,7 +97,7 @@
 			</n-form>
 		</n-sidebar>
 		<page-field v-for="field in cell.state.fields" :field="field" :data="data ? data : state" :label="label"
-			v-if="!field.hidden || !$services.page.isCondition(field.hidden, data, $self)"
+			v-if="!field.hidden || !$services.page.isCondition(field.hidden, data ? data : state, $self)"
 			:page="page"
 			:cell="cell"
 			:should-style="shouldStyle"

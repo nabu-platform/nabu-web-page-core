@@ -67,7 +67,7 @@ nabu.page.views.PageForm = Vue.extend({
 		if (this.cell.bindings) {
 			Object.keys(this.cell.bindings).map(function(key) {
 				if (self.cell.bindings[key]) {
-					Vue.set(self.result, key, pageInstance.get(self.cell.bindings[key]));
+					Vue.set(self.result, key, self.$services.page.getBindingValue(pageInstance, self.cell.bindings[key]));
 				}
 			});
 		}
@@ -445,17 +445,15 @@ nabu.page.views.PageForm = Vue.extend({
 		upAll: function(field) {
 			var index = this.cell.state.fields.indexOf(field);
 			if (index > 0) {
-				var replacement = this.cell.state.fields[0];
-				this.cell.state.fields.splice(0, 1, this.cell.state.fields[index]);
-				this.cell.state.fields.splice(index, 1, replacement);
+				this.cell.state.fields.splice(index, 1);
+				this.cell.state.fields.unshift(field);
 			}
 		},
 		downAll: function(field) {
 			var index = this.cell.state.fields.indexOf(field);
 			if (index < this.cell.state.fields.length - 1) {
-				var replacement = this.cell.state.fields[this.cell.state.fields.length - 1];
-				this.cell.state.fields.splice(this.cell.state.fields.length - 1, 1, this.cell.state.fields[index]);
-				this.cell.state.fields.splice(index, 1, replacement);
+				this.cell.state.fields.splice(index, 1);
+				this.cell.state.fields.push(field);
 			}
 		}
 	}
@@ -628,17 +626,15 @@ Vue.component("page-form-configure", {
 		upAll: function(field) {
 			var index = this.fields.indexOf(field);
 			if (index > 0) {
-				var replacement = this.fields[0];
-				this.fields.splice(0, 1, this.fields[index]);
-				this.fields.splice(index, 1, replacement);
+				this.fields.splice(index, 1);
+				this.fields.unshift(field);
 			}
 		},
 		downAll: function(field) {
 			var index = this.fields.indexOf(field);
 			if (index < this.fields.length - 1) {
-				var replacement = this.fields[this.fields.length - 1];
-				this.fields.splice(this.fields.length - 1, 1, this.fields[index]);
 				this.fields.splice(index, 1, replacement);
+				this.fields.push(field);
 			}
 		},
 		addField: function() {

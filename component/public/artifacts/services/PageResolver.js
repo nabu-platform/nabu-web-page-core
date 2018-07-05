@@ -49,6 +49,9 @@ nabu.services.VueService(Vue.extend({
 		},
 		merge: function(resolved, key, value) {
 			var self = this;
+			if (!resolved[key]) {
+				Vue.set(resolved, key, {});
+			}
 			Object.keys(value).map(function(childKey) {
 				Vue.set(resolved[key], childKey, value[childKey]);	
 			});

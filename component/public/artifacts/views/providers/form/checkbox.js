@@ -1,4 +1,4 @@
-Vue.component("page-form-input-switch-configure", {
+Vue.component("page-form-input-checkbox-configure", {
 	template: "<div/>",
 	props: {
 		cell: {
@@ -16,8 +16,8 @@ Vue.component("page-form-input-switch-configure", {
 	}
 });
 
-Vue.component("page-form-input-switch", {
-	template: "<n-form-switch ref='form'"
+Vue.component("page-form-input-checkbox", {
+	template: "<n-form-checkbox ref='form'"
 			+ "		:schema='schema'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
@@ -57,9 +57,8 @@ Vue.component("page-form-input-switch", {
 		}
 	},
 	methods: {
-		// currently not implemented for switch
-		/*validate: function(soft) {
+		validate: function(soft) {
 			return this.$refs.form.validate(soft);
-		}*/
+		}
 	}
 });

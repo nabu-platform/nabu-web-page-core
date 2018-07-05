@@ -129,17 +129,15 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 		fieldBeginning: function(field) {
 			var index = this.cell.state.fields.indexOf(field);
 			if (index > 0) {
-				var replacement = this.cell.state.fields[0];
-				this.cell.state.fields.splice(0, 1, field);
-				this.cell.state.fields.splice(index, 1, replacement);
+				this.cell.state.fields.splice(index, 1);
+				this.cell.state.fields.unshift(field);
 			}
 		},
 		fieldEnd: function(field) {
 			var index = this.cell.state.fields.indexOf(field);
 			if (index < this.cell.state.fields.length - 1) {
-				var replacement = this.cell.state.fields[this.cell.state.fields.length - 1];
-				this.cell.state.fields.splice(this.cell.state.fields.length - 1, 1, field);
-				this.cell.state.fields.splice(index, 1, replacement);
+				this.cell.state.fields.splice(index, 1);
+				this.cell.state.fields.push(field);
 			}
 		},
 		up: function(field, fragment) {

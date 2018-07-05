@@ -51,7 +51,6 @@ Vue.component("n-page-mapper", {
 			}
 			var provider = nabu.page.providers("page-enumerate").filter(function(x) { return x.name == label })[0];
 			if (provider) {
-				console.log("found provider for", label, provider);
 				var enumerations = provider.enumerate();
 				if (provider.label) {
 					enumerations = enumerations.map(function(x) { return x[provider.label ]});

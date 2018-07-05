@@ -79,7 +79,16 @@
 						<n-form-combo v-model="action.anchor" v-if="action.route" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 						<n-form-combo v-model="action.operation" v-if="!action.route" label="Operation" :filter="getOperations" />
 						<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" :timeout="600" @input="resetEvents()"/>
-						<n-page-mapper v-if="action.operation && !action.route" :to="getOperationParameters(action.operation)"
+						<n-form-switch v-if="action.operation" v-model="action.expandBindings" label="Field level bindings"/>
+						<div class="list-row">
+							<n-form-combo v-if="action.operation && !action.route && action.expandBindings" 
+								:items="Object.keys(availableParameters)" v-model="autoMapFrom"/>
+							<button @click="automap(action)" :disabled="!autoMapFrom">Automap</button>
+						</div>
+						<n-page-mapper v-if="action.operation && !action.route && !action.expandBindings" :to="getOperationParameters(action.operation)"
+							:from="availableParameters" 
+							v-model="action.bindings"/>
+						<n-page-mapper v-else-if="action.operation && !action.route && action.expandBindings" :to="getOperationParameters(action.operation, true)"
 							:from="availableParameters" 
 							v-model="action.bindings"/>
 						<n-page-mapper v-if="action.route" :to="$services.page.getRouteParameters($services.router.get(action.route))"
@@ -191,7 +200,7 @@
 				</div>
 				<template v-else-if="shouldRenderCell(row, cell)">
 					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)" :popout="false">
-						<div :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+						<div @keyup.esc="close(cell)" :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"
@@ -200,7 +209,7 @@
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-sidebar>
 					<n-prompt v-else-if="cell.target == 'prompt'" @close="close(cell)">
-						<div :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+						<div @keyup.esc="close(cell)" :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"

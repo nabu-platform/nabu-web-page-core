@@ -161,10 +161,24 @@ nabu.page.views.Page = Vue.extend({
 			// per cell
 			closed: {},
 			// subscriptions to events
-			subscriptions: {}
+			subscriptions: {},
+			autoMapFrom: null
 		}
 	},
 	methods: {
+		automap: function(action) {
+			var source = this.availableParameters[this.autoMapFrom];
+			var self = this;
+			this.getOperationParameters(action.operation, true).map(function(key) {
+				// only automap those that are not filled in
+				if (!action.bindings[key]) {
+					var keyToCheck = key.indexOf(".") < 0 ? key : key.substring(key.indexOf(".") + 1);
+					if (!!source.properties[keyToCheck]) {
+						Vue.set(action.bindings, key, self.autoMapFrom + "." + keyToCheck);
+					}
+				}
+			});
+		},
 		pasteRow: function() {
 			this.page.content.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
 			this.$services.page.copiedRow = null;
@@ -224,13 +238,18 @@ nabu.page.views.Page = Vue.extend({
 			Vue.set(this.page.content, "menuY", event.clientY - rect.top);
 			this.$services.page.update(this.page);
 		},
-		getOperationParameters: function(operation) {
+		getOperationParameters: function(operation, explode) {
 			// could be an invalid operation?
 			if (!this.$services.swagger.operations[operation]) {
 				 return [];
 			}
 			var parameters = this.$services.swagger.operations[operation].parameters;
-			return parameters ? parameters.map(function(x) { return x.name }) : [];
+			if (explode) {
+				return this.$services.page.getSwaggerParametersAsKeys(this.$services.swagger.operations[operation]);
+			}
+			else {
+				return parameters ? parameters.map(function(x) { return x.name }) : [];
+			}
 		},
 		getOperations: function(value) {
 			var options = Object.keys(this.$services.swagger.operations);
@@ -254,7 +273,8 @@ nabu.page.views.Page = Vue.extend({
 				route: null,
 				event: null,
 				anchor: null,
-				bindings: {}
+				bindings: {},
+				expandBindings: true
 			});
 		},
 		removeQuery: function(index) {
@@ -477,7 +497,7 @@ nabu.page.views.Page = Vue.extend({
 					promises.push(promise);
 					var parameters = {};
 					Object.keys(action.bindings).map(function(key) {
-						parameters[key] = self.get(action.bindings[key]);	
+						self.$services.page.setValue(parameters, key, self.$services.page.getBindingValue(self, action.bindings[key]));
 					});
 					if (action.confirmation) {
 						self.$confirm({message:action.confirmation}).then(function() {

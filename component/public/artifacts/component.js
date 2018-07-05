@@ -119,6 +119,12 @@ window.addEventListener("load", function() {
 			namespace: "nabu.page"
 		});
 		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-checkbox", 
+			configure: "page-form-input-checkbox-configure", 
+			name: "checkbox",
+			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-form-input", { 
 			component: "page-form-input-enumeration", 
 			configure: "page-form-input-enumeration-configure", 
 			name: "enumeration",

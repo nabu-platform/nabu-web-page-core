@@ -60,7 +60,8 @@
 						@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
 						:timeout="cell.state.immediate ? 600 : 0"
 						:page="page"
-						:cell="cell"/>
+						:cell="cell"
+						v-focus="currentPage.fields.indexOf(field) == 0"/>
 				</n-form-section>
 			</n-form-section>
 			<footer class="global-actions" v-if="!cell.state.immediate">

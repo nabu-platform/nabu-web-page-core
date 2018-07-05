@@ -281,7 +281,7 @@ nabu.services.VueService(Vue.extend({
 		getInputBindings: function(operation) {
 			var self = this;
 			var bindings = {};
-			if (operation.parameters) {
+			if (operation && operation.parameters) {
 				var self = this;
 				operation.parameters.map(function(parameter) {
 					if (parameter.in == "body") {
@@ -1079,6 +1079,24 @@ nabu.services.VueService(Vue.extend({
 				path.reverse();
 			}
 			return path;
+		},
+		getSwaggerParametersAsKeys: function(operation) {
+			var self = this;
+			var keys = [];
+			if (operation) {
+				operation.parameters.map(function(parameter) {
+					if (parameter.in == "body") {
+						var type = self.$services.swagger.resolve(parameter);
+						if (type.schema.properties) {
+							nabu.utils.arrays.merge(keys, self.getSimpleKeysFor(type.schema).map(function(x) { return "body." + x }));
+						}
+					}
+					else {
+						keys.push(parameter.name);
+					}
+				});
+			}
+			return keys;
 		}
 	},
 	watch: {
