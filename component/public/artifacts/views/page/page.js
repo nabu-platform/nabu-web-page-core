@@ -975,7 +975,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				}
 			}
 			if (!!row.condition) {
-				if (!this.$services.page.isCondition(row.condition, getState(row), this)) {
+				if (!this.$services.page.isCondition(row.condition, this.getState(row), this)) {
 					return false;
 				}
 			}
