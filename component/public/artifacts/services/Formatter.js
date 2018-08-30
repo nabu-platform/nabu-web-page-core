@@ -5,6 +5,12 @@ nabu.services.VueService(Vue.extend({
 				return value;
 			}
 			else if (properties.format == "date") {
+				if (value && properties.isTimestamp) {
+					value = new Date(value);
+				}
+				else if (value && properties.isSecondsTimestamp) {
+					value = new Date(1000 * value);
+				}
 				return this.date(value, properties.dateFormat);
 			}
 			// backwards compatibility

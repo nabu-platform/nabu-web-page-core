@@ -101,9 +101,21 @@ window.addEventListener("load", function() {
 			namespace: "nabu.page"
 		});
 		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-page", 
+			configure: "page-form-input-page-configure", 
+			name: "page",
+			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-form-input", { 
 			component: "page-form-input-text", 
 			configure: "page-form-input-text-configure", 
 			name: "text",
+			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-slider", 
+			configure: "page-form-input-slider-configure", 
+			name: "slider",
 			namespace: "nabu.page"
 		});
 		nabu.page.provide("page-form-input", { 
@@ -159,6 +171,30 @@ window.addEventListener("load", function() {
 			},
 			configure: "page-format-resolver",
 			name: "resolve",
+			namespace: "nabu.cms"
+		});
+		
+		nabu.page.provide("page-format", {
+			format: function(value) {
+				try {
+					var page = new nabu.page.views.Page({
+						propsData: {
+							embedded: true,
+							page: {
+								name: "dynamic-page-" + application.services.page.counter++,
+								content: application.services.page.normalize(value ? JSON.parse(value) : {})
+							}
+						}
+					});
+					return page.$mount().$el;
+				}
+				catch (exception) {
+					return null;
+				}
+			},
+			html: true,
+			skipCompile: true,
+			name: "page",
 			namespace: "nabu.cms"
 		});
 		

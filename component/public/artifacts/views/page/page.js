@@ -62,7 +62,7 @@ Vue.mixin({
 // - configure: start configuration for the cell content
 // - getEvents: return event definitions
 // - getLocalState: return the state definition for this level (e.g. because of for loop or variable scoping)
-nabu.page.views.Page = Vue.extend({
+nabu.page.views.Page = Vue.component("n-page", {
 	template: "#page",
 	props: {
 		page: {
@@ -71,6 +71,14 @@ nabu.page.views.Page = Vue.extend({
 		},
 		parameters: {
 			type: Object,
+			required: false
+		},
+		embedded: {
+			type: Boolean,
+			required: false
+		},
+		editable: {
+			type: Boolean,
 			required: false
 		}
 	},
@@ -110,6 +118,9 @@ nabu.page.views.Page = Vue.extend({
 					Vue.set(self.variables, x.name, x.default);
 				}
 			});
+		}
+		if (this.editable) {
+			this.edit = true;
 		}
 	},
 	beforeMount: function() {
@@ -162,7 +173,12 @@ nabu.page.views.Page = Vue.extend({
 			closed: {},
 			// subscriptions to events
 			subscriptions: {},
-			autoMapFrom: null
+			autoMapFrom: null,
+			
+			// a lot of components load events at the beginning on startup in a computed property
+			// however, depending on the mount order, new events come in after those components are started
+			// to be able to recompute those events, this should be reactive
+			cachedEvents: null
 		}
 	},
 	methods: {
@@ -935,7 +951,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			return route ? this.$services.page.getRouteParameters(route) : {};
 		},
 		getAvailableParameters: function(cell) {
-			return this.$services.page.getAvailableParameters(this.page, cell);
+			return this.$services.page.getAvailableParameters(this.page, cell, true);
 		},
 		getAvailableEvents: function() {
 			var available = this.$services.page.getPageInstance(this.page, this).getEvents();

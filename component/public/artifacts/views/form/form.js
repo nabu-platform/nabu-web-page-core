@@ -2,6 +2,7 @@ if (!nabu) { var nabu = {} }
 if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 
+// there is a hardcoded exception in the focus for fields known to use the combo box as this immediately shows the combo box dropdown
 nabu.page.views.PageForm = Vue.extend({
 	template: "#page-form",
 	props: {
@@ -27,7 +28,8 @@ nabu.page.views.PageForm = Vue.extend({
 			configuring: false,
 			result: {},
 			currentPage: null,
-			autoMapFrom: null
+			autoMapFrom: null,
+			messages: []
 		}
 	},
 	computed: {
@@ -403,12 +405,14 @@ nabu.page.views.PageForm = Vue.extend({
 		doIt: function() {
 			var messages = this.$refs.form.validate();
 			if (!messages.length) {
+				this.messages.splice(0, this.messages.length);
 				// commit the form
 				// refresh things that are necessary
 				// send out event! > can use this to refresh stuff!
 				// globale parameters that we can pass along
 				var self = this;
 				var result = this.createResult();
+				console.log("result is", result);
 				this.$services.swagger.execute(this.cell.state.operation, result).then(function(returnValue) {
 					var pageInstance = self.$services.page.getPageInstance(self.page, self);
 					// if we want to synchronize the values, do so
@@ -423,6 +427,21 @@ nabu.page.views.PageForm = Vue.extend({
 					self.$emit("close");
 				}, function(error) {
 					self.error = "Form submission failed";
+					try {
+						var parsed = JSON.parse(error.responseText);
+						self.messages.push({
+							type: "request",
+							severity: "error",
+							title: parsed.message
+						})
+					}
+					catch (exception) {
+						self.messages.push({
+							type: "request",
+							severity: "error",
+							title: "%{An error has occurred on the server, please try again}"
+						})
+					}
 				});
 			}
 		},

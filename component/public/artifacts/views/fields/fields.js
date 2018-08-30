@@ -378,7 +378,7 @@ Vue.component("page-formatted-configure", {
 });
 
 Vue.component("page-formatted", {
-	template: "<component :is='tag' v-content.compile.parameterized=\"{value:formatted,plain:fragment.format == 'text', sanitize: !isHtml}\"/>",
+	template: "<component :is='tag' v-content.parameterized=\"{value:formatted,plain:fragment.format == 'text', sanitize: !isHtml, compile: !skipCompile }\"/>",
 	props: {
 		value: {
 			required: false
@@ -416,6 +416,11 @@ Vue.component("page-formatted", {
 			var self = this;
 			var formatter = nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0];
 			return formatter && formatter.html;
+		},
+		skipCompile: function() {
+			var self = this;
+			var formatter = nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0];
+			return formatter && formatter.skipCompile;
 		},
 		formatted: function() {
 			if (this.fragment.format == "checkbox") {

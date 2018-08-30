@@ -28,7 +28,11 @@ nabu.services.VueService(Vue.extend({
 				var resolved = this.resolved[operation + "." + ids];
 				this.resolvers[operation + "." + ids] = nabu.utils.misc.BatchResolver(
 					// resolver
-					function(ids) { return self.$services.swagger.execute(operation, {ids:ids}) },
+					function(idList) {
+						var properties = {};
+						properties[ids] = idList;
+						return self.$services.swagger.execute(operation, properties);
+					},
 					// cacher
 					function(key, value) { if (value) self.merge(resolved, key, value); return resolved[key] },
 					// generator

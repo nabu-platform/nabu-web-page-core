@@ -3,17 +3,23 @@
 		<div class="page-menu n-page-menu" v-if="edit">
 			<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
 			<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
-			<button @click="$services.page.update(page)"><span class="fa fa-save" title="Save"></span></button>
+			<button v-if="!embedded" @click="$services.page.update(page)"><span class="fa fa-save" title="Save"></span></button>
 			<button @click="pasteRow" v-if="$services.page.copiedRow"><span class="fa fa-paste"></span></button>
-			<button @click="edit = false"><span class="fa fa-sign-out-alt" title="Stop Editing"></span></button>
+			<button v-if="!embedded" @click="edit = false"><span class="fa fa-sign-out-alt" title="Stop Editing"></span></button>
 		</div>
-		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit" :draggable="true" 
+		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit && !embedded" :draggable="true" 
 				@dragstart="dragMenu($event)"
 				:style="{'top': page.content.menuY ? page.content.menuY + 'px' : '0px', 'left': page.content.menuX ? page.content.menuX + 'px' : '0px'}">
 			<span>{{page.name}}</span>
 			<span class="fa fa-pencil-alt" @click="edit = !edit"></span>
 			<span class="fa fa-copy" v-route:pages></span>
 			<span class="n-icon" :class="'n-icon-' + $services.page.cssStep" v-if="false && $services.page.cssStep"></span>
+			<span class="fa fa-sign-out-alt" v-route:logout></span>
+		</div>
+		<div class="page-edit" v-else-if="false && !$services.page.canEdit() && !embedded && $services.page.wantEdit && $services.user && !$services.user.loggedIn"
+				:style="{'top': '0px', 'left': '0px'}">
+			<span>Login</span>
+			<span class="fa fa-sign-in-alt" v-route:login></span>
 		</div>
 		<n-sidebar v-if="configuring" @close="configuring = false" class="settings">
 			<n-form class="layout2">
@@ -155,6 +161,7 @@
 								<n-form-text label="Cell Height (any)" v-model="cell.height"/>
 								<n-form-text label="Click Event" v-model="cell.clickEvent" :timeout="600" @input="resetEvents"/>
 								<n-form-text label="Class" v-model="cell.class"/>
+								<n-form-switch label="Stop Rerender" v-model="cell.stopRerender"/>
 								<n-form-text label="Condition" v-model="cell.condition"/>
 								<div class="list-actions">
 									<button @click="addDevice(cell)">Add device rule</button>
@@ -200,7 +207,7 @@
 				</div>
 				<template v-else-if="shouldRenderCell(row, cell)">
 					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)" :popout="false">
-						<div @keyup.esc="close(cell)" :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+						<div @keyup.esc="close(cell)" :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"
@@ -209,7 +216,7 @@
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-sidebar>
 					<n-prompt v-else-if="cell.target == 'prompt'" @close="close(cell)">
-						<div @keyup.esc="close(cell)" :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+						<div @keyup.esc="close(cell)" :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"
@@ -218,7 +225,7 @@
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-prompt>
 					<template v-else>
-						<div :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row) }"></div>
+						<div :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"

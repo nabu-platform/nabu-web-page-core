@@ -61,13 +61,16 @@
 						:timeout="cell.state.immediate ? 600 : 0"
 						:page="page"
 						:cell="cell"
-						v-focus="currentPage.fields.indexOf(field) == 0"/>
+						v-focus="currentPage.fields.indexOf(field) == 0 && field.type != 'enumeration' && field.type != 'enumeration-operation' && field.type != 'enumeration-provider'"/>
 				</n-form-section>
 			</n-form-section>
 			<footer class="global-actions" v-if="!cell.state.immediate">
 				<a class="cancel" href="javascript:void(0)" @click="$emit('close')" v-if="cell.state.cancel">{{cell.state.cancel}}</a>
 				<button class="primary" @click="nextPage" v-if="cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1">{{cell.state.next}}</button>
 				<button class="primary" @click="doIt" v-else-if="cell.state.ok">{{cell.state.ok}}</button>
+			</footer>
+			<footer>
+				<n-messages :messages="messages"/>
 			</footer>
 		</n-form>
 	</div>

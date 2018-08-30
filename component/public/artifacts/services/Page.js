@@ -45,12 +45,6 @@ nabu.services.VueService(Vue.extend({
 		}
 	},
 	activate: function(done) {
-		this.activate(done);
-	},
-	clear: function(done) {
-		this.activate(done ? done : function() {});
-	},
-	created: function() {
 		var self = this;
 		document.title = "%{Loading...}";
 		window.addEventListener("paste", function(event) {
@@ -71,6 +65,10 @@ nabu.services.VueService(Vue.extend({
 			}
 		});
 		this.isServerRendering = navigator.userAgent.match(/Nabu-Renderer/);
+		this.activate(done);
+	},
+	clear: function(done) {
+		this.activate(done ? done : function() {});
 	},
 	computed: {
 		enumerators: function() {
@@ -80,6 +78,14 @@ nabu.services.VueService(Vue.extend({
 			});
 			return providers;
 		}
+	},
+	created: function() {
+		var self = this;
+		document.addEventListener("keydown", function(event) {
+			if (event.ctrlKey && event.keyCode == 88) {
+				self.wantEdit = !self.wantEdit;
+			}
+		});
 	},
 	methods: {
 		activate: function(done) {
@@ -147,11 +153,6 @@ nabu.services.VueService(Vue.extend({
 						self.reloadCss();
 						done();
 					});
-					document.addEventListener("keydown", function(event) {
-						if (event.ctrlKey && event.keyCode == 88) {
-							self.wantEdit = !self.wantEdit;
-						}
-					});
 				}
 				else {
 					Vue.nextTick(function() {
@@ -168,12 +169,12 @@ nabu.services.VueService(Vue.extend({
 			}
 			if (entity.rows) {
 				entity.rows.map(function(row) {
-					self.renumber(row);
+					self.renumber(page, row);
 				});
 			}
 			if (entity.cells) {
 				entity.cells.map(function(cell) {
-					self.renumber(cell);
+					self.renumber(page, cell);
 				});
 			}
 			return entity;
@@ -641,6 +642,7 @@ nabu.services.VueService(Vue.extend({
 			if (!page.content) {
 				page.content = self.normalize({});
 			}
+			page.content.name = page.name;
 			page.marshalled = JSON.stringify(page.content, null, "\t");
 			return this.$services.swagger.execute("nabu.web.page.core.rest.page.update", { body: page }).then(function() {
 				// add it to the pages if it isn't there yet (e.g. create)
@@ -860,10 +862,10 @@ nabu.services.VueService(Vue.extend({
 			});
 			return keys;
 		},
-		getAvailableKeys: function(page, cell) {
+		getAvailableKeys: function(page, cell, includeAllEvents) {
 			var keys = [];
 			var self = this;
-			var parameters = this.getAvailableParameters(page, cell);
+			var parameters = this.getAvailableParameters(page, cell, includeAllEvents);
 			Object.keys(parameters).map(function(key) {
 				nabu.utils.arrays.merge(keys, self.getSimpleKeysFor(parameters[key]).map(function(x) {
 					return key + "." + x;
@@ -931,6 +933,7 @@ nabu.services.VueService(Vue.extend({
 					});
 				}
 			}
+
 			return result;	
 		},
 		getAllArrays: function(page, targetId) {
@@ -1115,7 +1118,11 @@ nabu.services.VueService(Vue.extend({
 				this.$services.router.register({
 					alias: "home",
 					enter: function(parameters) {
-						self.$services.router.route(newValue, parameters);
+						// the timeout disconnects the reroute from the current flow
+						// otherwise weird things happen
+						setTimeout(function() {
+							self.$services.router.route(newValue, parameters);
+						}, 1)
 					},
 					url: "/"
 				});
