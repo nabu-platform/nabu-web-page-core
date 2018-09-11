@@ -888,7 +888,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				styles.push({'flex-grow': width});
 			}
 			else {
-				styles.push({'width': width});
+				styles.push({'min-width': width});
 			}
 			if (cell.height) {
 				styles.push({'height': cell.height});

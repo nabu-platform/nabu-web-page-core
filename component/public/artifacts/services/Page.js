@@ -279,6 +279,25 @@ nabu.services.VueService(Vue.extend({
 			}
 			return value;
 		},
+		interpret: function(value, component) {
+			if (typeof(value) == "string" && value.length > 0 && value.substring(0, 1) == "=") {
+				value = value.substring(1);
+				var result = null;
+				var stateOwner = component;
+				while (!stateOwner.localState && stateOwner.$parent) {
+					stateOwner = stateOwner.$parent;
+				}
+				if (stateOwner && stateOwner.localState) {
+					result = this.eval(value, stateOwner.localState, component);
+				}
+				if (result == null && component.page) {
+					var pageInstance = this.getPageInstance(component.page, component);
+					result = this.getBindingValue(pageInstance, value);
+				}
+				return result;
+			}
+			return value;
+		},
 		getValue: function(data, field) {
 			if (field) {
 				var parts = field.split(".");
@@ -981,7 +1000,7 @@ nabu.services.VueService(Vue.extend({
 								var variable = mapping.substring(0, index);
 								var path = mapping.substring(index + 1);
 								var definition = self.getChildDefinition(parameters[variable], path);
-								nabu.utils.arrays.merge(arrays, self.getArrays(definition).map(function(x) { return variable + "." + x }));
+								nabu.utils.arrays.merge(arrays, self.getArrays(definition.items).map(function(x) { return key + "." + x }));
 							}
 						});
 					}

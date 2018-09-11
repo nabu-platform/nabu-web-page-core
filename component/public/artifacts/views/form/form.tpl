@@ -77,19 +77,18 @@
 </template>
 
 <template id="page-form-field">
-	<n-form-section class="page-form-field">
-		<component
-			:is="getProvidedComponent(field.type)"
-			:value="value"
-			:page="page"
-			:cell="cell"
-			:field="field"
-			@input="function(newValue) { $emit('input', newValue) }"
-			:label="fieldLabel"
-			:timeout="timeout"
-			:schema="schema"
-			:disabled="isDisabled"/>
-	</n-form-section>
+	<component
+		class="page-form-field"
+		:is="getProvidedComponent(field.type)"
+		:value="value"
+		:page="page"
+		:cell="cell"
+		:field="field"
+		@input="function(newValue) { $emit('input', newValue) }"
+		:label="fieldLabel"
+		:timeout="timeout"
+		:schema="schema"
+		:disabled="isDisabled"/>
 </template>
 
 <template id="page-form-configure">
