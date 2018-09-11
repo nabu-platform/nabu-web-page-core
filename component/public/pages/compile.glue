@@ -6,7 +6,7 @@
 nabu.web.page.core.types.rest.styleInput content ?= null
 
 if (!hasRole("editor") || !hasPermission("webApplication:" + environment("webApplicationId"), "style.write"))
-	respone.code(404)
+	response.code(404)
 	abort()
 	
 response.header("Content-Type", "text/css")

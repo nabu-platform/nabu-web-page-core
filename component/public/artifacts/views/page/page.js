@@ -9,6 +9,10 @@ Vue.mixin({
 		localState: {
 			type: Object,
 			required: false
+		},
+		pageInstanceId: {
+			type: Number,
+			required: false
 		}
 	},
 	data: function() {
@@ -17,7 +21,8 @@ Vue.mixin({
 			runtimeId: null
 		}
 	},
-	created: function() {
+	// not ideal, can it be replaced everywhere with $services.page.getBindingValue() ?
+	beforeMount: function() {
 		var self = this;
 		// map any local state
 		if (this.localState) {
@@ -35,6 +40,15 @@ Vue.mixin({
 						Vue.set(self.state, key, pageInstance.variables[key]);
 					}
 				})
+				var page = pageInstance.parameters ? nabu.utils.objects.clone(pageInstance.parameters) : {};
+				if (this.page.content.parameters) {
+					this.page.content.parameters.map(function(parameter) {
+						page[parameter.name] = pageInstance.get("page." + page.name);
+					});
+				}
+				if (Object.keys(page).length) {
+					Vue.set(self.state, "page", page);
+				}
 			}
 			var application = {};
 			this.$services.page.properties.map(function(x) {
@@ -301,6 +315,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			component.$on("hook:beforeDestroy", function() {
 				self.$services.page.destroy(component);
 			});
+			
 			// reset event cache
 			this.cachedEvents = null;
 			this.components[cell.id] = component;
@@ -1177,7 +1192,8 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				//state: pageInstance.variables,
 				// if we are in edit mode, the local state does not matter
 				// and if we add it, we retrigger a redraw everytime we change something
-				localState: this.edit ? null : this.getLocalState(row, cell)
+				localState: this.edit ? null : this.getLocalState(row, cell),
+				pageInstance: this.pageInstance
 			};
 			// if we have a trigger event, add it explicitly to trigger a redraw if needed
 			if (cell.on) {

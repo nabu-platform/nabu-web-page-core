@@ -154,6 +154,12 @@ window.addEventListener("load", function() {
 			name: "enumeration-operation",
 			namespace: "nabu.page"
 		});
+		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-static-image", 
+			configure: "page-form-input-static-image-configure", 
+			name: "static-image",
+			namespace: "nabu.page"
+		});
 		
 		// form list providers
 		nabu.page.provide("page-form-list-input", { 

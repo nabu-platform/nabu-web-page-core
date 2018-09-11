@@ -1,0 +1,3 @@
+<structure name="resourceList">
+    <structure definition="nabu.web.page.core.rest.resource.resource" maxOccurs="unbounded" minOccurs="0" name="resources"/>
+</structure>

@@ -48,16 +48,16 @@ nabu.page.views.Image = Vue.extend({
 	methods: {
 		load: function() {
 			var self = this;
-			return this.$services.swagger.execute("nabu.web.page.core.rest.image.list").then(function(list) {
+			return this.$services.swagger.execute("nabu.web.page.core.rest.resource.list", {path:this.cell.state.imagePath}).then(function(list) {
 				self.images.splice(0, self.images.length);
-				if (list.images) {
-					nabu.utils.arrays.merge(self.images, list.images);
+				if (list.resources) {
+					nabu.utils.arrays.merge(self.images, list.resources);
 				}
 			});
 		},
 		upload: function() {
 			var self = this;
-			this.$services.swagger.execute("nabu.web.page.core.rest.image.create", { body: this.files[0] }).then(function() {
+			this.$services.swagger.execute("nabu.web.page.core.rest.resource.create", { path:this.cell.state.imagePath, body: this.files[0] }).then(function() {
 				self.load();
 				self.files.splice(0, self.files.length);
 			});
@@ -78,6 +78,14 @@ nabu.page.views.Image = Vue.extend({
 			if (!state.size) {
 				Vue.set(state, "size", 'cover');
 			}
+			if (!state.imagePath) {
+				Vue.set(state, "imagePath", 'images');
+			}
+		}
+	},
+	watch: {
+		'cell.state.imagePath': function() {
+			this.load();
 		}
 	}
 })

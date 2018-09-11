@@ -94,11 +94,12 @@
 			<n-form class="layout2">
 				<n-collapsible title="Field Settings">
 					<n-form-text v-model="cell.state.class" label="Class"/>
+					<n-form-switch v-model="cell.state.hideLabel" label="Hide label" v-if="label == null"/>
 				</n-collapsible>
 				<page-fields-edit :cell="cell" :allow-multiple="true" :page="page" :data="data" :should-style="shouldStyle"/>
 			</n-form>
 		</n-sidebar>
-		<page-field v-for="field in cell.state.fields" :field="field" :data="data ? data : state" :label="label"
+		<page-field v-for="field in cell.state.fields" :field="field" :data="data ? data : state" :label="label == null ? !cell.state.hideLabel : label"
 			v-if="!field.hidden || !$services.page.isCondition(field.hidden, data ? data : state, $self)"
 			:page="page"
 			:cell="cell"

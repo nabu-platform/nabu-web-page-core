@@ -1,3 +1,22 @@
+.page-form-input-static-image {
+	.image-content {
+		display: flex;
+		> img {
+			max-width: 10rem;
+			max-height: 7rem;
+			vertical-align: top;
+			+ .n-input-file {
+				margin-left: 1rem;
+			}
+		}
+		.n-input-file {
+			padding: 1rem;
+			margin-right: 1rem;
+			flex-grow: 1;
+		}
+	}
+}
+
 .n-prompt-container {
 	//min-height: 80vh !important;
 	&[template~="-page"] {

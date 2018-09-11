@@ -46,6 +46,8 @@ nabu.services.VueService(Vue.extend({
 	},
 	activate: function(done) {
 		var self = this;
+		// non-reactive
+		this.pageCounter = 0;
 		document.title = "%{Loading...}";
 		window.addEventListener("paste", function(event) {
 			var data = event.clipboardData.getData("text/plain");
@@ -197,12 +199,34 @@ nabu.services.VueService(Vue.extend({
 			});
 		},
 		getPageInstance: function(page, component) {
-			return nabu.page.instances[page.name];
+			var pageInstance = null;
+			if (component && component.pageInstanceId != null) {
+				pageInstance = nabu.page.instances[page.name + "." + component.pageInstanceId];
+			}
+			else if (component && component.$parent) {
+				var parent = component.$parent;
+				while (parent != null && parent.pageInstanceId == null) {
+					parent = parent.$parent;
+				}
+				if (parent && parent.pageInstanceId != null) {
+					pageInstance = nabu.page.instances[page.name + "." + parent.pageInstanceId];	
+				}
+			}
+			if (!pageInstance && component && component.$root && component.$root.pageInstanceId != null) {
+				pageInstance = nabu.page.instances[page.name + "." + component.$root.pageInstanceId];
+			}
+			return pageInstance ? pageInstance : nabu.page.instances[page.name];
 		},
 		setPageInstance: function(page, instance) {
 			nabu.page.instances[page.name] = instance;
+			if (instance.pageInstanceId != null) {
+				nabu.page.instances[page.name + "." + instance.pageInstanceId] = instance;	
+			}
 		},
-		destroyPageInstance: function(page) {
+		destroyPageInstance: function(page, instance) {
+			if (instance.pageInstanceId) {
+				delete nabu.page.instances[page.name + "." + instance.pageInstanceId];
+			}
 			if (nabu.page.instances[page.name] == page) {
 				delete nabu.page.instances[page.name];
 			}
@@ -710,7 +734,7 @@ nabu.services.VueService(Vue.extend({
 								});
 							}
 						}
-						return new nabu.page.views.Page({propsData: {page: page, parameters: parameters }});
+						return new nabu.page.views.Page({propsData: {page: page, parameters: parameters, pageInstanceId: self.pageCounter++ }});
 					},
 					// ability to recognize page routes
 					isPage: true,

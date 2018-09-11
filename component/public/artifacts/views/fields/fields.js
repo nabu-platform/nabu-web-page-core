@@ -223,7 +223,7 @@ nabu.page.views.PageFields = Vue.component("page-fields", {
 		label: {
 			type: Boolean,
 			required: false,
-			default: true
+			default: null
 		},
 		localState: {
 			type: Object,

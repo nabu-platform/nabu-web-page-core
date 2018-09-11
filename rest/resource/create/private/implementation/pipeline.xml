@@ -1,4 +1,5 @@
 <structure interface="$self:api" name="pipeline">
     <structure name="input"/>
     <structure name="output"/>
+    <structure definition="nabu.web.application.types.WebApplicationInformation" minOccurs="0" name="information"/>
 </structure>

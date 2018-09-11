@@ -112,6 +112,7 @@
 			:events="events"
 			:ref="page.name + '_rows'"
 			:root="true"
+			:page-instance-id="pageInstanceId"
 			@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
 	</component>
 </template>
@@ -119,14 +120,16 @@
 <template id="page-rows">
 	<div class="page-rows">
 		<component :is="rowTagFor(row)" v-for="row in getCalculatedRows()" class="page-row" :id="page.name + '_' + row.id" :class="['page-row-' + row.cells.length, row.class ? row.class : null ]" 
-				:key="row.id"
+				:key="'row_' + row.id"
+				:row-key="'row_' + row.id"
 				v-if="edit || shouldRenderRow(row)"
 				:style="rowStyles(row)">
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 			<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" 
 					:id="page.name + '_' + row.id + '_' + cell.id" 
-					:class="[{'clickable': !!cell.clickEvent}, {'page-cell': edit || !cell.target || cell.target == 'page'}, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root} ]" 
-					:key="cell.id"
+					:class="[{'clickable': !!cell.clickEvent}, {'page-cell': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar'}, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root} ]" 
+					:key="'cell_' + cell.id"
+					:cell-key="'cell_' + cell.id"
 					@click="clickOnCell(cell)">
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				<n-sidebar v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings">
@@ -203,6 +206,7 @@
 						:events="events"
 						:ref="page.name + '_' + cell.id + '_rows'"
 						:local-state="getLocalState(row, cell)"
+						:page-instance-id="pageInstanceId"
 						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 				</div>
 				<template v-else-if="shouldRenderCell(row, cell)">
@@ -213,6 +217,7 @@
 							:events="events"
 							:ref="page.name + '_' + cell.id + '_rows'"
 							:local-state="getLocalState(row, cell)"
+							:page-instance-id="pageInstanceId"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-sidebar>
 					<n-prompt v-else-if="cell.target == 'prompt'" @close="close(cell)">
@@ -222,6 +227,7 @@
 							:events="events"
 							:ref="page.name + '_' + cell.id + '_rows'"
 							:local-state="getLocalState(row, cell)"
+							:page-instance-id="pageInstanceId"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-prompt>
 					<template v-else>
@@ -231,6 +237,7 @@
 							:events="events"
 							:ref="page.name + '_' + cell.id + '_rows'"
 							:local-state="getLocalState(row, cell)"
+							:page-instance-id="pageInstanceId"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</template>
 				</template>
