@@ -91,7 +91,7 @@ nabu.services.VueService(Vue.extend({
 			return this.$services.masterdata.resolve(id);
 		},
 		number: function(input, amountOfDecimals) {
-			amountOfDecimals = typeof(amountOfDecimals) === "number" ? amountOfDecimals : 2;
+			amountOfDecimals = amountOfDecimals == null ? 2 : parseInt(amountOfDecimals);
             return typeof(input) === "number" ? input.toFixed(amountOfDecimals) : input;
 		}
 	}
