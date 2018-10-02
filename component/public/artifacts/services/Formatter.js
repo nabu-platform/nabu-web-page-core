@@ -92,7 +92,10 @@ nabu.services.VueService(Vue.extend({
 		},
 		number: function(input, amountOfDecimals) {
 			amountOfDecimals = amountOfDecimals == null ? 2 : parseInt(amountOfDecimals);
-            return typeof(input) === "number" ? input.toFixed(amountOfDecimals) : input;
+			if (typeof(input) != "number") {
+				input = parseFloat(input);
+			}
+            return input.toFixed(amountOfDecimals);
 		}
 	}
 }), { name: "nabu.page.services.Formatter" });

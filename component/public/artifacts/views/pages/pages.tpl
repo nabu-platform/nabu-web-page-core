@@ -1,4 +1,4 @@
-<template id="pages">
+<template id="nabu-pages">
 	<div class="pages">
 		<n-form class="layout2 settings pages" v-if="$services.page.canEdit()">
 			<n-prompt v-if="showing">

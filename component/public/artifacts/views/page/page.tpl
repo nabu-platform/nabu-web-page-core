@@ -1,4 +1,4 @@
-<template id="page">
+<template id="nabu-page">
 	<component :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
 		<div class="page-menu n-page-menu" v-if="edit">
 			<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
@@ -84,6 +84,7 @@
 						<n-form-combo v-model="action.route" v-if="!action.operation" label="Redirect" :filter="filterRoutes"/>
 						<n-form-combo v-model="action.anchor" v-if="action.route" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 						<n-form-combo v-model="action.operation" v-if="!action.route" label="Operation" :filter="getOperations" />
+						<n-form-switch v-if="action.operation" v-model="action.isSlow" label="Is slow operation?"/>
 						<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" :timeout="600" @input="resetEvents()"/>
 						<n-form-switch v-if="action.operation" v-model="action.expandBindings" label="Field level bindings"/>
 						<div class="list-row">
@@ -119,17 +120,18 @@
 
 <template id="page-rows">
 	<div class="page-rows">
-		<component :is="rowTagFor(row)" v-for="row in getCalculatedRows()" class="page-row" :id="page.name + '_' + row.id" :class="['page-row-' + row.cells.length, row.class ? row.class : null ]" 
-				:key="'row_' + row.id"
-				:row-key="'row_' + row.id"
+		<component :is="rowTagFor(row)" v-for="row in getCalculatedRows()" class="page-row" :id="page.name + '_' + row.id" 
+				:class="['page-row-' + row.cells.length, row.class ? row.class : null ]" 
+				:key="'page_' + pageInstanceId + '_row_' + row.id"
+				:row-key="'page_' + pageInstanceId + '_row_' + row.id"
 				v-if="edit || shouldRenderRow(row)"
 				:style="rowStyles(row)">
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 			<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" 
 					:id="page.name + '_' + row.id + '_' + cell.id" 
 					:class="[{'clickable': !!cell.clickEvent}, {'page-cell': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar'}, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root} ]" 
-					:key="'cell_' + cell.id"
-					:cell-key="'cell_' + cell.id"
+					:key="'page_' + pageInstanceId + '_cell_' + cell.id"
+					:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
 					@click="clickOnCell(cell)">
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				<n-sidebar v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings">
@@ -137,10 +139,10 @@
 						<n-form-section>
 							<n-collapsible title="Content" key="cell-content">
 								<n-form-combo label="Content Route" :filter="filterRoutes" v-model="cell.alias"
-									:key="cell.id + '_alias'"
+									:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
 									:required="true"/>
 								<n-page-mapper v-if="cell.alias" 
-									:key="cell.id + '_mapper'"
+									:key="'page_' + pageInstanceId + '_' + cell.id + '_mapper'"
 									:to="getRouteParameters(cell)"
 									:from="getAvailableParameters(cell)" 
 									v-model="cell.bindings"/>
@@ -200,7 +202,7 @@
 				</div>
 				
 				<div v-if="edit">
-					<div v-if="cell.alias" :key="'rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return false } }"></div>
+					<div v-if="cell.alias" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return false } }"></div>
 					<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 						:parameters="parameters"
 						:events="events"
@@ -211,7 +213,7 @@
 				</div>
 				<template v-else-if="shouldRenderCell(row, cell)">
 					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)" :popout="false">
-						<div @keyup.esc="close(cell)" :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !cell.stopRerender } }"></div>
+						<div @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"
@@ -221,7 +223,7 @@
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-sidebar>
 					<n-prompt v-else-if="cell.target == 'prompt'" @close="close(cell)">
-						<div @keyup.esc="close(cell)" :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !cell.stopRerender } }"></div>
+						<div @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"
@@ -231,7 +233,7 @@
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-prompt>
 					<template v-else>
-						<div :key="'rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !cell.stopRerender } }"></div>
+						<div :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"
@@ -252,6 +254,7 @@
 						<n-form-text label="Condition" v-model="row.condition"/>
 						<n-form-combo label="Direction" v-model="row.direction" :items="['horizontal', 'vertical']"/>
 						<n-form-combo label="Alignment" v-model="row.align" :items="['center', 'flex-start', 'flex-end', 'stretch', 'baseline']"/>
+						<n-form-combo label="Justification" v-model="row.justify" :items="['center', 'flex-start', 'flex-end', 'space-between', 'space-around', 'space-evenly']"/>
 						<div class="list-actions">
 							<button @click="addDevice(row)">Add device rule</button>
 						</div>

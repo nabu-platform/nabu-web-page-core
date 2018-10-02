@@ -90,6 +90,11 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		formatFieldsLight: function(value, fields) {
+			for (var i = 0; i < fields.length; i++) {
+				
+			}
+		},
 		activate: function(done) {
 			var self = this;
 		
@@ -262,7 +267,17 @@ nabu.services.VueService(Vue.extend({
 				setTimeout(self.reloadCss, 2000);
 			});
 		},
-		getBindingValue: function(pageInstance, bindingValue) {
+		getBindingValue: function(pageInstance, bindingValue, context) {
+			while (context && !context.localState) {
+				context = context.$parent;
+			}
+			if (context) {
+				var result = this.getValue(context.localState, bindingValue);
+				if (result) {
+					return result;
+				}
+			}
+			
 			var enumerators = this.enumerators;
 			// allow for fixed values
 			var value = bindingValue.indexOf("fixed") == 0 ? bindingValue.substring("fixed.".length) : pageInstance.get(bindingValue);
@@ -421,8 +436,10 @@ nabu.services.VueService(Vue.extend({
 					var result = Function('"use strict";return (function(state, $services, $value) { return ' + condition + ' })')()(state, this.$services, instance ? instance.$value : function() { throw "No value function" });
 				}
 				catch (exception) {
-					console.error("Could not evaluate", condition, exception);
-					return false;
+					if (${environment("development")}) {
+						console.error("Could not evaluate", condition, exception);
+					}
+					return null;
 				}
 				if (result instanceof Function) {
 					result = result(state);
@@ -473,6 +490,7 @@ nabu.services.VueService(Vue.extend({
 			}
 			if (definition && definition.properties) {
 				Object.keys(definition.properties).map(function(key) {
+					console.log("checking", key, includeComplex, includeArrays);
 					// arrays can not be chosen, you need to bind them first
 					if (definition.properties[key].type != "array" || includeArrays) {
 						var childPath = (path ? path + "." : "") + key;
@@ -480,7 +498,7 @@ nabu.services.VueService(Vue.extend({
 						var isComplex = !!definition.properties[key].properties;
 						// if we have an array, it can be a complex array
 						if (!isComplex && definition.properties[key].items) {
-							isComplex = definition.properties[key].items.properties;
+							isComplex = !!definition.properties[key].items.properties;
 						}
 						if (includeComplex || !isComplex) {
 							keys.push(childPath);
@@ -488,6 +506,7 @@ nabu.services.VueService(Vue.extend({
 						// if it is complex, recurse
 						if (isComplex) {
 							if (isArray) {
+								console.log("recursing array");
 								self.getSimpleKeysFor({properties:definition.properties[key].items}, includeComplex, includeArrays, keys, childPath);
 							}
 							else {
@@ -861,11 +880,14 @@ nabu.services.VueService(Vue.extend({
 		},
 		// this simply returns all available parameters, regardless of whether you listen on it or not
 		// currently not cell specific, so does not take into account repeats
-		getAllAvailableParameters: function(page) {
+		getAllAvailableParameters: function(page, context) {
 			var result = {};
 			
 			var self = this;
-			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			if (!context) {
+				context = self;
+			}
+			var pageInstance = self.$services.page.getPageInstance(page, context);
 			
 			var provided = this.getProvidedParameters();
 			Object.keys(provided.properties).map(function(key) {
@@ -972,6 +994,11 @@ nabu.services.VueService(Vue.extend({
 									}
 								}
 							})
+						}
+						if (part.cellState) {
+							Object.keys(part.cellState).map(function(key) {
+								result[key] = part.cellState[key];
+							});
 						}
 					});
 				}

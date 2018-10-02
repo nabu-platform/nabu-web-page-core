@@ -6,12 +6,14 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			+ "		<n-form-combo v-model='field.enumerationOperation'"
 			+ "			label='Enumeration Operation'"
 			+ "			:filter='getEnumerationServices'/>"
-			+ "		<n-form-combo v-if='field.enumerationOperation' v-model='field.enumerationOperationLabel' label='Enumeration Label'"
+			+ "		<n-form-switch v-model='field.enumerationOperationLabelComplex' label='Complex Enumeration Label'/>"
+			+ "		<n-form-combo v-if='field.enumerationOperation && !field.enumerationOperationLabelComplex' v-model='field.enumerationOperationLabel' label='Enumeration Label'"
 			+ "			:filter='function() { return getEnumerationFields(field.enumerationOperation) }'/>"
 			+ "		<n-form-combo v-if='field.enumerationOperation' v-model='field.enumerationOperationValue' label='Enumeration Value'"
 			+ "			:filter='function() { return getEnumerationFields(field.enumerationOperation) }'/>"
 			+ "		<n-form-combo v-if='field.enumerationOperation' v-model='field.enumerationOperationQuery' label='Enumeration Query'"
 			+ "			:filter='function() { return getEnumerationParameters(field.enumerationOperation) }'/>"
+			+ "		<page-fields-edit :allow-multiple='false' fields-name='enumerationFields' v-if='field.enumerationOperation && field.enumerationOperationLabelComplex' :cell='{state:field}' :page='page' :keys='getEnumerationFields(field.enumerationOperation)' :allow-editable='false'/>"
 			+ "		<n-page-mapper v-if='field.enumerationOperation && hasMappableEnumerationParameters(field)'"
 			+ "			v-model='field.enumerationOperationBinding'"
 			+ "			:from='$services.page.getAvailableParameters(page, cell)'"
@@ -173,6 +175,9 @@ Vue.component("page-form-input-enumeration-operation", {
 			provider: null
 		}
 	},
+	created: function() {
+		console.log("created", this.field.enumerationOperation);	
+	},
 	methods: {
 		// enumerationOperation: null,
 		// enumerationFormatter
@@ -184,7 +189,9 @@ Vue.component("page-form-input-enumeration-operation", {
 			if (!this.field.enumerationOperation) {
 				return [];
 			}
-			var parameters = {};
+			var parameters = {
+				limit: 20
+			};
 			if (this.field.enumerationOperationQuery) {
 				parameters[this.field.enumerationOperationQuery] = value;
 			}
@@ -201,7 +208,7 @@ Vue.component("page-form-input-enumeration-operation", {
 						}
 						target = target[parts[i]];
 					}
-					target[parts[parts.length - 1]] = self.$services.page.getBindingValue(pageInstance, self.field.enumerationOperationBinding[key]);
+					target[parts[parts.length - 1]] = self.$services.page.getBindingValue(pageInstance, self.field.enumerationOperationBinding[key], self);
 				});
 			}
 			return this.$services.swagger.execute(this.field.enumerationOperation, parameters, function(response) {
@@ -220,10 +227,36 @@ Vue.component("page-form-input-enumeration-operation", {
 			if (value == null) {
 				return null;
 			}
+			// we want complex labels
+			else if (this.field.enumerationOperationLabelComplex) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				var storageId = "enumerate." + this.field.enumerationOperation + "." + value[this.field.enumerationOperationValue];
+				storageId = storageId.replace(/\./g, "_");
+				
+				if (pageInstance.retrieve(storageId) != null) {
+					return pageInstance.retrieve(storageId);
+				}
+				
+				var self = this;
+				pageInstance.store(storageId, "");
+				var parameters = nabu.utils.objects.deepClone({
+					page: self.page,
+					cell: {state: self.field},
+					edit: false,
+					data: value,
+					label: false,
+					fieldsName: "enumerationFields"
+				});
+				var component = new nabu.page.views.PageFields({ propsData: parameters });
+				component.$mount();
+				pageInstance.store(storageId, component.$el.innerHTML.replace(/<[^>]+>/g, ""));
+				return pageInstance.retrieve(storageId);
+			}
 			else if (this.field.enumerationFormatter) {
 				return this.field.enumerationFormatter(value);
 			}
 			else if (this.field.enumerationOperationLabel) {
+				console.log("rendering", this.field.name);
 				return value[this.field.enumerationOperationLabel];
 			}
 			else {

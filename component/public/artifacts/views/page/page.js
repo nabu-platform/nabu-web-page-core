@@ -77,7 +77,7 @@ Vue.mixin({
 // - getEvents: return event definitions
 // - getLocalState: return the state definition for this level (e.g. because of for loop or variable scoping)
 nabu.page.views.Page = Vue.component("n-page", {
-	template: "#page",
+	template: "#nabu-page",
 	props: {
 		page: {
 			type: Object,
@@ -185,6 +185,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			configuring: false,
 			// per cell
 			closed: {},
+			// centralized storage that exists for the lifetime of the page
+			storage: {},
 			// subscriptions to events
 			subscriptions: {},
 			autoMapFrom: null,
@@ -196,6 +198,22 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		store: function(key, value) {
+			if (typeof(value) == "object") {
+				if (!this.storage[key]) {
+					Vue.set(this.storage, key, {});
+				}
+				Object.keys(value).map(function(name) {
+					Vue.set(this.storage[key], name, value[name]);
+				})
+			}
+			else {
+				Vue.set(this.storage, key, value);
+			}
+		},
+		retrieve: function(key) {
+			return this.storage[key];
+		},
 		automap: function(action) {
 			var source = this.availableParameters[this.autoMapFrom];
 			var self = this;
@@ -375,6 +393,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 					if (!self.variables[name]) {
 						Vue.set(self.variables, name, null);
 					}
+					component.$on(name, function(value) {
+						self.emit(name, value);
+					});
 				})
 			}
 		},
@@ -544,6 +565,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 								}
 							}
 							else if (action.operation) {
+								if (action.isSlow) {
+									self.$wait({promise: promise});
+								}
 								var operation = self.$services.swagger.operations[action.operation];
 								if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
 									window.location = self.$services.swagger.parameters(action.operation, parameters).url;
@@ -578,6 +602,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 							}
 						}
 						else if (action.operation) {
+							console.log("action is slow", action.isSlow);
+							if (action.isSlow) {
+								self.$wait({promise: promise});
+							}
 							var operation = self.$services.swagger.operations[action.operation];
 							if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
 								window.location = self.$services.swagger.parameters(action.operation, parameters).url;
@@ -1066,7 +1094,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				}
 				return true;
 			}
-			else if (!cell.alias && !cell.rows.length) {
+			else if (!cell.alias && !cell.rows.length && !cell.customId) {
 				return false;
 			}
 			// if we have width limitations, check those first
@@ -1193,7 +1221,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				// if we are in edit mode, the local state does not matter
 				// and if we add it, we retrigger a redraw everytime we change something
 				localState: this.edit ? null : this.getLocalState(row, cell),
-				pageInstance: this.pageInstance
+				pageInstanceId: this.pageInstanceId
 			};
 			// if we have a trigger event, add it explicitly to trigger a redraw if needed
 			if (cell.on) {
@@ -1335,6 +1363,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 			if (!!row.align) {
 				styles.push({"align-items": row.align});
+			}
+			if (!!row.justify) {
+				styles.push({"justify-content": row.justify});
 			}
 			return styles;
 		},

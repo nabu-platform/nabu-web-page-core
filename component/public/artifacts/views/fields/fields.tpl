@@ -3,12 +3,12 @@
 		<div class="list-actions" v-if="allowMultiple">
 			<button @click="addField">Add Field</button>
 		</div>
-		<n-collapsible class="list-item" :title="field.label ? field.label : 'Unlabeled'" v-for="field in cell.state.fields">
+		<n-collapsible class="list-item" :title="field.label ? field.label : 'Unlabeled'" v-for="field in cell.state[fieldsName]">
 			<n-form-text v-model="field.label" label="Field Label"/>
-			<n-form-text v-model="field.hidden" label="Hide field if"/>
+			<n-form-text v-if="!basic" v-model="field.hidden" label="Hide field if"/>
 			<div class="list-item-actions">
 				<button @click="addFragment(field)">Add Fragment</button>
-				<button v-if="allowMultiple" @click="cell.state.fields.splice(cell.state.fields.indexOf(field), 1)">Remove Field</button>
+				<button v-if="allowMultiple" @click="cell.state[fieldsName].splice(cell.state[fieldsName].indexOf(field), 1)">Remove Field</button>
 				<button v-if="allowMultiple" @click="fieldBeginning(field)"><span class="fa fa-chevron-circle-left"></span></button>
 				<button v-if="allowMultiple" @click="fieldUp(field)"><span class="fa fa-chevron-circle-up"></span></button>
 				<button v-if="allowMultiple" @click="fieldDown(field)"><span class="fa fa-chevron-circle-down"></span></button>
@@ -16,15 +16,15 @@
 			</div>
 			<n-collapsible :title="fragment.key ? fragment.key : fragment.type" v-for="fragment in field.fragments">
 				<n-form-combo v-model="fragment.type" label="Fragment Type" :items="fragmentTypes"/>
-				<n-form-text v-model="fragment.hidden" label="Hide fragment if"/>
+				<n-form-text v-if="!basic" v-model="fragment.hidden" label="Hide fragment if"/>
 				<n-form-combo v-if="fragment.type == 'data'" v-model="fragment.key" label="Data Key" :filter="getKeys"/>
-				<n-form-text v-model="fragment.class" label="Fragment Class"/>
+				<n-form-text v-if="!basic" v-model="fragment.class" label="Fragment Class"/>
 				
 				<component v-if="fragment.type" :cell="cell" :page="page" :keys="getKeys()"
 					:fragment="fragment"
 					:is="getProvidedConfiguration(fragment.type)"/>
 					
-				<div class="list-item-actions" v-if="allowMultiple">
+				<div class="list-item-actions">
 					<button @click="up(field, fragment)"><span class="fa fa-chevron-circle-up"></span></button>
 					<button @click="down(field, fragment)"><span class="fa fa-chevron-circle-down"></span></button>
 					<button @click="field.fragments.splice(field.fragments.indexOf(fragment), 1)"><span class="fa fa-trash"></span></button>
@@ -99,7 +99,7 @@
 				<page-fields-edit :cell="cell" :allow-multiple="true" :page="page" :data="data" :should-style="shouldStyle"/>
 			</n-form>
 		</n-sidebar>
-		<page-field v-for="field in cell.state.fields" :field="field" :data="data ? data : state" :label="label == null ? !cell.state.hideLabel : label"
+		<page-field v-for="field in cell.state[fieldsName]" :field="field" :data="data ? data : state" :label="label == null ? !cell.state.hideLabel : label"
 			v-if="!field.hidden || !$services.page.isCondition(field.hidden, data ? data : state, $self)"
 			:page="page"
 			:cell="cell"

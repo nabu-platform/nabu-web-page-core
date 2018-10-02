@@ -30,13 +30,23 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 		localState: {
 			type: Object,
 			required: false
+		},
+		fieldsName: {
+			type: String,
+			required: false,
+			default: "fields"
+		},
+		basic: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	created: function() {
-		if (!this.cell.state.fields) {
-			Vue.set(this.cell.state, "fields", []);
+		if (!this.cell.state[this.fieldsName]) {
+			Vue.set(this.cell.state, this.fieldsName, []);
 		}
-		if (!this.allowMultiple && !this.cell.state.fields.length) {
+		if (!this.allowMultiple && !this.cell.state[this.fieldsName].length) {
 			this.addField();
 		}
 		this.normalize();
@@ -63,7 +73,7 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 			return provided ? provided.configure : null;
 		},
 		normalize: function() {
-			this.cell.state.fields.map(function(field) {
+			this.cell.state[this.fieldsName].map(function(field) {
 				if (!field.label) {
 					Vue.set(field, "label", null);
 				}
@@ -111,33 +121,33 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 			});
 		},
 		fieldUp: function(field) {
-			var index = this.cell.state.fields.indexOf(field);
+			var index = this.cell.state[this.fieldsName].indexOf(field);
 			if (index > 0) {
-				var replacement = this.cell.state.fields[index - 1];
-				this.cell.state.fields.splice(index - 1, 1, field);
-				this.cell.state.fields.splice(index, 1, replacement);
+				var replacement = this.cell.state[this.fieldsName][index - 1];
+				this.cell.state[this.fieldsName].splice(index - 1, 1, field);
+				this.cell.state[this.fieldsName].splice(index, 1, replacement);
 			}
 		},
 		fieldDown: function(field) {
-			var index = this.cell.state.fields.indexOf(field);
-			if (index < this.cell.state.fields.length - 1) {
-				var replacement = this.cell.state.fields[index + 1];
-				this.cell.state.fields.splice(index + 1, 1, field);
-				this.cell.state.fields.splice(index, 1, replacement);
+			var index = this.cell.state[this.fieldsName].indexOf(field);
+			if (index < this.cell.state[this.fieldsName].length - 1) {
+				var replacement = this.cell.state[this.fieldsName][index + 1];
+				this.cell.state[this.fieldsName].splice(index + 1, 1, field);
+				this.cell.state[this.fieldsName].splice(index, 1, replacement);
 			}
 		},
 		fieldBeginning: function(field) {
-			var index = this.cell.state.fields.indexOf(field);
+			var index = this.cell.state[this.fieldsName].indexOf(field);
 			if (index > 0) {
-				this.cell.state.fields.splice(index, 1);
-				this.cell.state.fields.unshift(field);
+				this.cell.state[this.fieldsName].splice(index, 1);
+				this.cell.state[this.fieldsName].unshift(field);
 			}
 		},
 		fieldEnd: function(field) {
-			var index = this.cell.state.fields.indexOf(field);
-			if (index < this.cell.state.fields.length - 1) {
-				this.cell.state.fields.splice(index, 1);
-				this.cell.state.fields.push(field);
+			var index = this.cell.state[this.fieldsName].indexOf(field);
+			if (index < this.cell.state[this.fieldsName].length - 1) {
+				this.cell.state[this.fieldsName].splice(index, 1);
+				this.cell.state[this.fieldsName].push(field);
 			}
 		},
 		up: function(field, fragment) {
@@ -157,14 +167,14 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 			}
 		},
 		addField: function() {
-			this.cell.state.fields.push({
+			this.cell.state[this.fieldsName].push({
 				label: null,
 				fragments: [],
 				hidden: null,
 				styles: []
 			});
 			// already add a fragment, a field is generally useless without it...
-			this.addFragment(this.cell.state.fields[this.cell.state.fields.length - 1]);
+			this.addFragment(this.cell.state[this.fieldsName][this.cell.state[this.fieldsName].length - 1]);
 		},
 		addFragment: function(field) {
 			// default to a data fragment (generally the case)
@@ -229,6 +239,11 @@ nabu.page.views.PageFields = Vue.component("page-fields", {
 		localState: {
 			type: Object,
 			required: false
+		},
+		fieldsName: {
+			type: String,
+			required: false,
+			default: "fields"
 		}
 	},
 	data: function() {
@@ -381,6 +396,14 @@ Vue.component("page-formatted-configure", {
 Vue.component("page-formatted", {
 	template: "<component :is='tag' v-content.parameterized=\"{value:formatted,plain:fragment.format == 'text', sanitize: !isHtml, compile: !skipCompile }\"/>",
 	props: {
+		page: {
+			type: Object,
+			required: true,
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
 		value: {
 			required: false
 		},
@@ -447,8 +470,9 @@ Vue.component("page-formatted", {
 			// otherwise we are using a provider
 			else {
 				var self = this;
-				return nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0]
-					.format(this.value, this.fragment);
+				var result = nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0]
+					.format(this.value, this.fragment, this.page, this.cell);
+				return result;
 			}
 		}
 	}

@@ -2,7 +2,7 @@
 <restInterface>
     <method>GET</method>
     <path>/resource</path>
-    <queryParameters>path</queryParameters>
+    <queryParameters>path, webApplicationId</queryParameters>
     <role>editor</role>
     <permissionContext>="webApplication:" + input/webApplicationId</permissionContext>
     <permissionAction>resource.read</permissionAction>

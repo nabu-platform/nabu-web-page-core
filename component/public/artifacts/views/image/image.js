@@ -45,6 +45,22 @@ nabu.page.views.Image = Vue.extend({
 			files: []
 		}
 	},
+	computed: {
+		fullHref: function() {
+			var href = null;
+			if (this.cell.state.href) {
+				href = this.cell.state.href;
+			}
+			else if (this.href) {
+				href = this.href;
+			}
+			// if the href is not an absolute one (either globally absolute or application absolute), we inject the server root
+			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && href.substring(0, 1) != "/") {
+				href = "${server.root()}" + href;
+			}
+			return href;
+		}
+	},
 	methods: {
 		load: function() {
 			var self = this;

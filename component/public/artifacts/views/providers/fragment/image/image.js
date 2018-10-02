@@ -63,12 +63,18 @@ Vue.component("page-field-fragment-image", {
 	},
 	computed: {
 		href: function() {
+			var href = null;
 			if (this.fragment.fixedHref) {
-				return this.fragment.imageHref;
+				href = this.fragment.imageHref;
 			}
 			else if (this.fragment.imageHref) {
-				return this.$services.page.getValue(this.data, this.fragment.imageHref);
+				href = this.$services.page.getValue(this.data, this.fragment.imageHref);
 			}
+			// if the href is not an absolute one (either globally absolute or application absolute), we inject the server root
+			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && href.substring(0, 1) != "/") {
+				href = "${server.root()}" + href;
+			}
+			return href;
 		}
 	}
 });

@@ -76,6 +76,11 @@ nabu.page.views.PageForm = Vue.extend({
 		
 		// get the first page
 		this.currentPage = this.cell.state.pages[0];
+		
+		// make sure we set the cell state for the form
+		this.cell.cellState = {
+			form: this.createResultDefinition()
+		};
 	},
 	methods: {
 		automap: function() {
@@ -357,6 +362,21 @@ nabu.page.views.PageForm = Vue.extend({
 			}
 			this.result[field.name].push(result);
 		},
+		createResultDefinition: function() {
+			var result = {properties: {}}
+			if (this.operation && this.operation.parameters) {
+				var self = this;
+				Object.keys(this.operation.parameters).map(function(key) {
+					if (self.operation.parameters[key].schema) {
+						result.properties[self.operation.parameters[key].name] = self.$services.swagger.resolve(self.operation.parameters[key].schema);
+					}
+					else {
+						result.properties[self.operation.parameters[key].name] = self.operation.parameters[key];
+					}
+				});
+			}
+			return result;
+		},
 		createResult: function() {
 			var result = this.result;
 			var transformed = {};
@@ -401,6 +421,8 @@ nabu.page.views.PageForm = Vue.extend({
 			if (this.cell.state.immediate) {
 				this.doIt();
 			}
+			// update local state to reflect the change
+			Vue.set(this.localState, "form", this.createResult());
 		},
 		doIt: function() {
 			var messages = this.$refs.form.validate();
@@ -412,7 +434,6 @@ nabu.page.views.PageForm = Vue.extend({
 				// globale parameters that we can pass along
 				var self = this;
 				var result = this.createResult();
-				console.log("result is", result);
 				this.$services.swagger.execute(this.cell.state.operation, result).then(function(returnValue) {
 					var pageInstance = self.$services.page.getPageInstance(self.page, self);
 					// if we want to synchronize the values, do so

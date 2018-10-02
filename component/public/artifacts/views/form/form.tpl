@@ -61,7 +61,7 @@
 						:timeout="cell.state.immediate ? 600 : 0"
 						:page="page"
 						:cell="cell"
-						v-focus="currentPage.fields.indexOf(field) == 0 && field.type != 'enumeration' && field.type != 'enumeration-operation' && field.type != 'enumeration-provider'"/>
+						v-focus="!cell.state.synchronize && currentPage.fields.indexOf(field) == 0 && field.type != 'enumeration' && field.type != 'enumeration-operation' && field.type != 'enumeration-provider'"/>
 				</n-form-section>
 			</n-form-section>
 			<footer class="global-actions" v-if="!cell.state.immediate">

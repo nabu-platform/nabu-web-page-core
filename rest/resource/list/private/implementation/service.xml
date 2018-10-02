@@ -1,4 +1,10 @@
 <sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" disabled="false" id="bf45e4a1-694f-45f7-9038-f68a7744bc1e">
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" label="input/query/webApplicationId != null" id="12c9f5c0-5665-495e-9c96-2924a61b31f3">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="1f42b888-aece-4289-81eb-8496bdb05f41" fixedValue="false" mask="false" optional="false">
+			<from>input/query/webApplicationId</from>
+			<to>input/webApplicationId</to>
+		</steps>
+	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" label="input/query/path = null" id="a2d5f648-8766-4d39-a3b7-67651ef25e5c">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="0985e5c1-9fd8-4ece-b490-eea7b5825cfd" fixedValue="true" mask="false" optional="false">
 			<from>images</from>

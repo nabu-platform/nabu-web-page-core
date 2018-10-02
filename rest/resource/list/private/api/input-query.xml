@@ -1,3 +1,4 @@
 <structure name="query">
     <field minOccurs="0" name="path" type="java.lang.String"/>
+    <field minOccurs="0" name="webApplicationId" type="java.lang.String"/>
 </structure>

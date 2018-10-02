@@ -1,5 +1,5 @@
 Vue.component("page-form-input-static-image-configure", {
-	template: "<n-form-text v-model='field.imagePath' label='Image Path'/>",
+	template: "<n-form-section><n-form-text v-model='field.imagePath' label='Image Path'/><n-form-text v-model='field.webApplicationId' label='Web Application Id'/></n-form-section>",
 	props: {
 		cell: {
 			type: Object,
@@ -15,14 +15,14 @@ Vue.component("page-form-input-static-image-configure", {
 		}
 	},
 	created: function() {
-		if (!field.imagePath) {
-			Vue.set(field, "imagePath", "images")
+		if (!this.field.imagePath) {
+			Vue.set(this.field, "imagePath", "images")
 		}
 	}
 });
 
 Vue.component("page-form-input-static-image", {
-	template: "<div class='page-form-input-static-image n-form-component'><label class='n-form-label' v-if='label'>{{label}}</label><div class='image-content'><img v-if='value' :src=\"'${server.root()}' + value\"/>"
+	template: "<div class='page-form-input-static-image n-form-component'><label class='n-form-label' v-if='label'>{{label}}</label><div class='image-content'><img v-if='value' :src=\"(field.webApplicationId ? '' : '${server.root()}') + value\"/>"
 		+ "<n-input-file v-model='files' @change='upload' :types=\"['image']\"/></div></div>",
 	props: {
 		cell: {
@@ -64,9 +64,13 @@ Vue.component("page-form-input-static-image", {
 	methods: {
 		upload: function() {
 			var self = this;
-			this.$services.swagger.execute("nabu.web.page.core.rest.resource.create", { path:this.field.imagePath, body: this.files[0] }).then(function(result) {
+			this.$services.swagger.execute("nabu.web.page.core.rest.resource.create", {
+				webApplicationId: this.$services.page.interpret(this.field.webApplicationId, this),
+				path: this.$services.page.interpret(this.field.imagePath, this), 
+				body: this.files[0] 
+			}).then(function(result) {
 				self.files.splice(0, self.files.length);
-				self.$emit("input", result.relativePath);
+				self.$emit("input", this.field.webApplicationId ? result.path : result.relativePath);
 			});
 		},
 	}

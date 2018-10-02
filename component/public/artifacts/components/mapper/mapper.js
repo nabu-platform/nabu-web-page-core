@@ -40,7 +40,7 @@ Vue.component("n-page-mapper", {
 			nabu.utils.arrays.merge(this.fieldsToMap, this.to);
 		}
 		else if (this.to) {
-			nabu.utils.arrays.merge(this.fieldsToMap, this.$services.page.getSimpleKeysFor(this.to, false, true));
+			nabu.utils.arrays.merge(this.fieldsToMap, this.$services.page.getSimpleKeysFor(this.to, true, true));
 		}
 	},
 	methods: {
@@ -57,7 +57,7 @@ Vue.component("n-page-mapper", {
 				}
 				return enumerations;
 			}
-			var fields = this.$services.page.getSimpleKeysFor(this.from[label]);
+			var fields = this.$services.page.getSimpleKeysFor(this.from[label], true, true);
 			if (value) {
 				fields = fields.filter(function(x) { x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
 			}

@@ -3,7 +3,7 @@ if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 
 nabu.page.views.Pages = Vue.extend({
-	template: "#pages",
+	template: "#nabu-pages",
 	data: function() {
 		return {
 			parameters: {},
