@@ -40,12 +40,7 @@ Vue.mixin({
 						Vue.set(self.state, key, pageInstance.variables[key]);
 					}
 				})
-				var page = pageInstance.parameters ? nabu.utils.objects.clone(pageInstance.parameters) : {};
-				if (this.page.content.parameters) {
-					this.page.content.parameters.map(function(parameter) {
-						page[parameter.name] = pageInstance.get("page." + page.name);
-					});
-				}
+				var page = this.$services.page.getPageParameterValues(this.page, pageInstance);
 				if (Object.keys(page).length) {
 					Vue.set(self.state, "page", page);
 				}
@@ -94,6 +89,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 		editable: {
 			type: Boolean,
 			required: false
+		},
+		masked: {
+			typed: Boolean,
+			required: false
 		}
 	},
 	activate: function(done) {
@@ -124,12 +123,20 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	created: function() {
+		console.log("creating page", this.page.name);
 		this.$services.page.setPageInstance(this.page, this);
 		if (this.page.content.parameters) {
 			var self = this;
 			this.page.content.parameters.map(function(x) {
-				if (!!x.default && !!x.name) {
-					Vue.set(self.variables, x.name, x.default);
+				if (x.name != null) {
+					// if it is not passed in as input, we set the default value
+					if (self.parameters[x.name] == null) {
+						Vue.set(self.variables, x.name, x.default != null ? x.default : null);
+					}
+					// but you can override the default with an input parameter
+					else {
+						Vue.set(self.variables, x.name, self.parameters[x.name]);
+					}
 				}
 			});
 		}
@@ -399,6 +406,33 @@ nabu.page.views.Page = Vue.component("n-page", {
 				})
 			}
 		},
+		hasConfigureListener: function(rows) {
+			if (!rows) {
+				rows = this.page.content.rows;
+			}
+			if (rows) {
+				for (var i = 0; i < rows.length; i++) {
+					if (rows[i].on == "$configure") {
+						return true;
+					}
+					if (rows[i].cells) {
+						for (var j = 0; j < rows[i].cells.length; j++) {
+							var cell = rows[i].cells[j];
+							if (cell.on == "$configure") {
+								return true;
+							}
+							if (cell.rows) {
+								var has = this.hasConfigureListener(cell.rows);
+								if (has) {
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
+			return false;
+		},
 		addRow: function() {
 			this.page.content.rows.push({
 				id: this.page.content.counter++,
@@ -439,7 +473,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 			// we have too many problems with update loops that are triggered by this method
 			// and in general the result should only change if we route new content
 			if (!this.cachedEvents) {
-				var events = {};
+				var events = {
+					"$configure": {properties:{}}
+				};
 				this.cachedEvents = events;
 				var self = this;
 				
@@ -710,11 +746,26 @@ nabu.page.views.Page = Vue.component("n-page", {
 		set: function(name, value) {
 			var target = null;
 			var parts = null;
+			var updateUrl = false;
 			// update something in the page parameters
 			if (name.indexOf("page.") == 0) {
-				target = this.parameters;
+				if (!this.masked) {
+					updateUrl = true;
+				}
+				var pageParameter = this.page.content.parameters ? this.page.content.parameters.filter(function(parameter) {
+					return parameter.name == name.substring("page.".length);
+				})[0] : null;
+				if (pageParameter) {
+					target = this.variables;
+					// also set it as the default value if in edit mode or light edit mode
+					if (this.edit || (this.$services.page.canEdit() && this.$services.page.wantEdit)) {
+						pageParameter.default = value;
+					}
+				}
+				else {
+					target = this.parameters;
+				}
 				parts = name.substring("page.".length).split(".");
-				// TODO: update the URL? what if it is masked?
 			}
 			else {
 				parts = name.split(".");
@@ -727,6 +778,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 				target = target[parts[i]];
 			}
 			Vue.set(target, parts[parts.length - 1], value);
+			if (updateUrl) {
+				var route = this.$services.router.get(this.$services.page.alias(this.page));
+				this.$services.router.router.updateUrl(
+					route.alias,
+					route.url,
+					this.parameters,
+					route.query)
+			}
 		},
 		pageTag: function() {
 			return this.page.content.pageType == "email" ? "e-root" : "div";
@@ -812,6 +871,10 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 					localState[key] = pageInstance.variables[key];
 				}
 			});
+			var page = this.$services.page.getPageParameterValues(this.page, pageInstance);
+			if (Object.keys(page).length) {
+				localState.page = page;
+			}
 			return localState;
 		},
 		getLocalState: function(row, cell) {

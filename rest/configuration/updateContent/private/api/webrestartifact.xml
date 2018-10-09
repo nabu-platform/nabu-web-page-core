@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <restInterface>
-    <method>GET</method>
-    <path>/configuration</path>
-    <output>nabu.web.page.core.types.rest.configuration</output>
+    <method>PUT</method>
+    <path>/configuration/content</path>
+    <role>editor</role>
+    <permissionContext>="webApplication:" + input/webApplicationId</permissionContext>
+    <permissionAction>page.edit</permissionAction>
+    <input>nabu.web.page.core.rest.configuration.contentList</input>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
     <language>true</language>
     <allowFormBinding>false</allowFormBinding>
     <caseInsensitive>false</caseInsensitive>
-    <cache>true</cache>
+    <cache>false</cache>
     <allowCookiesWithoutReferer>false</allowCookiesWithoutReferer>
     <allowCookiesWithExternalReferer>false</allowCookiesWithExternalReferer>
     <request>false</request>

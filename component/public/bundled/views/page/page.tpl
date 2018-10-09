@@ -11,6 +11,7 @@
 				@dragstart="dragMenu($event)"
 				:style="{'top': page.content.menuY ? page.content.menuY + 'px' : '0px', 'left': page.content.menuX ? page.content.menuX + 'px' : '0px'}">
 			<span>{{page.name}}</span>
+			<span class="fa fa-cog" v-if="hasConfigureListener()" @click="emit('$configure', {})"/>
 			<span class="fa fa-pencil-alt" @click="edit = !edit"></span>
 			<span class="fa fa-copy" v-route:pages></span>
 			<span class="n-icon" :class="'n-icon-' + $services.page.cssStep" v-if="false && $services.page.cssStep"></span>

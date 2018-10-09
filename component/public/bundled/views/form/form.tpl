@@ -5,7 +5,10 @@
 				<n-collapsible title="Form Settings">
 					<n-form-combo label="Operation" :value="operation" :filter="getOperations"
 						@input="updateOperation"
-						:formatter="function(x) { return x.id }"/>
+						:formatter="function(x) { return x.id }"
+						v-if="!cell.state.pageForm"/>
+					<n-form-switch label="Page form" v-model="cell.state.pageForm"
+						v-if="!cell.state.operation"/>
 					<n-form-text v-model="cell.state.title" label="Title"/>
 					<n-form-text v-model="cell.state.class" label="Form Class"/>
 					<n-form-switch v-model="cell.state.immediate" label="Save On Change"/>
@@ -14,8 +17,9 @@
 					<n-form-text v-model="cell.state.next" v-if="!cell.state.immediate && cell.state.pages.length > 1" label="Next Label"/>
 					<n-form-text v-model="cell.state.event" label="Success Event" :timeout="600" @input="$emit('updatedEvents')"/>
 					<n-form-switch v-model="cell.state.synchronize" label="Synchronize Changes"/>
+					<n-form-switch v-model="cell.state.autofocus" label="Autofocus"/>
 				</n-collapsible>
-				<n-collapsible title="Value Binding">
+				<n-collapsible title="Value Binding" v-if="!cell.state.pageForm">
 					<div class="list-row">
 						<n-form-combo :items="Object.keys(availableParameters)" v-model="autoMapFrom"/>
 						<button @click="automap" :disabled="!autoMapFrom">Automap</button>
@@ -61,7 +65,7 @@
 						:timeout="cell.state.immediate ? 600 : 0"
 						:page="page"
 						:cell="cell"
-						v-focus="!cell.state.synchronize && currentPage.fields.indexOf(field) == 0 && field.type != 'enumeration' && field.type != 'enumeration-operation' && field.type != 'enumeration-provider'"/>
+						v-focus="cell.state.autofocus == true && currentPage.fields.indexOf(field) == 0"/>
 				</n-form-section>
 			</n-form-section>
 			<footer class="global-actions" v-if="!cell.state.immediate">

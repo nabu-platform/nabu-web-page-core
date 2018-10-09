@@ -1,0 +1,23 @@
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" disabled="false" id="8aff79b4-b848-4e4f-a083-b0d34969ad52">
+	<steps xsi:type="be.nabu.libs.services.vm.step.Switch" disabled="false" id="2ab6ea1f-42d4-4245-a7e5-ee3552a18712">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" label="input/language != input/cache/etag" comment="If we have another language, we need to retrieve the content again" id="12f1d1b1-7ab3-4992-805d-5717ff176451">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="6d1d9325-b85e-4b39-b7ec-ac8e6b3d5e6d" mask="false" optional="false" fixedValue="true">
+				<from>true</from>
+				<to>output/hasChanged</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" id="3eefed3e-59e0-4f38-a4c1-b7002f96c776">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="15495df6-d68f-44a8-89b6-f43fbd0e4460" temporaryMapping="true" invocationOrder="0" serviceId="nabu.utils.Server.property" resultName="resultb0cf26a817ea48908ff54b313f337be7" y="106" x="114">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="b9323f22-df02-4be3-8b2a-1da39d6f2d5a" mask="false" optional="false" fixedValue="true">
+					<from>development</from>
+					<to>key</to>
+				</steps>
+				<asynchronous>false</asynchronous>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="61ffddf5-09ef-4ab4-a1a2-e7bb8c02f7f8" mask="false" optional="false" fixedValue="false">
+				<from>resultb0cf26a817ea48908ff54b313f337be7/value</from>
+				<to>output/hasChanged</to>
+			</steps>
+		</steps>
+	</steps>
+</sequence>

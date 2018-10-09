@@ -407,6 +407,17 @@ nabu.services.VueService(Vue.extend({
 				return style.class;
 			});
 		},
+		getPageParameterValues: function(page, pageInstance) {
+			// copy things like query parameters & path parameters
+			var result = pageInstance.parameters ? nabu.utils.objects.clone(pageInstance.parameters) : {};
+			// copy internal parameters as well
+			if (page.content.parameters) {
+				page.content.parameters.map(function(parameter) {
+					result[parameter.name] = pageInstance.get("page." + parameter.name);
+				});
+			}
+			return result;
+		},
 		isCondition: function(condition, state, instance) {
 			if (!condition) {
 				return true;
@@ -753,7 +764,7 @@ nabu.services.VueService(Vue.extend({
 					alias: self.alias(page),
 					url: page.content.initial ? "/.*" : page.content.path,
 					query: page.content.query ? page.content.query : [],
-					enter: function(parameters) {
+					enter: function(parameters, mask) {
 						if (page.content.initial) {
 							var found = !!self.findMain(page.content);
 							// check that there is a row/cell with the default anchor, if not, insert it
@@ -772,7 +783,7 @@ nabu.services.VueService(Vue.extend({
 								});
 							}
 						}
-						return new nabu.page.views.Page({propsData: {page: page, parameters: parameters, pageInstanceId: self.pageCounter++ }});
+						return new nabu.page.views.Page({propsData: {page: page, parameters: parameters, pageInstanceId: self.pageCounter++, masked: mask }});
 					},
 					// ability to recognize page routes
 					isPage: true,

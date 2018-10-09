@@ -1,0 +1,227 @@
+{
+	"namespace": "page", 
+	"name": "core", 
+	"resources": {
+		"page": {
+			"core": {
+				"components": {
+					"ace": {
+						"ace.js": {
+							"url": "components/ace/ace.js"
+						}, 
+						"ace.gcss": {
+							"url": "components/ace/ace.gcss"
+						}
+					}, 
+					"form-page": {
+						"form-page.tpl": {
+							"url": "components/form-page/form-page.tpl"
+						}, 
+						"form-page.js": {
+							"url": "components/form-page/form-page.js"
+						}
+					}, 
+					"mapper": {
+						"mapper.tpl": {
+							"url": "components/mapper/mapper.tpl"
+						}, 
+						"mapper.js": {
+							"url": "components/mapper/mapper.js"
+						}
+					}
+				}, 
+				"services": {
+					"Formatter.js": {
+						"url": "services/Formatter.js"
+					}, 
+					"PageResolver.js": {
+						"url": "services/PageResolver.js"
+					}, 
+					"Resizer.js": {
+						"url": "services/Resizer.js"
+					}, 
+					"Page.js": {
+						"url": "services/Page.js"
+					}
+				}, 
+				"views": {
+					"image": {
+						"image.gcss": {
+							"url": "views/image/image.gcss"
+						}, 
+						"image.tpl": {
+							"url": "views/image/image.tpl"
+						}, 
+						"image.js": {
+							"url": "views/image/image.js"
+						}, 
+						"image.scss": {
+							"url": "views/image/image.scss"
+						}
+					}, 
+					"pages": {
+						"pages.sass": {
+							"url": "views/pages/pages.sass"
+						}, 
+						"pages.js": {
+							"url": "views/pages/pages.js"
+						}, 
+						"pages.gcss": {
+							"url": "views/pages/pages.gcss"
+						}, 
+						"pages.tpl": {
+							"url": "views/pages/pages.tpl"
+						}
+					}, 
+					"form": {
+						"form.tpl": {
+							"url": "views/form/form.tpl"
+						}, 
+						"form.js": {
+							"url": "views/form/form.js"
+						}
+					}, 
+					"richtext": {
+						"richtext.tpl": {
+							"url": "views/richtext/richtext.tpl"
+						}, 
+						"richtext.js": {
+							"url": "views/richtext/richtext.js"
+						}
+					}, 
+					"page": {
+						"addCell": {
+							"add.js": {
+								"url": "views/page/addCell/add.js"
+							}, 
+							"add.tpl": {
+								"url": "views/page/addCell/add.tpl"
+							}
+						}, 
+						"page.js": {
+							"url": "views/page/page.js"
+						}, 
+						"page.sass": {
+							"url": "views/page/page.sass"
+						}, 
+						"page.tpl": {
+							"url": "views/page/page.tpl"
+						}, 
+						"page.md": {
+							"url": "views/page/page.md"
+						}, 
+						"page.gcss": {
+							"url": "views/page/page.gcss"
+						}
+					}, 
+					"fields": {
+						"fields.tpl": {
+							"url": "views/fields/fields.tpl"
+						}, 
+						"fields.js": {
+							"url": "views/fields/fields.js"
+						}
+					}, 
+					"actions": {
+						"actions.gcss": {
+							"url": "views/actions/actions.gcss"
+						}, 
+						"actions.js": {
+							"url": "views/actions/actions.js"
+						}, 
+						"actions.sass": {
+							"url": "views/actions/actions.sass"
+						}, 
+						"actions.tpl": {
+							"url": "views/actions/actions.tpl"
+						}
+					}, 
+					"providers": {
+						"fragment": {
+							"image": {
+								"image.tpl": {
+									"url": "views/providers/fragment/image/image.tpl"
+								}, 
+								"image.js": {
+									"url": "views/providers/fragment/image/image.js"
+								}
+							}, 
+							"text.js": {
+								"url": "views/providers/fragment/text.js"
+							}, 
+							"data.js": {
+								"url": "views/providers/fragment/data.js"
+							}, 
+							"javascript.js": {
+								"url": "views/providers/fragment/javascript.js"
+							}, 
+							"richtext.js": {
+								"url": "views/providers/fragment/richtext.js"
+							}, 
+							"form.js": {
+								"url": "views/providers/fragment/form.js"
+							}
+						}, 
+						"form": {
+							"list": {
+								"dynamic.js": {
+									"url": "views/providers/form/list/dynamic.js"
+								}
+							}, 
+							"checkbox.js": {
+								"url": "views/providers/form/checkbox.js"
+							}, 
+							"enumeration.js": {
+								"url": "views/providers/form/enumeration.js"
+							}, 
+							"enumerationOperation.js": {
+								"url": "views/providers/form/enumerationOperation.js"
+							}, 
+							"page.js": {
+								"url": "views/providers/form/page.js"
+							}, 
+							"slider.js": {
+								"url": "views/providers/form/slider.js"
+							}, 
+							"enumerationProvider.js": {
+								"url": "views/providers/form/enumerationProvider.js"
+							}, 
+							"text.js": {
+								"url": "views/providers/form/text.js"
+							}, 
+							"static-image.js": {
+								"url": "views/providers/form/static-image.js"
+							}, 
+							"richtext.js": {
+								"url": "views/providers/form/richtext.js"
+							}, 
+							"switch.js": {
+								"url": "views/providers/form/switch.js"
+							}, 
+							"date.js": {
+								"url": "views/providers/form/date.js"
+							}
+						}, 
+						"format": {
+							"resolver.js": {
+								"url": "views/providers/format/resolver.js"
+							}
+						}
+					}, 
+					"style.gcss": {
+						"url": "views/style.gcss"
+					}, 
+					"style.sass": {
+						"url": "views/style.sass"
+					}
+				}, 
+				"auto-bundle.json": {
+					"url": "auto-bundle.json"
+				}, 
+				"component.js": {
+					"url": "component.js"
+				}
+			}
+		}
+	}
+}

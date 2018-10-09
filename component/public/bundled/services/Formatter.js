@@ -70,10 +70,13 @@ nabu.services.VueService(Vue.extend({
 			format = format.replace(/[X]+/g, Math.floor(date.getTimezoneOffset() / 60) + ":" + date.getTimezoneOffset() % 60);
 			// do months last as they can introduce named months which might conflict with expressions in the above
 			// e.g. "Sep" could trigger the millisecond replacement
-			format = format.replace(/MMMM/g, nabu.utils.dates.months()[date.getMonth()]);
-			format = format.replace(/MMM/g, nabu.utils.dates.months()[date.getMonth()].substring(0, 3));
-			format = format.replace(/MM/g, (date.getMonth() < 9 ? "0" : "") + (date.getMonth() + 1));
-			format = format.replace(/M/g, date.getMonth() + 1);
+			// replacing a month with "May" could trigger the single "M" replacement though
+			// so first we replace the capital M with something that should never conflict
+			format = format.replace(/M/g, "=");
+			format = format.replace(/====/g, nabu.utils.dates.months()[date.getMonth()]);
+			format = format.replace(/===/g, nabu.utils.dates.months()[date.getMonth()].substring(0, 3));
+			format = format.replace(/==/g, (date.getMonth() < 9 ? "0" : "") + (date.getMonth() + 1));
+			format = format.replace(/=/g, date.getMonth() + 1);
 			return format;
 		},
 		masterdata: function(id) {

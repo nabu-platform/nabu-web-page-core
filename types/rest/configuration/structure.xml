@@ -1,4 +1,5 @@
 <structure name="configuration" superType="nabu.web.page.core.types.configuration">
     <structure comment="Parameters not contained in the path are found in the content (and most likely query parameters but also direct input)" definition="nabu.web.page.core.types.rest.page" maxOccurs="unbounded" minOccurs="0" name="pages"/>
     <field name="editable" type="java.lang.Boolean"/>
+    <structure definition="nabu.web.page.core.rest.configuration.content" maxOccurs="unbounded" minOccurs="0" name="contents"/>
 </structure>

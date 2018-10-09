@@ -1,9 +1,6 @@
-<structure name="configuration">
-    <field minOccurs="0" name="title" type="java.lang.String"/>
-    <field comment="Default home page" minOccurs="0" name="home" type="java.lang.String"/>
-    <structure definition="nabu.utils.types.Property" maxOccurs="unbounded" minOccurs="0" name="properties"/>
-    <structure maxOccurs="unbounded" minOccurs="0" name="devices">
-        <field name="name" type="java.lang.String"/>
-        <field minOccurs="0" name="width" type="java.lang.Long"/>
+<structure name="configuration" superType="nabu.web.page.core.types.rest.configurationInput">
+    <structure minOccurs="0" name="providers">
+        <field minOccurs="0" name="getAllContent" type="java.lang.String"/>
+        <field minOccurs="0" name="setContent" type="java.lang.String"/>
     </structure>
 </structure>

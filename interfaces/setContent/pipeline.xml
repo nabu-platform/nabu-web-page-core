@@ -1,0 +1,10 @@
+<structure name="pipeline">
+    <structure name="input">
+        <field name="applicationId" type="java.lang.String"/>
+        <field minOccurs="0" name="page" type="java.lang.String"/>
+        <field name="key" type="java.lang.String"/>
+        <field minOccurs="0" name="language" type="java.lang.String"/>
+        <field minOccurs="0" name="content" type="java.lang.String"/>
+    </structure>
+    <structure name="output"/>
+</structure>

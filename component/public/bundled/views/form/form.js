@@ -55,9 +55,15 @@ nabu.page.views.PageForm = Vue.extend({
 		fieldsToAdd: function() {
 			var fields = [];
 			var self = this;
-			Object.keys(this.cell.bindings).map(function(key) {
-				fields.push(key);
-			});
+			if (this.cell.state.pageForm) {
+				var parameters = this.$services.page.getPageParameters(this.page);
+				nabu.utils.arrays.merge(fields, Object.keys(parameters.properties));
+			}
+			else {
+				Object.keys(this.cell.bindings).map(function(key) {
+					fields.push(key);
+				});
+			}
 			return fields;
 		}
 	},
@@ -66,7 +72,14 @@ nabu.page.views.PageForm = Vue.extend({
 		
 		var self = this;
 		var pageInstance = self.$services.page.getPageInstance(self.page, self);
-		if (this.cell.bindings) {
+		// if we are updating the page itself, get the parameters from there
+		if (this.cell.state.pageForm) {
+			var page = this.$services.page.getPageParameterValues(self.page, pageInstance);
+			Object.keys(page).map(function(key) {
+				Vue.set(self.result, key, page[key]);
+			});
+		}
+		else if (this.cell.bindings) {
 			Object.keys(this.cell.bindings).map(function(key) {
 				if (self.cell.bindings[key]) {
 					Vue.set(self.result, key, self.$services.page.getBindingValue(pageInstance, self.cell.bindings[key]));
@@ -434,36 +447,51 @@ nabu.page.views.PageForm = Vue.extend({
 				// globale parameters that we can pass along
 				var self = this;
 				var result = this.createResult();
-				this.$services.swagger.execute(this.cell.state.operation, result).then(function(returnValue) {
+				if (this.cell.state.pageForm) {
+					// close before the page is updated
+					self.$emit("close");					
 					var pageInstance = self.$services.page.getPageInstance(self.page, self);
-					// if we want to synchronize the values, do so
-					if (self.cell.state.synchronize) {
-						Object.keys(self.cell.bindings).map(function(name) {
-							pageInstance.set(self.cell.bindings[name], self.result[name]);
-						});
+					var parameters = this.$services.page.getPageParameters(self.page);
+					Object.keys(parameters.properties).map(function(key) {
+						pageInstance.set("page." + key, result[key]);
+					});
+					// if we are in light edit mode, save the page automatically
+					if (!this.edit && this.$services.page.canEdit() && this.$services.page.wantEdit) {
+						this.$services.page.update(this.page);
 					}
-					if (self.cell.state.event) {
-						pageInstance.emit(self.cell.state.event, returnValue);
-					}
-					self.$emit("close");
-				}, function(error) {
-					self.error = "Form submission failed";
-					try {
-						var parsed = JSON.parse(error.responseText);
-						self.messages.push({
-							type: "request",
-							severity: "error",
-							title: parsed.message
-						})
-					}
-					catch (exception) {
-						self.messages.push({
-							type: "request",
-							severity: "error",
-							title: "%{An error has occurred on the server, please try again}"
-						})
-					}
-				});
+				}
+				else {
+					this.$services.swagger.execute(this.cell.state.operation, result).then(function(returnValue) {
+						var pageInstance = self.$services.page.getPageInstance(self.page, self);
+						// if we want to synchronize the values, do so
+						if (self.cell.state.synchronize) {
+							Object.keys(self.cell.bindings).map(function(name) {
+								pageInstance.set(self.cell.bindings[name], self.result[name]);
+							});
+						}
+						if (self.cell.state.event) {
+							pageInstance.emit(self.cell.state.event, returnValue);
+						}
+						self.$emit("close");
+					}, function(error) {
+						self.error = "Form submission failed";
+						try {
+							var parsed = JSON.parse(error.responseText);
+							self.messages.push({
+								type: "request",
+								severity: "error",
+								title: parsed.message
+							})
+						}
+						catch (exception) {
+							self.messages.push({
+								type: "request",
+								severity: "error",
+								title: "%{An error has occurred on the server, please try again}"
+							})
+						}
+					});
+				}
 			}
 		},
 		up: function(field) {

@@ -1,0 +1,4 @@
+<structure interface="$self:implementation" name="pipeline">
+    <structure name="input"/>
+    <structure name="output"/>
+</structure>
