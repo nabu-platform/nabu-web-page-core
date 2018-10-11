@@ -219,6 +219,10 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		handle: function(action, force) {
 			if (force || !this.isDisabled(action)) {
 				if (action.route) {
+					var route = action.route;
+					if (route.charAt(0) == "=") {
+						route = this.$services.page.interpret(route, this);
+					}
 					var parameters = {};
 					var self = this;
 					Object.keys(action.bindings).map(function(key) {
@@ -233,7 +237,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 							parameters[key] = value;
 						}
 					});
-					this.$services.router.route(action.route, parameters, action.anchor, action.mask);
+					this.$services.router.route(route, parameters, action.anchor, action.mask);
 				}
 				else if (action.event == "$close") {
 					this.$emit("close");
