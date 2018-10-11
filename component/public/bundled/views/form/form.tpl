@@ -18,6 +18,8 @@
 					<n-form-text v-model="cell.state.event" label="Success Event" :timeout="600" @input="$emit('updatedEvents')"/>
 					<n-form-switch v-model="cell.state.synchronize" label="Synchronize Changes"/>
 					<n-form-switch v-model="cell.state.autofocus" label="Autofocus"/>
+					<n-form-switch v-if="cell.state.pages.length >= 2" v-model="cell.state.pageTabs" label="Pages as tabs"/>
+					<n-form-switch v-if="cell.state.pages.length >= 2" v-model="cell.state.partialSubmit" label="Allow partial submit"/>
 				</n-collapsible>
 				<n-collapsible title="Value Binding" v-if="!cell.state.pageForm">
 					<div class="list-row">
@@ -46,6 +48,10 @@
 				</div>
 			</n-form>
 		</n-sidebar>
+		<div class="form-tabs" v-if="cell.state.pages.length >= 2 && cell.state.pageTabs">
+			<button v-for="page in cell.state.pages" @click="setPage(page)"
+				:class="{'is-active': currentPage == page}">{{$services.page.interpret(page.name, self)}}</button>
+		</div>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
 		<n-form :class="cell.state.class" ref="form">
 			<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">
@@ -72,6 +78,7 @@
 				<a class="cancel" href="javascript:void(0)" @click="$emit('close')" v-if="cell.state.cancel">{{cell.state.cancel}}</a>
 				<button class="primary" @click="nextPage" v-if="cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1">{{cell.state.next}}</button>
 				<button class="primary" @click="doIt" v-else-if="cell.state.ok">{{cell.state.ok}}</button>
+				<button class="secondary" @click="doIt" v-if="cell.state.pages.length >= 2 && cell.state.partialSubmit && cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1 && cell.state.ok">{{cell.state.ok}}</button>
 			</footer>
 			<footer>
 				<n-messages :messages="messages"/>
@@ -89,7 +96,7 @@
 		:cell="cell"
 		:field="field"
 		@input="function(newValue) { $emit('input', newValue) }"
-		:label="fieldLabel"
+		:label="$services.page.interpret(fieldLabel, $self)"
 		:timeout="timeout"
 		:schema="schema"
 		:disabled="isDisabled"/>

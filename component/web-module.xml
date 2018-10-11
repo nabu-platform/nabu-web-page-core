@@ -10,4 +10,5 @@
     <webFragments>nabu.web.page.core.rest.style.list</webFragments>
     <webFragments>nabu.web.page.core.rest.style.write</webFragments>
     <webFragments>nabu.web.page.core.rest.style.delete</webFragments>
+    <webFragments>nabu.web.page.core.rest.configuration.updateContent</webFragments>
 </webModule>

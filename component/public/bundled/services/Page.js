@@ -32,6 +32,8 @@ nabu.services.VueService(Vue.extend({
 			devices: [],
 			// application styles
 			styles: [],
+			// custom content
+			contents: [],
 			lastCompiled: null,
 			customStyle: null,
 			cssStep: null,
@@ -85,11 +87,35 @@ nabu.services.VueService(Vue.extend({
 		var self = this;
 		document.addEventListener("keydown", function(event) {
 			if (event.ctrlKey && event.keyCode == 88) {
-				self.wantEdit = !self.wantEdit;
+				if (self.canEdit()) {
+					self.wantEdit = !self.wantEdit;
+				}
+				else {
+					self.$services.router.route("login");
+				}
 			}
 		});
 	},
 	methods: {
+		getContent: function(page, key) {
+			// if we are in development mode and no explicit language choice is made, don't show the contents, you want the json values
+			if (${environment("development")} && (!this.$services.language || !this.$services.language.cookieValue)) {
+				return null;
+			}
+			return this.contents.filter(function(x) {
+				// if it is a different page we are not interested
+				if (page && x.page != page) {
+					return false;
+				}
+				// if we want a global content, don't take a page content
+				else if (!page && x.page) {
+					return false;
+				}
+				else {
+					return x.key == key;
+				}
+			})[0];
+		},
 		formatFieldsLight: function(value, fields) {
 			for (var i = 0; i < fields.length; i++) {
 				
@@ -127,6 +153,7 @@ nabu.services.VueService(Vue.extend({
 				self.pages.splice(0, self.pages.length);
 				self.properties.splice(0, self.properties.length);
 				self.devices.splice(0, self.devices.length);
+				self.contents.splice(0);
 				if (configuration.pages) {
 					nabu.utils.arrays.merge(self.pages, configuration.pages);
 					self.loadPages(self.pages);
@@ -142,6 +169,9 @@ nabu.services.VueService(Vue.extend({
 				}
 				if (configuration.home) {
 					self.home = configuration.home;
+				}
+				if (configuration.contents) {
+					nabu.utils.arrays.merge(self.contents, configuration.contents);
 				}
 				if (self.canEdit()) {
 					var promises = [];

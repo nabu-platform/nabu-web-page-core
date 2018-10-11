@@ -1,50 +1,50 @@
 <sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" disabled="false" id="c2ff6f65-306b-4fcf-a80d-15725939432e">
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" comment="Get configuration" id="ad49500f-79d6-49f2-a0d8-7ded8220b150">
-		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="bd6feb4c-b3e2-423a-9b68-68eedc7ffded" temporaryMapping="true" invocationOrder="0" serviceId="nabu.web.application.Services.configuration" resultName="resultd1f5790a1de046a780abcce1e9bf2cff" y="84" x="146">
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="8ad6e0be-99c6-4a4f-a8e7-ee1afc059d5c" mask="false" optional="false" fixedValue="false">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="bd6feb4c-b3e2-423a-9b68-68eedc7ffded" invocationOrder="0" temporaryMapping="true" serviceId="nabu.web.application.Services.configuration" resultName="resultd1f5790a1de046a780abcce1e9bf2cff" y="84" x="146">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="8ad6e0be-99c6-4a4f-a8e7-ee1afc059d5c" mask="false" fixedValue="false" optional="false">
 				<from>input/webApplicationId</from>
 				<to>webApplicationId</to>
 			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="f9911fef-7b2a-4592-ab97-73bff1f42767" mask="false" optional="false" fixedValue="true">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="f9911fef-7b2a-4592-ab97-73bff1f42767" mask="false" fixedValue="true" optional="false">
 				<from>nabu.web.page.core.types.configuration</from>
 				<to>typeId</to>
 			</steps>
 			<asynchronous>false</asynchronous>
 		</steps>
-		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="797f31cc-703b-4a04-9c7d-f2d2dbc6af07" mask="false" optional="false" fixedValue="false">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="797f31cc-703b-4a04-9c7d-f2d2dbc6af07" mask="false" fixedValue="false" optional="false">
 			<from>resultd1f5790a1de046a780abcce1e9bf2cff/configuration</from>
 			<to>configuration</to>
 		</steps>
 	</steps>
-	<steps xsi:type="be.nabu.libs.services.vm.step.Throw" disabled="false" label="configuration/providers/setContent = null" id="1d22244e-639d-4f4e-8cf1-03e3fd107edb" message="No content provided configured" xsi:nil="true"/>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Throw" disabled="false" label="configuration/providers/setContent = null" id="1d22244e-639d-4f4e-8cf1-03e3fd107edb" message="No content provider configured" xsi:nil="true"/>
 	<steps xsi:type="be.nabu.libs.services.vm.step.For" disabled="false" id="6b0e928a-2803-4b1e-a53f-76461efa1bfe" variable="content">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" id="ef36abe1-97e3-4d03-a211-226c5c915428">
-			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="ffdbc511-372b-4239-b1d8-d18370836d57" temporaryMapping="true" invocationOrder="0" serviceId="nabu.web.page.core.interfaces.setContent" resultName="resultdd23be8b609a4f53a7e2795eac5c818a" y="54" x="14">
-				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="6b7ea77c-3df0-4d48-ba6b-cd48352172f4" mask="false" optional="false" fixedValue="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="ffdbc511-372b-4239-b1d8-d18370836d57" invocationOrder="0" temporaryMapping="true" serviceId="nabu.web.page.core.interfaces.setContent" resultName="resultdd23be8b609a4f53a7e2795eac5c818a" y="54" x="14">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="6b7ea77c-3df0-4d48-ba6b-cd48352172f4" mask="false" fixedValue="false" optional="false">
 					<from>input/language</from>
 					<to>language</to>
 				</steps>
-				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="73177216-a487-401c-b762-cdba04e39112" mask="false" optional="false" fixedValue="false">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="73177216-a487-401c-b762-cdba04e39112" mask="false" fixedValue="false" optional="false">
 					<from>input/webApplicationId</from>
 					<to>applicationId</to>
 				</steps>
-				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="5822c4cd-7ded-4e9b-9ccc-d886d0053b71" mask="false" optional="false" fixedValue="false">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="5822c4cd-7ded-4e9b-9ccc-d886d0053b71" mask="false" fixedValue="false" optional="false">
 					<from>content/page</from>
 					<to>page</to>
 				</steps>
-				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="15b99015-7591-4f48-b897-d661a07aacf4" mask="false" optional="false" fixedValue="false">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="15b99015-7591-4f48-b897-d661a07aacf4" mask="false" fixedValue="false" optional="false">
 					<from>content/key</from>
 					<to>key</to>
 				</steps>
-				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="ac908dea-c093-4deb-8016-23c5fad29f26" mask="false" optional="false" fixedValue="false">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="ac908dea-c093-4deb-8016-23c5fad29f26" mask="false" fixedValue="false" optional="false">
 					<from>content/content</from>
 					<to>content</to>
 				</steps>
-				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="5456f869-52fc-4cc8-b95f-60c9aee4c03a" mask="false" optional="false" fixedValue="false">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="5456f869-52fc-4cc8-b95f-60c9aee4c03a" mask="false" fixedValue="false" optional="false">
 					<from>configuration/providers/setContent</from>
 					<to>implementationId</to>
 				</steps>
-				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="4cccf55f-0565-43ba-9a9a-243b439a09ce" mask="false" optional="false" fixedValue="true">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="4cccf55f-0565-43ba-9a9a-243b439a09ce" mask="false" fixedValue="true" optional="false">
 					<from>true</from>
 					<to>useAsContext</to>
 				</steps>

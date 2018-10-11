@@ -80,7 +80,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 		},
 		parameters: {
 			type: Object,
-			required: false
+			required: false,
+			default: function() { return {} }
 		},
 		embedded: {
 			type: Boolean,
@@ -131,7 +132,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 				if (x.name != null) {
 					// if it is not passed in as input, we set the default value
 					if (self.parameters[x.name] == null) {
-						Vue.set(self.variables, x.name, x.default != null ? x.default : null);
+						// check if we have a content setting
+						var value = self.$services.page.getContent(x.global ? null : self.page.name, x.name);
+						if (value == null) {
+							value = x.default;
+						}
+						else {
+							value = value.content;
+						}
+						Vue.set(self.variables, x.name, value == null ? null : value);
 					}
 					// but you can override the default with an input parameter
 					else {
@@ -201,7 +210,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 			// a lot of components load events at the beginning on startup in a computed property
 			// however, depending on the mount order, new events come in after those components are started
 			// to be able to recompute those events, this should be reactive
-			cachedEvents: null
+			cachedEvents: null,
+			// a timer for content saving, we want to batch content updates to prevent a lot of calls
+			// the form sets value by value using standard interfaces, it doesn't know that the content is being pushed to the backend
+			// we want to keep it that way, which is why it is unaware of the batch
+			saveContentTimer: null,
+			// the actual contents to save
+			saveContents: [],
+			savePageTimer: null
 		}
 	},
 	methods: {
@@ -457,6 +473,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				type: 'string',
 				format: null,
 				default: null,
+				global: false,
 				// we can listen to events and take a value from them to update the current value
 				// e.g. we could update a search parameter if you select something
 				listeners: []
@@ -699,7 +716,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				if (applicationProperty) {
 					return applicationProperty.value;
 				}
-				else if (pageParameter) {
+				else if (pageParameter != null) {
 					return this.variables[pageParameter.name];
 				}
 				else {
@@ -743,6 +760,68 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 			}
 		},
+		saveTranslatedContent: function(content) {
+			if (this.saveContentTimer) {
+				clearTimeout(this.saveContentTimer);
+				this.saveContentTimer = null;
+			}
+			this.saveContents.push(content);
+			var self = this;
+			this.saveContentTimer = setTimeout(function() {
+				var contents = self.saveContents.splice(0);
+				var save = function() {
+					self.$services.swagger.execute("nabu.web.page.core.rest.configuration.updateContent", {
+						body: {
+							contents: contents
+						}
+					}).then(function(response) {
+						// do nothing
+					}, function(error) {
+						self.$confirm({
+							message: "Your content could not be saved, do you want to try again?"
+						}).then(save)
+					});
+				};
+				save();
+			}, 300);
+		},
+		savePage: function() {
+			if (this.savePageTimer) {
+				clearTimeout(this.savePageTimer);
+				this.savePageTimer = null;
+			}
+			var self = this;
+			this.savePageTimer = setTimeout(function() {
+				self.$services.page.update(self.page);
+			}, 300);
+		},
+		isDevelopment: function() {
+			return ${environment("development")};	
+		},
+		hasLanguageSet: function() {
+			// the current value can be automatically deduced from the browser settings instead of an active choice by the user
+			// the cookieValue is only present if the user has actively chosen a language so check that to allow "unsetting" of the value for json manipulation
+			return this.$services.language.current && this.$services.language.cookieValue;
+		},
+		// the idea was to force the user to select a language if none is selected
+		// this however may not be possible if the site does not actually support multiple languages (the language service is always injected if you have CMS)
+		triggerConfiguration: function() {
+			// if you trigger the $configure event, it is usually for page parameter editing
+			// if you don't have a selected language, the result will be stored in the JSON itself
+			// this is OK (and intended) for development to have default content but not OK in for example qlty where:
+			// a) you might be in a cluster (and only save the json on one server) 
+			// b) changes are overwritten on the next deployment
+			// so if there is no language service alltogether, we have no option but to store it in the json
+			// otherwise you can only "not" have a language if you are in development mode
+			if (this.isDevelopment() || !this.$services.language || this.$services.language.current) {
+				this.emit("$configure", {});
+			}
+			else {
+				this.$confirm({
+					message: "You must select a language"
+				});
+			}
+		},
 		set: function(name, value) {
 			var target = null;
 			var parts = null;
@@ -759,7 +838,24 @@ nabu.page.views.Page = Vue.component("n-page", {
 					target = this.variables;
 					// also set it as the default value if in edit mode or light edit mode
 					if (this.edit || (this.$services.page.canEdit() && this.$services.page.wantEdit)) {
-						pageParameter.default = value;
+						// if we have no language service, update the default value
+						// alternatively if we have explicitly not selected a language and we are in development mode, we want to set the default as well
+						// if however we are not in development mode, these are also sent to the backend and saved in the default language (that must be configured)
+						if (!this.$services.language || (!this.hasLanguageSet() && ${environment("development")})) {
+							pageParameter.default = value;
+							// if we are in light edit mode, save the page automatically because there is no save button
+							if (!this.edit && this.$services.page.canEdit() && this.$services.page.wantEdit) {
+								this.savePage();
+							}
+						}
+						// we have a language selected, save the value for that language
+						else {
+							this.saveTranslatedContent({
+								page: pageParameter.global ? null : this.page.name,
+								key: pageParameter.name,
+								content: value
+							});
+						}
 					}
 				}
 				else {
@@ -1272,6 +1368,19 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 			return null;
 		},
+		getRowEditStyle: function(row) {
+			return 'background-color:' + this.getNameColor(row.name) + '; color: #fff';	
+		},
+		getNameColor: function(name) {
+			var saturation = 80;
+			var lightness = 40;
+			var hash = 0;
+			for (var i = 0; i < name.length; i++) {
+				hash = name.charCodeAt(i) + ((hash << 5) - hash);
+			}
+			var hue = hash % 360;
+			return 'hsl('+ hue +', '+ saturation +'%, '+ lightness +'%)';
+		},
 		getParameters: function(row, cell) {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
@@ -1429,6 +1538,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 			if (!!row.justify) {
 				styles.push({"justify-content": row.justify});
+			}
+			if ((this.edit || this.$services.page.wantEdit) && row.name) {
+				styles.push({"border": "solid 2px " + this.getNameColor(row.name), "border-style": "none solid solid solid"})
 			}
 			return styles;
 		},

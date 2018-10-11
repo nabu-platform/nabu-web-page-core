@@ -67,7 +67,7 @@
 				@click="handle(action)" 
 				v-if="!cell.state.useButtons && (action.route || action.event)"
 					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
-					><span>{{ action.label }}</span></a>
+					><span>{{ $services.page.interpret(action.label, $self) }}</span></a>
 			<button auto-close-actions class="page-action-button page-action-entry"
 				:class="getDynamicClasses(action)"
 				:sequence="getActions().indexOf(action) + 1"
@@ -75,13 +75,13 @@
 				@click="handle(action)" 
 				v-else-if="cell.state.useButtons && (action.route || action.event)"
 					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
-					><span>{{ action.label }}</span></button>
+					><span>{{ $services.page.interpret(action.label, $self) }}</span></button>
 			<span class="page-action-label page-action-entry" 
 				v-else
 				:class="getDynamicClasses(action)"
 				:sequence="getActions().indexOf(action) + 1"
 					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
-					><span>{{ action.label }}</span></span>
+					><span>{{ $services.page.interpret(action.label, $self) }}</span></span>
 			<page-actions :ref="'action_' + getActions().indexOf(action)"
 				v-if="(action.actions && action.actions.length) || configuringAction == action"
 				:cell="cell"

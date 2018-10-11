@@ -33,6 +33,31 @@
 			flex-basis: 0;
 		}
 	}
+	.row-edit-label {
+		position: relative;
+		&.direction-horizontal {
+			width: 4rem;
+			min-width: 4rem;
+			min-height: 15rem;
+			span {
+				width: 4rem;
+				display: block;
+				tranform: rotate(-90deg);
+				-moz-transform: rotate(-90deg);
+				-webkit-transform: rotate(-90deg);
+				-ms-transform: rotate(-90deg);
+				-o-transform: rotate(-90deg);
+				position: absolute;
+				white-space: nowrap;
+				left: 0;
+				top: 80%;
+			}
+		}
+		&.direction-vertical {
+			padding: 1rem;
+			width: 100%;
+		}
+	}
 }
 
 .page-cell.clickable {
@@ -86,6 +111,24 @@
 			margin: 0 1rem;
 			display: inline-block;
 			cursor: pointer;
+		}
+		.language-selector {
+			position: relative;
+			.options {
+				display: none;
+				position: absolute;
+				top: 90%;
+				background-color: #333;
+				padding: 0.3rem;
+				span {
+					padding: 0.3rem;
+				}
+			}
+			&:hover {
+				.options {
+					display: block;
+				}
+			}
 		}
 	}
 	&.edit {

@@ -65,6 +65,9 @@ nabu.page.views.PageForm = Vue.extend({
 				});
 			}
 			return fields;
+		},
+		self: function() {
+			return this;
 		}
 	},
 	created: function() {
@@ -132,6 +135,12 @@ nabu.page.views.PageForm = Vue.extend({
 			var messages = this.$refs.form.validate();
 			if (!messages.length) {
 				this.currentPage = this.cell.state.pages[this.cell.state.pages.indexOf(this.currentPage) + 1];
+			}
+		},
+		setPage: function(page) {
+			var messages = this.$refs.form.validate();
+			if (!messages.length) {
+				this.currentPage = page;
 			}
 		},
 		deletePage: function(page) {
@@ -455,10 +464,6 @@ nabu.page.views.PageForm = Vue.extend({
 					Object.keys(parameters.properties).map(function(key) {
 						pageInstance.set("page." + key, result[key]);
 					});
-					// if we are in light edit mode, save the page automatically
-					if (!this.edit && this.$services.page.canEdit() && this.$services.page.wantEdit) {
-						this.$services.page.update(this.page);
-					}
 				}
 				else {
 					this.$services.swagger.execute(this.cell.state.operation, result).then(function(returnValue) {

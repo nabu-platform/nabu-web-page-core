@@ -18,7 +18,7 @@ Vue.component("page-field-fragment-data-configure", {
 });
 
 Vue.component("page-field-fragment-data", {
-	template: "<page-formatted :value='$services.page.getValue(data, fragment.key)' :fragment='fragment' :cell='cell' :page='page'/>",
+	template: "<page-formatted :value='value' :fragment='fragment' :cell='cell' :page='page'/>",
 	props: {
 		cell: {
 			type: Object,
@@ -35,6 +35,19 @@ Vue.component("page-field-fragment-data", {
 		data: {
 			type: Object,
 			required: true
+		}
+	},
+	computed: {
+		value: function() {
+			// if we get values from the page, they don't have local state so get them there directly
+			// the problem is: state is copied on creation but is no longer watched, so updating that state in the page does not reflect changes in the data
+			// we could use a general refactor of the whole state model though...
+			// but this is important enough to warrant a workaround because of content management going through page parameters now
+			if (this.fragment.key.indexOf("page.") == 0) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				return pageInstance.get(this.fragment.key);
+			}
+			return this.$services.page.getValue(this.data, this.fragment.key);
 		}
 	}
 });

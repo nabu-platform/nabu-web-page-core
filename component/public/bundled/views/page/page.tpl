@@ -11,10 +11,17 @@
 				@dragstart="dragMenu($event)"
 				:style="{'top': page.content.menuY ? page.content.menuY + 'px' : '0px', 'left': page.content.menuX ? page.content.menuX + 'px' : '0px'}">
 			<span>{{page.name}}</span>
-			<span class="fa fa-cog" v-if="hasConfigureListener()" @click="emit('$configure', {})"/>
+			<span class="fa fa-cog" v-if="hasConfigureListener()" @click="triggerConfiguration()"/>
 			<span class="fa fa-pencil-alt" @click="edit = !edit"></span>
 			<span class="fa fa-copy" v-route:pages></span>
 			<span class="n-icon" :class="'n-icon-' + $services.page.cssStep" v-if="false && $services.page.cssStep"></span>
+			<span v-if="$services.language && $services.language.available.length" class="language-selector">
+				<span class="current">{{hasLanguageSet() ? $services.language.current.name : "none"}}</span>
+				<div class="options">
+					<span v-for="language in $services.language.available" @click="$services.language.current = language">{{language.name}}</span>
+					<span v-if="$services.language.current && ${environment('development')}" @click="$services.language.current = null">unset</span>
+				</div>
+			</span>
 			<span class="fa fa-sign-out-alt" v-route:logout></span>
 		</div>
 		<div class="page-edit" v-else-if="false && !$services.page.canEdit() && !embedded && $services.page.wantEdit && $services.user && !$services.user.loggedIn"
@@ -64,6 +71,7 @@
 						<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :items="['string', 'boolean', 'number', 'integer']"/>
 						<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
 						<n-form-text v-model="parameter.default" label="Default Value"/>
+						<n-form-switch v-model="parameter.global" label="Is global?"/>
 						<div class="list-row" v-for="i in Object.keys(parameter.listeners)">
 							<n-form-combo v-model="parameter.listeners[i]" :filter="function() { return $services.page.getAllAvailableKeys(page) }"/>
 							<button @click="parameter.listeners.splice(i, 1)"><span class="fa fa-trash"></span></button>
@@ -127,6 +135,8 @@
 				:row-key="'page_' + pageInstanceId + '_row_' + row.id"
 				v-if="edit || shouldRenderRow(row)"
 				:style="rowStyles(row)">
+			<div v-if="(edit || $services.page.wantEdit) && row.name && !row.collapsed" :style="getRowEditStyle(row)" class="row-edit-label"
+				:class="'direction-' + (row.direction ? row.direction : 'horizontal')"><span>{{row.name}}</span></div>
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 			<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" 
 					:id="page.name + '_' + row.id + '_' + cell.id" 
@@ -283,7 +293,7 @@
 				</n-form>
 			</n-sidebar>
 			<div class="page-row-menu n-page-menu" v-if="edit">
-				<label>{{row.name}}</label>
+				<label v-if="row.collapsed">{{row.name}}</label>
 				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="configuring = row.id"><span class="fa fa-cog"></span></button>
 				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button>
 				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button>
@@ -291,7 +301,7 @@
 				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="copyRow(row)"><span class="fa fa-copy" title="Copy Row"></span></button>
 				<button v-if="!row.collapsed && $services.page.copiedCell" :style="rowButtonStyle(row)" @click="pasteCell(row)"><span class="fa fa-paste" title="Paste Cell"></span></button>
 				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
-				<button @click="row.collapsed = !row.collapsed"><span class="fa" :class="{'fa-minus-square': !row.collapsed, 'fa-plus-square': row.collapsed }"></span></button>
+				<button :style="rowButtonStyle(row)" @click="row.collapsed = !row.collapsed"><span class="fa" :class="{'fa-minus-square': !row.collapsed, 'fa-plus-square': row.collapsed }"></span></button>
 			</div>
 		</component>
 	</div>

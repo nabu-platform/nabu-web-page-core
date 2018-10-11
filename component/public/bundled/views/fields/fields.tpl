@@ -63,7 +63,7 @@
 <template id="page-field">
 	<div class="page-field" :class="getDynamicClasses(field)">
 		<template v-if="label">
-			<dt v-if="label && field.label">{{field.label}}</dt>
+			<dt v-if="label && field.label">{{$services.page.interpret(field.label,$self)}}</dt>
 			<dd class="page-field-fragment">
 				<component v-if="fragment.type && !isHidden(fragment)" 
 					:class="fragment.class" v-for="fragment in field.fragments"
