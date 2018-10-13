@@ -162,6 +162,19 @@
 								"url": "views/providers/fragment/form.js"
 							}
 						}, 
+						"renderer": {
+							"slider": {
+								"slider.js": {
+									"url": "views/providers/renderer/slider/slider.js"
+								}, 
+								"slider.scss": {
+									"url": "views/providers/renderer/slider/slider.scss"
+								}, 
+								"slider.tpl": {
+									"url": "views/providers/renderer/slider/slider.tpl"
+								}
+							}
+						}, 
 						"form": {
 							"list": {
 								"dynamic.js": {

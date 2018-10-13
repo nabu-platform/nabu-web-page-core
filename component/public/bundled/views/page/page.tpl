@@ -134,7 +134,8 @@
 				:key="'page_' + pageInstanceId + '_row_' + row.id"
 				:row-key="'page_' + pageInstanceId + '_row_' + row.id"
 				v-if="edit || shouldRenderRow(row)"
-				:style="rowStyles(row)">
+				:style="rowStyles(row)"
+				v-bind="getRendererProperties(row)">
 			<div v-if="(edit || $services.page.wantEdit) && row.name && !row.collapsed" :style="getRowEditStyle(row)" class="row-edit-label"
 				:class="'direction-' + (row.direction ? row.direction : 'horizontal')"><span>{{row.name}}</span></div>
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
@@ -143,7 +144,8 @@
 					:class="[{'clickable': !!cell.clickEvent}, {'page-cell': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar'}, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root} ]" 
 					:key="'page_' + pageInstanceId + '_cell_' + cell.id"
 					:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-					@click="clickOnCell(cell)">
+					@click="clickOnCell(cell)"
+					v-bind="getRendererProperties(cell)">
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				<n-sidebar v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings">
 					<n-form class="layout2" key="cell-form">
@@ -177,6 +179,10 @@
 								<n-form-text label="Cell Height (any)" v-model="cell.height"/>
 								<n-form-text label="Click Event" v-model="cell.clickEvent" :timeout="600" @input="resetEvents"/>
 								<n-form-text label="Class" v-model="cell.class"/>
+								<n-form-combo label="Cell Renderer" v-model="cell.renderer" :items="getRenderers('cell')" :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
+								<n-form-section v-if="cell.renderer">
+									<n-form-text v-for="property in getRendererPropertyKeys(cell)" :label="property" v-model="cell.rendererProperties[property]"/>
+								</n-form-section>
 								<n-form-switch label="Stop Rerender" v-model="cell.stopRerender"/>
 								<n-form-text label="Condition" v-model="cell.condition"/>
 								<div class="list-actions">
@@ -262,6 +268,10 @@
 						<n-form-text label="Row Name" v-model="row.name"/>
 						<n-form-combo label="Show On" v-model="row.on" :filter="getAvailableEvents"/>
 						<n-form-text label="Class" v-model="row.class"/>
+						<n-form-combo label="Row Renderer" v-model="row.renderer" :items="getRenderers('row')"  :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
+						<n-form-section v-if="row.renderer">
+							<n-form-text v-for="property in getRendererPropertyKeys(row)" :label="property" v-model="row.rendererProperties[property]"/>
+						</n-form-section>
 						<n-form-text label="Condition" v-model="row.condition"/>
 						<n-form-combo label="Direction" v-model="row.direction" :items="['horizontal', 'vertical']"/>
 						<n-form-combo label="Alignment" v-model="row.align" :items="['center', 'flex-start', 'flex-end', 'stretch', 'baseline']"/>

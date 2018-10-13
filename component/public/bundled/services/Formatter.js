@@ -1,8 +1,24 @@
 nabu.services.VueService(Vue.extend({
 	methods: {
-		format: function(value, properties) {
+		format: function(value, properties, page, cell) {
 			if (!properties.format) {
 				return value;
+			}
+			else if (properties.format == "checkbox") {
+				return "<n-form-checkbox :value='value' />";
+			}
+			else if (value == null || typeof(value) == "undefined") {
+				return null;
+			}
+			// formatting is optional
+			else if (!properties.format || properties.format == "text") {
+				return value;
+			}
+			else if (properties.format == "html") {
+				return properties.html ? properties.html : value;
+			}
+			else if (properties.format == "link") {
+				return "<a target='_blank' ref='noopener noreferrer nofollow' href='" + value + "'>" + value.replace(/http[s]*:\/\/([^/]+).*/, "$1") + "</a>";
 			}
 			else if (properties.format == "date") {
 				if (value && properties.isTimestamp) {
@@ -26,8 +42,11 @@ nabu.services.VueService(Vue.extend({
 			else if (properties.format == "javascript") {
 				return this.javascript(value, properties.javascript);
 			}
+			// otherwise we are using a provider
 			else {
-				console.error("Incorrect properties for formatting", value, properties);
+				var result = nabu.page.providers("page-format").filter(function(x) { return x.name == properties.format })[0]
+					.format(value, properties, page, cell);
+				return result;
 			}
 		},
 		javascript: function(value, code) {

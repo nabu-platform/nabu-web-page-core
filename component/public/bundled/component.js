@@ -169,6 +169,14 @@ window.addEventListener("load", function() {
 			namespace: "nabu.page"
 		});
 		
+		// renderers
+		nabu.page.provide("page-renderer", {
+			name: "slider",
+			component: "page-renderer-slider",
+			type: "row",
+			properties: ["group", "tag"]
+		});
+		
 		// formatters
 		nabu.page.provide("page-format", {
 			format: function(id, fragment, page, cell) {

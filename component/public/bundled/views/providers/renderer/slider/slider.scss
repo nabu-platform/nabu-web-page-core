@@ -1,0 +1,12 @@
+.page-renderer-slider {
+	.items {
+		> * {
+			transition: all 1s;
+			display: none;
+			margin-right: 10px;
+			&.is-active {
+				display: block;
+			}
+		}
+	}
+}

@@ -949,11 +949,43 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		});
 	},
 	methods: {
+		getRendererProperties: function(container) {
+			return container.rendererProperties != null ? container.rendererProperties : {};	
+		},
+		getRendererPropertyKeys: function(container) {
+			if (!container.renderer) {
+				return {};
+			}
+			if (!container.rendererProperties) {
+				Vue.set(container, "rendererProperties", {});
+			}
+			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == container.renderer })[0];
+			if (renderer == null) {
+				return {};
+			}
+			return renderer.properties ? renderer.properties : [];
+		},
+		// type is cell or row (currently)
+		getRenderers: function(type) {
+			return nabu.page.providers("page-renderer").filter(function(x) { return x.type == null || x.type == type });
+		},
 		rowTagFor: function(row) {
-			return this.page.content.pageType == "email" ? "e-row" : "div";
+			var renderer = row.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == row.renderer })[0];
+			if (this.edit || renderer == null) {
+				return this.page.content.pageType == "email" ? "e-row" : "div";
+			}
+			else {
+				return renderer.component;
+			}
 		},
 		cellTagFor: function(row, cell) {
-			return this.page.content.pageType == "email" ? "e-columns" : "div";	
+			var renderer = cell.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == cell.renderer })[0];
+			if (this.edit || renderer == null) {
+				return this.page.content.pageType == "email" ? "e-columns" : "div";	
+			}
+			else {
+				return renderer.component;
+			}
 		},
 		getInstance: function() {
 			return this.$services.page.instances[this.name];	
