@@ -1,6 +1,7 @@
 @path
 @operationId nabu.page.scss.compile
 @title Compile scss
+@output base64Binary
 
 @content
 nabu.web.page.core.types.rest.styleInput content ?= null

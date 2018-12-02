@@ -1,0 +1,10 @@
+<structure name="pipeline">
+    <structure name="input">
+        <field minOccurs="0" name="language" type="java.lang.String"/>
+        <field minOccurs="0" name="alias" type="java.lang.String"/>
+        <field minOccurs="0" name="realm" type="java.lang.String"/>
+    </structure>
+    <structure name="output">
+        <field name="etag" type="java.lang.String"/>
+    </structure>
+</structure>

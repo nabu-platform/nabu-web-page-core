@@ -1,5 +1,6 @@
 <template id="page-actions">
-	<ul class="page-actions" :class="cell.state.class" v-auto-close.actions="function() { showing.splice(0, showing.length) }">
+	<ul class="page-actions" :class="cell.state.class" v-auto-close.actions="function() { showing.splice(0, showing.length) }"
+			v-fixed-header="cell.state.isFixedHeader != null && cell.state.isFixedHeader == true">
 		<n-sidebar v-if="configuring" @close="configuring = false" class="settings">
 			<n-form class="layout2">
 				<n-form-section>
@@ -8,15 +9,18 @@
 							:filter="function(value) { return $services.page.classes('page-actions', value) }"/>
 						<n-form-text v-model="cell.state.activeClass" label="Active Class"/>
 						<n-form-switch v-model="cell.state.useButtons" label="Use Buttons"/>
+						<n-form-switch v-model="cell.state.isFixedHeader" label="Fix as header"/>
 						<n-form-combo v-model="cell.state.defaultAction" label="Default Action"
-							:filter="function() { return cell.state.actions.map(function(x) { return x.label }) }"/>
+							:filter="function() { return cell.state.actions.map(function(x) { return x.name }) }"/>
 					</n-collapsible>
 					<n-collapsible title="Actions" class="list">
 						<div class="list-actions">
 							<button @click="addAction">Add Action</button>
 						</div>
-						<n-collapsible class="list-item" :title="action.label" v-for="action in getActions()">
+						<n-collapsible class="list-item" :title="action.label ? action.label : action.name" v-for="action in getActions()">
+							<n-form-text v-model="action.name" label="Name"/>
 							<n-form-text v-model="action.label" label="Label"/>
+							<n-form-text v-model="action.id" label="Id"/>
 							<n-form-text v-model="action.icon" label="Icon"/>
 							<n-form-text v-model="action.class" label="Class" />
 							<n-form-combo v-model="action.buttonClass" label="Button Class" :filter="$services.page.getSimpleClasses"/>
@@ -64,6 +68,7 @@
 				:class="getDynamicClasses(action)"
 				:sequence="getActions().indexOf(action) + 1"
 				:disabled="isDisabled(action)"
+				:id="action.id"
 				@click="handle(action)" 
 				v-if="!cell.state.useButtons && (action.route || action.event)"
 					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
@@ -72,6 +77,7 @@
 				:class="getDynamicClasses(action)"
 				:sequence="getActions().indexOf(action) + 1"
 				:disabled="isDisabled(action)"
+				:id="action.id"
 				@click="handle(action)" 
 				v-else-if="cell.state.useButtons && (action.route || action.event)"
 					><span v-if="action.icon" class="icon fa" :class="action.icon"></span

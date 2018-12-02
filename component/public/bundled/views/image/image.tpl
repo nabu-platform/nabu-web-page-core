@@ -24,8 +24,9 @@
 				</n-form-section>
 			</n-form>
 		</n-sidebar>
-		<img v-if="cell.state.size == 'native' && (cell.state.href || href)" :src="cell.state.href ? '${server.root()}' + cell.state.href : href"/>
+		<img v-if="cell.state.size == 'native' && (cell.state.href || href)" :src="cell.state.href ? '${server.root()}' + cell.state.href : href"
+			:style="{'height': cell.state.height ? cell.state.height : 'inherit'}"/>
 		<div v-else-if="cell.state.href || href" class="image" 
-			:style="{'background-image': 'url(' + fullHref + ')', height: cell.state.height ? cell.state.height : 'inherit', 'background-size': cell.state.size }"></div>
+			:style="{'background-image': 'url(' + fullHref + ')', 'height': cell.state.height ? cell.state.height : 'inherit', 'background-size': cell.state.size }"></div>
 	</div>
 </template>

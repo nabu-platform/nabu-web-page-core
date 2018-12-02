@@ -10,6 +10,7 @@
 					<n-form-switch label="Page form" v-model="cell.state.pageForm"
 						v-if="!cell.state.operation"/>
 					<n-form-text v-model="cell.state.title" label="Title"/>
+					<n-form-text v-model="cell.state.formId" label="Form Id"/>
 					<n-form-text v-model="cell.state.class" label="Form Class"/>
 					<n-form-switch v-model="cell.state.immediate" label="Save On Change"/>
 					<n-form-text v-model="cell.state.cancel" v-if="!cell.state.immediate" label="Cancel Label"/>
@@ -53,7 +54,7 @@
 				:class="{'is-active': currentPage == page}">{{$services.page.interpret(page.name, self)}}</button>
 		</div>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
-		<n-form :class="cell.state.class" ref="form">
+		<n-form :class="cell.state.class" ref="form" :id="cell.state.formId">
 			<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">
 				<n-form-section v-for="field in group.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name) && !isHidden(field)">
 					<component v-if="isList(field.name)"
@@ -75,10 +76,10 @@
 				</n-form-section>
 			</n-form-section>
 			<footer class="global-actions" v-if="!cell.state.immediate">
-				<a class="cancel" href="javascript:void(0)" @click="$emit('close')" v-if="cell.state.cancel">{{cell.state.cancel}}</a>
-				<button class="primary" @click="nextPage" v-if="cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1">{{cell.state.next}}</button>
-				<button class="primary" @click="doIt" v-else-if="cell.state.ok">{{cell.state.ok}}</button>
-				<button class="secondary" @click="doIt" v-if="cell.state.pages.length >= 2 && cell.state.partialSubmit && cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1 && cell.state.ok">{{cell.state.ok}}</button>
+				<a class="cancel" href="javascript:void(0)" @click="$emit('close')" :id="cell.state.formId ? cell.state.formId + '_cancel' : null" v-if="cell.state.cancel">{{cell.state.cancel}}</a>
+				<button class="primary" :id="cell.state.formId ? cell.state.formId + '_next' : null" @click="nextPage" v-if="cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1">{{cell.state.next}}</button>
+				<button class="primary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" v-else-if="cell.state.ok">{{cell.state.ok}}</button>
+				<button class="secondary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" v-if="cell.state.pages.length >= 2 && cell.state.partialSubmit && cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1 && cell.state.ok">{{cell.state.ok}}</button>
 			</footer>
 			<footer>
 				<n-messages :messages="messages"/>

@@ -61,6 +61,7 @@ Vue.component("n-page-mapper", {
 			if (value) {
 				fields = fields.filter(function(x) { x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
 			}
+			fields.push("$all");
 			return fields;
 		},
 		getValueFor: function(field) {

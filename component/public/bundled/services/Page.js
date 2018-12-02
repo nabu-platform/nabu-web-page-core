@@ -43,7 +43,8 @@ nabu.services.VueService(Vue.extend({
 			copiedCell: null,
 			useEval: false,
 			cssLastModified: null,
-			cssError: null
+			cssError: null,
+			disableReload: false
 		}
 	},
 	activate: function(done) {
@@ -233,6 +234,45 @@ nabu.services.VueService(Vue.extend({
 				}
 			});
 		},
+		getGlobalEvents: function() {
+			var events = {};
+			this.pages.map(function(page) {
+				if (page.content.globalEvents) {
+					page.content.globalEvents.map(function(event) {
+						var globalName = event.globalName ? event.globalName : event.localName;
+						if (globalName != null) {
+							if (events[globalName] == null) {
+								events[globalName] = {properties:{}}
+							}
+						}
+					});
+				}
+			});
+			console.log("events are", events);
+			return events;
+		},
+		// push global events to all pages
+		emit: function(event, data, source) {
+			var instances = [];
+			// make sure we don't emit it again to the source page
+			if (source != null) {
+				instances.push(source);
+			}
+			Object.keys(nabu.page.instances).map(function(key) {
+				var instance = nabu.page.instances[key];
+				if (instances.indexOf(instance) < 0) {
+					if (instance.page.content.globalEventSubscriptions) {
+						var globalEvent = instance.page.content.globalEventSubscriptions.filter(function(x) {
+							return x.globalName == event;
+						})[0];
+						if (globalEvent) {
+							instance.emit(globalEvent.localName != null ? globalEvent.localName : event, data);
+						}
+					}
+					instances.push(instance);
+				}
+			});
+		},
 		getPageInstance: function(page, component) {
 			var pageInstance = null;
 			if (component && component.pageInstanceId != null) {
@@ -275,7 +315,7 @@ nabu.services.VueService(Vue.extend({
 		reloadCss: function() {
 			var self = this;
 			nabu.utils.ajax({url:"${server.root()}page/v1/api/css-modified"}).then(function(response) {
-				if (response.responseText) {
+				if (response.responseText && !self.disableReload) {
 					var date = new Date(response.responseText);
 					if (!self.cssLastModified) {
 						self.cssLastModified = date;
@@ -348,7 +388,8 @@ nabu.services.VueService(Vue.extend({
 				var parts = field.split(".");
 				var value = data;
 				parts.map(function(part) {
-					if (value) {
+					// skip $all, you just want the entire value
+					if (value && part != "$all") {
 						value = value[part];
 					}
 				});
@@ -360,6 +401,9 @@ nabu.services.VueService(Vue.extend({
 			var tmp = data;
 			var parts = field.split(".");
 			for (var i = 0; i < parts.length - 1; i++) {
+				if (parts[i] == "$all") {
+					continue;
+				}
 				if (!tmp[parts[i]]) {
 					Vue.set(tmp, parts[i], {});
 				}
@@ -464,7 +508,7 @@ nabu.services.VueService(Vue.extend({
 					var result = eval(condition);
 				}
 				catch (exception) {
-					console.error("Could not evaluate", condition, exception);
+					console.warn("Could not evaluate", condition, exception);
 					return false;
 				}
 				if (result instanceof Function) {
@@ -818,6 +862,7 @@ nabu.services.VueService(Vue.extend({
 					// ability to recognize page routes
 					isPage: true,
 					initial: page.content.initial,
+					roles: page.content.roles,
 					slow: !page.content.initial && page.content.slow
 				};
 				
@@ -1149,6 +1194,10 @@ nabu.services.VueService(Vue.extend({
 		},
 		// retrieves the path of rows/cells to get to the targetId, this can be used to resolve instances for example
 		getTargetPath: function(rowContainer, targetId, recursive) {
+			// when we explode for example cells in a loop, the id is further finetuned, for example the original cell might have id "2", the exploded will have "2-1", "2-2" etc to guarantee in-document uniqueness
+			if (typeof(targetId) == "string" && targetId.indexOf("-") > 0) {
+				targetId = targetId.substring(0, targetId.indexOf("-"));
+			}
 			var reverse = false;
 			if (!recursive) {
 				recursive = true;

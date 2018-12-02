@@ -190,13 +190,13 @@ nabu.page.views.PageForm = Vue.extend({
 			if (!state.class) {
 				Vue.set(state, "class", null);
 			}
-			if (!state.ok) {
+			if (!state.hasOwnProperty("ok")) {
 				Vue.set(state, "ok", "Ok");
 			}
-			if (!state.next) {
+			if (!state.hasOwnProperty("next")) {
 				Vue.set(state, "next", "Next");
 			}
-			if (!state.cancel) {
+			if (!state.hasOwnProperty("cancel")) {
 				Vue.set(state, "cancel", "Cancel");
 			}
 			if (!state.event) {

@@ -1,20 +1,67 @@
 <sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" disabled="false" id="8aff79b4-b848-4e4f-a083-b0d34969ad52">
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" comment="Calculate etag &amp; last modified" id="aa101239-34b7-4726-8056-9e4a9a02487c">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="d40b3491-9e6f-4efa-8d0c-d3c852058c9e" resultName="resultee1e4e7102aa42dcab74c891a0a82ba5" temporaryMapping="true" serviceId="nabu.web.page.core.services.getConfigurationEtag" invocationOrder="1" y="160" x="332">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="0b992734-d217-4343-bc25-4aaa218580ce" fixedValue="false" mask="false" optional="false">
+				<from>input/language</from>
+				<to>language</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="126fbbc3-0287-4442-83f8-c648752dbccc" fixedValue="false" mask="false" optional="false">
+				<from>resulte5909360df6a4b2aabaa4a488eb94905/token/realm</from>
+				<to>realm</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="d4863f29-9d92-45e0-ba48-1da4d268b232" fixedValue="false" mask="false" optional="false">
+				<from>resulte5909360df6a4b2aabaa4a488eb94905/token/name</from>
+				<to>alias</to>
+			</steps>
+			<asynchronous>false</asynchronous>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="0c052ad6-7428-4ed8-9534-a65d8ed41ceb" resultName="resulte5909360df6a4b2aabaa4a488eb94905" temporaryMapping="true" serviceId="nabu.utils.Runtime.getCurrentToken" invocationOrder="0" y="204" x="14">
+			<asynchronous>false</asynchronous>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="c0ea09f9-0baf-4a25-b6db-5b7e38a580a8" fixedValue="false" mask="false" optional="false">
+			<from>resultee1e4e7102aa42dcab74c891a0a82ba5/etag</from>
+			<to>etag</to>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="de99d9f3-6d26-43d3-8d7f-86b57ef67e58" resultName="resultac92bc27ee2145178fbe471daf045918" temporaryMapping="true" serviceId="nabu.web.page.core.services.getLastModifiedPage" invocationOrder="0" y="57" x="58">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="3064b03e-0b99-4254-8f8c-b01f6d6bde63" fixedValue="false" mask="false" optional="false">
+				<from>input/webApplicationId</from>
+				<to>webApplication</to>
+			</steps>
+			<asynchronous>false</asynchronous>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="fa6d117d-dd14-4226-810e-195697007607" fixedValue="false" mask="false" optional="false">
+			<from>resultac92bc27ee2145178fbe471daf045918/lastModified</from>
+			<to>lastModified</to>
+		</steps>
+	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Switch" disabled="false" id="2ab6ea1f-42d4-4245-a7e5-ee3552a18712">
-		<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" label="input/language != input/cache/etag" comment="If we have another language, we need to retrieve the content again" id="12f1d1b1-7ab3-4992-805d-5717ff176451">
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="6d1d9325-b85e-4b39-b7ec-ac8e6b3d5e6d" mask="false" optional="false" fixedValue="true">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" label="etag != input/clientCache/etag" comment="If we have another language, we need to retrieve the content again" id="12f1d1b1-7ab3-4992-805d-5717ff176451">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="6d1d9325-b85e-4b39-b7ec-ac8e6b3d5e6d" fixedValue="true" mask="false" optional="false">
+				<from>true</from>
+				<to>output/hasChanged</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" label="input/clientCache/lastModified = null" comment="If the client does not have a timestamp, set changed" id="b1f7a443-46d5-44da-880b-1723e7227687">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="d3ed79c4-40c2-4573-b6ce-4a4eda24aaf9" fixedValue="true" mask="false" optional="false">
+				<from>true</from>
+				<to>output/hasChanged</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" label="input/clientCache/lastModified &lt; lastModified" comment="We have more recent changes" id="adc8e90f-6a2b-4180-a413-e71558487122">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="0e8d618e-2f37-42e5-98b6-53507ea1c6a9" fixedValue="true" mask="false" optional="false">
 				<from>true</from>
 				<to>output/hasChanged</to>
 			</steps>
 		</steps>
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" id="3eefed3e-59e0-4f38-a4c1-b7002f96c776">
-			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="15495df6-d68f-44a8-89b6-f43fbd0e4460" temporaryMapping="true" invocationOrder="0" serviceId="nabu.utils.Server.property" resultName="resultb0cf26a817ea48908ff54b313f337be7" y="106" x="114">
-				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="b9323f22-df02-4be3-8b2a-1da39d6f2d5a" mask="false" optional="false" fixedValue="true">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="15495df6-d68f-44a8-89b6-f43fbd0e4460" resultName="resultb0cf26a817ea48908ff54b313f337be7" temporaryMapping="true" serviceId="nabu.utils.Server.property" invocationOrder="0" y="106" x="114">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="b9323f22-df02-4be3-8b2a-1da39d6f2d5a" fixedValue="true" mask="false" optional="false">
 					<from>development</from>
 					<to>key</to>
 				</steps>
 				<asynchronous>false</asynchronous>
 			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="61ffddf5-09ef-4ab4-a1a2-e7bb8c02f7f8" mask="false" optional="false" fixedValue="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="61ffddf5-09ef-4ab4-a1a2-e7bb8c02f7f8" fixedValue="false" mask="false" optional="false">
 				<from>resultb0cf26a817ea48908ff54b313f337be7/value</from>
 				<to>output/hasChanged</to>
 			</steps>

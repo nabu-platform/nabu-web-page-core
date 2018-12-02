@@ -1,0 +1,25 @@
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" disabled="false" id="c068812d-848a-4947-acfb-495ffc262ad3">
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" id="1b76565b-aa16-4412-af05-62b73f22334e">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="ce8e9e6f-3b21-4024-888b-94fa9a20c2dd" fixedValue="true" mask="false" optional="false">
+			<from>=input/language + "-" + input/alias + "@" + input/realm</from>
+			<to>output/etag</to>
+		</steps>
+	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" id="c62119fd-eed3-4921-83e7-d48b0aecd864">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="cfee8937-de42-444a-b794-5bc8d8e03830" resultName="resulte8a03f3e46b44b82ad513d8ed420f0ab" temporaryMapping="true" serviceId="nabu.utils.Security.hash" invocationOrder="0" y="82" x="114">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="a86d8ba2-c837-4f3f-81fc-15d234b220e7" fixedValue="false" mask="false" optional="false">
+				<from>output/etag</from>
+				<to>string</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="ae1d4239-c23a-421e-b964-92921733b21a" fixedValue="true" mask="false" optional="false">
+				<from>MD5</from>
+				<to>algorithm</to>
+			</steps>
+			<asynchronous>false</asynchronous>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="04d73455-0268-4944-aa9c-0d96129741fc" fixedValue="false" mask="false" optional="false">
+			<from>resulte8a03f3e46b44b82ad513d8ed420f0ab/hash</from>
+			<to>output/etag</to>
+		</steps>
+	</steps>
+</sequence>

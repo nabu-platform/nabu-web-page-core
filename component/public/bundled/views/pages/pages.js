@@ -34,6 +34,7 @@ nabu.page.views.Pages = Vue.extend({
 		}
 	},
 	ready: function() {
+		this.$services.page.disableReload = true;
 		if (this.$services.page.canEdit()) {
 			var self = this;
 			this.$el.addEventListener("paste", function(event) {
@@ -70,6 +71,9 @@ nabu.page.views.Pages = Vue.extend({
 				}
 			});
 		}
+	},
+	beforeDestroy: function() {
+		this.$services.page.disableReload = false;	
 	},
 	methods: {
 		getRoutes: function(newValue) {

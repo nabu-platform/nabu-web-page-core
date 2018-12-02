@@ -493,6 +493,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 				var events = {
 					"$configure": {properties:{}}
 				};
+				
+				// check which events are picked up globally
+				if (this.page.content.globalEventSubscriptions) {
+					this.page.content.globalEventSubscriptions.map(function(sub) {
+						events[sub.localName == null ? sub.globalName : sub.localName] = {properties:{}};	
+					});
+				}
+				
 				this.cachedEvents = events;
 				var self = this;
 				
@@ -606,7 +614,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 					});
 					if (action.confirmation) {
 						self.$confirm({message:action.confirmation}).then(function() {
-							if (action.route) {
+							if (action.scroll) {
+								var element = document.querySelector(action.scroll);
+								if (!element) {
+									element = document.getElementById(action.scroll);
+								}
+								if (element) {
+									element.scrollIntoView();
+								}
+							}
+							else if (action.route) {
 								if (action.anchor == "$blank") {
 									window.open(self.$services.router.template(action.route, parameters));
 								}
@@ -643,7 +660,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 						})
 					}
 					else {
-						if (action.route) {
+						if (action.scroll) {
+							var element = document.querySelector(action.scroll);
+							if (!element) {
+								element = document.getElementById(action.scroll);
+							}
+							if (element) {
+								element.scrollIntoView();
+							}
+						}
+						else if (action.route) {
 							if (action.anchor == "$blank") {
 								window.open(self.$services.router.template(action.route, parameters));
 							}
@@ -695,7 +721,28 @@ nabu.page.views.Page = Vue.component("n-page", {
 					Vue.set(self.closed, key, null);
 				}
 			});
-			return this.$services.q.all(promises);
+			return this.$services.q.all(promises).then(function() {
+				if (self.page.content.globalEvents) {
+					var globalEvent = self.page.content.globalEvents.filter(function(x) {
+						return x.localName == name;
+					})[0];
+					if (globalEvent) {
+						self.$services.page.emit(globalEvent.globalName ? globalEvent.globalName : name, value, self);
+					}
+				}
+			});
+		},
+		addGlobalEvent: function() {
+			if (!this.page.content.globalEvents) {
+				Vue.set(this.page.content, "globalEvents", []);
+			}
+			this.page.content.globalEvents.push({localName: null, globalName: null});
+		},
+		addGlobalEventSubscription: function() {
+			if (!this.page.content.globalEventSubscriptions) {
+				Vue.set(this.page.content, "globalEventSubscriptions", []);
+			}
+			this.page.content.globalEventSubscriptions.push({localName: null, globalName: null});
 		},
 		get: function(name) {
 			// probably not filled in the value yet
@@ -1241,7 +1288,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		isDevice: function(devices) {
 			var actual = this.$services.resizer.width;
 			for (var i = 0; i < devices.length; i++) {
-				if (devices[i].operator) {
+				if (devices[i].operator && devices[i].name) {
 					var operator = devices[i].operator;
 					var width = 0;
 					if (devices[i].name.match(/[0-9]+/)) {

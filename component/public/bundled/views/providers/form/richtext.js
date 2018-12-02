@@ -1,5 +1,5 @@
 Vue.component("page-form-input-richtext-configure", {
-	template: "<div/>",
+	template: "<n-form-section><n-form-switch v-model='field.cleanStyle' label='Clean style on paste'/></n-form-section>",
 	props: {
 		cell: {
 			type: Object,
@@ -18,7 +18,7 @@ Vue.component("page-form-input-richtext-configure", {
 });
 
 Vue.component("page-form-input-richtext", {
-	template: "<n-form-richtext ref='form' :value='value' @input=\"function(value) { $emit('input', value) }\" :schema='schema'/>",
+	template: "<n-form-richtext ref='form' :value='value' @input=\"function(value) { $emit('input', value) }\" :schema='schema' :clean-style='field.cleanStyle'/>",
 	props: {
 		cell: {
 			type: Object,

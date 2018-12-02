@@ -37,6 +37,14 @@
 					<n-form-text v-model="page.content.class" label="Class"/>
 					<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow"/>
 					<n-form-combo label="Page Type" :items="['page', 'email']" v-model="page.content.pageType"/>
+					
+					<div class="list" v-if="page.content.roles">
+						<div v-for="i in Object.keys(page.content.roles)" class="list-row">
+							<n-form-text v-model="page.content.roles[i]"/>
+							<button @click="page.content.roles.splice(i)"><span class="fa fa-trash"></span></button>
+						</div>
+					</div>
+					<button @click="page.content.roles ? page.content.roles.push('') : $window.Vue.set(page.content, 'roles', [''])">Add Role</button>
 				</n-collapsible>
 				<n-collapsible title="Initial State" class="list">
 					<div class="list-actions">
@@ -90,9 +98,10 @@
 						<n-form-text v-model="action.name" label="Name" :required="true"/>
 						<n-form-text v-model="action.confirmation" label="Confirmation Message"/>
 						<n-form-combo v-model="action.on" label="Trigger On" :filter="getAvailableEvents"/>
-						<n-form-combo v-model="action.route" v-if="!action.operation" label="Redirect" :filter="filterRoutes"/>
+						<n-form-text v-model="action.scroll" label="Scroll to" v-if="!action.operation && !action.route"/>
+						<n-form-combo v-model="action.route" v-if="!action.operation && !action.scroll" label="Redirect" :filter="filterRoutes"/>
 						<n-form-combo v-model="action.anchor" v-if="action.route" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
-						<n-form-combo v-model="action.operation" v-if="!action.route" label="Operation" :filter="getOperations" />
+						<n-form-combo v-model="action.operation" v-if="!action.route && !action.scroll" label="Operation" :filter="getOperations" />
 						<n-form-switch v-if="action.operation" v-model="action.isSlow" label="Is slow operation?"/>
 						<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" :timeout="600" @input="resetEvents()"/>
 						<n-form-switch v-if="action.operation" v-model="action.expandBindings" label="Field level bindings"/>
@@ -114,6 +123,38 @@
 							<button @click="page.content.actions.splice(page.content.actions.indexOf(action), 1)"><span class="fa fa-trash"></span></button>
 						</div>
 					</n-collapsible>
+				</n-collapsible>
+				<n-collapsible title="Publish Global Events" class="list">
+					<div class="list-actions">
+						<button @click="addGlobalEvent">Add Global Event</button>
+					</div>
+					<n-form-section v-if="page.content.globalEvents">
+						<n-form-section class="list-row" v-for="i in Object.keys(page.content.globalEvents)">
+							<n-form-combo v-model="page.content.globalEvents[i].localName"
+								label="Local Name"
+								:filter="getAvailableEvents"/>
+							<n-form-text v-model="page.content.globalEvents[i].globalName" 
+								label="Global Name"
+								:placeholder="page.content.globalEvents[i].localName"/>
+							<button @click="page.content.globalEvents.splice(i, 1)"><span class="fa fa-trash"></span></button>
+						</n-form-section>
+					</n-form-section>
+				</n-collapsible>
+				<n-collapsible title="Subscribe Global Events" class="list">
+					<div class="list-actions">
+						<button @click="addGlobalEventSubscription">Add Global Event</button>
+					</div>
+					<n-form-section v-if="page.content.globalEventSubscriptions">
+						<n-form-section class="list-row" v-for="i in Object.keys(page.content.globalEventSubscriptions)">
+							<n-form-combo v-model="page.content.globalEventSubscriptions[i].globalName"
+								label="Global Name"
+								:items="$window.Object.keys($services.page.getGlobalEvents())"/>
+							<n-form-text v-model="page.content.globalEventSubscriptions[i].localName" 
+								label="Local Name"
+								:placeholder="page.content.globalEventSubscriptions[i].globalName"/>
+							<button @click="page.content.globalEventSubscriptions.splice(i, 1)"><span class="fa fa-trash"></span></button>
+						</n-form-section>
+					</n-form-section>
 				</n-collapsible>
 			</n-form>
 		</n-sidebar>

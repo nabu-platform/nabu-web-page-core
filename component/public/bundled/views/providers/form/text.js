@@ -28,6 +28,7 @@ Vue.component("page-form-input-text", {
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
+			+ "		:name='field.name'"
 			+ "		:timeout='timeout'"
 			+ "		:disabled='disabled'/>",
 	props: {

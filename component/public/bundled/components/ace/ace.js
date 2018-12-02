@@ -33,7 +33,7 @@ Vue.component("n-ace", {
 			scrollPastEnd: false,
 			enableEmmet: false,
 			// default scroll speed is _very_ fast for some reason
-			scrollSpeed: 0.05,
+			scrollSpeed: 0.5,
 			tabSize: 4
 		});
 		//this.editor.setTheme("ace/theme/monokai");

@@ -1,0 +1,10 @@
+<structure name="pipeline">
+    <structure name="input">
+        <field name="webApplication" type="java.lang.String"/>
+    </structure>
+    <structure name="output">
+        <field minOccurs="0" name="lastModified" type="java.util.Date"/>
+    </structure>
+    <structure definition="be.nabu.libs.resources.api.ResourceProperties" maxOccurs="unbounded" minOccurs="0" name="children"/>
+    <field minOccurs="0" name="lastModified" type="java.util.Date"/>
+</structure>

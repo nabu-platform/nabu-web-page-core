@@ -44,7 +44,8 @@ window.addEventListener("load", function() {
 			alias: "page-actions",
 			enter: function(parameters) {
 				return new nabu.page.views.PageActions({propsData: parameters});
-			}
+			},
+			query: ["active"]
 		});
 		
 		$services.router.register({

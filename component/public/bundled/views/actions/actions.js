@@ -28,6 +28,10 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		actions: {
 			type: Array,
 			required: false
+		},
+		active: {
+			type: String,
+			required: false
 		}
 	},
 	created: function() {
@@ -44,9 +48,12 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 	},
 	ready: function() {
 		var self = this;
-		if (this.cell.state.defaultAction) {
+		if (this.active || this.cell.state.defaultAction) {
 			var action = this.cell.state.actions.filter(function(action) {
-				return action.label == self.cell.state.defaultAction;
+				// the new match
+				return (action.name == (self.active ? self.active : self.cell.state.defaultAction))
+				// backwards compatible matching
+					|| (action.label == (self.active ? self.active : self.cell.state.defaultAction));
 			})[0];
 			if (action) {
 				this.handle(action, true);
