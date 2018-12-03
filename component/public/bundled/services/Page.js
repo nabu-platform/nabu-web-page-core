@@ -170,6 +170,7 @@ nabu.services.VueService(Vue.extend({
 				}
 				if (configuration.home) {
 					self.home = configuration.home;
+					self.registerHome(configuration.home);
 				}
 				if (configuration.contents) {
 					nabu.utils.arrays.merge(self.contents, configuration.contents);
@@ -1260,6 +1261,21 @@ nabu.services.VueService(Vue.extend({
 				});
 			}
 			return keys;
+		},
+		registerHome: function(home) {
+			this.$services.router.unregister("home");
+			var self = this;
+			this.$services.router.register({
+				alias: "home",
+				enter: function(parameters) {
+					// the timeout disconnects the reroute from the current flow
+					// otherwise weird things happen
+					setTimeout(function() {
+						self.$services.router.route(home, parameters);
+					}, 1)
+				},
+				url: "/"
+			});
 		}
 	},
 	watch: {
@@ -1272,20 +1288,8 @@ nabu.services.VueService(Vue.extend({
 			document.title = newValue;
 		},
 		home: function(newValue) {
-			if (newValue) {
-				this.$services.router.unregister("home");
-				var self = this;
-				this.$services.router.register({
-					alias: "home",
-					enter: function(parameters) {
-						// the timeout disconnects the reroute from the current flow
-						// otherwise weird things happen
-						setTimeout(function() {
-							self.$services.router.route(newValue, parameters);
-						}, 1)
-					},
-					url: "/"
-				});
+			if (newValue && !this.loading) {
+				this.registerHome(newValue);
 			}
 		}
 	}
