@@ -94,6 +94,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 		masked: {
 			typed: Boolean,
 			required: false
+		},
+		stopRerender: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	activate: function(done) {
@@ -124,7 +129,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	created: function() {
-		console.log("creating page", this.page.name);
+		console.log("creating page", this.page.name, this.stopRerender);
 		this.$services.page.setPageInstance(this.page, this);
 		if (this.page.content.parameters) {
 			var self = this;
@@ -221,6 +226,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		getParameterTypes: function(value) {
+			var types = ['string', 'boolean', 'number', 'integer'];
+			nabu.utils.arrays.merge(types, Object.keys(this.$services.swagger.swagger.definitions));
+			if (value) {
+				types = types.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+			}
+			return types;
+		},
 		store: function(key, value) {
 			if (typeof(value) == "object") {
 				if (!this.storage[key]) {
@@ -982,6 +995,11 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		stopRerender: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	data: function() {
@@ -1472,7 +1490,8 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				// if we are in edit mode, the local state does not matter
 				// and if we add it, we retrigger a redraw everytime we change something
 				localState: this.edit ? null : this.getLocalState(row, cell),
-				pageInstanceId: this.pageInstanceId
+				pageInstanceId: this.pageInstanceId,
+				stopRerender: this.edit
 			};
 			// if we have a trigger event, add it explicitly to trigger a redraw if needed
 			if (cell.on) {

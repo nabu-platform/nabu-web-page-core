@@ -169,6 +169,12 @@ window.addEventListener("load", function() {
 			name: "dynamic",
 			namespace: "nabu.page"
 		});
+		nabu.page.provide("page-form-list-input", { 
+			component: "page-form-list-input-predefined", 
+			configure: "page-form-list-input-predefined-configure", 
+			name: "predefined",
+			namespace: "nabu.page"
+		});
 		
 		// renderers
 		nabu.page.provide("page-renderer", {

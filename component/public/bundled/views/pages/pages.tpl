@@ -58,6 +58,7 @@
 							<!-- support for pages with input values -->
 						</n-form-section>
 						<div class="global-actions">
+							<button @click="copy(page)">Copy</button>
 							<button v-if="page.content.path && !page.content.initial" @click="route(page)">View</button>
 							<button @click="remove(page)">Delete</button>
 						</div>
@@ -80,3 +81,15 @@
 	</div>
 </template>
 
+<template id="nabu-pages-paste">
+	<n-form class="nabu-pages-paste layout2" ref="form">
+		<n-form-section>
+			<n-form-text v-model="category" label="Paste in category" :required="true"/>
+			<n-form-text v-model="name" label="Paste with name" :required="true"/>
+		</n-form-section>
+		<footer>
+			<a href="javascript:void(0)" @click="$reject">Cancel</a>
+			<button @click="$resolve({category:category, name:name})">Add</button>
+		</footer>
+	</n-form>
+</template>

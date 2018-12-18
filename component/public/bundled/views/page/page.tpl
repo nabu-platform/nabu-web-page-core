@@ -76,7 +76,7 @@
 					</div>
 					<n-collapsible class="list-item" v-for="parameter in page.content.parameters" :title="parameter.name">
 						<n-form-text v-model="parameter.name" :required="true" label="Name"/>
-						<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :items="['string', 'boolean', 'number', 'integer']"/>
+						<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :filter="getParameterTypes"/>
 						<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
 						<n-form-text v-model="parameter.default" label="Default Value"/>
 						<n-form-switch v-model="parameter.global" label="Is global?"/>
@@ -164,6 +164,7 @@
 			:ref="page.name + '_rows'"
 			:root="true"
 			:page-instance-id="pageInstanceId"
+			:stop-rerender="stopRerender"
 			@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
 	</component>
 </template>
@@ -267,37 +268,41 @@
 						:ref="page.name + '_' + cell.id + '_rows'"
 						:local-state="getLocalState(row, cell)"
 						:page-instance-id="pageInstanceId"
+						:stop-rerender="stopRerender"
 						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 				</div>
 				<template v-else-if="shouldRenderCell(row, cell)">
 					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)" :popout="false">
-						<div @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !cell.stopRerender } }"></div>
+						<div @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"
 							:ref="page.name + '_' + cell.id + '_rows'"
 							:local-state="getLocalState(row, cell)"
 							:page-instance-id="pageInstanceId"
+							:stop-rerender="stopRerender"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-sidebar>
 					<n-prompt v-else-if="cell.target == 'prompt'" @close="close(cell)">
-						<div @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !cell.stopRerender } }"></div>
+						<div @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"
 							:ref="page.name + '_' + cell.id + '_rows'"
 							:local-state="getLocalState(row, cell)"
 							:page-instance-id="pageInstanceId"
+							:stop-rerender="stopRerender"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-prompt>
 					<template v-else>
-						<div :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !cell.stopRerender } }"></div>
+						<div :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { $window.console.log('stopping', stopRerender); return !stopRerender && !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"
 							:ref="page.name + '_' + cell.id + '_rows'"
 							:local-state="getLocalState(row, cell)"
 							:page-instance-id="pageInstanceId"
+							:stop-rerender="stopRerender"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</template>
 				</template>

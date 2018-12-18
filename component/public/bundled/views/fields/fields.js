@@ -349,7 +349,7 @@ Vue.component("page-formatted-configure", {
 	},
 	computed: {
 		nativeTypes: function() {
-			var types = ['date', 'number', 'masterdata', 'javascript', 'text'];
+			var types = ['date', 'number', 'masterdata', 'javascript', 'text', 'literal'];
 			if (this.allowHtml) {
 				types.push('link');
 				types.push('html');
@@ -414,7 +414,7 @@ Vue.component("page-formatted", {
 	},
 	computed: {
 		nativeTypes: function() {
-			var types = ['date', 'number', 'masterdata', 'javascript'];
+			var types = ['date', 'number', 'masterdata', 'javascript', 'literal'];
 			if (this.allowHtml) {
 				types.push('link');
 				types.push('html');
@@ -443,6 +443,10 @@ Vue.component("page-formatted", {
 		},
 		skipCompile: function() {
 			var self = this;
+			// don't compile literals
+			if (this.fragment.format == "literal") {
+				return true;
+			}
 			var formatter = nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0];
 			return formatter && formatter.skipCompile;
 		},
@@ -456,6 +460,9 @@ Vue.component("page-formatted", {
 			// formatting is optional
 			else if (!this.fragment.format || this.fragment.format == "text") {
 				return this.value;
+			}
+			else if (this.fragment.format == "literal") {
+				return this.value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 			}
 			else if (this.fragment.format == "html") {
 				return this.fragment.html ? this.fragment.html : this.value;

@@ -78,17 +78,19 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 					&& operation.responses["200"];
 				// we also need at least _a_ complex array in the results
 				if (isAllowed) {
-					var schema = operation.responses["200"].schema;
-					var definition = self.$services.swagger.definition(schema["$ref"]);
-					// now we need a child in the definition that is a record array
-					// TODO: we currently don't actually check for a complex array, just any array, could be an array of strings...
-					isAllowed = false;
-					if (definition.properties) {
-						Object.keys(definition.properties).map(function(field) {
-							if (definition.properties[field].type == "array") {
-								isAllowed = true;
-							}
-						});
+					var schema = operation.responses["200"] ? operation.responses["200"].schema : null;
+					if (schema) {
+						var definition = self.$services.swagger.definition(schema["$ref"]);
+						// now we need a child in the definition that is a record array
+						// TODO: we currently don't actually check for a complex array, just any array, could be an array of strings...
+						isAllowed = false;
+						if (definition.properties) {
+							Object.keys(definition.properties).map(function(field) {
+								if (definition.properties[field].type == "array") {
+									isAllowed = true;
+								}
+							});
+						}
 					}
 				}
 				return isAllowed;

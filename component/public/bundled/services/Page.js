@@ -835,10 +835,23 @@ nabu.services.VueService(Vue.extend({
 					Vue.set(page, "content", self.normalize(page.marshalled ? JSON.parse(page.marshalled) : {}));
 				}
 				
+				var parameters = {};
+				if (page.content.parameters) {
+					page.content.parameters.map(function(x) {
+						parameters[x.name] = self.getResolvedPageParameterType(x.type);
+						// currently we do not want to allow you to map different parts
+						if (parameters[x.name].properties) {
+							parameters[x.name].properties = {};
+						}
+					})
+				}
+				
 				var route = {
 					alias: self.alias(page),
 					url: page.content.initial ? "/.*" : page.content.path,
 					query: page.content.query ? page.content.query : [],
+					//parameters: page.content.parameters ? page.content.parameters.map(function(x) { return x.name }) : [],
+					parameters: parameters,
 					enter: function(parameters, mask) {
 						if (page.content.initial) {
 							var found = !!self.findMain(page.content);
@@ -858,7 +871,7 @@ nabu.services.VueService(Vue.extend({
 								});
 							}
 						}
-						return new nabu.page.views.Page({propsData: {page: page, parameters: parameters, pageInstanceId: self.pageCounter++, masked: mask }});
+						return new nabu.page.views.Page({propsData: {page: page, parameters: parameters, stopRerender: parameters.stopRerender, pageInstanceId: self.pageCounter++, masked: mask }});
 					},
 					// ability to recognize page routes
 					isPage: true,
@@ -1161,13 +1174,28 @@ nabu.services.VueService(Vue.extend({
 			// that means you can set a name
 			// you can also set a default value and other stuff
 			if (page.content.parameters) {
+				var self = this;
 				page.content.parameters.map(function(x) {
-					parameters.properties[x.name] = {
-						type: "string"
+					/*if (x.type == null || ['string', 'boolean', 'number', 'integer'].indexOf(x.type) >= 0) {
+						parameters.properties[x.name] = {
+							type: x.type == null ? "string" : x.type
+						}
 					}
+					else {
+						parameters.properties[x.name] = self.$services.swagger.resolve(self.$services.swagger.definition(x.type))
+					}*/
+					parameters.properties[x.name] = self.getResolvedPageParameterType(x.type);
 				});
 			}
 			return parameters;
+		},
+		getResolvedPageParameterType: function(type) {
+			if (type == null || ['string', 'boolean', 'number', 'integer'].indexOf(type) >= 0) {
+				return {type:type == null ? "string" : type};
+			}
+			else {
+				return this.$services.swagger.resolve(this.$services.swagger.definition(type));
+			}
 		},
 		getApplicationParameters: function() {
 			var parameters = {

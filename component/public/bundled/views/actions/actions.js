@@ -232,18 +232,27 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 					}
 					var parameters = {};
 					var self = this;
+					var pageInstance = self.$services.page.getPageInstance(this.page, this);
 					Object.keys(action.bindings).map(function(key) {
-						var parts = action.bindings[key].split(".");
-						var value = self.state;
-						parts.map(function(part) {
+						var value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], self);
+						// the old way... should disable it?
+						if (value == null) {
+							var parts = action.bindings[key].split(".");
+							var value = self.state;
+							parts.map(function(part) {
+								if (value) {
+									value = value[part];
+								}
+							});
 							if (value) {
-								value = value[part];
+								parameters[key] = value;
 							}
-						});
-						if (value) {
+						}
+						if (value != null) {
 							parameters[key] = value;
 						}
 					});
+					console.log("parameter are", parameters);
 					this.$services.router.route(route, parameters, action.anchor, action.mask);
 				}
 				else if (action.event == "$close") {

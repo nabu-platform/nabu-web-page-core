@@ -41,6 +41,7 @@ nabu.page.views.Pages = Vue.extend({
 				var data = event.clipboardData.getData("text/plain");
 				if (data) {
 					var parsed = JSON.parse(data);
+					console.log("parsed is", parsed);
 					if (parsed && parsed.type == "page-category") {
 						self.$confirm({ 
 							message: "Are you sure you want to add the category '" + parsed.category + "' to this website?", 
@@ -53,7 +54,22 @@ nabu.page.views.Pages = Vue.extend({
 						});
 					}
 					// check for some markers that it is a page
-					else if (parsed && parsed.path && parsed.rows && parsed.counter != null) {
+					else if (parsed && parsed.category && parsed.name && parsed.rows && parsed.counter != null) {
+						self.$prompt(function() {
+							return new nabu.page.views.PagesPaste({data: {
+								category: parsed.category,
+								name: parsed.name
+							}});
+						}).then(function(result) {
+							parsed.name = result.name;
+							parsed.category = result.category;
+							var page = {
+								content: parsed,
+								name: parsed.name
+							}
+							self.$services.page.update(page);
+						});
+						/*
 						self.$confirm({ 
 							message: "Are you sure you want to add the page '" + parsed.path + "' from category '" + parsed.category + "' to this website?", 
 							type: 'question', 
@@ -67,6 +83,7 @@ nabu.page.views.Pages = Vue.extend({
 								self.$services.page.update(page);
 							}
 						});
+						*/
 					}
 				}
 			});
@@ -76,6 +93,10 @@ nabu.page.views.Pages = Vue.extend({
 		this.$services.page.disableReload = false;	
 	},
 	methods: {
+		copy: function(page) {
+			console.log("page is", page);
+			nabu.utils.objects.copy(page.content);
+		},
 		getRoutes: function(newValue) {
 			var routes = this.$services.router.list().filter(function(x) { return !!x.alias }).map(function(x) { return x.alias });
 			if (newValue) {
@@ -131,6 +152,16 @@ nabu.page.views.Pages = Vue.extend({
 		},
 		doRoute: function() {
 			this.$services.router.route(this.$services.page.alias(this.pageToRoute), this.parameters);
+		}
+	}
+});
+
+nabu.page.views.PagesPaste = Vue.extend({
+	template: "#nabu-pages-paste",
+	data: function() {
+		return {
+			category: null,
+			name: null
 		}
 	}
 });
