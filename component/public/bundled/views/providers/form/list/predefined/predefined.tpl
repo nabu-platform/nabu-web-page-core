@@ -2,9 +2,12 @@
 	<div class="page-form-list-input-predefined">
 		<n-form-section ref='form'>
 			<n-form-section v-for="field in fields">
-				<n-form-date :label="field.label" v-model="value[field.name]" v-if="field.type == 'date'" v-bind="field.additional"/>
-				<n-form-checkbox :label="field.label" v-model="value[field.name]" v-if="field.type == 'boolean'" v-bind="field.additional"/>
-				<n-form-text :label="field.label" v-model="value[field.name]" v-else v-bind="field.additional"/>
+				<n-form-date :label="field.label" v-model="field.value" v-if="field.type == 'date'" v-bind="field.additional"
+					@input="function(value) { updateField(field, value) }"/>
+				<n-form-checkbox :label="field.label" v-model="field.value" v-if="field.type == 'boolean'" v-bind="field.additional"
+					@input="function(value) { updateField(field, value) }"/>
+				<n-form-text :label="field.label" v-model="field.value" v-else v-bind="field.additional"
+					@input="function(value) { updateField(field, value) }"/>
 			</n-form-section>
 		</n-form-section>
 	</div>	
@@ -12,14 +15,23 @@
 
 <template id="page-form-list-input-predefined-configure">
 	<n-form-section>
+		<n-form-combo  v-model="field.resultKeyField" label="Resulting name field"
+			:items="availableResultFields"/>
+		<n-form-combo v-model="field.resultValueField" label="Resulting value field"
+			:items="availableResultFields"/>
+			
 		<n-form-combo :filter="listOperations" label="Field Provider Operation" v-model="field.fieldProviderOperation"/>
-		<n-form-combo v-model="field.nameField" label="Name Field" :required="true" v-if="field.fieldProviderOperation"
+		<n-form-combo v-model="field.nameField" label="Provider Name Field" :required="true" v-if="field.fieldProviderOperation"
 			:items="availableFields"/>
-		<n-form-combo v-model="field.labelField" label="Label Field" v-if="field.fieldProviderOperation"
+		<n-form-combo v-model="field.labelField" label="Provider Label Field" v-if="field.fieldProviderOperation"
 			:items="availableFields"/>
-		<n-form-combo v-model="field.typeField" label="Type Field" v-if="field.fieldProviderOperation"
+		<n-form-combo v-model="field.typeField" label="Provider Type Field" v-if="field.fieldProviderOperation"
 			:items="availableFields"/>
-		<n-form-combo v-model="field.valueField" label="Value Field" v-if="field.fieldProviderOperation"
+		<n-form-combo v-model="field.valueField" label="Provider Value Field" v-if="field.fieldProviderOperation"
 			:items="availableFields"/>
+		<n-page-mapper v-if='field.fieldProviderOperation && hasMappableParameters(field)'
+			v-model='field.fieldOperationBinding'
+			:from='$services.page.getAvailableParameters(page, cell)'
+			:to='getMappableParameters(field)'/>
 	</n-form-section>
 </template>

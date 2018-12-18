@@ -177,6 +177,14 @@
 						}, 
 						"form": {
 							"list": {
+								"predefined": {
+									"predefined.js": {
+										"url": "views/providers/form/list/predefined/predefined.js"
+									}, 
+									"predefined.tpl": {
+										"url": "views/providers/form/list/predefined/predefined.tpl"
+									}
+								}, 
 								"dynamic.js": {
 									"url": "views/providers/form/list/dynamic.js"
 								}

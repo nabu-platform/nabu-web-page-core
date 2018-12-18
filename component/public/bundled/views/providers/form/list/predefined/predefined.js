@@ -13,6 +13,10 @@ Vue.component("page-form-list-input-predefined-configure", {
 		field: {
 			type: Object,
 			required: true
+		},
+		schema: {
+			type: Object,
+			required: false
 		}
 	},
 	computed: {
@@ -41,6 +45,18 @@ Vue.component("page-form-list-input-predefined-configure", {
 		},
 		availableFields: function() {
 			return this.$services.page.getSimpleKeysFor({properties:this.definition});
+		},
+		availableResultFields: function() {
+			var schema = this.schema;
+			if (schema.items) {
+				schema = schema.items;
+			}
+			return Object.keys(schema.properties);
+		}
+	},
+	created: function() {
+		if (!this.field.fieldOperationBinding) {
+			Vue.set(this.field, "fieldOperationBinding", {});
 		}
 	},
 	methods: {
@@ -76,6 +92,21 @@ Vue.component("page-form-list-input-predefined-configure", {
 				 return x.id;
 			});	
 		},
+		// copy paste from enumerationOperation
+		getMappableParameters: function(field) {
+			var result = {
+				properties: {}
+			};
+			Object.keys(this.$services.page.getInputBindings(this.$services.swagger.operations[field.fieldProviderOperation])).map(function(key) {
+				result.properties[key] = {
+					type: "string"
+				}
+			});
+			return result;
+		},
+		hasMappableParameters: function(field) {
+			var amount = Object.keys(this.getMappableParameters(field).properties).length;
+			return amount > 0;
 		}
 	}
 });
@@ -122,7 +153,24 @@ Vue.component("page-form-list-input-predefined", {
 	created: function () {
 		var self = this;
 		if (this.field.fieldProviderOperation) {
-			this.$services.swagger.execute(this.field.fieldProviderOperation).then(function(list) {
+			var parameters = {};
+			// map any additional bindings
+			if (this.field.fieldOperationBinding) {
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				Object.keys(this.field.fieldOperationBinding).map(function(key) {
+					var target = parameters;
+					var parts = key.split(".");
+					for (var i = 0; i < parts.length - 1; i++) {
+						if (!target[parts[i]]) {
+							target[parts[i]] = {};
+						}
+						target = target[parts[i]];
+					}
+					target[parts[parts.length - 1]] = self.$services.page.getBindingValue(pageInstance, self.field.fieldOperationBinding[key], self);
+				});
+			}
+			this.$services.swagger.execute(this.field.fieldProviderOperation, parameters).then(function(list) {
 				if (list) {
 					Object.keys(list).map(function(key) {
 						if (list[key] instanceof Array) {
@@ -158,6 +206,29 @@ Vue.component("page-form-list-input-predefined", {
 	methods: {
 		validate: function(soft) {
 			return this.$refs.form.validate(soft);
+		},
+		updateField: function(field, newValue) {
+			if (this.value[this.field.name] == null) {
+				Vue.set(this.value, this.field.name, []);
+			}
+			var key = this.field.resultKeyField;
+			if (key == null) {
+				key = "key";
+			}
+			var value = this.field.resultValueField;
+			if (value == null) {
+				value = "value";
+			}
+			var existing = this.value[this.field.name].filter(function(x) { return x[key] == field.name })[0];
+			if (existing == null) {
+				var entry = {};
+				entry[key] = field.name;
+				entry[value] = newValue;
+				this.value[this.field.name].push(entry);
+			}
+			else {
+				existing[value] = newValue;
+			}
 		}
 	}
 });

@@ -32,6 +32,7 @@
 				</n-collapsible>
 				<div v-for="cellPage in cell.state.pages">
 					<page-form-configure :title="cellPage.name"
+						:schema-resolver="getSchemaFor"
 						:groupable="true"
 						:edit-name="true"
 						:fields="cellPage.fields" 
@@ -117,6 +118,7 @@
 				:hidable="true"
 				:is-list="isList"
 				:page="page"
+				:schema="schemaResolver(field.name)"
 				:cell="cell"/>
 			<div class="list-item-actions">
 				<button @click="upAll(field)"><span class="fa fa-chevron-circle-left"></span></button>
@@ -144,6 +146,7 @@
 			:is="getProvidedConfiguration(field.type)"
 			:page="page"
 			:cell="cell"
+			:schema="schema"
 			:field="field"/>
 			
 	</div>

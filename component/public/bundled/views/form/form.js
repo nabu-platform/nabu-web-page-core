@@ -677,6 +677,11 @@ Vue.component("page-form-configure", {
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		schemaResolver: {
+			type: Function,
+			required: false,
+			default: function(name) { return null }
 		}
 	},
 	methods: {
@@ -767,6 +772,10 @@ Vue.component("page-form-configure-single", {
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		schema: {
+			type: Object,
+			required: false
 		}
 	},
 	created: function() {
