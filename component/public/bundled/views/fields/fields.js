@@ -458,7 +458,7 @@ Vue.component("page-formatted", {
 				return null;
 			}
 			// formatting is optional
-			else if (!this.fragment.format || this.fragment.format == "text") {
+			else if (this.fragment.format == null || this.fragment.format == "text") {
 				return this.value;
 			}
 			else if (this.fragment.format == "literal") {

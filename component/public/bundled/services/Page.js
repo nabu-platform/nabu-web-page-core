@@ -523,7 +523,7 @@ nabu.services.VueService(Vue.extend({
 				}
 				catch (exception) {
 					if (${environment("development")}) {
-						console.error("Could not evaluate", condition, exception);
+						console.warn("Could not evaluate", condition, exception);
 					}
 					return null;
 				}
@@ -871,12 +871,12 @@ nabu.services.VueService(Vue.extend({
 								});
 							}
 						}
-						return new nabu.page.views.Page({propsData: {page: page, parameters: parameters, stopRerender: parameters.stopRerender, pageInstanceId: self.pageCounter++, masked: mask }});
+						return new nabu.page.views.Page({propsData: {page: page, parameters: parameters, stopRerender: parameters ? parameters.stopRerender : false, pageInstanceId: self.pageCounter++, masked: mask }});
 					},
 					// ability to recognize page routes
 					isPage: true,
 					initial: page.content.initial,
-					roles: page.content.roles,
+					roles: page.content.roles != null && page.content.roles.length > 0 ? page.content.roles : null,
 					slow: !page.content.initial && page.content.slow
 				};
 				

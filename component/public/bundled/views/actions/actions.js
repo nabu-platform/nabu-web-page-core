@@ -187,6 +187,9 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			}
 		},
 		listRoutes: function(value, includeValue) {
+			if (value != null && value.substring(0, 1) == "=") {
+				return [value];
+			}
 			var routes = this.$services.router.list().map(function(x) { return x.alias });
 			if (value) {
 				routes = routes.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });

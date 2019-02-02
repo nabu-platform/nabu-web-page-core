@@ -66,7 +66,7 @@
 			<dt v-if="label && field.label">{{$services.page.interpret(field.label,$self)}}</dt>
 			<dd class="page-field-fragment">
 				<component v-if="fragment.type && !isHidden(fragment)" 
-					:class="fragment.class" v-for="fragment in field.fragments"
+					:class="$services.page.interpret(fragment.class, $self)" v-for="fragment in field.fragments"
 					:is="getProvidedComponent(fragment.type)"
 					:page="page" 
 					:cell="cell"

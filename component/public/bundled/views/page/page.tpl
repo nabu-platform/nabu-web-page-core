@@ -122,6 +122,16 @@
 						<div class="list-item-actions">
 							<button @click="page.content.actions.splice(page.content.actions.indexOf(action), 1)"><span class="fa fa-trash"></span></button>
 						</div>
+						
+						<div v-if="action.eventResets">
+							<div class="list-row" v-for="i in Object.keys(action.eventResets)">
+								<n-form-combo v-model="action.eventResets[i]" :filter="getAvailableEvents"/>
+								<button @click="action.eventResets.splice(i, 1)"><span class="fa fa-trash"></span></button>
+							</div>
+						</div>
+						<div class="list-item-actions">
+							<button @click="addEventReset(action)">Add Event Reset</button>
+						</div>
 					</n-collapsible>
 				</n-collapsible>
 				<n-collapsible title="Publish Global Events" class="list">

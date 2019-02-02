@@ -68,7 +68,7 @@
 				:class="getDynamicClasses(action)"
 				:sequence="getActions().indexOf(action) + 1"
 				:disabled="isDisabled(action)"
-				:id="action.id"
+				:id="$services.page.interpret(action.id, $self)"
 				@click="handle(action)" 
 				v-if="!cell.state.useButtons && (action.route || action.event)"
 					><span v-if="action.icon" class="icon fa" :class="action.icon"></span
@@ -77,7 +77,7 @@
 				:class="getDynamicClasses(action)"
 				:sequence="getActions().indexOf(action) + 1"
 				:disabled="isDisabled(action)"
-				:id="action.id"
+				:id="$services.page.interpret(action.id, $self)"
 				@click="handle(action)" 
 				v-else-if="cell.state.useButtons && (action.route || action.event)"
 					><span v-if="action.icon" class="icon fa" :class="action.icon"></span

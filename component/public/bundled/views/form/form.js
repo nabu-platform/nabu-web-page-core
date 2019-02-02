@@ -456,6 +456,7 @@ nabu.page.views.PageForm = Vue.extend({
 				// globale parameters that we can pass along
 				var self = this;
 				var result = this.createResult();
+				console.log("result is", JSON.stringify(result, null, 2));
 				if (this.cell.state.pageForm) {
 					// close before the page is updated
 					self.$emit("close");					
@@ -471,7 +472,10 @@ nabu.page.views.PageForm = Vue.extend({
 						// if we want to synchronize the values, do so
 						if (self.cell.state.synchronize) {
 							Object.keys(self.cell.bindings).map(function(name) {
-								pageInstance.set(self.cell.bindings[name], self.result[name]);
+								// only set it if we actually bound something to it
+								if (self.cell.bindings[name] != null) {
+									pageInstance.set(self.cell.bindings[name], self.result[name]);
+								}
 							});
 						}
 						if (self.cell.state.event) {

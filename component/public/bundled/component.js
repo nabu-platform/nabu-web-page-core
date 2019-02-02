@@ -254,6 +254,52 @@ window.addEventListener("load", function() {
 			namespace: "nabu.cms"
 		});
 		
+		nabu.page.provide("page-format", {
+			format: function(value) {
+				if ($services.vue.$highlightCounter == null) {
+					$services.vue.$highlightCounter = 1;
+				}
+				var id = "format_highlight_" + $services.vue.$highlightCounter++;
+				var result = value == null ? null :
+					"<pre id='" + id + "'><code>" + value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</code></pre>";
+					
+				setTimeout(function() {
+					if (!$services.vue.$highlightLoaded) {
+						$services.vue.$highlightLoaded = [];
+					}
+					var loaded = $services.vue.$highlightLoaded;
+					
+					var highlight = function() {
+						hljs.highlightBlock(document.getElementById(id));
+					}
+					
+					if (loaded.indexOf("$main") < 0) {
+						loaded.push("$main");
+						var script = document.createElement("script");
+						script.setAttribute("type", "text/javascript");
+						script.setAttribute("src", "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js");
+						document.head.appendChild(script);
+						script.onload = function() {
+							highlight();
+						}
+						var link = document.createElement("link");
+						link.rel = "stylesheet";
+						link.href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/default.min.css";
+						document.head.appendChild(link);
+					}
+					else {
+						highlight();
+					}
+				}, 1);
+				
+				return result;
+			},
+			html: true,
+			skipCompile: true,
+			name: "highlight",
+			namespace: "nabu.cms"
+		});
+		
 		return $services.$register({
 			page: nabu.page.services.Page,
 			pageResolver: nabu.page.services.PageResolver,
