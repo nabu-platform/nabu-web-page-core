@@ -36,6 +36,7 @@ Vue.component("page-field-fragment-form-configure", {
 Vue.component("page-field-fragment-form", {
 	template: "<page-form-field :key=\"fragment.form.name + '_value'\" :field='fragment.form'" 
 				+ "		:value='formValue(fragment)'"
+				+ "		:parent-value='data'"
 				+ "		@input='function(newValue) { updateForm(fragment, newValue) }'"
 				+ "		:label='false'"
 				+ "		:page='page'"

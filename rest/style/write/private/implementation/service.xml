@@ -1,15 +1,51 @@
-<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" disabled="false" id="e73897ab-c80d-47de-b7f9-61bbb123884c">
-	<steps xsi:type="be.nabu.libs.services.vm.step.Map" disabled="false" id="aff18870-5592-4bdd-975c-b072433bf60f">
-		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke" disabled="false" id="c259962c-0eca-4215-a2be-5c06826194bd" serviceId="nabu.utils.Resource.write" resultName="result84f2125dfabc46be96cf821ecbf67479" invocationOrder="0" temporaryMapping="true" y="116" x="132">
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="aa341b7b-cb47-4f75-8c97-fe7284a76b6b" mask="false" optional="false" fixedValue="true">
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		disabled="false"
+		id="e73897ab-c80d-47de-b7f9-61bbb123884c">
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			disabled="false"
+			label="input/content/content = null"
+			id="15ffa55e-5156-49ee-ab64-fe05df87e603">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="4cd20c56-629e-40dc-a64f-199df0307310"
+				mask="false"
+				optional="false"
+				fixedValue="true">
+			<from>=""</from>
+			<to>input/content/content</to>
+		</steps>
+	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			disabled="false"
+			id="aff18870-5592-4bdd-975c-b072433bf60f">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="c259962c-0eca-4215-a2be-5c06826194bd"
+				serviceId="nabu.utils.Resource.write"
+				resultName="result84f2125dfabc46be96cf821ecbf67479"
+				temporaryMapping="true"
+				x="132"
+				y="116"
+				invocationOrder="0"
+				asynchronous="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="aa341b7b-cb47-4f75-8c97-fe7284a76b6b"
+					mask="false"
+					optional="false"
+					fixedValue="true">
 				<from>="repository:" + input/webApplicationId + ":/public/artifacts/styles/" + input/path/name + ".scss"</from>
 				<to>uri</to>
 			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link" disabled="false" id="0e3f72d6-8e74-45e8-8ef3-3d22f2ffbc62" mask="false" optional="false" fixedValue="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="0e3f72d6-8e74-45e8-8ef3-3d22f2ffbc62"
+					mask="false"
+					optional="false"
+					fixedValue="false">
 				<from>input/content/content</from>
 				<to>stream</to>
 			</steps>
-			<asynchronous>false</asynchronous>
 		</steps>
 	</steps>
 </sequence>

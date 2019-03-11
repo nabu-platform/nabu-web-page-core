@@ -34,7 +34,8 @@ nabu.page.views.Pages = Vue.extend({
 		}
 	},
 	ready: function() {
-		this.$services.page.disableReload = true;
+		// not sure anymore why we do this? but can make it hard to style the index
+		//this.$services.page.disableReload = true;
 		if (this.$services.page.canEdit()) {
 			var self = this;
 			this.$el.addEventListener("paste", function(event) {
@@ -87,6 +88,9 @@ nabu.page.views.Pages = Vue.extend({
 					}
 				}
 			});
+		}
+		else {
+			this.$services.router.route("login");
 		}
 	},
 	beforeDestroy: function() {

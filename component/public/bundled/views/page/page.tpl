@@ -51,7 +51,7 @@
 						<button @click="addState">Add State</button>
 					</div>
 					<n-collapsible class="list-item" :title="state.name" v-for="state in page.content.states">
-						<n-form-text v-model="state.name" label="Name" :required="true"/>
+						<n-form-text :value="state.name" @input="function(newValue) { if (!validateStateName(newValue).length) state.name = newValue; }" label="Name" :required="true" :validator="validateStateName"/>
 						<n-form-combo :value="state.operation" :filter="getStateOperations" label="Operation" @input="function(newValue) { setStateOperation(state, newValue) }"/>
 						<n-page-mapper v-if="state.operation && Object.keys($services.page.getPageParameters(page)).length" :to="getOperationParameters(state.operation)"
 							:from="{page:$services.page.getPageParameters(page)}" 
@@ -98,9 +98,9 @@
 						<n-form-text v-model="action.name" label="Name" :required="true"/>
 						<n-form-text v-model="action.confirmation" label="Confirmation Message"/>
 						<n-form-combo v-model="action.on" label="Trigger On" :filter="getAvailableEvents"/>
-						<n-form-text v-model="action.scroll" label="Scroll to" v-if="!action.operation && !action.route"/>
-						<n-form-combo v-model="action.route" v-if="!action.operation && !action.scroll" label="Redirect" :filter="filterRoutes"/>
-						<n-form-combo v-model="action.anchor" v-if="action.route" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
+						<n-form-text v-model="action.scroll" label="Scroll to" v-if="!action.operation"/>
+						<n-form-combo v-model="action.route" v-if="!action.operation" label="Redirect" :filter="filterRoutes"/>
+						<n-form-combo v-model="action.anchor" v-if="action.route || (action.operation && isGet(action.operation))" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 						<n-form-combo v-model="action.operation" v-if="!action.route && !action.scroll" label="Operation" :filter="getOperations" />
 						<n-form-switch v-if="action.operation" v-model="action.isSlow" label="Is slow operation?"/>
 						<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" :timeout="600" @input="resetEvents()"/>
@@ -305,7 +305,7 @@
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-prompt>
 					<template v-else>
-						<div :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { $window.console.log('stopping', stopRerender); return !stopRerender && !cell.stopRerender } }"></div>
+						<div :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"
 							:events="events"

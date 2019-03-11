@@ -1,9 +1,15 @@
 .page-actions {
 	li {
 		position: relative;
+		list-style: none;
 		.n-icon-cog {
 			position: absolute;
 			right: -10px;
+		}
+		&.click-based {
+			> span {
+				cursor: pointer;
+			}
 		}
 	}
 	.settings {

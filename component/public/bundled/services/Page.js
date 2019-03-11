@@ -34,6 +34,9 @@ nabu.services.VueService(Vue.extend({
 			styles: [],
 			// custom content
 			contents: [],
+			// any imports
+			imports: [],
+			translations: [],
 			lastCompiled: null,
 			customStyle: null,
 			cssStep: null,
@@ -155,6 +158,8 @@ nabu.services.VueService(Vue.extend({
 				self.properties.splice(0, self.properties.length);
 				self.devices.splice(0, self.devices.length);
 				self.contents.splice(0);
+				self.imports.splice(0);
+				self.translations.splice(0);
 				if (configuration.pages) {
 					nabu.utils.arrays.merge(self.pages, configuration.pages);
 					self.loadPages(self.pages);
@@ -175,6 +180,17 @@ nabu.services.VueService(Vue.extend({
 				if (configuration.contents) {
 					nabu.utils.arrays.merge(self.contents, configuration.contents);
 				}
+				if (configuration.translations) {
+					nabu.utils.arrays.merge(self.translations, configuration.translations);
+				}
+				if (configuration.imports) {
+					nabu.utils.arrays.merge(self.imports, configuration.imports);
+				}
+				self.imports.forEach(function(x) {
+					if (x.type == 'javascript') {
+						self.inject(x.link, function() {}, x.async);
+					}
+				});
 				if (self.canEdit()) {
 					var promises = [];
 					promises.push(injectJavascript());
@@ -226,7 +242,7 @@ nabu.services.VueService(Vue.extend({
 					content: style.content
 				}});
 			}, function(error) {
-				var parsed = JSON.parse(error.responseText);
+				var parsed = error.responseText ? JSON.parse(error.responseText) : error;
 				if (parsed.description) {
 					self.cssError = parsed.description.replace(/[\s\S]*CompilationException:([^\n]+)[\s\S]*/g, "$1");
 				}
@@ -243,13 +259,17 @@ nabu.services.VueService(Vue.extend({
 						var globalName = event.globalName ? event.globalName : event.localName;
 						if (globalName != null) {
 							if (events[globalName] == null) {
-								events[globalName] = {properties:{}}
+								var properties = event.properties;
+								// if we have an instance of it, we can resolve the definition
+								if (nabu.page.instances[page.content.name]) {
+									properties = nabu.page.instances[page.content.name].getEvents()[event.localName];
+								}
+								events[globalName] = properties == null ? {properties:{}} : properties;
 							}
 						}
 					});
 				}
 			});
-			console.log("events are", events);
 			return events;
 		},
 		// push global events to all pages
@@ -316,7 +336,7 @@ nabu.services.VueService(Vue.extend({
 		reloadCss: function() {
 			var self = this;
 			nabu.utils.ajax({url:"${server.root()}page/v1/api/css-modified"}).then(function(response) {
-				if (response.responseText && !self.disableReload) {
+				if (response.responseText != null && !self.disableReload) {
 					var date = new Date(response.responseText);
 					if (!self.cssLastModified) {
 						self.cssLastModified = date;
@@ -326,6 +346,7 @@ nabu.services.VueService(Vue.extend({
 						var links = document.head.getElementsByTagName("link");
 						for (var i = 0; i < links.length; i++) {
 							var original = links[i].getAttribute("original");
+							console.log("Reloading style", links[i].href);
 							if (!original) {
 								original = links[i].href;
 								links[i].setAttribute("original", original);
@@ -364,6 +385,20 @@ nabu.services.VueService(Vue.extend({
 				}
 			}
 			return value;
+		},
+		translate: function(value, component) {
+			var available = value;
+			var translation = null;
+			if (value && value.indexOf && value.indexOf("%") == 0 && value.indexOf("{") == 1) {
+				available = value.replace(/^%\{([^}]+)\}$/, "$1");
+				var parts = available.split(":");
+				translation = this.translations.filter(function(x) {
+					return ((parts.length == 1 && x.context == null)
+							|| (parts.length == 2 && x.context == parts[0]))
+						&& (x.name == parts.length == 1 ? parts[0] : parts[1]);
+				})[0];
+			}
+			return translation == null || translation.translation == null ? available : translation.translation;
 		},
 		interpret: function(value, component) {
 			if (typeof(value) == "string" && value.length > 0 && value.substring(0, 1) == "=") {
@@ -543,6 +578,10 @@ nabu.services.VueService(Vue.extend({
 					for (var i = 0; i < rules.length; i++) {
 						var rule = rules.item(i);
 						if (rule.selectorText) {
+							if (rule.selectorText.indexOf(clazz) > 0) {
+							console.log(rule.selectorText);
+								
+							}
 							if (rule.selectorText.match(new RegExp(".*\\." + clazz + "\\.([\\w-]+)\\b.*", "g"))) {
 								var match = rule.selectorText.replace(new RegExp(".*\\." + clazz + "\\.([\\w-]+)\\b.*", "g"), "$1");
 								if (result.indexOf(match) < 0) {
@@ -576,7 +615,6 @@ nabu.services.VueService(Vue.extend({
 			}
 			if (definition && definition.properties) {
 				Object.keys(definition.properties).map(function(key) {
-					console.log("checking", key, includeComplex, includeArrays);
 					// arrays can not be chosen, you need to bind them first
 					if (definition.properties[key].type != "array" || includeArrays) {
 						var childPath = (path ? path + "." : "") + key;
@@ -614,7 +652,8 @@ nabu.services.VueService(Vue.extend({
 					title: this.title,
 					home: this.home,
 					properties: self.properties,
-					devices: self.devices
+					devices: self.devices,
+					imports: self.imports
 				}
 			});
 		},
@@ -724,10 +763,13 @@ nabu.services.VueService(Vue.extend({
 				}
 			});
 		},
-		inject: function(link, callback) {
+		inject: function(link, callback, async) {
 			var script = document.createElement("script");
 			script.setAttribute("src", link);
 			script.setAttribute("type", "text/javascript");
+			if (async) {
+				script.setAttribute("async", "true");
+			}
 			
 			if (callback) {
 				// IE
@@ -963,7 +1005,7 @@ nabu.services.VueService(Vue.extend({
 			if (!arrays) {
 				arrays = [];
 			}
-			if (definition.properties) {
+			if (definition && definition.properties) {
 				var keys = Object.keys(definition.properties);
 				for (var i = 0; i < keys.length; i++) {
 					var property = definition.properties[keys[i]];
@@ -1170,6 +1212,7 @@ nabu.services.VueService(Vue.extend({
 					}
 				});
 			}
+			
 			// you can set parameters much like swagger input parameters
 			// that means you can set a name
 			// you can also set a default value and other stuff
@@ -1188,6 +1231,38 @@ nabu.services.VueService(Vue.extend({
 				});
 			}
 			return parameters;
+		},
+		// not used atm
+		getTranslatableParameters: function(part, translations) {
+			if (translations == null) {
+				translations = [];
+			}
+			var self = this;
+			if (part.$translations) {
+				part.$translations.forEach(function(translation) {
+					if (part[translation]) {
+						translations.push({
+							key: translation,
+							value: part[translation]
+						});
+					}
+				});
+			}
+			Object.keys(part).forEach(function(key) {
+				if (key != "$translations" && (!part.$translations || part.$translations.indexOf(key) < 0)) {
+					if (typeof(part[key]) == "object") {
+						self.getTranslatableParameters(part[key], translations);
+					}
+					else if (part[key] instanceof Array) {
+						part[key].forEach(function(single) {
+							if (typeof(single) == "object") {		
+								self.getTranslatableParameters(single, translations);
+							}
+						})
+					}
+				}
+			})
+			return translations;
 		},
 		getResolvedPageParameterType: function(type) {
 			if (type == null || ['string', 'boolean', 'number', 'integer'].indexOf(type) >= 0) {

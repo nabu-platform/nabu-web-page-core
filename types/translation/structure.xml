@@ -1,0 +1,5 @@
+<structure name="translation">
+    <field minOccurs="0" name="context" type="java.lang.String"/>
+    <field name="name" type="java.lang.String"/>
+    <field minOccurs="0" name="translation" type="java.lang.String"/>
+</structure>

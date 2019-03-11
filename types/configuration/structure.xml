@@ -2,5 +2,6 @@
     <structure minOccurs="0" name="providers">
         <field minOccurs="0" name="getAllContent" type="java.lang.String"/>
         <field minOccurs="0" name="setContent" type="java.lang.String"/>
+        <field minOccurs="0" name="translationProvider" type="java.lang.String"/>
     </structure>
 </structure>

@@ -6,4 +6,9 @@
         <field name="name" type="java.lang.String"/>
         <field minOccurs="0" name="width" type="java.lang.Long"/>
     </structure>
+    <structure maxOccurs="unbounded" minOccurs="0" name="imports">
+        <field name="link" type="java.lang.String"/>
+        <field name="type" type="java.lang.String"/>
+        <field name="async" type="java.lang.Boolean"/>
+    </structure>
 </structure>

@@ -30,6 +30,19 @@
 					</div>
 				</n-form-section>
 			</n-collapsible>
+			<n-collapsible title="Imports" class="main">
+				<n-form-section>
+					<div class="list-actions">
+						<button @click="$services.page.imports.push({link:null, type: 'javascript', async: true})">Add Link</button>
+					</div>
+					<div class="list-row" v-for="single in $services.page.imports">
+						<n-form-text v-model="single.link" :required="true" label="Link" :timeout="600" @input="$services.page.saveConfiguration"/>
+						<n-form-combo v-if="false" v-model="single.type" :items="['javascript', 'css']" label="Type" :timeout="600" @input="$services.page.saveConfiguration"/>
+						<n-form-switch v-model="single.async" label="Asynchronous" :timeout="600" @input="$services.page.saveConfiguration"/>
+						<button @click="$services.page.imports.splice($services.page.imports.indexOf(single), 1); $services.page.saveConfiguration()"><span class="fa fa-trash"></span></button>
+					</div>
+				</n-form-section>
+			</n-collapsible>
 			<n-collapsible title="Devices" class="main">
 				<n-form-section>
 					<div class="list-actions">
@@ -38,7 +51,7 @@
 					<div class="list-row" v-for="device in $services.page.devices">
 						<n-form-text v-model="device.name" :required="true" label="Device Name" :timeout="600" @input="$services.page.saveConfiguration"/>
 						<n-form-text v-model="device.width" type="number" label="Width" :timeout="600" @input="$services.page.saveConfiguration"/>
-						<button @click="$services.page.properties.splice($services.page.devices.indexOf(device), 1); $services.page.saveConfiguration()"><span class="fa fa-trash"></span></button>
+						<button @click="$services.page.devices.splice($services.page.devices.indexOf(device), 1); $services.page.saveConfiguration()"><span class="fa fa-trash"></span></button>
 					</div>
 				</n-form-section>
 			</n-collapsible>

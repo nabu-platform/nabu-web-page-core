@@ -43,11 +43,11 @@ Vue.component("page-field-fragment-data", {
 			// the problem is: state is copied on creation but is no longer watched, so updating that state in the page does not reflect changes in the data
 			// we could use a general refactor of the whole state model though...
 			// but this is important enough to warrant a workaround because of content management going through page parameters now
-			if (this.fragment.key.indexOf("page.") == 0) {
+			if (this.fragment.key && this.fragment.key.indexOf("page.") == 0) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				return pageInstance.get(this.fragment.key);
 			}
-			return this.$services.page.getValue(this.data, this.fragment.key);
+			return this.fragment.key ? this.$services.page.getValue(this.data, this.fragment.key) : null;
 		}
 	}
 });

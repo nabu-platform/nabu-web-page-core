@@ -1,6 +1,6 @@
 <template id="page-form">
 	<div class="page-form">
-		<n-sidebar @close="configuring = false" v-show="configuring" class="settings">
+		<n-sidebar @close="configuring = false" v-if="configuring" class="settings">
 			<n-form class="layout2">
 				<n-collapsible title="Form Settings">
 					<n-form-combo label="Operation" :value="operation" :filter="getOperations"
@@ -16,11 +16,15 @@
 					<n-form-text v-model="cell.state.cancel" v-if="!cell.state.immediate" label="Cancel Label"/>
 					<n-form-text v-model="cell.state.ok" v-if="!cell.state.immediate" label="Ok Label"/>
 					<n-form-text v-model="cell.state.next" v-if="!cell.state.immediate && cell.state.pages.length > 1" label="Next Label"/>
+					<n-form-text v-model="cell.state.previous" v-if="!cell.state.immediate && cell.state.pages.length > 1" label="Previous Label"/>
 					<n-form-text v-model="cell.state.event" label="Success Event" :timeout="600" @input="$emit('updatedEvents')"/>
+					<n-form-text v-model="cell.state.cancelEvent" label="Cancel Event" :timeout="600" @input="$emit('updatedEvents')"/>
 					<n-form-switch v-model="cell.state.synchronize" label="Synchronize Changes"/>
 					<n-form-switch v-model="cell.state.autofocus" label="Autofocus"/>
+					<n-form-switch v-model="cell.state.autoclose" label="Autoclose"/>
 					<n-form-switch v-if="cell.state.pages.length >= 2" v-model="cell.state.pageTabs" label="Pages as tabs"/>
 					<n-form-switch v-if="cell.state.pages.length >= 2" v-model="cell.state.partialSubmit" label="Allow partial submit"/>
+					<n-form-text v-model="cell.state.mode" label="Message Mode (the literal 'component' or a number)"/>
 				</n-collapsible>
 				<n-collapsible title="Value Binding" v-if="!cell.state.pageForm">
 					<div class="list-row">
@@ -55,7 +59,8 @@
 				:class="{'is-active': currentPage == page}">{{$services.page.interpret(page.name, self)}}</button>
 		</div>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
-		<n-form :class="cell.state.class" ref="form" :id="cell.state.formId">
+		<n-form :class="cell.state.class" ref="form" :id="cell.state.formId" :mode="cell.state.mode">
+			<header slot="header" v-if="cell.state.dynamicHeader"><component :is="cell.state.dynamicHeader" :form="$self" :page="page" :cell="cell"/></header>
 			<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">
 				<n-form-section v-for="field in group.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name) && !isHidden(field)">
 					<component v-if="isList(field.name)"
@@ -68,22 +73,38 @@
 						@changed="changed"
 						:timeout="cell.state.immediate ? 600 : 0"
 						:schema="getSchemaFor(field.name)"/>
-					<page-form-field v-else :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
+					<page-form-field v-else-if="!field.arbitrary" :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
+						:parent-value="result"
 						@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
 						:timeout="cell.state.immediate ? 600 : 0"
 						:page="page"
 						:cell="cell"
 						v-focus="cell.state.autofocus == true && currentPage.fields.indexOf(field) == 0"/>
+					<page-arbitrary v-else
+						:edit="edit"
+						:page="page"
+						:cell="cell"
+						:target="field"
+						:component="$self"/>
 				</n-form-section>
 			</n-form-section>
-			<footer class="global-actions" v-if="!cell.state.immediate">
-				<a class="cancel" href="javascript:void(0)" @click="$emit('close')" :id="cell.state.formId ? cell.state.formId + '_cancel' : null" v-if="cell.state.cancel">{{cell.state.cancel}}</a>
-				<button class="primary" :id="cell.state.formId ? cell.state.formId + '_next' : null" @click="nextPage" v-if="cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1">{{cell.state.next}}</button>
-				<button class="primary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" v-else-if="cell.state.ok">{{cell.state.ok}}</button>
-				<button class="secondary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" v-if="cell.state.pages.length >= 2 && cell.state.partialSubmit && cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1 && cell.state.ok">{{cell.state.ok}}</button>
-			</footer>
-			<footer>
-				<n-messages :messages="messages"/>
+			<footer slot="footer">
+				<footer v-if="cell.state.dynamicFooter"><component :is="cell.state.dynamicFooter" :form="$self" :page="page" :cell="cell"/></footer>
+				<footer class="global-actions" v-else-if="!cell.state.immediate">
+					<a class="cancel" href="javascript:void(0)" @click="cancel" :id="cell.state.formId ? cell.state.formId + '_cancel' : null" 
+						v-if="cell.state.cancel && (!cell.state.previous || cell.state.pages.indexOf(currentPage) == 0)">{{$services.page.translate($services.page.interpret(cell.state.cancel, $self))}}</a>
+					<a class="previous" href="javascript:void(0)" @click="previousPage" :id="cell.state.formId ? cell.state.formId + '_previous' : null" 
+						v-if="cell.state.previous && cell.state.pages.indexOf(currentPage) > 0">{{$services.page.translate($services.page.interpret(cell.state.previous, $self))}}</a>
+					<button class="primary" :id="cell.state.formId ? cell.state.formId + '_next' : null" @click="nextPage" 
+						v-if="cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1">{{$services.page.translate($services.page.interpret(cell.state.next, $self))}}</button>
+					<button class="primary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
+						v-else-if="cell.state.ok">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
+					<button class="secondary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
+						v-if="cell.state.pages.length >= 2 && cell.state.partialSubmit && cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1 && cell.state.ok">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
+				</footer>
+				<footer>
+					<n-messages :messages="messages"/>
+				</footer>
 			</footer>
 		</n-form>
 	</div>
@@ -93,12 +114,12 @@
 	<component
 		class="page-form-field"
 		:is="getProvidedComponent(field.type)"
-		:value="value"
+		:value="usesMultipleFields(field.type) ? parentValue : value"
 		:page="page"
 		:cell="cell"
 		:field="field"
 		@input="function(newValue) { $emit('input', newValue) }"
-		:label="$services.page.interpret(fieldLabel, $self)"
+		:label="$services.page.translate($services.page.interpret(fieldLabel, $self))"
 		:timeout="timeout"
 		:schema="schema"
 		:disabled="isDisabled"/>
@@ -110,10 +131,17 @@
 			<n-form-text :value="page.name" label="Page Name" v-if="editName" v-bubble:input/>
 		</div>
 		<div class="list-actions">
-			<button @click="addField">Add Field</button>
+			<button @click="addField(false)">Add Field</button>
+			<button @click="addField(true)">Add Content</button>
 		</div>
 		<n-collapsible class="field list-item" v-for="field in fields" :title="field.label ? field.label : field.name">
-			<page-form-configure-single :field="field" :possible-fields="possibleFields"
+			<page-configure-arbitrary v-if="field.arbitrary" 
+				:page="page"
+				:cell="cell"
+				:target="field"
+				:keys="possibleFields"/>
+				
+			<page-form-configure-single v-else :field="field" :possible-fields="possibleFields"
 				:groupable="groupable"
 				:hidable="true"
 				:is-list="isList"
@@ -133,7 +161,7 @@
 
 <template id="page-form-configure-single">
 	<div class="page-form-single-field">
-		<n-form-combo v-model="field.name" label="Field Name" :items="possibleFields"/>
+		<n-form-combo v-model="field.name" label="Field Name" :items="possibleFields" v-if="!usesMultipleFields(field.type)"/>
 		<n-form-text v-model="field.label" label="Label" v-if="allowLabel" />
 		<n-form-text v-model="field.hidden" label="Hide field if" v-if="hidable" />
 		<n-form-text v-model="field.group" label="Field Group" v-if="groupable && !field.joinGroup" />
@@ -143,11 +171,31 @@
 		<n-form-text v-model="field.value" v-if="field.type == 'fixed'" label="Fixed Value"/>
 		
 		<component v-if="field.type && ['fixed'].indexOf(field.type) < 0"
+			:possible-fields="possibleFields"
 			:is="getProvidedConfiguration(field.type)"
 			:page="page"
 			:cell="cell"
 			:schema="schema"
 			:field="field"/>
 			
+	</div>
+</template>
+
+<template id="page-configure-arbitrary">
+	<div class="page-configure-arbitrary">
+		<n-form-text v-model="target.label" label="Label"/>
+		<n-form-combo v-model="target.route" label="Route" :filter="filterRoutes"/>
+		<n-page-mapper v-if="target.route" :to="$services.page.getRouteParameters($services.router.get(target.route))"
+			:from="availableParameters" 
+			v-model="target.bindings"/>
+	</div>
+</template>
+
+<template id="page-arbitrary">
+	<div>
+		<div v-if="instance && instance.configure && edit">
+			<button @click="instance.configure"><span class="fa fa-cog"></span></button>
+		</div>
+		<div v-route-render="{ alias: target.route, parameters: getParameters(), mounted: mounted }"></div>
 	</div>
 </template>

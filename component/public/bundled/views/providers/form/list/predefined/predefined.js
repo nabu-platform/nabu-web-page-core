@@ -180,11 +180,13 @@ Vue.component("page-form-list-input-predefined", {
 								var nameCounter = 1;
 								var label = self.field.labelField ? x[self.field.labelField] : null;
 								var value = self.field.valueField ? x[self.field.valueField] : null;
+								var optional = self.field.optionalField ? x[self.field.optionalField] : true;
 								var result = {
 									type: type == null ? "string" : type,
 									name: name == null ? "unnamed" + nameCounter++ : name,
 									label: label == null ? (name == null ? "%{Unnamed}" : name) : label,
-									value: value
+									value: value,
+									optional: optional
 								}
 								if (value != null) {
 									self.value[result.name] = value;

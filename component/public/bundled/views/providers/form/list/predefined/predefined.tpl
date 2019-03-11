@@ -3,10 +3,14 @@
 		<n-form-section ref='form'>
 			<n-form-section v-for="field in fields">
 				<n-form-date :label="field.label" v-model="field.value" v-if="field.type == 'date'" v-bind="field.additional"
+					:required="!field.optional"
 					@input="function(value) { updateField(field, value) }"/>
-				<n-form-checkbox :label="field.label" v-model="field.value" v-if="field.type == 'boolean'" v-bind="field.additional"
+				<n-form-checkbox :label="field.label" v-model="field.value" v-else-if="field.type == 'boolean'" v-bind="field.additional"
+					:required="!field.optional"
 					@input="function(value) { updateField(field, value) }"/>
 				<n-form-text :label="field.label" v-model="field.value" v-else v-bind="field.additional"
+					:type="field.type"
+					:required="!field.optional"
 					@input="function(value) { updateField(field, value) }"/>
 			</n-form-section>
 		</n-form-section>
@@ -27,7 +31,9 @@
 			:items="availableFields"/>
 		<n-form-combo v-model="field.typeField" label="Provider Type Field" v-if="field.fieldProviderOperation"
 			:items="availableFields"/>
-		<n-form-combo v-model="field.valueField" label="Provider Value Field" v-if="field.fieldProviderOperation"
+		<n-form-combo v-model="field.valueField" label="Provider (Existing) Value Field" v-if="field.fieldProviderOperation"
+			:items="availableFields"/>
+		<n-form-combo v-model="field.optionalField" label="Provider Optional Field" v-if="field.fieldProviderOperation"
 			:items="availableFields"/>
 		<n-page-mapper v-if='field.fieldProviderOperation && hasMappableParameters(field)'
 			v-model='field.fieldOperationBinding'

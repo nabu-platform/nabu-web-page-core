@@ -1,0 +1,10 @@
+<structure name="pipeline">
+    <structure name="input">
+        <field name="applicationId" type="java.lang.String"/>
+        <field minOccurs="0" name="language" type="java.lang.String"/>
+        <structure definition="nabu.web.page.core.types.translation" maxOccurs="unbounded" minOccurs="0" name="translations"/>
+    </structure>
+    <structure name="output">
+        <structure definition="nabu.web.page.core.types.translation" maxOccurs="unbounded" minOccurs="0" name="translations"/>
+    </structure>
+</structure>

@@ -114,6 +114,12 @@ window.addEventListener("load", function() {
 			namespace: "nabu.page"
 		});
 		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-password", 
+			configure: "page-form-input-password-configure", 
+			name: "password",
+			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-form-input", { 
 			component: "page-form-input-slider", 
 			configure: "page-form-input-slider-configure", 
 			name: "slider",
@@ -160,6 +166,19 @@ window.addEventListener("load", function() {
 			configure: "page-form-input-static-image-configure", 
 			name: "static-image",
 			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-file", 
+			configure: "page-form-input-file-configure", 
+			name: "file",
+			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-location", 
+			configure: "page-form-input-location-configure", 
+			name: "location",
+			namespace: "google",
+			multipleFields: true
 		});
 		
 		// form list providers
@@ -224,6 +243,7 @@ window.addEventListener("load", function() {
 					return result && fragment.resolveOperationLabel ? result[fragment.resolveOperationLabel] : result;
 				}
 			},
+			skipCompile: true,
 			html: true,
 			configure: "page-format-resolver",
 			name: "resolve",

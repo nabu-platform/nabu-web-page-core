@@ -137,6 +137,11 @@ nabu.page.views.PageForm = Vue.extend({
 				this.currentPage = this.cell.state.pages[this.cell.state.pages.indexOf(this.currentPage) + 1];
 			}
 		},
+		previousPage: function() {
+			if (this.cell.state.pages.indexOf(this.currentPage) >= 1) {
+				this.currentPage = this.cell.state.pages[this.cell.state.pages.indexOf(this.currentPage) - 1];
+			}
+		},
 		setPage: function(page) {
 			var messages = this.$refs.form.validate();
 			if (!messages.length) {
@@ -159,6 +164,9 @@ nabu.page.views.PageForm = Vue.extend({
 			});
 		},
 		configure: function() {
+			if (this.cell.state.autoclose == null) {
+				Vue.set(this.cell.state, "autoclose", true);
+			}
 			this.configuring = true;	
 		},
 		normalize: function(state) {
@@ -216,7 +224,29 @@ nabu.page.views.PageForm = Vue.extend({
 				}
 				result[this.cell.state.event] = schema ? schema : {};
 			}
+			else if (this.cell.state.event) {
+				result[this.cell.state.event] = this.cell.on ? this.cell.on : {};
+			}
+			if (this.cell.state.cancelEvent) {
+				result[this.cell.state.cancelEvent] = this.cell.on ? this.cell.on : {};
+			}
 			return result;
+		},
+		cancel: function() {
+			if (this.cell.state.cancelEvent) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				var content = null;
+				if (this.cell.page.on) {
+					content = pageInstance.get(this.cell.page.on);
+				}
+				if (content == null) {
+					content = {};
+				}
+				pageInstance.emit(this.cell.state.cancelEvent, content);
+			}
+			else {
+				this.$emit('close');
+			}
 		},
 		getOperations: function(name) {
 			var self = this;
@@ -267,6 +297,12 @@ nabu.page.views.PageForm = Vue.extend({
 									});
 								}
 							});
+						}
+						// if we have a binary body, expose that
+						else if (type.schema.type == "string" && type.schema.format == "binary") {
+							bindings["body"] =  self.cell.bindings && self.cell.bindings["body"]
+								? self.cell.bindings["body"]
+								: null;
 						}
 					}
 					else {
@@ -447,7 +483,8 @@ nabu.page.views.PageForm = Vue.extend({
 			Vue.set(this.localState, "form", this.createResult());
 		},
 		doIt: function() {
-			var messages = this.$refs.form.validate();
+			// if we have an embedded form with immediate turned on, don't valide it?
+			var messages = this.cell.state.immediate && this.cell.target == "page" ? [] : this.$refs.form.validate();
 			if (!messages.length) {
 				this.messages.splice(0, this.messages.length);
 				// commit the form
@@ -456,15 +493,20 @@ nabu.page.views.PageForm = Vue.extend({
 				// globale parameters that we can pass along
 				var self = this;
 				var result = this.createResult();
-				console.log("result is", JSON.stringify(result, null, 2));
+				//console.log("result is", JSON.stringify(result, null, 2));
 				if (this.cell.state.pageForm) {
 					// close before the page is updated
-					self.$emit("close");					
+					if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
+						self.$emit("close");
+					}
 					var pageInstance = self.$services.page.getPageInstance(self.page, self);
 					var parameters = this.$services.page.getPageParameters(self.page);
 					Object.keys(parameters.properties).map(function(key) {
 						pageInstance.set("page." + key, result[key]);
 					});
+					if (self.cell.state.event) {
+						pageInstance.emit(self.cell.state.event, self.cell.on ? pageInstance.get(self.cell.on) : {});
+					}
 				}
 				else {
 					this.$services.swagger.execute(this.cell.state.operation, result).then(function(returnValue) {
@@ -481,7 +523,9 @@ nabu.page.views.PageForm = Vue.extend({
 						if (self.cell.state.event) {
 							pageInstance.emit(self.cell.state.event, returnValue);
 						}
-						self.$emit("close");
+						if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
+							self.$emit("close");
+						}
 					}, function(error) {
 						self.error = "Form submission failed";
 						try {
@@ -572,6 +616,10 @@ Vue.component("page-form-field", {
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		// the parent value that contains the value
+		parentValue: {
+			required: false
 		}
 	},
 	created: function() {
@@ -601,6 +649,12 @@ Vue.component("page-form-field", {
 		}
 	},
 	methods: {
+		usesMultipleFields: function(type) {
+			var provided = nabu.page.providers("page-form-input").filter(function(x) {
+				 return x.name == type;
+			})[0];
+			return provided ? provided.multipleFields : false;
+		},
 		getProvidedComponent: function(type) {
 			var provided = nabu.page.providers("page-form-input").filter(function(x) {
 				 return x.name == type;
@@ -719,17 +773,27 @@ Vue.component("page-form-configure", {
 				this.fields.push(field);
 			}
 		},
-		addField: function() {
-			this.fields.push({
-				name: null,
-				label: null,
-				description: null,
-				type: null,
-				enumerations: [],
-				value: null,
-				group: null,
-				joinGroup: false
-			})
+		addField: function(content) {
+			if (content) {
+				this.fields.push({
+					arbitrary: true,
+					route: null,
+					bindings: {}
+				});
+			}
+			else {
+				this.fields.push({
+					arbitrary: false,
+					name: null,
+					label: null,
+					description: null,
+					type: null,
+					enumerations: [],
+					value: null,
+					group: null,
+					joinGroup: false
+				})
+			}
 		}
 	}
 });
@@ -800,6 +864,12 @@ Vue.component("page-form-configure-single", {
 		}
 	},
 	methods: {
+		usesMultipleFields: function(type) {
+			var provided = nabu.page.providers("page-form-input").filter(function(x) {
+				 return x.name == type;
+			})[0];
+			return provided ? provided.multipleFields : false;
+		},
 		getProvidedConfiguration: function(type) {
 			var provided = nabu.page.providers(this.isList && this.isList(this.field.name) ? "page-form-list-input" : "page-form-input").filter(function(x) {
 				 return x.name == type;
@@ -825,6 +895,93 @@ Vue.component("page-form-configure-single", {
 			if (!field.value) {
 				Vue.set(field, "value", null);
 			}
+		}
+	}
+});
+
+Vue.component("page-configure-arbitrary", {
+	template: "#page-configure-arbitrary",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
+		target: {
+			type: Object,
+			required: true
+		}
+	},
+	created: function() {
+		if (this.target.bindings == null) {
+			this.target.bindings = {}
+		}
+	},
+	computed: {
+		availableParameters: function() {
+			var available = this.$services.page.getAvailableParameters(this.page, this.cell, true);
+			return available;
+		}
+	},
+	methods: {
+		filterRoutes: function(value) {
+			var routes = this.$services.router.list().filter(function(x) {
+				return x.alias && (!value || x.alias.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+			});
+			routes.sort(function(a, b) {
+				return a.alias.localeCompare(b.alias);
+			});
+			return routes.map(function(x) { return x.alias });
+		},
+	}
+});
+
+Vue.component("page-arbitrary", {
+	template: "#page-arbitrary",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
+		target: {
+			type: Object,
+			required: true
+		},
+		// the component that owns this arbitrary content
+		component: {
+			type: Object,
+			required: true
+		},
+		edit: {
+			type: Boolean,
+			required: false
+		}
+	},
+	data: function() {
+		return {
+			instance: null
+		}
+	},
+	methods: {
+		getParameters: function() {
+			var cellClone = nabu.utils.objects.clone(this.cell);
+			cellClone.state = this.target;
+			return {
+				page: this.page,
+				cell: cellClone,
+				component: this.component,
+				edit: this.edit
+			}
+		},
+		mounted: function(instance) {
+			this.instance = instance;
 		}
 	}
 });

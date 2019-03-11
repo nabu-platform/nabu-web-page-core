@@ -210,6 +210,12 @@
 							"text.js": {
 								"url": "views/providers/form/text.js"
 							}, 
+							"password.js": {
+								"url": "views/providers/form/password.js"
+							}, 
+							"file.js": {
+								"url": "views/providers/form/file.js"
+							}, 
 							"static-image.js": {
 								"url": "views/providers/form/static-image.js"
 							}, 
@@ -221,6 +227,9 @@
 							}, 
 							"date.js": {
 								"url": "views/providers/form/date.js"
+							}, 
+							"location.js": {
+								"url": "views/providers/form/location.js"
 							}
 						}, 
 						"format": {

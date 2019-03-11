@@ -171,11 +171,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 			return this.getEvents();
 		},
 		availableParameters: function() {
+			return this.$services.page.getAvailableParameters(this.page, null, true);
 			// there are all the events
-			var available = nabu.utils.objects.clone(this.getEvents());
+			//var available = nabu.utils.objects.clone(this.getEvents());
 			// and the page
-			available.page = this.$services.page.getPageParameters(this.page);
-			return available;
+			//available.page = this.$services.page.getPageParameters(this.page);
+			//return available;
 		},
 		classes: function() {
 			var classes = [];
@@ -196,6 +197,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 	},
 	data: function() {
 		return {
+			refs: {},
 			edit: false,
 			// contains all the component instances
 			// the key is their id
@@ -226,6 +228,21 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		validateStateName: function(name) {
+			var blacklisted = ["page", "application"];
+			var messages = [];
+			if (name && blacklisted.indexOf(name) >= 0) {
+				messages.push({
+					type: "error",
+					title: "%{This name is not allowed}"
+				});
+			}
+			return messages;
+		},
+		isGet: function(operationId) {
+			var operation = this.$services.swagger.operations[operationId];
+			return operation && operation.method && operation.method.toLowerCase() == "get";
+		},
 		getParameterTypes: function(value) {
 			var types = ['string', 'boolean', 'number', 'integer'];
 			nabu.utils.arrays.merge(types, Object.keys(this.$services.swagger.swagger.definitions));
@@ -372,6 +389,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 		},
 		mounted: function(cell, row, state, component) {
 			var self = this;
+			
+			if (cell.ref) {
+				this.refs[cell.ref] = component;
+			}
+			
 			component.$on("hook:beforeDestroy", function() {
 				// clear subscriptions
 				if (component.$pageSubscriptions != null) {
@@ -379,6 +401,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 					component.$pageSubscriptions.forEach(function(sub) {
 						sub();
 					});
+				}
+				if (cell.ref) {
+					self.refs[cell.ref] = null;
 				}
 				self.$services.page.destroy(component);
 			});
@@ -532,15 +557,18 @@ nabu.page.views.Page = Vue.component("n-page", {
 					"$configure": {properties:{}}
 				};
 				
+				var self = this;
+				this.cachedEvents = events;
+				
 				// check which events are picked up globally
 				if (this.page.content.globalEventSubscriptions) {
+					var globalEventDefinitions = this.$services.page.getGlobalEvents();
+					console.log("global events", JSON.stringify(globalEventDefinitions, null, 2));
 					this.page.content.globalEventSubscriptions.map(function(sub) {
-						events[sub.localName == null ? sub.globalName : sub.localName] = {properties:{}};	
+						console.log("wtf", sub.globalName, sub.localName, globalEventDefinitions[sub.globalName]);
+						events[sub.localName == null ? sub.globalName : sub.localName] = globalEventDefinitions[sub.globalName] ? globalEventDefinitions[sub.globalName] : {properties:{}};	
 					});
 				}
-				
-				this.cachedEvents = events;
-				var self = this;
 				
 				// your page actions can trigger success events
 				if (this.page.content.actions) {
@@ -666,17 +694,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 					
 					if (action.confirmation) {
 						self.$confirm({message:action.confirmation}).then(function() {
+							var element = null;
+							// already get the element, it can be triggered with or without a route
 							if (action.scroll) {
-								eventReset();
 								var element = document.querySelector(action.scroll);
 								if (!element) {
 									element = document.getElementById(action.scroll);
 								}
-								if (element) {
-									element.scrollIntoView();
-								}
 							}
-							else if (action.route) {
+							if (action.route) {
 								eventReset();
 								if (action.anchor == "$blank") {
 									console.log("routing", action.route, parameters, 
@@ -687,8 +713,27 @@ nabu.page.views.Page = Vue.component("n-page", {
 									window.location = self.$services.router.template(action.route, parameters);
 								}
 								else {
-									self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
+									promise = self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
 								}
+								if (element) {
+									if (promise && promise.then) {
+										promise.then(function() {
+											element.scrollIntoView();
+										});
+									}
+									else {
+										element.scrollIntoView();
+									}
+								}
+							}
+							else if (action.scroll) {
+								eventReset();
+								if (element) {
+									element.scrollIntoView();
+								}
+							}
+							else if (action.operation && self.isGet(action.operation) && action.anchor == "$blank") {
+								window.open(self.$services.swagger.parameters(action.operation, parameters).url);
 							}
 							else if (action.operation) {
 								if (action.isSlow) {
@@ -740,6 +785,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 							else {
 								self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
 							}
+						}
+						else if (action.operation && self.isGet(action.operation) && action.anchor == "$blank") {
+							window.open(self.$services.swagger.parameters(action.operation, parameters).url);
 						}
 						else if (action.operation) {
 							if (action.isSlow) {
@@ -1023,7 +1071,18 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 			});
 			this.lastParameters = JSON.stringify(newValue);
-			this.rerender(changedValues);
+			//this.rerender(changedValues);
+		},
+		'page.content.globalEvents': {
+			deep: true,
+			handler: function(newValue) {
+				var self = this;
+				if (newValue) {
+					newValue.forEach(function(globalEvent) {
+						globalEvent.properties = self.getEvents()[globalEvent.localName];
+					});
+				}
+			}
 		}
 	}
 });
@@ -1233,11 +1292,13 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		getStyles: function(cell) {
 			var width = typeof(cell.width) == "undefined" ? 1 : cell.width;
 			var styles = [];
-			if (typeof(width) == "number" || (width.match && width.match(/^[0-9.]+$/))) {
-				styles.push({'flex-grow': width});
-			}
-			else {
-				styles.push({'min-width': width});
+			if (width != null) {
+				if (typeof(width) == "number" || (width.match && width.match(/^[0-9.]+$/))) {
+					styles.push({'flex-grow': width});
+				}
+				else {
+					styles.push({'min-width': width});
+				}
 			}
 			if (cell.height) {
 				styles.push({'height': cell.height});
