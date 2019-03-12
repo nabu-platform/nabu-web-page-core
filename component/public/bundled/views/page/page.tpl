@@ -59,6 +59,13 @@
 						<div class="list-item-actions">
 							<button @click="page.content.states.splice(page.content.states.indexOf(state), 1)"><span class="fa fa-trash"></span></button>
 						</div>
+						<div class="list" v-if="state.refreshOn">
+							<div v-for="i in Object.keys(state.refreshOn)" class="list-row">
+								<n-form-combo v-model="state.refreshOn[i]" :filter="getAvailableEvents" placeholder="event"/>
+								<button @click="state.refreshOn.splice(i)"><span class="fa fa-trash"></span></button>
+							</div>
+						</div>
+						<button @click="state.refreshOn ? state.refreshOn.push('') : $window.Vue.set(state, 'refreshOn', [''])">Add Refresh Event</button>
 					</n-collapsible>
 				</n-collapsible>
 				<n-collapsible title="Query Parameters">

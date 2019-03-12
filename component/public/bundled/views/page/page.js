@@ -826,6 +826,51 @@ nabu.page.views.Page = Vue.component("n-page", {
 				});
 			}
 			
+			// check states that have to be refreshed
+			if (this.page.content.states.length) {
+				var promises = this.page.content.states.filter(function(x) { return x.refreshOn != null && x.refreshOn.indexOf(name) >= 0 }).map(function(state) {
+					var parameters = {};
+					Object.keys(state.bindings).map(function(key) {
+						parameters[key] = self.get(state.bindings[key]);
+					});
+					try {
+						// can throw hard errors
+						return self.$services.swagger.execute(state.operation, parameters).then(function(result) {
+							if (self.variables[state.name] != null) {
+								if (self.variables[state.name] instanceof Array) {
+									self.variables[state.name].splice(0);
+									if (result instanceof Array) {
+										nabu.utils.arrays.merge(self.variables[state.name], result);
+									}
+									else {
+										self.variables[state.name].push(result);
+									}
+								}
+								else {
+									var resultKeys = Object.keys(result);
+									Object.keys(self.variables[state.name]).forEach(function(key) {
+										if (resultKeys.indexOf(key) < 0) {
+											self.variables[state.name] = null;
+										}
+									});
+									nabu.utils.objects.merge(self.variables[state.name], result);
+								}
+							}
+							else {
+								Vue.set(self.variables, state.name, result ? result : null);
+							}
+						});
+					}
+					catch (exception) {
+						console.error("Could not execute", state.operation, exception);
+						var promise = self.$services.q.defer();
+						promise.reject(exception);
+						return promise;
+					}
+				});
+				this.$services.q.all(promises).then(done, done);
+			}
+			
 			// remove all the closed stuff for this event, we may want to reopen something
 			Object.keys(this.closed).map(function(key) {
 				if (self.closed[key] == name) {

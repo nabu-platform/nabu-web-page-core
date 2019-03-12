@@ -13,7 +13,7 @@
 						<n-form-combo v-model="cell.state.defaultAction" label="Default Action"
 							:filter="function() { return cell.state.actions.map(function(x) { return x.name }) }"/>
 						<n-form-switch v-model="cell.state.clickBased" label="Use Clicks Instead of Hover"/>
-						<n-form-switch v-model="cell.state.showOnlyOne" label="Only allow one open"/>
+						<n-form-switch v-model="cell.state.showOnlyOne" label="Only allow one open" v-if="cell.state.clickBased"/>
 					</n-collapsible>
 					<n-collapsible title="Actions" class="list">
 						<div class="list-actions">

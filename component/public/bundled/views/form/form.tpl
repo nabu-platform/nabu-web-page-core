@@ -85,7 +85,7 @@
 						:page="page"
 						:cell="cell"
 						:target="field"
-						:component="$self"/>
+						:component="form"/>
 				</n-form-section>
 			</n-form-section>
 			<footer slot="footer">

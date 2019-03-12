@@ -68,6 +68,9 @@ nabu.page.views.PageForm = Vue.extend({
 		},
 		self: function() {
 			return this;
+		},
+		form: function() {
+			return this;
 		}
 	},
 	created: function() {
@@ -982,6 +985,11 @@ Vue.component("page-arbitrary", {
 		},
 		mounted: function(instance) {
 			this.instance = instance;
+		},
+		validate: function(soft) {
+			if (this.instance && this.instance.validate) {
+				return this.instance.validate(soft);
+			}
 		}
 	}
 });
