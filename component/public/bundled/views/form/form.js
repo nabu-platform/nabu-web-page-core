@@ -50,7 +50,7 @@ nabu.page.views.PageForm = Vue.extend({
 			return {};
 		},
 		availableParameters: function() {
-			return this.$services.page.getAvailableParameters(this.page, this.cell);
+			return this.$services.page.getAvailableParameters(this.page, this.cell, true);
 		},
 		fieldsToAdd: function() {
 			var fields = [];
@@ -225,6 +225,10 @@ nabu.page.views.PageForm = Vue.extend({
 				if (response && response.schema) {
 					schema = this.$services.swagger.resolve(response.schema);
 				}
+				if (schema == null) {
+					schema = {properties:this.getOperationInput()};
+					console.log("schema properties are", schema);
+				}
 				result[this.cell.state.event] = schema ? schema : {};
 			}
 			else if (this.cell.state.event) {
@@ -232,6 +236,25 @@ nabu.page.views.PageForm = Vue.extend({
 			}
 			if (this.cell.state.cancelEvent) {
 				result[this.cell.state.cancelEvent] = this.cell.on ? this.cell.on : {};
+			}
+			return result;
+		},
+		getOperationInput: function() {
+			var result = {};
+			var self = this;
+			if (this.cell.state.operation) {
+				var operation = this.$services.swagger.operations[this.cell.state.operation];
+				if (operation && operation.parameters) {
+					operation.parameters.forEach(function(parameter) {
+						if (parameter.in == "body") {
+							var type = self.$services.swagger.resolve(parameter);
+							result[parameter.name] = type.schema;
+						}
+						else {
+							result[parameter.name] = parameter;
+						}
+					})
+				}
 			}
 			return result;
 		},
@@ -511,7 +534,7 @@ nabu.page.views.PageForm = Vue.extend({
 						pageInstance.emit(self.cell.state.event, self.cell.on ? pageInstance.get(self.cell.on) : {});
 					}
 				}
-				else {
+				else if (this.cell.state.operation) {
 					this.$services.swagger.execute(this.cell.state.operation, result).then(function(returnValue) {
 						var pageInstance = self.$services.page.getPageInstance(self.page, self);
 						// if we want to synchronize the values, do so
@@ -524,7 +547,7 @@ nabu.page.views.PageForm = Vue.extend({
 							});
 						}
 						if (self.cell.state.event) {
-							pageInstance.emit(self.cell.state.event, returnValue);
+							pageInstance.emit(self.cell.state.event, returnValue == null ? result : returnValue);
 						}
 						if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
 							self.$emit("close");
@@ -547,6 +570,15 @@ nabu.page.views.PageForm = Vue.extend({
 							})
 						}
 					});
+				}
+				else {
+					var pageInstance = self.$services.page.getPageInstance(self.page, self);
+					if (self.cell.state.event) {
+						pageInstance.emit(self.cell.state.event, {});
+					}
+					if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
+						self.$emit("close");
+					}
 				}
 			}
 		},
@@ -976,12 +1008,20 @@ Vue.component("page-arbitrary", {
 		getParameters: function() {
 			var cellClone = nabu.utils.objects.clone(this.cell);
 			cellClone.state = this.target;
-			return {
+			var parameters = {
 				page: this.page,
 				cell: cellClone,
 				component: this.component,
 				edit: this.edit
+			};
+			if (this.target.bindings) {
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				Object.keys(this.target.bindings).forEach(function(key) {
+					parameters[key] = self.$services.page.getBindingValue(pageInstance, self.target.bindings[key]);
+				});
 			}
+			return parameters;
 		},
 		mounted: function(instance) {
 			this.instance = instance;

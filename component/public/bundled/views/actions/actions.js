@@ -258,6 +258,11 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				}
 			}
 		},
+		autoclose: function() {
+			if (!this.cell.state.leaveOpen) {
+				this.showing.splice(0, this.showing.length);
+			}
+		},
 		listRoutes: function(value, includeValue) {
 			if (value != null && value.substring(0, 1) == "=") {
 				return [value];
@@ -299,8 +304,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				icons: null,
 				activeRoutes: [],
 				class: null,
-				buttonClass: null,
-				bindings: {}
+				buttonClass: null
 			});
 		},
 		isVisible: function(action) {
@@ -338,8 +342,16 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 							parameters[key] = value;
 						}
 					});
-					console.log("parameter are", parameters);
 					this.$services.router.route(route, parameters, action.anchor, action.mask);
+				}
+				else if (action.url) {
+					var url = this.$services.page.interpret(action.url, this);
+					if (action.anchor) {
+						window.open(url);
+					}
+					else {
+						window.location = url;
+					}
 				}
 				else if (action.event == "$close") {
 					this.$emit("close");

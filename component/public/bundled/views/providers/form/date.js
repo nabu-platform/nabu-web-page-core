@@ -26,6 +26,7 @@ Vue.component("page-form-input-date-configure", {
 Vue.component("page-form-input-date", {
 	template: "<n-form-date ref='form'"
 			+ "		:schema='schema'"
+			+ "		v-bubble:label"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"

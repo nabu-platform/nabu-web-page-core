@@ -1,5 +1,5 @@
 <template id="page-actions">
-	<ul class="page-actions" :class="[cell.state.class, {'page-actions-root': actions == null }]" v-auto-close.actions="function() { showing.splice(0, showing.length) }"
+	<ul class="page-actions" :class="[cell.state.class, {'page-actions-root': actions == null }]" v-auto-close.actions="autoclose"
 			v-fixed-header="cell.state.isFixedHeader != null && cell.state.isFixedHeader == true">
 		<n-sidebar v-if="configuring" @close="configuring = false" class="settings">
 			<n-form class="layout2">
@@ -14,6 +14,7 @@
 							:filter="function() { return cell.state.actions.map(function(x) { return x.name }) }"/>
 						<n-form-switch v-model="cell.state.clickBased" label="Use Clicks Instead of Hover"/>
 						<n-form-switch v-model="cell.state.showOnlyOne" label="Only allow one open" v-if="cell.state.clickBased"/>
+						<n-form-switch v-model="cell.state.leaveOpen" label="Leave Open" v-if="cell.state.clickBased"/>
 					</n-collapsible>
 					<n-collapsible title="Actions" class="list">
 						<div class="list-actions">
@@ -51,16 +52,18 @@
 								
 								<n-form-combo v-model="action.class" label="Class" :filter="$services.page.classes.bind($self, 'page-action')" />
 								<n-form-combo v-model="action.buttonClass" label="Button Class" :filter="$services.page.getSimpleClasses"/>
-								<n-form-combo v-model="action.event" v-if="!action.route" label="Event" :filter="function(value) { return value ? [value, '$close'] : ['$close'] }"/>
+								<n-form-combo v-model="action.event" v-if="!action.route && !action.url" label="Event" :filter="function(value) { return value ? [value, '$close'] : ['$close'] }"/>
 								
 								<n-form-section v-if="!action.dynamic">
 									<n-form-switch v-model="action.hasFixedState" v-if="action.event" label="Does the event have a fixed value?"/>
 									<n-form-combo v-model="action.eventState" v-if="action.event && !action.hasFixedState" label="Event Value"
 										:filter="function() { return $services.page.getAvailableKeys(page, cell) }"/>
 									<n-form-text v-model="action.eventFixedState" v-if="action.event && action.hasFixedState" label="Event Fixed Value"/>
-									<n-form-combo v-model="action.route" v-if="!action.event" :filter="listRoutes" label="Route"/>
-									<n-form-text v-model="action.anchor" label="Anchor" v-if="action.route"/>
+									<n-form-combo v-model="action.route" v-if="!action.event && !action.url" :filter="listRoutes" label="Route"/>
+									<n-form-combo v-model="action.anchor" v-if="action.route" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 									<n-form-switch v-model="action.mask" label="Mask" v-if="action.route"/>
+									<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.event"/>
+									<n-form-combo v-model="action.anchor" v-if="action.url" label="Anchor" :items="['$blank', '$window']"/>
 									<n-page-mapper v-if="action.route && $services.router.get(action.route)" :to="$services.page.getRouteParameters($services.router.get(action.route))"
 										:from="$services.page.getAvailableParameters(page, cell)" 
 										v-model="action.bindings"/>
@@ -111,7 +114,7 @@
 					:disabled="isDisabled(action)"
 					:id="$services.page.interpret(action.id, $self)"
 					@click="handle(action)" 
-					v-if="!cell.state.useButtons && (action.route || action.event)"
+					v-if="!cell.state.useButtons && (action.route || action.event || action.url)"
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
 						><span>{{ $services.page.translate($services.page.interpret(action.label, $self)) }}</span></a>
 				<button auto-close-actions class="page-action-button page-action-entry"
@@ -120,7 +123,7 @@
 					:disabled="isDisabled(action)"
 					:id="$services.page.interpret(action.id, $self)"
 					@click="handle(action)" 
-					v-else-if="cell.state.useButtons && (action.route || action.event)"
+					v-else-if="cell.state.useButtons && (action.route || action.event || action.url)"
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
 						><span>{{ $services.page.translate($services.page.interpret(action.label, $self)) }}</span></button>
 				<span class="page-action-label page-action-entry" 

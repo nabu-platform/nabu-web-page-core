@@ -411,6 +411,9 @@ nabu.services.VueService(Vue.extend({
 				if (stateOwner && stateOwner.localState) {
 					result = this.eval(value, stateOwner.localState, component);
 				}
+				if (result == null && stateOwner && stateOwner.state) {
+					result = this.eval(value, stateOwner.state, component);
+				}
 				if (result == null && component.page) {
 					var pageInstance = this.getPageInstance(component.page, component);
 					result = this.getBindingValue(pageInstance, value);

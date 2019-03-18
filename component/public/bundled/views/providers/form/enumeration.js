@@ -1,5 +1,5 @@
 Vue.component("page-form-input-enumeration-configure", {
-	template: "<n-form-section><button @click=\"field.enumerations.push('')\">Add enumeration</button>"
+	template: "<n-form-section><n-form-switch v-model='field.allowCustom' label='Allow Custom Values'/><button @click=\"field.enumerations.push('')\">Add enumeration</button>"
 		+ "		<n-form-section class='enumeration list-row' v-for='i in Object.keys(field.enumerations)' :key=\"field.name + 'enumeration_' + i\">"
 		+ "			<n-form-text v-model='field.enumerations[i]'/>"
 		+ "			<button @click='field.enumerations.splice(i, 1)'><span class='fa fa-trash'></span></button>"
@@ -27,7 +27,7 @@ Vue.component("page-form-input-enumeration-configure", {
 });
 
 Vue.component("page-form-input-enumeration", {
-	template: "<n-form-combo :items='field.enumerations' ref='form'"
+	template: "<n-form-combo :filter='enumerate' ref='form'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
@@ -68,6 +68,15 @@ Vue.component("page-form-input-enumeration", {
 	methods: {
 		validate: function(soft) {
 			return this.$refs.form.validate(soft);
+		},
+		enumerate: function(value) {
+			var result = this.field.enumerations.filter(function(x) {
+				return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+			});
+			if (this.field.allowCustom && result.indexOf(value) < 0) {
+				result.unshift(value);
+			}
+			return result;
 		}
 	}
 });

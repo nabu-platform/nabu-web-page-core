@@ -107,7 +107,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			var promises = this.page.content.states.map(function(state) {
 				var parameters = {};
 				Object.keys(state.bindings).map(function(key) {
-					parameters[key] = self.get(state.bindings[key]);
+					//parameters[key] = self.get(state.bindings[key]);
+					parameters[key] = self.$services.page.getBindingValue(self, state.bindings[key]);
 				});
 				try {
 					// can throw hard errors
@@ -702,7 +703,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 									element = document.getElementById(action.scroll);
 								}
 							}
-							if (action.route) {
+							if (action.url) {
+								var url = self.$services.page.interpret(action.url, self);
+								if (action.anchor) {
+									window.open(url);
+								}
+								else {
+									window.location = url;
+								}
+							}
+							else if (action.route) {
 								eventReset();
 								if (action.anchor == "$blank") {
 									console.log("routing", action.route, parameters, 
@@ -764,7 +774,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 						})
 					}
 					else {
-						if (action.scroll) {
+						if (action.url) {
+							var url = self.$services.page.interpret(action.url, self);
+							if (action.anchor) {
+								window.open(url);
+							}
+							else {
+								window.location = url;
+							}
+						}
+						else if (action.scroll) {
 							eventReset();
 							var element = document.querySelector(action.scroll);
 							if (!element) {
@@ -1348,6 +1367,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			if (cell.height) {
 				styles.push({'height': cell.height});
 			}
+			if ((this.edit || this.$services.page.wantEdit) && cell.name) {
+				styles.push({"border": "solid 2px " + this.getNameColor(cell.name), "border-style": "none solid solid solid"})
+			}
 			return styles;
 		},
 		hasPageRoute: function(cell) {
@@ -1638,6 +1660,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		},
 		getRowEditStyle: function(row) {
 			return 'background-color:' + this.getNameColor(row.name) + '; color: #fff';	
+		},
+		getCellEditStyle: function(cell) {
+			return 'background-color:' + this.getNameColor(cell.name) + '; color: #fff';	
 		},
 		getNameColor: function(name) {
 			var saturation = 80;

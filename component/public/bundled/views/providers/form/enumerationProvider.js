@@ -24,7 +24,6 @@ Vue.component("page-form-input-enumeration-provider-configure", {
 	},
 	computed: {
 		valueOptions: function() {
-			console.log("checking value options");
 			if (this.field.enumerationProvider != null) {
 				var self = this;
 				var providers = nabu.page.providers("page-enumerate").map(function(x) { return x.name });

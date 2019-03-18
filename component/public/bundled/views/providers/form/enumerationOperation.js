@@ -13,6 +13,7 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			+ "			:filter='function() { return getEnumerationFields(field.enumerationOperation) }'/>"
 			+ "		<n-form-combo v-if='field.enumerationOperation' v-model='field.enumerationOperationQuery' label='Enumeration Query'"
 			+ "			:filter='function() { return getEnumerationParameters(field.enumerationOperation) }'/>"
+			+ "		<n-form-combo v-if='field.enumerationOperation && field.enumerationOperationValue' :filter='function() { return getEnumerationParameters(field.enumerationOperation) }' v-model='field.enumerationOperationResolve' label='Resolve Field'/>"
 			+ "		<page-fields-edit :allow-multiple='false' fields-name='enumerationFields' v-if='field.enumerationOperation && field.enumerationOperationLabelComplex' :cell='{state:field}' :page='page' :keys='getEnumerationFields(field.enumerationOperation)' :allow-editable='false'/>"
 			+ "		<n-page-mapper v-if='field.enumerationOperation && hasMappableEnumerationParameters(field)'"
 			+ "			v-model='field.enumerationOperationBinding'"
@@ -133,8 +134,9 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 });
 
 Vue.component("page-form-input-enumeration-operation", {
-	template: "<n-form-combo ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter'"
+	template: "<n-form-combo ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter' :resolver='enumerationResolver'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		v-bubble:label"
 			+ "		:timeout='600'"
 			+ "		:label='label'"
 			+ "		:value='value'"
@@ -188,14 +190,20 @@ Vue.component("page-form-input-enumeration-operation", {
 		// enumerationOperationQuery: null,
 		// enumerationOperationBinding: {}
 		enumerationFilter: function(value) {
+			return this.enumerationFilterAny(value, false);
+		},
+		enumerationFilterAny: function(value, asResolve) {
 			if (!this.field.enumerationOperation) {
 				return [];
 			}
 			var parameters = {
 				limit: 20
 			};
-			if (this.field.enumerationOperationQuery) {
+			if (!asResolve && this.field.enumerationOperationQuery) {
 				parameters[this.field.enumerationOperationQuery] = value;
+			}
+			else if (asResolve && this.field.enumerationOperationResolve) {
+				parameters[this.field.enumerationOperationResolve] = value;
 			}
 			// map any additional bindings
 			if (this.field.enumerationOperationBinding) {
@@ -224,6 +232,12 @@ Vue.component("page-form-input-enumeration-operation", {
 				}
 				return result ? result : [];
 			});
+		},
+		enumerationResolver: function(value) {
+			if (this.field.enumerationOperationResolve && this.field.enumerationOperationValue) {
+				return this.enumerationFilterAny(value, true);
+			}
+			return value;
 		},
 		enumerationFormatter: function(value) {
 			if (value == null) {

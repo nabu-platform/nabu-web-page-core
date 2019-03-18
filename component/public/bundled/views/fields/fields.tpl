@@ -48,7 +48,7 @@
 		<n-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
 		<n-ace v-if="fragment.format == 'html'" mode="html" v-model="fragment.html"/>
 		<n-form-text v-if="fragment.format == 'number'" v-model="fragment.amountOfDecimals" label="Amount of decimals"/>
-		<n-form-combo label="Date Format" v-if="fragment.format == 'date'" v-model="fragment.dateFormat" :filter="function(value) { return [value, 'date', 'dateTime'] }"/>
+		<n-form-combo label="Date Format" v-if="fragment.format == 'date'" v-model="fragment.dateFormat" :filter="function(value) { return [value, 'date', 'dateTime', '\'yy MMM dd', '\'yy MMM dd HH:mm'] }"/>
 		<n-form-switch label="Is timestamp in milliseconds?" v-model="fragment.isTimestamp" v-if="fragment.format == 'date' && !fragment.isSecondsTimestamp"/>
 		<n-form-switch label="Is timestamp in seconds?" v-model="fragment.isSecondsTimestamp" v-if="fragment.format == 'date' && !fragment.isTimestamp"/>
 		<n-form-combo label="Type" v-model="fragment.tag" :items="['span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div']"/>

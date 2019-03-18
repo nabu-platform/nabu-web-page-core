@@ -61,31 +61,33 @@
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
 		<n-form :class="cell.state.class" ref="form" :id="cell.state.formId" :mode="cell.state.mode">
 			<header slot="header" v-if="cell.state.dynamicHeader"><component :is="cell.state.dynamicHeader" :form="$self" :page="page" :cell="cell"/></header>
-			<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">
-				<n-form-section v-for="field in group.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name) && !isHidden(field)">
-					<component v-if="isList(field.name)"
-						:is="getProvidedListComponent(field.type)"
-						:value="result"
-						:page="page"
-						:cell="cell"
-						:edit="edit"
-						:field="field"
-						@changed="changed"
-						:timeout="cell.state.immediate ? 600 : 0"
-						:schema="getSchemaFor(field.name)"/>
-					<page-form-field v-else-if="!field.arbitrary" :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
-						:parent-value="result"
-						@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
-						:timeout="cell.state.immediate ? 600 : 0"
-						:page="page"
-						:cell="cell"
-						v-focus="cell.state.autofocus == true && currentPage.fields.indexOf(field) == 0"/>
-					<page-arbitrary v-else
-						:edit="edit"
-						:page="page"
-						:cell="cell"
-						:target="field"
-						:component="form"/>
+			<n-form-section :key="'form_page_' + cell.state.pages.indexOf(currentPage)">
+				<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">
+					<n-form-section v-for="field in group.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name) && !isHidden(field)">
+						<component v-if="isList(field.name)"
+							:is="getProvidedListComponent(field.type)"
+							:value="result"
+							:page="page"
+							:cell="cell"
+							:edit="edit"
+							:field="field"
+							@changed="changed"
+							:timeout="cell.state.immediate ? 600 : 0"
+							:schema="getSchemaFor(field.name)"/>
+						<page-form-field v-else-if="!field.arbitrary" :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
+							:parent-value="result"
+							@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
+							:timeout="cell.state.immediate ? 600 : 0"
+							:page="page"
+							:cell="cell"
+							v-focus="cell.state.autofocus == true && currentPage.fields.indexOf(field) == 0"/>
+						<page-arbitrary v-else
+							:edit="edit"
+							:page="page"
+							:cell="cell"
+							:target="field"
+							:component="form"/>
+					</n-form-section>
 				</n-form-section>
 			</n-form-section>
 			<footer slot="footer">
@@ -119,6 +121,7 @@
 		:cell="cell"
 		:field="field"
 		@input="function(newValue) { $emit('input', newValue) }"
+		v-bubble:label
 		:label="$services.page.translate($services.page.interpret(fieldLabel, $self))"
 		:timeout="timeout"
 		:schema="schema"

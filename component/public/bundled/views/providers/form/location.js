@@ -52,6 +52,7 @@ Vue.component("page-form-input-location-configure", {
 Vue.component("page-form-input-location", {
 	template: "<n-form-location ref='form'"
 			+ "		:schema='schema'"
+			+ "		v-bubble:label"
 			+ "		:required='field.required'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"

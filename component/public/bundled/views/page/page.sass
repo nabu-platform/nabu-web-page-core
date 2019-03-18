@@ -9,7 +9,8 @@
 	.page-row {
 		display: flex;
 		.page-row-menu {
-			padding: 1rem;
+			padding: 0.7rem;
+			padding-left: 0;
 			align-self: center;
 			label {
 				font-size: 0.8rem;
@@ -22,10 +23,13 @@
 				&+button {
 					margin-top: 0.3rem;
 				}
+				padding: 0.3rem 0.7rem;
+				background-color: #f6f6f6;
+				color: #333;
 			}
 		}
 		.page-cell-menu {
-			padding: 0.3rem 1rem;
+			padding: 0.3rem 0.5rem;
 			background-color: #eaeaea;
 			button {
 				background-color: transparent;
@@ -33,6 +37,7 @@
 				border: none;
 				color: #333;
 				cursor: pointer;
+				padding: 0.3rem 0.7rem;
 			}
 		}
 		.page-cell {
@@ -65,6 +70,10 @@
 			width: 100%;
 		}
 	}
+	.cell-edit-label {
+		padding: 0.5rem;
+		text-align: center;
+	}
 }
 
 .page-cell.clickable {
@@ -86,6 +95,7 @@
 		width: 100%;
 	}
 	.page-menu {
+		z-index: 1;
 		background-color: steelblue;
 		text-align: center;
 		button {
