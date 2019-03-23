@@ -24,6 +24,8 @@ Vue.component("page-form-input-text-configure", {
 
 Vue.component("page-form-input-text", {
 	template: "<n-form-text :type='textType' ref='form'"
+			+ "		:edit='!readOnly'"
+			+ "		:placeholder='placeholder'"
 			+ "		:schema='schema'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
@@ -60,6 +62,14 @@ Vue.component("page-form-input-text", {
 		},
 		schema: {
 			type: Object,
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
+			required: false
+		},
+		placeholder: {
+			type: String,
 			required: false
 		}
 	},

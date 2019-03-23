@@ -40,6 +40,11 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		allowArbitrary: {
+			type: Boolean,
+			required: false,
+			default: true
 		}
 	},
 	created: function() {
@@ -166,12 +171,13 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 				field.fragments.splice(index, 1, replacement);
 			}
 		},
-		addField: function() {
+		addField: function(arbitrary) {
 			this.cell.state[this.fieldsName].push({
 				label: null,
 				fragments: [],
 				hidden: null,
-				styles: []
+				styles: [],
+				arbitrary: !!arbitrary
 			});
 			// already add a fragment, a field is generally useless without it...
 			this.addFragment(this.cell.state[this.fieldsName][this.cell.state[this.fieldsName].length - 1]);

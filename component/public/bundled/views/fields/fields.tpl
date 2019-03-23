@@ -1,35 +1,53 @@
 <template id="page-fields-edit">
 	<n-collapsible title="Fields" class="page-fields list">
 		<div class="list-actions" v-if="allowMultiple">
-			<button @click="addField">Add Field</button>
+			<button @click="addField(false)">Add Field</button>
+			<button @click="addField(true)">Add Content</button>
 		</div>
 		<n-collapsible class="list-item" :title="field.label ? field.label : 'Unlabeled'" v-for="field in cell.state[fieldsName]">
 			<n-form-text v-model="field.label" label="Field Label"/>
 			<n-form-text v-if="!basic" v-model="field.hidden" label="Hide field if"/>
-			<div class="list-item-actions">
-				<button @click="addFragment(field)">Add Fragment</button>
-				<button v-if="allowMultiple" @click="cell.state[fieldsName].splice(cell.state[fieldsName].indexOf(field), 1)">Remove Field</button>
-				<button v-if="allowMultiple" @click="fieldBeginning(field)"><span class="fa fa-chevron-circle-left"></span></button>
-				<button v-if="allowMultiple" @click="fieldUp(field)"><span class="fa fa-chevron-circle-up"></span></button>
-				<button v-if="allowMultiple" @click="fieldDown(field)"><span class="fa fa-chevron-circle-down"></span></button>
-				<button v-if="allowMultiple" @click="fieldEnd(field)"><span class="fa fa-chevron-circle-right"></span></button>
-			</div>
-			<n-collapsible :title="fragment.key ? fragment.key : fragment.type" v-for="fragment in field.fragments">
-				<n-form-combo v-model="fragment.type" label="Fragment Type" :items="fragmentTypes"/>
-				<n-form-text v-if="!basic" v-model="fragment.hidden" label="Hide fragment if"/>
-				<n-form-combo v-if="fragment.type == 'data'" v-model="fragment.key" label="Data Key" :filter="getKeys"/>
-				<n-form-text v-if="!basic" v-model="fragment.class" label="Fragment Class"/>
-				
-				<component v-if="fragment.type" :cell="cell" :page="page" :keys="getKeys()"
-					:fragment="fragment"
-					:is="getProvidedConfiguration(fragment.type)"/>
-					
+			<div v-if="!field.arbitrary">
 				<div class="list-item-actions">
-					<button @click="up(field, fragment)"><span class="fa fa-chevron-circle-up"></span></button>
-					<button @click="down(field, fragment)"><span class="fa fa-chevron-circle-down"></span></button>
-					<button @click="field.fragments.splice(field.fragments.indexOf(fragment), 1)"><span class="fa fa-trash"></span></button>
+					<button @click="addFragment(field)">Add Fragment</button>
+					<button v-if="allowMultiple" @click="cell.state[fieldsName].splice(cell.state[fieldsName].indexOf(field), 1)">Remove Field</button>
+					<button v-if="allowMultiple" @click="fieldBeginning(field)"><span class="fa fa-chevron-circle-left"></span></button>
+					<button v-if="allowMultiple" @click="fieldUp(field)"><span class="fa fa-chevron-circle-up"></span></button>
+					<button v-if="allowMultiple" @click="fieldDown(field)"><span class="fa fa-chevron-circle-down"></span></button>
+					<button v-if="allowMultiple" @click="fieldEnd(field)"><span class="fa fa-chevron-circle-right"></span></button>
 				</div>
-			</n-collapsible>
+				<n-collapsible :title="fragment.key ? fragment.key : fragment.type" v-for="fragment in field.fragments">
+					<n-form-combo v-model="fragment.type" label="Fragment Type" :items="fragmentTypes"/>
+					<n-form-text v-if="!basic" v-model="fragment.hidden" label="Hide fragment if"/>
+					<n-form-combo v-if="fragment.type == 'data'" v-model="fragment.key" label="Data Key" :filter="getKeys"/>
+					<n-form-text v-if="!basic" v-model="fragment.class" label="Fragment Class"/>
+					
+					<component v-if="fragment.type" :cell="cell" :page="page" :keys="getKeys()"
+						:fragment="fragment"
+						:is="getProvidedConfiguration(fragment.type)"/>
+						
+					<div class="list-item-actions">
+						<button @click="up(field, fragment)"><span class="fa fa-chevron-circle-up"></span></button>
+						<button @click="down(field, fragment)"><span class="fa fa-chevron-circle-down"></span></button>
+						<button @click="field.fragments.splice(field.fragments.indexOf(fragment), 1)"><span class="fa fa-trash"></span></button>
+					</div>
+				</n-collapsible>
+			</div>
+			<div v-else>
+				<div class="list-item-actions">
+					<button v-if="allowMultiple" @click="cell.state[fieldsName].splice(cell.state[fieldsName].indexOf(field), 1)">Remove Content</button>
+					<button v-if="allowMultiple" @click="fieldBeginning(field)"><span class="fa fa-chevron-circle-left"></span></button>
+					<button v-if="allowMultiple" @click="fieldUp(field)"><span class="fa fa-chevron-circle-up"></span></button>
+					<button v-if="allowMultiple" @click="fieldDown(field)"><span class="fa fa-chevron-circle-down"></span></button>
+					<button v-if="allowMultiple" @click="fieldEnd(field)"><span class="fa fa-chevron-circle-right"></span></button>
+				</div>
+				<page-configure-arbitrary
+					:page="page"
+					:cell="cell"
+					:target="field"
+					:keys="getKeys()"/>
+			</div>
+
 			<div class="list-item-actions">
 				<button @click="addStyle(field)">Add Style</button>
 			</div>
@@ -48,7 +66,7 @@
 		<n-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
 		<n-ace v-if="fragment.format == 'html'" mode="html" v-model="fragment.html"/>
 		<n-form-text v-if="fragment.format == 'number'" v-model="fragment.amountOfDecimals" label="Amount of decimals"/>
-		<n-form-combo label="Date Format" v-if="fragment.format == 'date'" v-model="fragment.dateFormat" :filter="function(value) { return [value, 'date', 'dateTime', '\'yy MMM dd', '\'yy MMM dd HH:mm'] }"/>
+		<n-form-combo label="Date Format" v-if="fragment.format == 'date'" v-model="fragment.dateFormat" :filter="function(value) { return [value, 'date', 'dateTime', '\'yy MMM dd', '\'yy MMM dd HH:mm', 'MMMM dd, yyyy'] }"/>
 		<n-form-switch label="Is timestamp in milliseconds?" v-model="fragment.isTimestamp" v-if="fragment.format == 'date' && !fragment.isSecondsTimestamp"/>
 		<n-form-switch label="Is timestamp in seconds?" v-model="fragment.isSecondsTimestamp" v-if="fragment.format == 'date' && !fragment.isTimestamp"/>
 		<n-form-combo label="Type" v-model="fragment.tag" :items="['span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div']"/>
@@ -64,7 +82,7 @@
 	<div class="page-field" :class="getDynamicClasses(field)">
 		<template v-if="label">
 			<dt v-if="label && field.label">{{$services.page.interpret(field.label,$self)}}</dt>
-			<dd class="page-field-fragment">
+			<dd class="page-field-fragment" v-if="!field.arbitrary">
 				<component v-if="fragment.type && !isHidden(fragment)" 
 					:class="$services.page.interpret(fragment.class, $self)" v-for="fragment in field.fragments"
 					:is="getProvidedComponent(fragment.type)"
@@ -74,8 +92,16 @@
 					:fragment="fragment"
 					@updated="function(value) { $emit('updated', value) }"/>
 			</dd>
+			<dd class="page-field-fragment" v-else>
+				<page-arbitrary
+					:edit="edit"
+					:page="page"
+					:cell="cell"
+					:target="field"
+					:component="$self"/>
+			</dd>
 		</template>
-		<template v-else>
+		<template v-else-if="!field.arbitrary">
 			<component v-if="!isHidden(fragment)"
 				class="page-field-fragment" :class="fragment.class" v-for="fragment in field.fragments"
 				:is="getProvidedComponent(fragment.type)"
@@ -85,6 +111,13 @@
 				:fragment="fragment"
 				@updated="function(value) { $emit('updated', value) }"/>
 		</template>
+		<page-arbitrary v-else
+			:edit="edit"
+			:page="page"
+			:cell="cell"
+			:target="field"
+			:component="$self"
+			:record="data"/>
 	</div>
 </template>
 

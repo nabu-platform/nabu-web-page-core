@@ -18,7 +18,7 @@ Vue.component("page-form-input-richtext-configure", {
 });
 
 Vue.component("page-form-input-richtext", {
-	template: "<n-form-richtext ref='form' :value='value' @input=\"function(value) { $emit('input', value) }\" :schema='schema' :clean-style='field.cleanStyle'/>",
+	template: "<n-form-richtext :edit='!readOnly' ref='form' :value='value' @input=\"function(value) { $emit('input', value) }\" :schema='schema' :clean-style='field.cleanStyle'/>",
 	props: {
 		cell: {
 			type: Object,
@@ -48,6 +48,10 @@ Vue.component("page-form-input-richtext", {
 		},
 		schema: {
 			type: Object,
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
 			required: false
 		}
 	},

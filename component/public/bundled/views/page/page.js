@@ -108,7 +108,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 				var parameters = {};
 				Object.keys(state.bindings).map(function(key) {
 					//parameters[key] = self.get(state.bindings[key]);
-					parameters[key] = self.$services.page.getBindingValue(self, state.bindings[key]);
+					if (state.bindings[key] != null) {
+						parameters[key] = self.$services.page.getBindingValue(self, state.bindings[key]);
+					}
 				});
 				try {
 					// can throw hard errors
@@ -127,6 +129,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 		else {
 			done();
+		}
+	},
+	ready: function() {
+		// the page has a path, set it in the body so we can do additional stuff
+		if (this.page.content.path)	{
+			document.body.setAttribute("page", this.page.name);
+			document.body.setAttribute("category", this.page.content.category);
 		}
 	},
 	created: function() {
@@ -193,6 +202,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			else {
 				classes.push("page-type-page");
 			}
+			classes.push("page-" + this.page.name);
 			return classes;
 		}
 	},
@@ -230,7 +240,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 	},
 	methods: {
 		validateStateName: function(name) {
-			var blacklisted = ["page", "application"];
+			var blacklisted = ["page", "application", "record", "state", "localState"];
 			var messages = [];
 			if (name && blacklisted.indexOf(name) >= 0) {
 				messages.push({
@@ -847,7 +857,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			
 			// check states that have to be refreshed
 			if (this.page.content.states.length) {
-				var promises = this.page.content.states.filter(function(x) { return x.refreshOn != null && x.refreshOn.indexOf(name) >= 0 }).map(function(state) {
+				nabu.utils.arrays.merge(promises, this.page.content.states.filter(function(x) { return x.refreshOn != null && x.refreshOn.indexOf(name) >= 0 }).map(function(state) {
 					var parameters = {};
 					Object.keys(state.bindings).map(function(key) {
 						parameters[key] = self.get(state.bindings[key]);
@@ -886,8 +896,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 						promise.reject(exception);
 						return promise;
 					}
-				});
-				this.$services.q.all(promises).then(done, done);
+				}));
 			}
 			
 			// remove all the closed stuff for this event, we may want to reopen something
@@ -1465,8 +1474,8 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		close: function(cell) {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
-			if (cell.on) {
-				Vue.set(pageInstance.closed, cell.id, cell.on);
+			if (cell.on || cell.closeable) {
+				Vue.set(pageInstance.closed, cell.id, cell.on ? cell.on : "$any");
 			}
 			else {
 				this.$parent.$emit("close");
@@ -1570,6 +1579,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				else if (!pageInstance.get(cell.on)) {
 					return false;
 				}
+			}
+			else if (cell.closeable && pageInstance.closed[cell.id]) {
+				return false;
 			}
 			var providers = [];
 			nabu.page.providers("page-enumerate").map(function(x) {

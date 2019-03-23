@@ -50,6 +50,8 @@ Vue.component("page-form-input-enumeration-provider-configure", {
 
 Vue.component("page-form-input-enumeration-provider", {
 	template: "<n-form-combo ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter'"
+			+ "		:edit='!readOnly'"
+			+ "		:placeholder='placeholder'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
@@ -84,6 +86,14 @@ Vue.component("page-form-input-enumeration-provider", {
 		},
 		schema: {
 			type: Object,
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
+			required: false
+		},
+		placeholder: {
+			type: String,
 			required: false
 		}
 	},

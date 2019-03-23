@@ -86,7 +86,7 @@
 						<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :filter="getParameterTypes"/>
 						<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
 						<n-form-text v-model="parameter.default" label="Default Value"/>
-						<n-form-switch v-model="parameter.global" label="Is global?"/>
+						<n-form-switch v-model="parameter.global" label="Is translation global?"/>
 						<div class="list-row" v-for="i in Object.keys(parameter.listeners)">
 							<n-form-combo v-model="parameter.listeners[i]" :filter="function() { return $services.page.getAllAvailableKeys(page) }"/>
 							<button @click="parameter.listeners.splice(i, 1)"><span class="fa fa-trash"></span></button>
@@ -270,7 +270,8 @@
 								</div>
 							</n-collapsible>
 							<n-collapsible title="Eventing" key="cell-events">
-								<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents"/>
+								<n-form-switch label="Closeable" v-model="cell.closeable" v-if="!cell.on"/>
+								<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents" v-if="!cell.closeable"/>
 								<n-form-combo label="Target" v-if="cell.on" :items="['page', 'sidebar', 'prompt']" v-model="cell.target"/>
 							</n-collapsible>
 						</n-form-section>

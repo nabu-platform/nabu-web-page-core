@@ -24,6 +24,7 @@ nabu.services.VueService(Vue.extend({
 			counter: 1,
 			title: null,
 			home: null,
+			homeUser: null,
 			pages: [],
 			loading: true,
 			// application properties
@@ -175,7 +176,9 @@ nabu.services.VueService(Vue.extend({
 				}
 				if (configuration.home) {
 					self.home = configuration.home;
-					self.registerHome(configuration.home);
+				}
+				if (configuration.homeUser) {
+					self.homeUser = configuration.homeUser;
 				}
 				if (configuration.contents) {
 					nabu.utils.arrays.merge(self.contents, configuration.contents);
@@ -185,6 +188,9 @@ nabu.services.VueService(Vue.extend({
 				}
 				if (configuration.imports) {
 					nabu.utils.arrays.merge(self.imports, configuration.imports);
+				}
+				if (self.home || self.homeUser) {
+					self.registerHome(self.home, self.homeUser);
 				}
 				self.imports.forEach(function(x) {
 					if (x.type == 'javascript') {
@@ -654,6 +660,7 @@ nabu.services.VueService(Vue.extend({
 				body: {
 					title: this.title,
 					home: this.home,
+					homeUser: this.homeUser,
 					properties: self.properties,
 					devices: self.devices,
 					imports: self.imports
@@ -1368,7 +1375,7 @@ nabu.services.VueService(Vue.extend({
 			}
 			return keys;
 		},
-		registerHome: function(home) {
+		registerHome: function(home, homeUser) {
 			this.$services.router.unregister("home");
 			var self = this;
 			this.$services.router.register({
@@ -1377,7 +1384,15 @@ nabu.services.VueService(Vue.extend({
 					// the timeout disconnects the reroute from the current flow
 					// otherwise weird things happen
 					setTimeout(function() {
-						self.$services.router.route(home, parameters);
+						if (homeUser && self.$services.user.loggedIn) {
+							self.$services.router.route(homeUser, parameters);
+						}
+						else if (home) {
+							self.$services.router.route(home, parameters);
+						}
+						else {
+							self.$services.router.route("login", parameters);
+						}
 					}, 1)
 				},
 				url: "/"
@@ -1395,7 +1410,12 @@ nabu.services.VueService(Vue.extend({
 		},
 		home: function(newValue) {
 			if (newValue && !this.loading) {
-				this.registerHome(newValue);
+				this.registerHome(newValue, this.homeUser);
+			}
+		},
+		homeUser: function(newValue) {
+			if (newValue && !this.loading) {
+				this.registerHome(this.home, newValue);
 			}
 		}
 	}

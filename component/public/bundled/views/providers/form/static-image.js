@@ -23,7 +23,7 @@ Vue.component("page-form-input-static-image-configure", {
 
 Vue.component("page-form-input-static-image", {
 	template: "<div class='page-form-input-static-image n-form-component'><label class='n-form-label' v-if='label'>{{label}}</label><div class='image-content'><img v-if='value' :src=\"(field.webApplicationId ? '' : '${server.root()}') + value\"/>"
-		+ "<n-input-file v-model='files' @change='upload' :types=\"['image']\"/></div></div>",
+		+ "<n-input-file v-if='!readOnly' v-model='files' @change='upload' :types=\"['image']\"/></div></div>",
 	props: {
 		cell: {
 			type: Object,
@@ -53,6 +53,10 @@ Vue.component("page-form-input-static-image", {
 		},
 		schema: {
 			type: Object,
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
 			required: false
 		}
 	},

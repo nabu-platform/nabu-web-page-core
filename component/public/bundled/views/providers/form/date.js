@@ -25,6 +25,8 @@ Vue.component("page-form-input-date-configure", {
 
 Vue.component("page-form-input-date", {
 	template: "<n-form-date ref='form'"
+			+ "		:placeholder='placeholder'"
+			+ "		:edit='!readOnly'"
 			+ "		:schema='schema'"
 			+ "		v-bubble:label"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
@@ -66,6 +68,14 @@ Vue.component("page-form-input-date", {
 		},
 		schema: {
 			type: Object,
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
+			required: false
+		},
+		placeholder: {
+			type: String,
 			required: false
 		}
 	},

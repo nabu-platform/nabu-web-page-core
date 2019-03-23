@@ -18,6 +18,7 @@ Vue.component("page-form-input-checkbox-configure", {
 
 Vue.component("page-form-input-checkbox", {
 	template: "<n-form-checkbox ref='form'"
+			+ "		:edit='!readOnly'"
 			+ "		:schema='schema'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
@@ -53,6 +54,10 @@ Vue.component("page-form-input-checkbox", {
 		},
 		schema: {
 			type: Object,
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
 			required: false
 		}
 	},

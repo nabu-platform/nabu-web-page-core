@@ -28,6 +28,7 @@ Vue.component("page-form-input-file-configure", {
 
 Vue.component("page-form-input-file", {
 	template: "<n-input-file :types='field.fileTypes' ref='form' :amount='1'"
+			+ "		:edit='!readOnly'"
 			+ "		:schema='schema'"
 			+ "		@change=\"function(newValue) { $emit('input', newValue && newValue.length ? newValue[0] : null) }\""
 			+ "		:label='label'"
@@ -64,6 +65,10 @@ Vue.component("page-form-input-file", {
 		},
 		schema: {
 			type: Object,
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
 			required: false
 		}
 	},

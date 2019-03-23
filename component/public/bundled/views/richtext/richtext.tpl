@@ -5,11 +5,13 @@
 				<n-form-section>
 					<n-collapsible title="Rich text settings">
 						<n-form-switch v-model='cell.state.cleanStyle' label='Clean style on paste'/>
+						<n-form-switch v-model='cell.state.highlight' label='Highlight'/>
 					</n-collapsible>
 				</n-form-section>
 			</n-form>
 		</n-sidebar>
 		<n-form-richtext v-if="edit" v-model="cell.state.content" :clean-style='cell.state.cleanStyle'/>
-		<div v-else v-content.compile.sanitize="cell.state.content"></div>
+		<div v-else-if="!cell.state.highlight" v-content.compile.sanitize="cell.state.content"></div>
+		<div v-else v-content="highlight(cell.state.content)"></div>
 	</div>
 </template>

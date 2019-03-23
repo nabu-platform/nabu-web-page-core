@@ -51,6 +51,8 @@ Vue.component("page-form-input-location-configure", {
 
 Vue.component("page-form-input-location", {
 	template: "<n-form-location ref='form'"
+			+ "		:edit='!readOnly'"
+			+ "		:placeholder='placeholder'"
 			+ "		:schema='schema'"
 			+ "		v-bubble:label"
 			+ "		:required='field.required'"
@@ -101,6 +103,14 @@ Vue.component("page-form-input-location", {
 		},
 		schema: {
 			type: Object,
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
+			required: false
+		},
+		placeholder: {
+			type: String,
 			required: false
 		}
 	},

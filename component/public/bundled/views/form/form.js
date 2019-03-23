@@ -29,7 +29,8 @@ nabu.page.views.PageForm = Vue.extend({
 			result: {},
 			currentPage: null,
 			autoMapFrom: null,
-			messages: []
+			messages: [],
+			readOnly: false
 		}
 	},
 	computed: {
@@ -74,34 +75,51 @@ nabu.page.views.PageForm = Vue.extend({
 		}
 	},
 	created: function() {
+		console.log("created form");
 		this.normalize(this.cell.state);
 		
-		var self = this;
-		var pageInstance = self.$services.page.getPageInstance(self.page, self);
-		// if we are updating the page itself, get the parameters from there
-		if (this.cell.state.pageForm) {
-			var page = this.$services.page.getPageParameterValues(self.page, pageInstance);
-			Object.keys(page).map(function(key) {
-				Vue.set(self.result, key, page[key]);
-			});
-		}
-		else if (this.cell.bindings) {
-			Object.keys(this.cell.bindings).map(function(key) {
-				if (self.cell.bindings[key]) {
-					Vue.set(self.result, key, self.$services.page.getBindingValue(pageInstance, self.cell.bindings[key]));
-				}
-			});
-		}
-		
-		// get the first page
-		this.currentPage = this.cell.state.pages[0];
+		this.initialize();
 		
 		// make sure we set the cell state for the form
 		this.cell.cellState = {
 			form: this.createResultDefinition()
 		};
+		
+		if (this.cell.state.allowReadOnly && this.cell.state.startAsReadOnly) {
+			this.readOnly = true;
+		}
+	},
+	// want ready because we need correct root
+	ready: function() {
+		var self = this;
+		this.formListener = this.$root.$on("form-opened", function(form) {
+			if (self.cell.state.onlyOneEdit && form != self && !self.readOnly) {
+				self.cancel();
+			}
+		});
 	},
 	methods: {
+		initialize: function() {
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			// if we are updating the page itself, get the parameters from there
+			if (this.cell.state.pageForm) {
+				var page = this.$services.page.getPageParameterValues(self.page, pageInstance);
+				Object.keys(page).map(function(key) {
+					Vue.set(self.result, key, page[key]);
+				});
+			}
+			else if (this.cell.bindings) {
+				Object.keys(this.cell.bindings).map(function(key) {
+					if (self.cell.bindings[key]) {
+						Vue.set(self.result, key, self.$services.page.getBindingValue(pageInstance, self.cell.bindings[key]));
+					}
+				});
+			}
+			
+			// get the first page
+			this.currentPage = this.cell.state.pages[0];	
+		},
 		automap: function() {
 			var source = this.availableParameters[this.autoMapFrom];
 			var self = this;
@@ -204,6 +222,9 @@ nabu.page.views.PageForm = Vue.extend({
 			if (!state.hasOwnProperty("ok")) {
 				Vue.set(state, "ok", "Ok");
 			}
+			if (!state.hasOwnProperty("edit")) {
+				Vue.set(state, "edit", "Edit");
+			}
 			if (!state.hasOwnProperty("next")) {
 				Vue.set(state, "next", "Next");
 			}
@@ -272,6 +293,25 @@ nabu.page.views.PageForm = Vue.extend({
 			}
 			else {
 				this.$emit('close');
+			}
+			if (this.cell.state.allowReadOnly) {
+				this.readOnly = true;
+				// reinitialize
+				this.initialize();
+				this.resetValidation();
+			}
+		},
+		resetValidation: function(component) {
+			if (component == null) {
+				component = this.$refs.form;
+			}
+			if (component.valid != null) {
+				component.valid = null;
+			}
+			if (component.$children) {
+				for (var i = 0; i < component.$children.length; i++) {
+					this.resetValidation(component.$children[i]);
+				}
 			}
 		},
 		getOperations: function(name) {
@@ -533,6 +573,10 @@ nabu.page.views.PageForm = Vue.extend({
 					if (self.cell.state.event) {
 						pageInstance.emit(self.cell.state.event, self.cell.on ? pageInstance.get(self.cell.on) : {});
 					}
+					// if we allow read only, revert to it after a successful edit
+					if (self.cell.state.allowReadOnly) {
+						self.readOnly = true;
+					}
 				}
 				else if (this.cell.state.operation) {
 					this.$services.swagger.execute(this.cell.state.operation, result).then(function(returnValue) {
@@ -551,6 +595,10 @@ nabu.page.views.PageForm = Vue.extend({
 						}
 						if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
 							self.$emit("close");
+						}
+						// if we allow read only, revert to it after a successful edit
+						if (self.cell.state.allowReadOnly) {
+							self.readOnly = true;
 						}
 					}, function(error) {
 						self.error = "Form submission failed";
@@ -578,6 +626,10 @@ nabu.page.views.PageForm = Vue.extend({
 					}
 					if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
 						self.$emit("close");
+					}
+					// if we allow read only, revert to it after a successful edit
+					if (self.cell.state.allowReadOnly) {
+						self.readOnly = true;
 					}
 				}
 			}
@@ -610,6 +662,18 @@ nabu.page.views.PageForm = Vue.extend({
 			if (index < this.cell.state.fields.length - 1) {
 				this.cell.state.fields.splice(index, 1);
 				this.cell.state.fields.push(field);
+			}
+		}
+	},
+	watch: {
+		// if we switch out of read only mode, check autofocus
+		readOnly: function(newValue) {
+			this.$root.$emit(newValue ? "form-closed" : "form-opened", this);
+			if (!newValue && this.cell.state.autofocus) {
+				var self = this;
+				Vue.nextTick(function() {
+					self.$refs.form.$el.querySelector("input").focus();
+				});
 			}
 		}
 	}
@@ -654,6 +718,10 @@ Vue.component("page-form-field", {
 		},
 		// the parent value that contains the value
 		parentValue: {
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
 			required: false
 		}
 	},
@@ -775,6 +843,10 @@ Vue.component("page-form-configure", {
 			type: Function,
 			required: false,
 			default: function(name) { return null }
+		},
+		allowReadOnly: {
+			type: Boolean,
+			required: false
 		}
 	},
 	methods: {
@@ -879,6 +951,10 @@ Vue.component("page-form-configure-single", {
 		schema: {
 			type: Object,
 			required: false
+		},
+		allowReadOnly: {
+			type: Boolean,
+			required: false
 		}
 	},
 	created: function() {
@@ -948,6 +1024,11 @@ Vue.component("page-configure-arbitrary", {
 		target: {
 			type: Object,
 			required: true
+		},
+		keys: {
+			type: Array,
+			required: false,
+			default: function() { return [] }
 		}
 	},
 	created: function() {
@@ -958,6 +1039,15 @@ Vue.component("page-configure-arbitrary", {
 	computed: {
 		availableParameters: function() {
 			var available = this.$services.page.getAvailableParameters(this.page, this.cell, true);
+			if (this.keys.length) {
+				available.record = {properties:{}};
+				console.log("keys are", this.keys);
+				this.keys.forEach(function(key) {
+					available.record.properties[key] = {
+						type: "string"
+					}
+				});
+			}
 			return available;
 		}
 	},
@@ -997,6 +1087,10 @@ Vue.component("page-arbitrary", {
 		edit: {
 			type: Boolean,
 			required: false
+		},
+		record: {
+			type: Object,
+			required: false
 		}
 	},
 	data: function() {
@@ -1018,7 +1112,17 @@ Vue.component("page-arbitrary", {
 				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				Object.keys(this.target.bindings).forEach(function(key) {
-					parameters[key] = self.$services.page.getBindingValue(pageInstance, self.target.bindings[key]);
+					if (self.target.bindings[key]) {
+						if (self.target.bindings[key].indexOf("record.") == 0) {
+							var value = self.record ? self.$services.page.getValue(self.record, self.target.bindings[key].substring("record.".length)) : null;
+							if (value != null) {
+								parameters[key] = value;
+							}
+						}
+						else {
+							parameters[key] = self.$services.page.getBindingValue(pageInstance, self.target.bindings[key]);
+						}
+					}
 				});
 			}
 			return parameters;

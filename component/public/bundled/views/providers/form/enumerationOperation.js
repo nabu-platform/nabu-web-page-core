@@ -135,6 +135,8 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 
 Vue.component("page-form-input-enumeration-operation", {
 	template: "<n-form-combo ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter' :resolver='enumerationResolver'"
+			+ "		:edit='!readOnly'"
+			+ "		:placeholder='placeholder'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		v-bubble:label"
 			+ "		:timeout='600'"
@@ -171,6 +173,14 @@ Vue.component("page-form-input-enumeration-operation", {
 		},
 		schema: {
 			type: Object,
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
+			required: false
+		},
+		placeholder: {
+			type: String,
 			required: false
 		}
 	},

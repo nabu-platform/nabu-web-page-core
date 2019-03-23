@@ -28,6 +28,8 @@ Vue.component("page-form-input-enumeration-configure", {
 
 Vue.component("page-form-input-enumeration", {
 	template: "<n-form-combo :filter='enumerate' ref='form'"
+			+ "		:edit='!readOnly'"
+			+ "		:placeholder='placeholder'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
@@ -62,6 +64,14 @@ Vue.component("page-form-input-enumeration", {
 		},
 		schema: {
 			type: Object,
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
+			required: false
+		},
+		placeholder: {
+			type: String,
 			required: false
 		}
 	},

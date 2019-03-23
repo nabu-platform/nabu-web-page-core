@@ -49,6 +49,10 @@ Vue.component("page-form-input-page", {
 		schema: {
 			type: Object,
 			required: false
+		},
+		readOnly: {
+			type: Boolean,
+			required: false
 		}
 	},
 	methods: {

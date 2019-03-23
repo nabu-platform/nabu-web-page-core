@@ -27,6 +27,7 @@ Vue.component("page-form-input-slider-configure", {
 
 Vue.component("page-form-input-slider", {
 	template: "<n-form-text type='range' ref='form'"
+			+ "		:edit='!readOnly'"
 			+ "		:minimum='field.minimum ? parseInt(field.minimum) : 0'"
 			+ "		:maximum='field.maximum ? parseInt(field.maximum) : 100'"
 			+ "		:schema='schema'"
@@ -64,6 +65,10 @@ Vue.component("page-form-input-slider", {
 		},
 		schema: {
 			type: Object,
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
 			required: false
 		}
 	},

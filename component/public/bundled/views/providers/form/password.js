@@ -28,8 +28,10 @@ Vue.component("page-form-input-password-configure", {
 
 Vue.component("page-form-input-password", {
 	template: "<n-form-section ref='form'><n-form-text type='password'"
+			+ "		:edit='!readOnly'"
+			+ "		:placeholder='placeholder'"
 			+ "		:schema='schema'"
-			+ "		:pattern-comment='regexLabel'" 
+			+ "		:pattern-comment='$services.page.translate(regexLabel)'" 
 			+ "		:pattern='field.regex'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
@@ -37,13 +39,12 @@ Vue.component("page-form-input-password", {
 			+ "		:name='field.name'"
 			+ "		:timeout='timeout'"
 			+ "		:disabled='disabled'/>"
-			+ "	<n-form-text type='password' v-if='field.repeatLabel'"
-			+ " 	:pattern-comment='regexLabel'" 
-			+ "		:pattern='field.regex'"
+			+ "	<n-form-text type='password' v-if='field.repeatLabel && !readOnly'"
+			+ "		:placeholder='placeholder'"
 			+ "		:schema='schema'"
-			+ "		:label='field.repeatLabel'"
+			+ "		:label='$services.page.translate(field.repeatLabel)'"
 			+ "		v-model='repeat'"
-			+ "		:name='field.name + 2'"
+			+ "		:name='field.name'"
 			+ "		:timeout='timeout'"
 			+ "		:validator='validatePassword'"
 			+ "		:disabled='disabled'/></n-form-section>",
@@ -76,6 +77,14 @@ Vue.component("page-form-input-password", {
 		},
 		schema: {
 			type: Object,
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
+			required: false
+		},
+		placeholder: {
+			type: String,
 			required: false
 		}
 	},

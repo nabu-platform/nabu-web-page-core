@@ -24,6 +24,11 @@
 					<n-form-switch v-model="cell.state.autoclose" label="Autoclose"/>
 					<n-form-switch v-if="cell.state.pages.length >= 2" v-model="cell.state.pageTabs" label="Pages as tabs"/>
 					<n-form-switch v-if="cell.state.pages.length >= 2" v-model="cell.state.partialSubmit" label="Allow partial submit"/>
+					<n-form-switch v-model="cell.state.allowReadOnly" label="Allow read only mode"/>
+					<n-form-switch v-if="cell.state.allowReadOnly" v-model="cell.state.startAsReadOnly" label="Start in read only mode"/>
+					<n-form-switch v-if="cell.state.allowReadOnly" v-model="cell.state.onlyOneEdit" label="Allow only one in edit mode"/>
+					<n-form-text v-if="cell.state.allowReadOnly" v-model="cell.state.edit" label="Edit Label"/>
+					<n-form-text v-if="cell.state.allowReadOnly" v-model="cell.state.editIcon" label="Edit Icon"/>
 					<n-form-text v-model="cell.state.mode" label="Message Mode (the literal 'component' or a number)"/>
 				</n-collapsible>
 				<n-collapsible title="Value Binding" v-if="!cell.state.pageForm">
@@ -36,6 +41,7 @@
 				</n-collapsible>
 				<div v-for="cellPage in cell.state.pages">
 					<page-form-configure :title="cellPage.name"
+						:allow-read-only="cell.state.allowReadOnly"
 						:schema-resolver="getSchemaFor"
 						:groupable="true"
 						:edit-name="true"
@@ -59,11 +65,11 @@
 				:class="{'is-active': currentPage == page}">{{$services.page.interpret(page.name, self)}}</button>
 		</div>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
-		<n-form :class="cell.state.class" ref="form" :id="cell.state.formId" :mode="cell.state.mode">
+		<n-form :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}]" ref="form" :id="cell.state.formId" :mode="cell.state.mode">
 			<header slot="header" v-if="cell.state.dynamicHeader"><component :is="cell.state.dynamicHeader" :form="$self" :page="page" :cell="cell"/></header>
 			<n-form-section :key="'form_page_' + cell.state.pages.indexOf(currentPage)">
 				<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">
-					<n-form-section v-for="field in group.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name) && !isHidden(field)">
+					<n-form-section v-for="field in group.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name) && !isHidden(field) && (!readOnly || !field.hideInReadOnly)">
 						<component v-if="isList(field.name)"
 							:is="getProvidedListComponent(field.type)"
 							:value="result"
@@ -79,6 +85,7 @@
 							@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
 							:timeout="cell.state.immediate ? 600 : 0"
 							:page="page"
+							:read-only="readOnly"
 							:cell="cell"
 							v-focus="cell.state.autofocus == true && currentPage.fields.indexOf(field) == 0"/>
 						<page-arbitrary v-else
@@ -91,8 +98,14 @@
 				</n-form-section>
 			</n-form-section>
 			<footer slot="footer">
-				<footer v-if="cell.state.dynamicFooter"><component :is="cell.state.dynamicFooter" :form="$self" :page="page" :cell="cell"/></footer>
-				<footer class="global-actions" v-else-if="!cell.state.immediate">
+				<footer v-if="cell.state.dynamicFooter" class="footer-custom"><component :is="cell.state.dynamicFooter" :read-only="readOnly" :form="$self" :page="page" :cell="cell"/></footer>
+				<footer v-else-if="readOnly" class="footer-edit">
+					<button class="form-edit" :id="cell.state.formId ? cell.state.formId + '_edit' : null" @click="readOnly = false" v-if="cell.state.edit || cell.state.editIcon">
+						<span class="fa" :class="cell.state.editIcon" v-if="cell.state.editIcon"></span>
+						<span>{{$services.page.translate($services.page.interpret(cell.state.edit, $self))}}</span>
+					</button>
+				</footer>
+				<footer class="global-actions footer-standard" v-else-if="!cell.state.immediate">
 					<a class="cancel" href="javascript:void(0)" @click="cancel" :id="cell.state.formId ? cell.state.formId + '_cancel' : null" 
 						v-if="cell.state.cancel && (!cell.state.previous || cell.state.pages.indexOf(currentPage) == 0)">{{$services.page.translate($services.page.interpret(cell.state.cancel, $self))}}</a>
 					<a class="previous" href="javascript:void(0)" @click="previousPage" :id="cell.state.formId ? cell.state.formId + '_previous' : null" 
@@ -104,7 +117,7 @@
 					<button class="secondary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
 						v-if="cell.state.pages.length >= 2 && cell.state.partialSubmit && cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1 && cell.state.ok">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
 				</footer>
-				<footer>
+				<footer class="footer-messages">
 					<n-messages :messages="messages"/>
 				</footer>
 			</footer>
@@ -114,6 +127,8 @@
 
 <template id="page-form-field">
 	<component
+		:readOnly="readOnly"
+		:placeholder="field.placeholder ? $services.page.translate(field.placeholder) : null"
 		class="page-form-field"
 		:is="getProvidedComponent(field.type)"
 		:value="usesMultipleFields(field.type) ? parentValue : value"
@@ -151,6 +166,8 @@
 				:page="page"
 				:schema="schemaResolver(field.name)"
 				:cell="cell"/>
+				
+			<n-form-switch v-model="field.hideInReadOnly" v-if="allowReadOnly" label="Hide In Read Only Mode"/>
 			<div class="list-item-actions">
 				<button @click="upAll(field)"><span class="fa fa-chevron-circle-left"></span></button>
 				<button @click="up(field)"><span class="fa fa-chevron-circle-up"></span></button>
@@ -166,6 +183,7 @@
 	<div class="page-form-single-field">
 		<n-form-combo v-model="field.name" label="Field Name" :items="possibleFields" v-if="!usesMultipleFields(field.type)"/>
 		<n-form-text v-model="field.label" label="Label" v-if="allowLabel" />
+		<n-form-text v-model="field.placeholder" label="Placeholder" />
 		<n-form-text v-model="field.hidden" label="Hide field if" v-if="hidable" />
 		<n-form-text v-model="field.group" label="Field Group" v-if="groupable && !field.joinGroup" />
 		<n-form-checkbox v-model="field.joinGroup" label="Join Field Group" v-if="groupable && !field.group" />

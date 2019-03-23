@@ -19,7 +19,8 @@
 			<n-collapsible title="Main Settings" class="main">
 				<n-form-section>
 					<n-form-text v-model="$services.page.title" label="Website Title" :timeout="600" @input="$services.page.saveConfiguration"/>
-					<n-form-combo v-model="$services.page.home" label="Home Page" :filter="getRoutes" @input="$services.page.saveConfiguration"/>
+					<n-form-combo v-model="$services.page.home" label="Guest Home Page" :filter="getRoutes" @input="$services.page.saveConfiguration"/>
+					<n-form-combo v-model="$services.page.homeUser" label="User Home Page" :filter="getRoutes" @input="$services.page.saveConfiguration"/>
 					<div class="list-actions">
 						<button @click="$services.page.properties.push({key:null,value:null})">Add property</button>
 					</div>

@@ -34,8 +34,9 @@ nabu.page.views.Pages = Vue.extend({
 		}
 	},
 	ready: function() {
-		// not sure anymore why we do this? but can make it hard to style the index
-		//this.$services.page.disableReload = true;
+		// this can make it harder to style the index itself, but otherwise the pages page keeps refreshing while you are styling
+		// which can be awefully annoying as it is autosave
+		this.$services.page.disableReload = true;
 		if (this.$services.page.canEdit()) {
 			var self = this;
 			this.$el.addEventListener("paste", function(event) {

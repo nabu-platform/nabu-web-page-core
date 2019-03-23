@@ -43,6 +43,12 @@ nabu.page.views.Richtext = Vue.extend({
 			if (!state.content) {
 				Vue.set(state, "content", null);
 			}
+		},
+		highlight: function(content) {
+			var highlighter = nabu.page.providers("page-format").filter(function(x) {
+				 return x.name == "highlight";
+			})[0];
+			return highlighter ? highlighter.format(content) : content;
 		}
 	}
 })
