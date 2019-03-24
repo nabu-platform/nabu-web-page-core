@@ -538,6 +538,7 @@ nabu.services.VueService(Vue.extend({
 			return result;
 		},
 		isCondition: function(condition, state, instance) {
+			console.log("eval", condition, JSON.stringify(state));
 			if (!condition) {
 				return true;
 			}
