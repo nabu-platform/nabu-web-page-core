@@ -98,7 +98,8 @@
 					:page="page"
 					:cell="cell"
 					:target="field"
-					:component="$self"/>
+					:component="$self"
+					:record="data"/>
 			</dd>
 		</template>
 		<template v-else-if="!field.arbitrary">
@@ -134,6 +135,7 @@
 		</n-sidebar>
 		<page-field v-for="field in cell.state[fieldsName]" :field="field" :data="data ? data : state" :label="label == null ? !cell.state.hideLabel : label"
 			v-if="!field.hidden || !$services.page.isCondition(field.hidden, data ? data : state, $self)"
+			:edit="edit"
 			:page="page"
 			:cell="cell"
 			:should-style="shouldStyle"

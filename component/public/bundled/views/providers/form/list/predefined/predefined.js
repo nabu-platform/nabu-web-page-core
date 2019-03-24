@@ -179,7 +179,26 @@ Vue.component("page-form-list-input-predefined", {
 								var name = self.field.nameField ? x[self.field.nameField] : null;
 								var nameCounter = 1;
 								var label = self.field.labelField ? x[self.field.labelField] : null;
-								var value = self.field.valueField ? x[self.field.valueField] : null;
+								var value = null;
+								if (self.field.valueField) {
+									value = x[self.field.valueField];
+								}
+								else if (self.value && self.value[self.field.name]) {
+									var keyField = self.field.resultKeyField;
+									if (keyField == null) {
+										keyField = "key";
+									}
+									var current = self.value[self.field.name].filter(function(y) {
+										return y[keyField] == name;
+									})[0];
+									if (current) {
+										var valueField = self.field.resultValueField;
+										if (valueField == null) {
+											valueField = "value";
+										}
+										value = current[valueField];
+									}
+								}
 								var optional = self.field.optionalField ? x[self.field.optionalField] : true;
 								var result = {
 									type: type == null ? "string" : type,
@@ -199,6 +218,9 @@ Vue.component("page-form-list-input-predefined", {
 								});
 								return result;
 							}));
+							self.fields.forEach(function(field) {
+								self.updateField(field, field.value);
+							})
 						}
 					});
 				}

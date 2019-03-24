@@ -298,6 +298,10 @@ Vue.component("page-field", {
 		label: {
 			type: Boolean,
 			required: false
+		},
+		edit: {
+			type: Boolean,
+			required: false
 		}
 	},
 	methods: {

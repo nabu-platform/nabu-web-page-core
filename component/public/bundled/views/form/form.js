@@ -1052,6 +1052,17 @@ Vue.component("page-configure-arbitrary", {
 		}
 	},
 	methods: {
+		getTargetParameters: function(target) {
+			var parameters = this.$services.page.getRouteParameters(this.$services.router.get(target.route));
+			if (parameters.properties) {
+				// these are auto-injected
+				delete parameters.properties.cell;
+				delete parameters.properties.page;
+				delete parameters.properties.edit;
+				delete parameters.properties.component;
+			}
+			return parameters;
+		},
 		filterRoutes: function(value) {
 			var routes = this.$services.router.list().filter(function(x) {
 				return x.alias && (!value || x.alias.toLowerCase().indexOf(value.toLowerCase()) >= 0);

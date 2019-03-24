@@ -206,7 +206,7 @@
 	<div class="page-configure-arbitrary">
 		<n-form-text v-model="target.label" label="Label"/>
 		<n-form-combo v-model="target.route" label="Route" :filter="filterRoutes"/>
-		<n-page-mapper v-if="target.route" :to="$services.page.getRouteParameters($services.router.get(target.route))"
+		<n-page-mapper v-if="target.route" :to="getTargetParameters(target)"
 			:from="availableParameters" 
 			v-model="target.bindings"/>
 	</div>
