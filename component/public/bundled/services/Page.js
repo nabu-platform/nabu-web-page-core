@@ -531,14 +531,13 @@ nabu.services.VueService(Vue.extend({
 			var result = pageInstance.parameters ? nabu.utils.objects.clone(pageInstance.parameters) : {};
 			// copy internal parameters as well
 			if (page.content.parameters) {
-				page.content.parameters.map(function(parameter) {
+				page.content.parameters.forEach(function(parameter) {
 					result[parameter.name] = pageInstance.get("page." + parameter.name);
 				});
 			}
 			return result;
 		},
 		isCondition: function(condition, state, instance) {
-			console.log("eval", condition, JSON.stringify(state));
 			if (!condition) {
 				return true;
 			}
@@ -930,7 +929,9 @@ nabu.services.VueService(Vue.extend({
 					isPage: true,
 					initial: page.content.initial,
 					roles: page.content.roles != null && page.content.roles.length > 0 ? page.content.roles : null,
-					slow: !page.content.initial && page.content.slow
+					slow: !page.content.initial && page.content.slow,
+					parent: page.content.pageParent,
+					defaultAnchor: page.content.defaultAnchor
 				};
 				
 				self.$services.router.unregister(self.alias(page));

@@ -92,6 +92,15 @@
 			<from>input/content/imports</from>
 			<to>configuration/imports</to>
 		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="5b7dd59d-9e32-4b53-b04f-8f72797605dc"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>input/content/homeUser</from>
+			<to>configuration/homeUser</to>
+		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"

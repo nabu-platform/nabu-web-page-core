@@ -30,7 +30,9 @@ nabu.page.views.PageForm = Vue.extend({
 			currentPage: null,
 			autoMapFrom: null,
 			messages: [],
-			readOnly: false
+			readOnly: false,
+			// keeps track of the labels set by the fields (if relevant)
+			labels: {}
 		}
 	},
 	computed: {
@@ -58,7 +60,8 @@ nabu.page.views.PageForm = Vue.extend({
 			var self = this;
 			if (this.cell.state.pageForm) {
 				var parameters = this.$services.page.getPageParameters(this.page);
-				nabu.utils.arrays.merge(fields, Object.keys(parameters.properties));
+				//nabu.utils.arrays.merge(fields, Object.keys(parameters.properties));
+				nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor(parameters, true, true));
 			}
 			else {
 				Object.keys(this.cell.bindings).map(function(key) {
@@ -99,6 +102,17 @@ nabu.page.views.PageForm = Vue.extend({
 		});
 	},
 	methods: {
+		getCurrentValue: function(field) {
+			var currentValue = this.result[field.name];
+			if (!this.result.hasOwnProperty(field.name)) {
+				currentValue = this.$services.page.getValue(this.result, field.name);
+				// might be overkill, currently done for backwards compatibility
+				if (currentValue != null) {
+					Vue.set(this.result, field.name, currentValue);
+				}
+			}
+			return currentValue;
+		},
 		initialize: function() {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
@@ -112,7 +126,24 @@ nabu.page.views.PageForm = Vue.extend({
 			else if (this.cell.bindings) {
 				Object.keys(this.cell.bindings).map(function(key) {
 					if (self.cell.bindings[key]) {
-						Vue.set(self.result, key, self.$services.page.getBindingValue(pageInstance, self.cell.bindings[key]));
+						var bindingValue = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[key]);
+						// duplicate the arrays to prevent refresh issues
+						// suppose in our form we add one to the form, but the entire array is watched, then the form is rerendered and rebound
+						// additionally we want to be able to "cancel" our form without having the changes persisted, hence the object clone
+						// TODO: the same could be set for objects themselves with fields being directly altered by reference, might need more work then
+						if (bindingValue instanceof Array) {
+							var cloned = bindingValue.map(function(x) { return nabu.utils.objects.clone(x) });
+							if (self.result[key] instanceof Array) {
+								self.result[key].splice(0);
+								nabu.utils.arrays.merge(self.result[key], cloned);
+							}
+							else {
+								Vue.set(self.result, key, cloned);
+							}
+						}
+						else {
+							Vue.set(self.result, key, bindingValue);
+						}
 					}
 				});
 			}
@@ -317,8 +348,8 @@ nabu.page.views.PageForm = Vue.extend({
 		getOperations: function(name) {
 			var self = this;
 			return this.$services.page.getOperations(function(operation) {
-				// must be a put or post
-				return (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "post")
+				// must be a put, post, patch or delete
+				return (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "post" || operation.method.toLowerCase() == "delete" || operation.method.toLowerCase() == "patch")
 					// and contain the name fragment (if any)
 					&& (!name || operation.id.toLowerCase().indexOf(name.toLowerCase()) >= 0);
 			});
@@ -334,9 +365,9 @@ nabu.page.views.PageForm = Vue.extend({
 			}
 		},
 		updateOperation: function(operation) {
-			this.cell.state.operation = operation.id;
+			this.cell.state.operation = !operation ? null : operation.id;
 			var bindings = {};
-			if (operation.parameters) {
+			if (operation && operation.parameters) {
 				var self = this;
 				operation.parameters.map(function(parameter) {
 					if (parameter.in == "body") {
@@ -567,6 +598,8 @@ nabu.page.views.PageForm = Vue.extend({
 					}
 					var pageInstance = self.$services.page.getPageInstance(self.page, self);
 					var parameters = this.$services.page.getPageParameters(self.page);
+					// TODO: if it is a complex object (or array) use merging instead of setting?
+					// otherwise we do not have reactivity on these changes
 					Object.keys(parameters.properties).map(function(key) {
 						pageInstance.set("page." + key, result[key]);
 					});
@@ -586,7 +619,20 @@ nabu.page.views.PageForm = Vue.extend({
 							Object.keys(self.cell.bindings).map(function(name) {
 								// only set it if we actually bound something to it
 								if (self.cell.bindings[name] != null) {
-									pageInstance.set(self.cell.bindings[name], self.result[name]);
+									var newValue = self.result[name];
+									var valueSet = false;
+									// if we are setting an array, check if the original value was an array as well
+									if (newValue instanceof Array) {
+										var originalValue = pageInstance.get(self.cell.bindings[name]);
+										if (originalValue instanceof Array) {
+											originalValue.splice(0);
+											nabu.utils.arrays.merge(originalValue, newValue);
+											valueSet = true;
+										}
+									}
+									if (!valueSet) {
+										pageInstance.set(self.cell.bindings[name], newValue);
+									}
 								}
 							});
 						}

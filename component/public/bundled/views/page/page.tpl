@@ -37,6 +37,8 @@
 					<n-form-text v-model="page.content.class" label="Class"/>
 					<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow"/>
 					<n-form-combo label="Page Type" :items="['page', 'email']" v-model="page.content.pageType"/>
+					<n-form-combo label="Page Parent" :filter="filterRoutes" v-model="page.content.pageParent"/>
+					<n-form-text v-model="page.content.defaultAnchor" label="Default Content Anchor"/>
 					
 					<div class="list" v-if="page.content.roles">
 						<div v-for="i in Object.keys(page.content.roles)" class="list-row">
@@ -250,6 +252,7 @@
 								<n-form-text label="Cell Width (flex or other)" v-model="cell.width"/>
 								<n-form-text label="Cell Height (any)" v-model="cell.height"/>
 								<n-form-text label="Click Event" v-model="cell.clickEvent" :timeout="600" @input="resetEvents"/>
+								<n-form-text label="Cell Reference" v-model="cell.ref"/>
 								<n-form-text label="Class" v-model="cell.class"/>
 								<n-form-combo label="Cell Renderer" v-model="cell.renderer" :items="getRenderers('cell')" :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
 								<n-form-section v-if="cell.renderer">

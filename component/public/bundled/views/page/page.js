@@ -398,6 +398,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 		removeQuery: function(index) {
 			this.page.content.query.splice(index, 1);	
 		},
+		ref: function(reference) {
+			return this.refs[reference];
+		},
 		mounted: function(cell, row, state, component) {
 			var self = this;
 			

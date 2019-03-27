@@ -13,6 +13,7 @@
 					:required="!field.optional"
 					@input="function(value) { updateField(field, value) }"/>
 			</n-form-section>
+			<div v-if="!fields.length && field.emptyPlaceholder">{{$services.page.translate(field.emptyPlaceholder)}}</div>
 		</n-form-section>
 	</div>	
 </template>
@@ -24,6 +25,7 @@
 		<n-form-combo v-model="field.resultValueField" label="Resulting value field"
 			:items="availableResultFields"/>
 			
+		<n-form-text v-model="field.emptyPlaceholder" label="Empty placeholder"/>
 		<n-form-combo :filter="listOperations" label="Field Provider Operation" v-model="field.fieldProviderOperation"/>
 		<n-form-combo v-model="field.nameField" label="Provider Name Field" :required="true" v-if="field.fieldProviderOperation"
 			:items="availableFields"/>
@@ -37,7 +39,7 @@
 			:items="availableFields"/>
 		<n-page-mapper v-if='field.fieldProviderOperation && hasMappableParameters(field)'
 			v-model='field.fieldOperationBinding'
-			:from='$services.page.getAvailableParameters(page, cell)'
+			:from='$services.page.getAvailableParameters(page, cell, true)'
 			:to='getMappableParameters(field)'/>
 	</n-form-section>
 </template>

@@ -44,7 +44,7 @@ Vue.component("page-form-input-password", {
 			+ "		:schema='schema'"
 			+ "		:label='$services.page.translate(field.repeatLabel)'"
 			+ "		v-model='repeat'"
-			+ "		:name='field.name'"
+			+ "		:name='field.name + 2'"
 			+ "		:timeout='timeout'"
 			+ "		:validator='validatePassword'"
 			+ "		:disabled='disabled'/></n-form-section>",

@@ -71,12 +71,14 @@ Vue.component("page-format-resolver", {
 		},
 		getEnumerationFields: function(operationId) {
 			var fields = [];
-			var resolved = this.$services.swagger.resolve(this.$services.swagger.operations[operationId].responses["200"]);
-			Object.keys(resolved.schema.properties).map(function(property) {
-				if (resolved.schema.properties[property].type == "array") {
-					nabu.utils.arrays.merge(fields, Object.keys(resolved.schema.properties[property].items.properties));
-				}
-			});
+			if (this.$services.swagger.operations[operationId]) {
+				var resolved = this.$services.swagger.resolve(this.$services.swagger.operations[operationId].responses["200"]);
+				Object.keys(resolved.schema.properties).map(function(property) {
+					if (resolved.schema.properties[property].type == "array") {
+						nabu.utils.arrays.merge(fields, Object.keys(resolved.schema.properties[property].items.properties));
+					}
+				});
+			}
 			return fields;
 		},
 		getEnumerationParameters: function(operationId) {

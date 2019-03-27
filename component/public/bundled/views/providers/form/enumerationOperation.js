@@ -101,12 +101,14 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 		},
 		getEnumerationFields: function(operationId) {
 			var fields = [];
-			var resolved = this.$services.swagger.resolve(this.$services.swagger.operations[operationId].responses["200"]);
-			Object.keys(resolved.schema.properties).map(function(property) {
-				if (resolved.schema.properties[property].type == "array") {
-					nabu.utils.arrays.merge(fields, Object.keys(resolved.schema.properties[property].items.properties));
-				}
-			});
+			if (this.$services.swagger.operations[operationId]) {
+				var resolved = this.$services.swagger.resolve(this.$services.swagger.operations[operationId].responses["200"]);
+				Object.keys(resolved.schema.properties).map(function(property) {
+					if (resolved.schema.properties[property].type == "array") {
+						nabu.utils.arrays.merge(fields, Object.keys(resolved.schema.properties[property].items.properties));
+					}
+				});
+			}
 			return fields;
 		},
 		getEnumerationParameters: function(operationId) {
@@ -117,13 +119,15 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			var result = {
 				properties: {}
 			};
-			Object.keys(this.$services.page.getInputBindings(this.$services.swagger.operations[field.enumerationOperation])).map(function(key) {
-				if (key != field.enumerationOperationQuery) {
-					result.properties[key] = {
-						type: "string"
+			if (this.$services.swagger.operations[field.enumerationOperation]) {
+				Object.keys(this.$services.page.getInputBindings(this.$services.swagger.operations[field.enumerationOperation])).map(function(key) {
+					if (key != field.enumerationOperationQuery) {
+						result.properties[key] = {
+							type: "string"
+						}
 					}
-				}
-			});
+				});
+			}
 			return result;
 		},
 		hasMappableEnumerationParameters: function(field) {
@@ -265,17 +269,25 @@ Vue.component("page-form-input-enumeration-operation", {
 				
 				var self = this;
 				pageInstance.store(storageId, "");
-				var parameters = nabu.utils.objects.deepClone({
-					page: self.page,
-					cell: {state: self.field},
-					edit: false,
-					data: value,
-					label: false,
-					fieldsName: "enumerationFields"
-				});
-				var component = new nabu.page.views.PageFields({ propsData: parameters });
-				component.$mount();
-				pageInstance.store(storageId, component.$el.innerHTML.replace(/<[^>]+>/g, ""));
+				
+				setTimeout(function() {
+					var parameters = nabu.utils.objects.deepClone({
+						page: self.page,
+						cell: {state: self.field},
+						edit: false,
+						data: value,
+						label: false,
+						fieldsName: "enumerationFields"
+					});
+					var component = new nabu.page.views.PageFields({ propsData: parameters, updated: function() {
+						var content = component.$el.innerHTML.replace(/<[^>]+>/g, "");
+						if (pageInstance.retrieve(storageId) != content) {
+							pageInstance.store(storageId, content);
+						}
+					} });
+					component.$mount();
+				}, 1);
+				//pageInstance.store(storageId, component.$el.innerHTML.replace(/<[^>]+>/g, ""));
 				return pageInstance.retrieve(storageId);
 			}
 			else if (this.field.enumerationFormatter) {

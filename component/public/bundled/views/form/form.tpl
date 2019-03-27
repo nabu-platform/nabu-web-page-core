@@ -80,13 +80,14 @@
 							@changed="changed"
 							:timeout="cell.state.immediate ? 600 : 0"
 							:schema="getSchemaFor(field.name)"/>
-						<page-form-field v-else-if="!field.arbitrary" :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
+						<page-form-field v-else-if="!field.arbitrary" :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="getCurrentValue(field)"
 							:parent-value="result"
 							@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
 							:timeout="cell.state.immediate ? 600 : 0"
 							:page="page"
 							:read-only="readOnly"
 							:cell="cell"
+							@label="function(value) { $window.Vue.set(labels, field.name, value) }"
 							v-focus="cell.state.autofocus == true && currentPage.fields.indexOf(field) == 0"/>
 						<page-arbitrary v-else
 							:edit="edit"
@@ -137,7 +138,7 @@
 		:field="field"
 		@input="function(newValue) { $emit('input', newValue) }"
 		v-bubble:label
-		:label="$services.page.translate($services.page.interpret(fieldLabel, $self))"
+		:label="field.hideLabel ? null : $services.page.translate($services.page.interpret(fieldLabel, $self))"
 		:timeout="timeout"
 		:schema="schema"
 		:disabled="isDisabled"/>
@@ -190,6 +191,7 @@
 		<n-form-text v-model="field.description" label="Description" v-if="allowDescription" />
 		<n-form-combo v-model="field.type" label="Type" :items="types"/>
 		<n-form-text v-model="field.value" v-if="field.type == 'fixed'" label="Fixed Value"/>
+		<n-form-switch v-model="field.hideLabel" label="Hide label"/>
 		
 		<component v-if="field.type && ['fixed'].indexOf(field.type) < 0"
 			:possible-fields="possibleFields"

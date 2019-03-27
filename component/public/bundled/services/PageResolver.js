@@ -21,15 +21,19 @@ nabu.services.VueService(Vue.extend({
 	methods: {
 		// the ids is the input field we can use to input the ids to be searched
 		// the id is the field in the returned values that can be used to extract the id again
-		getResolver: function(operation, ids, id) {
-			if (!this.resolvers[operation + "." + ids]) {
+		getResolver: function(operation, ids, id, operationProperties) {
+			var additional = operationProperties ? JSON.stringify(operationProperties) : "";
+			if (!this.resolvers[operation + "." + ids + additional]) {
 				var self = this;
-				Vue.set(this.resolved, operation + "." + ids, {});
-				var resolved = this.resolved[operation + "." + ids];
-				this.resolvers[operation + "." + ids] = nabu.utils.misc.BatchResolver(
+				Vue.set(this.resolved, operation + "." + ids + additional, {});
+				var resolved = this.resolved[operation + "." + ids + additional];
+				this.resolvers[operation + "." + ids + additional] = nabu.utils.misc.BatchResolver(
 					// resolver
 					function(idList) {
 						var properties = {};
+						if (operationProperties) {
+							nabu.utils.objects.merge(properties, operationProperties);
+						}
 						properties[ids] = idList;
 						return self.$services.swagger.execute(operation, properties);
 					},
@@ -41,15 +45,15 @@ nabu.services.VueService(Vue.extend({
 					function(result) { return result[id] }
 				);
 			}
-			return this.resolvers[operation + "." + ids];
+			return this.resolvers[operation + "." + ids + additional];
 		},
-		resolve: function(operation, ids, id, value) {
+		resolve: function(operation, ids, id, value, operationProperties) {
 			// without this, it goes into an infinite resolving loop
 			// only if we use the merge() function, if we simply set the full value it doesn't
 			if (this.resolved[operation + "." + ids] && this.resolved[operation + "." + ids][value]) {
 				return this.resolved[operation + "." + ids][value];
 			}
-			return this.getResolver(operation, ids, id)(value);
+			return this.getResolver(operation, ids, id, operationProperties)(value);
 		},
 		merge: function(resolved, key, value) {
 			var self = this;

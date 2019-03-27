@@ -69,11 +69,14 @@
 							<n-form-switch label="Is initial" v-model="page.content.initial" @input="save(page)"/>
 							<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow" @input="save(page)"/>
 							<n-form-text v-model="page.content.path" v-if="!page.content.initial" label="Path" :timeout="600" @input="save(page)"/>
+							<n-form-combo v-model="page.content.pageParent" label="Page Parent" :timeout="600" @input="save(page)"
+								:filter="getRoutes"/>
+							<n-form-text v-model="page.content.defaultAnchor" label="Default Content Anchor" :timeout="600" @input="save(page)"/>
 							<!-- support for pages with input values -->
 						</n-form-section>
 						<div class="global-actions">
 							<button @click="copy(page)">Copy</button>
-							<button v-if="page.content.path && !page.content.initial" @click="route(page)">View</button>
+							<button v-if="!page.content.initial" @click="route(page)">View</button>
 							<button @click="remove(page)">Delete</button>
 						</div>
 					</n-collapsible>
