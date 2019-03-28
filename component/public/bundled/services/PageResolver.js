@@ -48,10 +48,11 @@ nabu.services.VueService(Vue.extend({
 			return this.resolvers[operation + "." + ids + additional];
 		},
 		resolve: function(operation, ids, id, value, operationProperties) {
+			var additional = operationProperties ? JSON.stringify(operationProperties) : "";
 			// without this, it goes into an infinite resolving loop
 			// only if we use the merge() function, if we simply set the full value it doesn't
-			if (this.resolved[operation + "." + ids] && this.resolved[operation + "." + ids][value]) {
-				return this.resolved[operation + "." + ids][value];
+			if (this.resolved[operation + "." + ids + additional] && this.resolved[operation + "." + ids + additional][value]) {
+				return this.resolved[operation + "." + ids + additional][value];
 			}
 			return this.getResolver(operation, ids, id, operationProperties)(value);
 		},

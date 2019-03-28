@@ -34,6 +34,8 @@ nabu.page.views.Pages = Vue.extend({
 		}
 	},
 	ready: function() {
+		document.body.removeAttribute("page");
+		document.body.removeAttribute("category");
 		// this can make it harder to style the index itself, but otherwise the pages page keeps refreshing while you are styling
 		// which can be awefully annoying as it is autosave
 		this.$services.page.disableReload = true;
@@ -98,6 +100,26 @@ nabu.page.views.Pages = Vue.extend({
 		this.$services.page.disableReload = false;	
 	},
 	methods: {
+		updatePageName: function(page, newValue) {
+			console.log("page name is", page.name, newValue);
+			var result = this.$refs["category_" + page.content.category][0].validate(true);
+			if (result.length == 0) {
+				// check that the name is not in use
+				this.$services.page.rename(page, newValue);
+			}
+		},
+		customNameValidator: function(newValue) {
+			var messages = [];
+			if (this.$services.page.pages.filter(function(x) { return x.content.name == newValue }).length > 0) {
+				messages.push({
+					severity: "error",
+					title: "Name already in use",
+					soft: false
+				});
+			}
+			console.log("validating custom", newValue, messages);
+			return messages;
+		},
 		copy: function(page) {
 			console.log("page is", page);
 			nabu.utils.objects.copy(page.content);

@@ -1397,7 +1397,8 @@ nabu.services.VueService(Vue.extend({
 						}
 					}, 1)
 				},
-				url: "/"
+				url: "/",
+				priority: 1
 			});
 		}
 	},

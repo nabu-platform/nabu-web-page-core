@@ -115,7 +115,7 @@ Vue.component("page-form-input-password", {
 					soft: true,
 					code: "same",
 					severity: "error",
-					title: this.field.regexLabel != null && this.field.regexLabel != "" ? this.field.regexLabel : "%{The two passwords don't match}"
+					title: "%{The two passwords don't match}"
 				});
 			}
 			return messages;

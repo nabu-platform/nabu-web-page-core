@@ -137,6 +137,20 @@ nabu.page.views.Page = Vue.component("n-page", {
 			document.body.setAttribute("page", this.page.name);
 			document.body.setAttribute("category", this.page.content.category);
 		}
+		
+		if (this.page.content.path) {
+			// remove existing meta
+			var meta = document.head.querySelectorAll("meta[property]");
+			for (var i = 0; i < meta.length; i++) {
+				meta[i].parentNode.removeChild(meta[i]);
+			}
+			if (this.page.content.meta) {
+				meta = this.page.content.meta;
+				if (meta.title) {
+					this.createMetaTag("og:title", this.$services.page.interpret(meta.title, this));
+				}
+			}
+		}
 	},
 	created: function() {
 		console.log("creating page", this.page.name, this.stopRerender);
@@ -239,6 +253,20 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		createMetaTag: function(key, value) {
+			var meta = document.createElement("meta");
+			meta.setAttribute("property", key);
+			meta.setAttribute("content", value);
+			document.head.appendChild(meta);
+		},
+		// http://ogp.me/
+		getOgTypes: function(value) {
+			var items = ['article', 'profile', 'website', 'book', 'video.movie', 'video.episode', 'video.tv_show', 'video.other', 'music.song', 'music.album', 'music.playlist', 'music.radio_station' ];
+			if (items.indexOf(value) < 0) {
+				items.unshift(value);
+			}
+			return items;
+		},
 		validateStateName: function(name) {
 			var blacklisted = ["page", "application", "record", "state", "localState"];
 			var messages = [];

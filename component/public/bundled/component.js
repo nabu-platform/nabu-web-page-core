@@ -206,10 +206,11 @@ window.addEventListener("load", function() {
 		// formatters
 		nabu.page.provide("page-format", {
 			format: function(id, fragment, page, cell) {
-				var properties = {};
+				var properties = null;
 				var self = this;
 				var pageInstance = $services.page.getPageInstance(page, this);
 				if (fragment && fragment.resolveOperationBinding) {
+					properties = {};
 					Object.keys(fragment.resolveOperationBinding).map(function(key) {
 						if (fragment.resolveOperationBinding[key]) {
 							var bindingValue = $services.page.getBindingValue(pageInstance, fragment.resolveOperationBinding[key]);

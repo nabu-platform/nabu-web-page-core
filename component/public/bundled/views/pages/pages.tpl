@@ -1,6 +1,6 @@
 <template id="nabu-pages">
 	<div class="pages">
-		<n-form class="layout2 settings pages" v-if="$services.page.canEdit()">
+		<n-form class="layout2 settings pages" v-if="$services.page.canEdit()" mode="component" ref="form">
 			<n-prompt v-if="showing">
 				<n-form class="layout2">
 					<n-form-section>
@@ -60,11 +60,11 @@
 				<footer class="list-actions">
 					<button @click="create">Create New Page</button>
 				</footer>
-				<div v-for="category in categories" :key="category" :ref="'category_' + category">
+				<n-form-section v-for="category in categories" :key="category" :ref="'category_' + category">
 					<h2>{{category ? category : 'Uncategorized'}} <span class="fa fa-clipboard" @click="copyCategory(category)"></span></h2>
 					<n-collapsible :title="page.name" v-for="page in getPagesFor(category)" class="layout2 list-item" :key="page.id">
 						<n-form-section>
-							<n-form-text :value="page.name" label="Name (camelCase only!)" :required="true" :timeout="600" @input="function(newValue) { $services.page.rename(page, newValue) }"/>
+							<n-form-text :value="page.name" label="Name (camelCase only!)" :required="true" :timeout="600" @input="function(newValue) { updatePageName(page, newValue) }" :validator="customNameValidator"/>
 							<n-form-text v-model="page.content.category" label="Category" :timeout="600" @input="save(page)"/>
 							<n-form-switch label="Is initial" v-model="page.content.initial" @input="save(page)"/>
 							<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow" @input="save(page)"/>
@@ -80,7 +80,7 @@
 							<button @click="remove(page)">Delete</button>
 						</div>
 					</n-collapsible>
-				</div>
+				</n-form-section>
 			</n-collapsible>
 			<n-collapsible title="Styling" class="list">
 				<footer class="list-actions">

@@ -81,6 +81,15 @@
 				<from>="repository:" + input/webApplicationId + ":/public/artifacts/pages"</from>
 				<to>uri</to>
 			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="d214cc9b-fa94-4f94-bfc4-c406a7bc93ee"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>true</from>
+				<to>recursive</to>
+			</steps>
 		</steps>
 		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 				disabled="false"
@@ -145,7 +154,7 @@
 						mask="false"
 						optional="false"
 						fixedValue="true">
-					<from>^.*public/artifacts/pages/(.*)\.json</from>
+					<from>^.*/public/artifacts/pages/(.*)\.json</from>
 					<to>match</to>
 				</steps>
 				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
@@ -232,7 +241,7 @@
 					id="3d02d509-3c52-4167-a138-aa41df0de8d6"
 					path="resultPage" xsi:nil="true"/>
 		</steps>
-		<query>pages</query>
+		<query>pages[name ~ ".*\.json"]</query>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"

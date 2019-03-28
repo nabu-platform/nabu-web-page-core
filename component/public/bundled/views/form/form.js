@@ -32,7 +32,8 @@ nabu.page.views.PageForm = Vue.extend({
 			messages: [],
 			readOnly: false,
 			// keeps track of the labels set by the fields (if relevant)
-			labels: {}
+			labels: {},
+			doingIt: false
 		}
 	},
 	computed: {
@@ -215,6 +216,39 @@ nabu.page.views.PageForm = Vue.extend({
 				fields: []
 			});
 		},
+		upPage: function(page) {
+			var index = this.cell.state.pages.indexOf(page);
+			if (index > 0) {
+				var replacement = this.cell.state.pages[index - 1];
+				this.cell.state.pages.splice(index - 1, 1, this.cell.state.pages[index]);
+				this.cell.state.pages.splice(index, 1, replacement);
+			}
+		},
+		downPage: function(page) {
+			var index = this.cell.state.pages.indexOf(page);
+			if (index < this.cell.state.pages.length - 1) {
+				var replacement = this.cell.state.pages[index + 1];
+				this.cell.state.pages.splice(index + 1, 1, this.cell.state.pages[index]);
+				this.cell.state.pages.splice(index, 1, replacement);
+			}
+		},
+		upAllPage: function(page) {
+			var index = this.cell.state.pages.indexOf(page);
+			if (index > 0) {
+				this.cell.state.pages.splice(index, 1);
+				this.cell.state.pages.unshift(page);
+			}
+		},
+		downAllPage: function(page) {
+			var index = this.cell.state.pages.indexOf(page);
+			if (index < this.cell.state.pages.length - 1) {
+				this.cell.state.pages.splice(index, 1);
+				this.cell.state.pages.push(page);
+			}
+		},
+		copyPage: function(page) {
+			this.cell.state.pages.push(nabu.utils.objects.deepClone(page));
+		},
 		configure: function() {
 			if (this.cell.state.autoclose == null) {
 				Vue.set(this.cell.state, "autoclose", true);
@@ -311,25 +345,27 @@ nabu.page.views.PageForm = Vue.extend({
 			return result;
 		},
 		cancel: function() {
-			if (this.cell.state.cancelEvent) {
-				var pageInstance = this.$services.page.getPageInstance(this.page, this);
-				var content = null;
-				if (this.cell.page.on) {
-					content = pageInstance.get(this.cell.page.on);
+			if (!this.doingIt) {
+				if (this.cell.state.cancelEvent) {
+					var pageInstance = this.$services.page.getPageInstance(this.page, this);
+					var content = null;
+					if (this.cell.page.on) {
+						content = pageInstance.get(this.cell.page.on);
+					}
+					if (content == null) {
+						content = {};
+					}
+					pageInstance.emit(this.cell.state.cancelEvent, content);
 				}
-				if (content == null) {
-					content = {};
+				else {
+					this.$emit('close');
 				}
-				pageInstance.emit(this.cell.state.cancelEvent, content);
-			}
-			else {
-				this.$emit('close');
-			}
-			if (this.cell.state.allowReadOnly) {
-				this.readOnly = true;
-				// reinitialize
-				this.initialize();
-				this.resetValidation();
+				if (this.cell.state.allowReadOnly) {
+					this.readOnly = true;
+					// reinitialize
+					this.initialize();
+					this.resetValidation();
+				}
 			}
 		},
 		resetValidation: function(component) {
@@ -539,12 +575,18 @@ nabu.page.views.PageForm = Vue.extend({
 				var parts = name.split(".");
 				var tmp = transformed;
 				for (var i = 0; i < parts.length - 1; i++) {
-					if (!tmp[parts[i]]) {
+					if (tmp[parts[i]] == null) {
 						Vue.set(tmp, parts[i], {});
 					}
 					tmp = tmp[parts[i]];
 				}
-				Vue.set(tmp, parts[parts.length - 1], result[name]);
+				// merge them
+				if (typeof(tmp[parts[parts.length - 1]]) == "object") {
+					nabu.utils.objects.merge(tmp[parts[parts.length - 1]], result[name]);
+				}
+				else {
+					Vue.set(tmp, parts[parts.length - 1], result[name]);
+				}
 				// if it is a complex field, set the string value as well
 				// this makes it easier to check later on if it has been set or not
 				if (name.indexOf(".") > 0) {
@@ -558,7 +600,7 @@ nabu.page.views.PageForm = Vue.extend({
 			// bind additional stuff from the page
 			Object.keys(this.cell.bindings).map(function(name) {
 				// don't overwrite manually set values
-				if (self.cell.bindings[name] && Object.keys(transformed).indexOf(name) < 0) {
+				if (self.cell.bindings[name] && Object.keys(transformed).indexOf(name) < 0 && Object.keys(result).indexOf(name) < 0) {
 					var parts = name.split(".");
 					var tmp = transformed;
 					for (var i = 0; i < parts.length - 1; i++) {
@@ -580,64 +622,105 @@ nabu.page.views.PageForm = Vue.extend({
 			Vue.set(this.localState, "form", this.createResult());
 		},
 		doIt: function() {
-			// if we have an embedded form with immediate turned on, don't valide it?
-			var messages = this.cell.state.immediate && this.cell.target == "page" ? [] : this.$refs.form.validate();
-			if (!messages.length) {
-				this.messages.splice(0, this.messages.length);
-				// commit the form
-				// refresh things that are necessary
-				// send out event! > can use this to refresh stuff!
-				// globale parameters that we can pass along
-				var self = this;
-				var result = this.createResult();
-				//console.log("result is", JSON.stringify(result, null, 2));
-				if (this.cell.state.pageForm) {
-					// close before the page is updated
-					if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
-						self.$emit("close");
-					}
-					var pageInstance = self.$services.page.getPageInstance(self.page, self);
-					var parameters = this.$services.page.getPageParameters(self.page);
-					// TODO: if it is a complex object (or array) use merging instead of setting?
-					// otherwise we do not have reactivity on these changes
-					Object.keys(parameters.properties).map(function(key) {
-						pageInstance.set("page." + key, result[key]);
-					});
-					if (self.cell.state.event) {
-						pageInstance.emit(self.cell.state.event, self.cell.on ? pageInstance.get(self.cell.on) : {});
-					}
-					// if we allow read only, revert to it after a successful edit
-					if (self.cell.state.allowReadOnly) {
-						self.readOnly = true;
-					}
-				}
-				else if (this.cell.state.operation) {
-					this.$services.swagger.execute(this.cell.state.operation, result).then(function(returnValue) {
+			if (!this.doingIt) {
+				this.doingIt = true;
+				// if we have an embedded form with immediate turned on, don't valide it?
+				var messages = this.cell.state.immediate && this.cell.target == "page" ? [] : this.$refs.form.validate();
+				if (!messages.length) {
+					this.messages.splice(0, this.messages.length);
+					// commit the form
+					// refresh things that are necessary
+					// send out event! > can use this to refresh stuff!
+					// globale parameters that we can pass along
+					var self = this;
+					var result = this.createResult();
+					//console.log("result is", JSON.stringify(result, null, 2));
+					if (this.cell.state.pageForm) {
+						// close before the page is updated
+						if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
+							self.$emit("close");
+						}
 						var pageInstance = self.$services.page.getPageInstance(self.page, self);
-						// if we want to synchronize the values, do so
-						if (self.cell.state.synchronize) {
-							Object.keys(self.cell.bindings).map(function(name) {
-								// only set it if we actually bound something to it
-								if (self.cell.bindings[name] != null) {
-									var newValue = self.result[name];
-									var valueSet = false;
-									// if we are setting an array, check if the original value was an array as well
-									if (newValue instanceof Array) {
-										var originalValue = pageInstance.get(self.cell.bindings[name]);
-										if (originalValue instanceof Array) {
-											originalValue.splice(0);
-											nabu.utils.arrays.merge(originalValue, newValue);
-											valueSet = true;
+						var parameters = this.$services.page.getPageParameters(self.page);
+						// TODO: if it is a complex object (or array) use merging instead of setting?
+						// otherwise we do not have reactivity on these changes
+						Object.keys(parameters.properties).map(function(key) {
+							pageInstance.set("page." + key, result[key]);
+						});
+						if (self.cell.state.event) {
+							pageInstance.emit(self.cell.state.event, self.cell.on ? pageInstance.get(self.cell.on) : {});
+						}
+						// if we allow read only, revert to it after a successful edit
+						if (self.cell.state.allowReadOnly) {
+							self.readOnly = true;
+						}
+						this.doingIt = false;
+					}
+					else if (this.cell.state.operation) {
+						try {
+							this.$services.swagger.execute(this.cell.state.operation, result).then(function(returnValue) {
+								var pageInstance = self.$services.page.getPageInstance(self.page, self);
+								// if we want to synchronize the values, do so
+								if (self.cell.state.synchronize) {
+									Object.keys(self.cell.bindings).map(function(name) {
+										// only set it if we actually bound something to it
+										if (self.cell.bindings[name] != null) {
+											var newValue = self.result[name];
+											var valueSet = false;
+											// if we are setting an array, check if the original value was an array as well
+											if (newValue instanceof Array) {
+												var originalValue = pageInstance.get(self.cell.bindings[name]);
+												if (originalValue instanceof Array) {
+													originalValue.splice(0);
+													nabu.utils.arrays.merge(originalValue, newValue);
+													valueSet = true;
+												}
+											}
+											if (!valueSet) {
+												pageInstance.set(self.cell.bindings[name], newValue);
+											}
 										}
-									}
-									if (!valueSet) {
-										pageInstance.set(self.cell.bindings[name], newValue);
-									}
+									});
 								}
+								if (self.cell.state.event) {
+									pageInstance.emit(self.cell.state.event, returnValue == null ? result : returnValue);
+								}
+								if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
+									self.$emit("close");
+								}
+								// if we allow read only, revert to it after a successful edit
+								if (self.cell.state.allowReadOnly) {
+									self.readOnly = true;
+								}
+								this.doingIt = false;
+							}, function(error) {
+								self.error = "Form submission failed";
+								try {
+									var parsed = JSON.parse(error.responseText);
+									self.messages.push({
+										type: "request",
+										severity: "error",
+										title: parsed.message
+									})
+								}
+								catch (exception) {
+									self.messages.push({
+										type: "request",
+										severity: "error",
+										title: "%{An error has occurred on the server, please try again}"
+									})
+								}
+								this.doingIt = false;
 							});
 						}
+						finally {
+							this.doingIt = false;
+						}
+					}
+					else {
+						var pageInstance = self.$services.page.getPageInstance(self.page, self);
 						if (self.cell.state.event) {
-							pageInstance.emit(self.cell.state.event, returnValue == null ? result : returnValue);
+							pageInstance.emit(self.cell.state.event, {});
 						}
 						if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
 							self.$emit("close");
@@ -646,36 +729,7 @@ nabu.page.views.PageForm = Vue.extend({
 						if (self.cell.state.allowReadOnly) {
 							self.readOnly = true;
 						}
-					}, function(error) {
-						self.error = "Form submission failed";
-						try {
-							var parsed = JSON.parse(error.responseText);
-							self.messages.push({
-								type: "request",
-								severity: "error",
-								title: parsed.message
-							})
-						}
-						catch (exception) {
-							self.messages.push({
-								type: "request",
-								severity: "error",
-								title: "%{An error has occurred on the server, please try again}"
-							})
-						}
-					});
-				}
-				else {
-					var pageInstance = self.$services.page.getPageInstance(self.page, self);
-					if (self.cell.state.event) {
-						pageInstance.emit(self.cell.state.event, {});
-					}
-					if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
-						self.$emit("close");
-					}
-					// if we allow read only, revert to it after a successful edit
-					if (self.cell.state.allowReadOnly) {
-						self.readOnly = true;
+						this.doingIt = false;
 					}
 				}
 			}

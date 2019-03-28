@@ -47,6 +47,16 @@
 						</div>
 					</div>
 					<button @click="page.content.roles ? page.content.roles.push('') : $window.Vue.set(page.content, 'roles', [''])">Add Role</button>
+					<button v-if="page.content.path && !page.content.meta" @click="$window.Vue.set(page.content, 'meta', {})">Add Meta Data</button>
+				</n-collapsible>
+				<n-collapsible title="Meta Settings" v-if="page.content.path && page.content.meta">
+					<n-form-text v-model="page.content.meta.title" label="Title"/>
+					<n-form-combo v-model="page.content.meta.type" label="Type" :filter="getOgTypes"/>
+					<n-form-text v-model="page.content.meta.image" label="Absolute Image URL"/>
+					<n-form-text v-model="page.content.meta.video" label="Absolute Video URL"/>
+					<n-form-text v-model="page.content.meta.description" label="Description"/>
+					<n-form-text v-model="page.content.meta.twitterCreator" label="Twitter Creator Handle" placeholder="@"/>
+					<n-form-text v-model="page.content.meta.twitterSite" label="Twitter Site Handle" placeholder="@"/>
 				</n-collapsible>
 				<n-collapsible title="Initial State" class="list">
 					<div class="list-actions">

@@ -1,6 +1,7 @@
 Vue.component("page-form-input-enumeration-provider-configure", {
 	template: "<n-form-section><n-form-combo v-model='field.enumerationProvider' :filter='enumerationFilter' label='Enumeration Provider'/>"
-		+ "	<n-form-combo v-if='valueOptions'  :items='valueOptions' v-model='field.enumerationProviderValue' label='Value Field'/>"
+		+ "	<n-form-combo v-if='valueOptions' :items='valueOptions' v-model='field.enumerationProviderValue' label='Value Field'/>"
+		+ "	<n-form-combo v-if='labelOptions' :items='labelOptions' v-model='field.enumerationProviderLabel' label='Label Field'/>"
 		+ "</n-form-section>",
 	props: {
 		cell: {
@@ -28,13 +29,23 @@ Vue.component("page-form-input-enumeration-provider-configure", {
 				var self = this;
 				var providers = nabu.page.providers("page-enumerate").map(function(x) { return x.name });
 				var provider = nabu.page.providers("page-enumerate").filter(function(x) { return x.name == self.field.enumerationProvider })[0];
-				console.log("for provider", provider);
 				if (provider && provider.values) {
 					return provider.values;
 				}
 			}
 			return null;
-		}	
+		},
+		labelOptions: function() {
+			if (this.field.enumerationProvider != null) {
+				var self = this;
+				var providers = nabu.page.providers("page-enumerate").map(function(x) { return x.name });
+				var provider = nabu.page.providers("page-enumerate").filter(function(x) { return x.name == self.field.enumerationProvider })[0];
+				if (provider && provider.labels) {
+					return provider.labels;
+				}
+			}
+			return null;
+		},
 	},
 	methods: {
 		enumerationFilter: function(value) {
@@ -52,6 +63,7 @@ Vue.component("page-form-input-enumeration-provider", {
 	template: "<n-form-combo ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
+			+ "		v-bubble:label"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
@@ -137,15 +149,18 @@ Vue.component("page-form-input-enumeration-provider", {
 		},
 		enumerationFormatter: function(value) {
 			var provider = this.provider;
-			if (value && provider && provider.label) {
+			if (value && this.field.enumerationProviderLabel) {
+				return value[this.field.enumerationProviderLabel];
+			}
+			else if (value && provider && provider.label) {
 				return value[provider.label];
 			}
 			return value;
 		},
 		enumerationExtracter: function(value) {
 			var provider = this.provider;
-			if (this.field.enumerationOperationValue) {
-				return value[this.field.enumerationOperationValue];
+			if (value && this.field.enumerationProviderValue) {
+				return value[this.field.enumerationProviderValue];
 			}
 			else if (value && provider && provider.value) {
 				return value[provider.value];

@@ -51,8 +51,14 @@
 						:page="page"
 						@input="function(newValue) { cellPage.name = newValue }"
 						:cell="cell"/>
-					<div class="list-actions" v-if="cell.state.pages.length > 1">
-						<button @click="deletePage(cellPage)">Delete {{cellPage.name}}</button>
+					<div class="list-actions">
+						<span>Page Actions: </span>
+						<button v-if="cell.state.pages.length > 1" @click="upAllPage(cellPage)"><span class="fa fa-chevron-circle-left"></span></button>
+						<button v-if="cell.state.pages.length > 1" @click="upPage(cellPage)"><span class="fa fa-chevron-circle-up"></span></button>
+						<button v-if="cell.state.pages.length > 1" @click="downPage(cellPage)"><span class="fa fa-chevron-circle-down"></span></button>
+						<button v-if="cell.state.pages.length > 1" @click="downAllPage(cellPage)"><span class="fa fa-chevron-circle-right"></span></button>
+						<button @click="copyPage(cellPage)"><span class="fa fa-copy"></span></button>
+						<button v-if="cell.state.pages.length > 1" @click="deletePage(cellPage)">Delete {{cellPage.name}}</button>
 					</div>
 				</div>
 				<div class="list-actions">
@@ -107,15 +113,16 @@
 					</button>
 				</footer>
 				<footer class="global-actions footer-standard" v-else-if="!cell.state.immediate">
-					<a class="cancel" href="javascript:void(0)" @click="cancel" :id="cell.state.formId ? cell.state.formId + '_cancel' : null" 
+					<a class="cancel" :disabled="doingIt" href="javascript:void(0)" @click="cancel" :id="cell.state.formId ? cell.state.formId + '_cancel' : null" 
 						v-if="cell.state.cancel && (!cell.state.previous || cell.state.pages.indexOf(currentPage) == 0)">{{$services.page.translate($services.page.interpret(cell.state.cancel, $self))}}</a>
-					<a class="previous" href="javascript:void(0)" @click="previousPage" :id="cell.state.formId ? cell.state.formId + '_previous' : null" 
+					<a class="previous" :disabled="doingIt" href="javascript:void(0)" @click="previousPage" :id="cell.state.formId ? cell.state.formId + '_previous' : null" 
 						v-if="cell.state.previous && cell.state.pages.indexOf(currentPage) > 0">{{$services.page.translate($services.page.interpret(cell.state.previous, $self))}}</a>
 					<button class="primary" :id="cell.state.formId ? cell.state.formId + '_next' : null" @click="nextPage" 
 						v-if="cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1">{{$services.page.translate($services.page.interpret(cell.state.next, $self))}}</button>
-					<button class="primary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
+					<button :disabled="doingIt" class="primary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
 						v-else-if="cell.state.ok">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
 					<button class="secondary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
+						:disabled="doingIt"
 						v-if="cell.state.pages.length >= 2 && cell.state.partialSubmit && cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1 && cell.state.ok">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
 				</footer>
 				<footer class="footer-messages">
@@ -147,7 +154,7 @@
 <template id="page-form-configure">
 	<n-collapsible class="list" :title="title">
 		<div class="root-configuration">
-			<n-form-text :value="page.name" label="Page Name" v-if="editName" v-bubble:input/>
+			<n-form-text :value="title" label="Form Page Name" v-if="editName" v-bubble:input/>
 		</div>
 		<div class="list-actions">
 			<button @click="addField(false)">Add Field</button>
@@ -207,6 +214,7 @@
 <template id="page-configure-arbitrary">
 	<div class="page-configure-arbitrary">
 		<n-form-text v-model="target.label" label="Label"/>
+		<n-form-text v-model="target.class" label="Class"/>
 		<n-form-combo v-model="target.route" label="Route" :filter="filterRoutes"/>
 		<n-page-mapper v-if="target.route" :to="getTargetParameters(target)"
 			:from="availableParameters" 
@@ -219,6 +227,6 @@
 		<div v-if="instance && instance.configure && edit">
 			<button @click="instance.configure"><span class="fa fa-cog"></span></button>
 		</div>
-		<div v-route-render="{ alias: target.route, parameters: getParameters(), mounted: mounted }"></div>
+		<div :class="target.class" v-route-render="{ alias: target.route, parameters: getParameters(), mounted: mounted }"></div>
 	</div>
 </template>
