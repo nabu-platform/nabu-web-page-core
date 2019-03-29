@@ -639,8 +639,9 @@ nabu.services.VueService(Vue.extend({
 						// if it is complex, recurse
 						if (isComplex) {
 							if (isArray) {
-								console.log("recursing array");
-								self.getSimpleKeysFor({properties:definition.properties[key].items}, includeComplex, includeArrays, keys, childPath);
+								// not sure if the ternary is needed, "definition.properties[key].items" should be correct for complex types
+								// but for backwards compatibility i don't want to mess it up
+								self.getSimpleKeysFor(definition.properties[key].items.properties ? definition.properties[key].items : {properties:definition.properties[key].items}, includeComplex, includeArrays, keys, childPath);
 							}
 							else {
 								self.getSimpleKeysFor(definition.properties[key], includeComplex, includeArrays, keys, childPath);

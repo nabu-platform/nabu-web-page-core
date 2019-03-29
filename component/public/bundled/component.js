@@ -55,6 +55,13 @@ window.addEventListener("load", function() {
 			}
 		});
 		
+		$services.router.register({
+			alias: "page-youtube",
+			enter: function(parameters) {
+				return new nabu.page.views.Youtube({propsData: parameters});
+			}
+		});
+		
 		// fragment providers
 		nabu.page.provide("page-field-fragment", { 
 			component: "page-field-fragment-data", 

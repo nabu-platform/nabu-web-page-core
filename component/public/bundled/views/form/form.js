@@ -530,6 +530,9 @@ nabu.page.views.PageForm = Vue.extend({
 			}
 			return false;
 		},
+		set: function(key, value) {
+			this.result[key] = value;
+		},
 		getProvidedListComponent: function(type) {
 			var provided = nabu.page.providers("page-form-list-input").filter(function(x) {
 				 return x.name == type;
@@ -713,7 +716,7 @@ nabu.page.views.PageForm = Vue.extend({
 								this.doingIt = false;
 							});
 						}
-						finally {
+						catch(exception) {
 							this.doingIt = false;
 						}
 					}
@@ -731,6 +734,9 @@ nabu.page.views.PageForm = Vue.extend({
 						}
 						this.doingIt = false;
 					}
+				}
+				else {
+					this.doingIt = false;
 				}
 			}
 		},

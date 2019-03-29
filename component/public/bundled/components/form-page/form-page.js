@@ -17,10 +17,10 @@ Vue.component("n-form-page", {
 		}
 	},
 	created: function() {
-		console.log("value is", this.value);
-		
+		var counter = this.$services.page.counter++;
 		this.page = {
-			name: "dynamic-page-" + this.$services.page.counter++,
+			name: "dynamic-page-" + counter,
+			counter: counter,
 			content: this.$services.page.normalize(typeof(this.value) == "string" ? JSON.parse(this.value) : {})
 		};
 	},

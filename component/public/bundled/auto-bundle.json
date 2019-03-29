@@ -88,6 +88,14 @@
 						"richtext.js": {
 							"url": "views/richtext/richtext.js"
 						}
+					},
+					"youtube": {
+						"youtube.tpl": {
+							"url": "views/youtube/youtube.tpl"
+						}, 
+						"youtube.js": {
+							"url": "views/youtube/youtube.js"
+						}
 					}, 
 					"page": {
 						"addCell": {

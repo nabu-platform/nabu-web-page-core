@@ -131,32 +131,22 @@ nabu.page.views.Page = Vue.component("n-page", {
 			done();
 		}
 	},
+	mounted: function() {
+		console.log("mounted page", this.page.name, this.embedded);
+	},
 	ready: function() {
+		console.log("ready page", this.page.name, this.embedded);
 		// the page has a path, set it in the body so we can do additional stuff
 		if (this.page.content.path)	{
 			document.body.setAttribute("page", this.page.name);
 			document.body.setAttribute("category", this.page.content.category);
 		}
-		
-		if (this.page.content.path) {
-			// remove existing meta
-			var meta = document.head.querySelectorAll("meta[property]");
-			for (var i = 0; i < meta.length; i++) {
-				meta[i].parentNode.removeChild(meta[i]);
-			}
-			if (this.page.content.meta) {
-				meta = this.page.content.meta;
-				if (meta.title) {
-					this.createMetaTag("og:title", this.$services.page.interpret(meta.title, this));
-				}
-			}
-		}
 	},
 	created: function() {
 		console.log("creating page", this.page.name, this.stopRerender);
 		this.$services.page.setPageInstance(this.page, this);
+		var self = this;
 		if (this.page.content.parameters) {
-			var self = this;
 			this.page.content.parameters.map(function(x) {
 				if (x.name != null) {
 					// if it is not passed in as input, we set the default value
@@ -180,6 +170,18 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 		if (this.editable) {
 			this.edit = true;
+		}
+		
+		if (!this.embedded) {
+			// initialize plugins
+			this.plugins.forEach(function(plugin) {
+				var component = Vue.component(plugin.component);
+				new component({propsData: {
+					page: self.page,
+					edit: self.edit,
+					instance: self
+				}});
+			});
 		}
 	},
 	beforeMount: function() {
@@ -218,6 +220,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			classes.push("page-" + this.page.name);
 			return classes;
+		},
+		plugins: function() {
+			return nabu.page.providers("page-plugin").filter(function(x) { return x.target == "page" });
 		}
 	},
 	data: function() {
@@ -253,20 +258,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
-		createMetaTag: function(key, value) {
-			var meta = document.createElement("meta");
-			meta.setAttribute("property", key);
-			meta.setAttribute("content", value);
-			document.head.appendChild(meta);
-		},
-		// http://ogp.me/
-		getOgTypes: function(value) {
-			var items = ['article', 'profile', 'website', 'book', 'video.movie', 'video.episode', 'video.tv_show', 'video.other', 'music.song', 'music.album', 'music.playlist', 'music.radio_station' ];
-			if (items.indexOf(value) < 0) {
-				items.unshift(value);
-			}
-			return items;
-		},
 		validateStateName: function(name) {
 			var blacklisted = ["page", "application", "record", "state", "localState"];
 			var messages = [];
@@ -1618,7 +1609,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			nabu.page.providers("page-enumerate").map(function(x) {
 				providers.push(x.name);
 			});
-			return Object.keys(cell.bindings).reduce(function(consensus, name) {
+			var consensus =  Object.keys(cell.bindings).reduce(function(consensus, name) {
 				// fixed values are always ok
 				if (cell.bindings[name] && cell.bindings[name].indexOf("fixed") == 0) {
 					return consensus;
@@ -1641,6 +1632,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				}*/
 				return consensus;
 			}, true);
+			return consensus;
 		},
 		// changedValues is an array of field names that have changed, e.g. "page.test" or "select.$all" etc
 		shouldRerenderCell: function(cell, changedValues) {
