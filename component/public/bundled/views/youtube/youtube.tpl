@@ -12,8 +12,9 @@
 				</n-form-section>
 			</n-form>
 		</n-sidebar>
-		<iframe v-if="url" :width="cell.state.width ? cell.state.width : 560" :height="cell.state.height ? cell.state.height : 315" src="https://www.youtube.com/embed/bmLCj8Qba-M" 
+		<iframe ref="iframe" v-if="url && !$services.page.isSsr" :width="cell.state.width ? cell.state.width : 560" :height="cell.state.height ? cell.state.height : 315" src="https://www.youtube.com/embed/bmLCj8Qba-M" 
 			frameborder="0" 
 			allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+		<a :href="url" rel="nofollow noreferrer noopener" v-else-if="$services.page.isSsr">%{Go to youtube}</a>
 	</div>
 </template>

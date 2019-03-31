@@ -314,6 +314,9 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			return action.disabled && this.$services.page.isCondition(action.disabled, this.state, this);
 		},
 		handle: function(action, force) {
+			if (action.name && this.$services.analysis && this.$services.analysis.emit) {
+				this.$services.analysis.emit("trigger-" + (this.cell.state.analysisId ? this.cell.state.analysisId : "action"), action.name, {url: window.location}, true);
+			}
 			if (force || !this.isDisabled(action)) {
 				if (action.route) {
 					var route = action.route;

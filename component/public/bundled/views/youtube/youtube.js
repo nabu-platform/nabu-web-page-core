@@ -31,6 +31,17 @@ nabu.page.views.Youtube = Vue.extend({
 			configuring: false
 		}
 	},
+	created: function() {
+		var self = this;
+		// this monitor allows us to check whether you have activated the iframe and are thus presumably watching the video
+		var monitor = setInterval(function(){
+			var element = document.activeElement;
+			if (element && element == self.$refs.iframe) {
+				clearInterval(monitor);
+				self.analyze();
+			}
+		}, 100);
+	},
 	computed: {
 		url: function() {
 			if (this.cell.state.url) {
@@ -61,6 +72,11 @@ nabu.page.views.Youtube = Vue.extend({
 	methods: {
 		configure: function() {
 			this.configuring = true;	
+		},
+		analyze: function() {
+			if (this.$services.analysis && this.$services.analysis.emit) {
+				this.$services.analysis.emit("watch-youtube", this.url, null, true);
+			}
 		}
 	}
 })

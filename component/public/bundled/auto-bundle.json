@@ -2,6 +2,22 @@
 	"namespace": "page", 
 	"name": "core", 
 	"resources": {
+		"images": {
+			"social": {
+				"facebook.svg": {
+					"url": "images/social/facebook.svg"
+				},
+				"twitter.svg": {
+					"url": "images/social/twitter.svg"
+				},
+				"linkedin.svg": {
+					"url": "images/social/linkedin.svg"
+				},
+				"pinterest.svg": {
+					"url": "images/social/pinterest.svg"
+				}
+			}
+		},
 		"page": {
 			"core": {
 				"components": {
@@ -96,7 +112,18 @@
 						"youtube.js": {
 							"url": "views/youtube/youtube.js"
 						}
-					}, 
+					},
+					"share": {
+						"share.tpl": {
+							"url": "views/share/share.tpl"
+						}, 
+						"share.scss": {
+							"url": "views/share/share.scss"
+						}, 
+						"share.js": {
+							"url": "views/share/share.js"
+						}
+					},
 					"page": {
 						"addCell": {
 							"add.js": {

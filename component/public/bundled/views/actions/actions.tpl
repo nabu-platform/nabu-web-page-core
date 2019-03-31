@@ -8,6 +8,7 @@
 						<n-form-combo v-model="cell.state.class" label="Class" 
 							:filter="function(value) { return $services.page.classes('page-actions', value) }"/>
 						<n-form-text v-model="cell.state.activeClass" label="Active Class"/>
+						<n-form-text v-model="cell.state.analysisId" label="Analysis Id"/>
 						<n-form-switch v-model="cell.state.useButtons" label="Use Buttons"/>
 						<n-form-switch v-model="cell.state.isFixedHeader" label="Fix as header"/>
 						<n-form-combo v-model="cell.state.defaultAction" label="Default Action"

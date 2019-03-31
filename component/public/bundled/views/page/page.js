@@ -725,9 +725,20 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 					};
 					
+					var date = new Date();
+					var stop = function(error) {
+						if (self.$services.analysis && self.$services.analysis.emit && action.name) {
+							self.$services.analysis.emit("trigger-" + self.page.name, action.name, 
+								{time: new Date().getTime() - date.getTime(), error: error}, true);
+						}
+					};
+					
+					promise.then(function() { stop() }, function(error) { stop(error) });
+					
 					if (action.confirmation) {
 						self.$confirm({message:action.confirmation}).then(function() {
 							var element = null;
+							var async = false;
 							// already get the element, it can be triggered with or without a route
 							if (action.scroll) {
 								var element = document.querySelector(action.scroll);
@@ -745,21 +756,20 @@ nabu.page.views.Page = Vue.component("n-page", {
 								}
 							}
 							else if (action.route) {
+								var routePromise = null;
 								eventReset();
 								if (action.anchor == "$blank") {
-									console.log("routing", action.route, parameters, 
-										self.$services.router.template(action.route, parameters));
 									window.open(self.$services.router.template(action.route, parameters));
 								}
 								else if (action.anchor == "$window") {
 									window.location = self.$services.router.template(action.route, parameters);
 								}
 								else {
-									promise = self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
+									routePromise = self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
 								}
 								if (element) {
-									if (promise && promise.then) {
-										promise.then(function() {
+									if (routePromise && routePromise.then) {
+										routePromise.then(function() {
 											element.scrollIntoView();
 										});
 									}
@@ -775,7 +785,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 								}
 							}
 							else if (action.operation && self.isGet(action.operation) && action.anchor == "$blank") {
-								window.open(self.$services.swagger.parameters(action.operation, parameters).url);
+								window.open(self.$services.swagger.parameters(action.operation, parameters).url, "_blank");
 							}
 							else if (action.operation) {
 								if (action.isSlow) {
@@ -785,9 +795,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 								if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
 									window.location = self.$services.swagger.parameters(action.operation, parameters).url;
 									eventReset();
-									promise.resolve();
 								}
 								else {
+									async = true;
 									self.$services.swagger.execute(action.operation, parameters).then(function(result) {
 										if (action.event) {
 											self.emit(action.event, result);
@@ -799,6 +809,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 							}
 							else {
 								eventReset();
+							}
+							if (!async) {
 								promise.resolve();
 							}
 						}, function() {
@@ -806,6 +818,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 						})
 					}
 					else {
+						var async = false;
 						if (action.url) {
 							var url = self.$services.page.interpret(action.url, self);
 							if (action.anchor) {
@@ -838,7 +851,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 							}
 						}
 						else if (action.operation && self.isGet(action.operation) && action.anchor == "$blank") {
-							window.open(self.$services.swagger.parameters(action.operation, parameters).url);
+							window.open(self.$services.swagger.parameters(action.operation, parameters).url, "_blank");
 						}
 						else if (action.operation) {
 							if (action.isSlow) {
@@ -848,9 +861,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 							if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
 								window.location = self.$services.swagger.parameters(action.operation, parameters).url;
 								eventReset();
-								promise.resolve();
 							}
 							else {
+								async = true;
 								self.$services.swagger.execute(action.operation, parameters).then(function(result) {
 									if (action.event) {
 										self.emit(action.event, result);
@@ -862,6 +875,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 						else {
 							eventReset();
+						}
+						if (!async) {
 							promise.resolve();
 						}
 					}

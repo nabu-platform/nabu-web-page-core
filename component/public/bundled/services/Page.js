@@ -86,6 +86,9 @@ nabu.services.VueService(Vue.extend({
 				providers[x.name] = x;
 			});
 			return providers;
+		},
+		isSsr: function() {
+			return navigator.userAgent.match(/Nabu-Renderer/);
 		}
 	},
 	created: function() {

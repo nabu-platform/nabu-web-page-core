@@ -33,10 +33,22 @@ nabu.page.views.PageForm = Vue.extend({
 			readOnly: false,
 			// keeps track of the labels set by the fields (if relevant)
 			labels: {},
-			doingIt: false
+			doingIt: false,
+			started: null
 		}
 	},
 	computed: {
+		analysisId: function() {
+			var id = this.cell.state.analysisId;
+			if (!id) {
+				id = this.cell.state.formId;
+			}
+			// if we have nothing specific, we assume there is only one form on the page
+			if (!id) {
+				id = this.page.name;
+			}
+			return id;
+		},
 		operation: function() {
 			return this.cell.state.operation ? this.$services.swagger.operations[this.cell.state.operation] : null;
 		},
@@ -92,6 +104,7 @@ nabu.page.views.PageForm = Vue.extend({
 		if (this.cell.state.allowReadOnly && this.cell.state.startAsReadOnly) {
 			this.readOnly = true;
 		}
+		this.started = new Date();
 	},
 	// want ready because we need correct root
 	ready: function() {
@@ -150,7 +163,11 @@ nabu.page.views.PageForm = Vue.extend({
 			}
 			
 			// get the first page
-			this.currentPage = this.cell.state.pages[0];	
+			this.currentPage = this.cell.state.pages[0];
+			
+			if (this.$services.analysis && this.$services.analysis.emit) {
+				this.$services.analysis.emit("form-page-0", this.analysisId, null, true);
+			}
 		},
 		automap: function() {
 			var source = this.availableParameters[this.autoMapFrom];
@@ -188,17 +205,26 @@ nabu.page.views.PageForm = Vue.extend({
 			var messages = this.$refs.form.validate();
 			if (!messages.length) {
 				this.currentPage = this.cell.state.pages[this.cell.state.pages.indexOf(this.currentPage) + 1];
+				if (this.$services.analysis && this.$services.analysis.emit) {
+					this.$services.analysis.emit("form-page-" + this.cell.state.pages.indexOf(this.currentPage), this.analysisId, {method: "next"}, true);
+				}
 			}
 		},
 		previousPage: function() {
 			if (this.cell.state.pages.indexOf(this.currentPage) >= 1) {
 				this.currentPage = this.cell.state.pages[this.cell.state.pages.indexOf(this.currentPage) - 1];
+				if (this.$services.analysis && this.$services.analysis.emit) {
+					this.$services.analysis.emit("form-page-" + this.cell.state.pages.indexOf(this.currentPage), this.analysisId, {method: "previous"}, true);
+				}
 			}
 		},
 		setPage: function(page) {
 			var messages = this.$refs.form.validate();
 			if (!messages.length) {
 				this.currentPage = page;
+				if (this.$services.analysis && this.$services.analysis.emit) {
+					this.$services.analysis.emit("form-page-" + this.cell.state.pages.indexOf(this.currentPage), this.analysisId, {method: "choose"}, true);
+				}
 			}
 		},
 		deletePage: function(page) {
@@ -365,6 +391,9 @@ nabu.page.views.PageForm = Vue.extend({
 					// reinitialize
 					this.initialize();
 					this.resetValidation();
+				}
+				if (this.$services.analysis && this.$services.analysis.emit) {
+					this.$services.analysis.emit("form-cancel", this.analysisId, null, true);
 				}
 			}
 		},
@@ -626,6 +655,14 @@ nabu.page.views.PageForm = Vue.extend({
 		},
 		doIt: function() {
 			if (!this.doingIt) {
+				var date = new Date();
+				var self = this;
+				var stop = function(error) {
+					if (self.$services.analysis && self.$services.analysis.emit) {
+						self.$services.analysis.emit(error ? "form-fail" : "form-finalize", self.analysisId, 
+							{submitTime: new Date().getTime() - date.getTime(), totalTime: new Date().getTime() - self.started.getTime(), error: error}, true);
+					}
+				};
 				this.doingIt = true;
 				// if we have an embedded form with immediate turned on, don't valide it?
 				var messages = this.cell.state.immediate && this.cell.target == "page" ? [] : this.$refs.form.validate();
@@ -696,6 +733,7 @@ nabu.page.views.PageForm = Vue.extend({
 									self.readOnly = true;
 								}
 								this.doingIt = false;
+								stop();
 							}, function(error) {
 								self.error = "Form submission failed";
 								try {
@@ -714,10 +752,12 @@ nabu.page.views.PageForm = Vue.extend({
 									})
 								}
 								this.doingIt = false;
+								stop(error && error.responseText ? error.responseText : "Form submission failed");
 							});
 						}
 						catch(exception) {
 							this.doingIt = false;
+							stop(exception.message);
 						}
 					}
 					else {
@@ -733,6 +773,7 @@ nabu.page.views.PageForm = Vue.extend({
 							self.readOnly = true;
 						}
 						this.doingIt = false;
+						stop();
 					}
 				}
 				else {
