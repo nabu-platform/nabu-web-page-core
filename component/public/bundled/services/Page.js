@@ -33,6 +33,8 @@ nabu.services.VueService(Vue.extend({
 			devices: [],
 			// application styles
 			styles: [],
+			// transformers
+			transformers: [],
 			// custom content
 			contents: [],
 			// any imports
@@ -48,6 +50,7 @@ nabu.services.VueService(Vue.extend({
 			useEval: false,
 			cssLastModified: null,
 			cssError: null,
+			transformerError: null,
 			disableReload: false
 		}
 	},
@@ -105,6 +108,14 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		getAvailableTypes: function(value) {
+			var types = ['string', 'boolean', 'number', 'integer'];
+			nabu.utils.arrays.merge(types, Object.keys(this.$services.swagger.swagger.definitions));
+			if (value) {
+				types = types.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+			}
+			return types;
+		},
 		getContent: function(page, key) {
 			// if we are in development mode and no explicit language choice is made, don't show the contents, you want the json values
 			if (${environment("development")} && (!this.$services.language || !this.$services.language.cookieValue)) {
@@ -195,17 +206,25 @@ nabu.services.VueService(Vue.extend({
 				if (self.home || self.homeUser) {
 					self.registerHome(self.home, self.homeUser);
 				}
-				self.imports.forEach(function(x) {
-					if (x.type == 'javascript') {
-						self.inject(x.link, function() {}, x.async);
-					}
-				});
+				// don't do imports for server rendering, they should not be critical to the page and might not be parseable
+				if (!navigator.userAgent.match(/Nabu-Renderer/)) {
+					self.imports.forEach(function(x) {
+						if (x.type == 'javascript') {
+							self.inject(x.link, function() {}, x.async);
+						}
+					});
+				}
 				if (self.canEdit()) {
 					var promises = [];
 					promises.push(injectJavascript());
 					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.style.list").then(function(list) {
 						if (list.styles) {
 							nabu.utils.arrays.merge(self.styles, list.styles);
+						}
+					}));
+					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.transformer.list").then(function(list) {
+						if (list.styles) {
+							nabu.utils.arrays.merge(self.transformers, list.styles.map(function(x) { return JSON.parse(x.content) }));
 						}
 					}));
 					self.$services.q.all(promises).then(function() {
@@ -369,13 +388,26 @@ nabu.services.VueService(Vue.extend({
 			});
 		},
 		getBindingValue: function(pageInstance, bindingValue, context) {
-			while (context && !context.localState) {
-				context = context.$parent;
+			// only useful if the binding value is a string
+			if (typeof(bindingValue) == "string") {
+				while (context && !context.localState) {
+					context = context.$parent;
+				}
+				if (context) {
+					var result = this.getValue(context.localState, bindingValue);
+					if (result) {
+						return result;
+					}
+				}
 			}
-			if (context) {
-				var result = this.getValue(context.localState, bindingValue);
-				if (result) {
-					return result;
+			// if it has a label, we have a structure object
+			else if (bindingValue && bindingValue.label) {
+				if (bindingValue.label == "fixed") {
+					return bindingValue.value;
+				}
+				else if (bindingValue.label == "$transformer") {
+					console.log("TODO: we should calculate the transformer!", bindingValue);
+					return null;
 				}
 			}
 			
@@ -678,6 +710,36 @@ nabu.services.VueService(Vue.extend({
 					compiled: this.lastCompiled
 				}
 			});
+		},
+		saveTransformer: function(transformer) {
+			try {
+				var result = new Function('input', transformer.content);
+				var parts = transformer.id.split(".");
+				var target = window;
+				for (var i = 0; i < parts.length - 1; i++) {
+					if (!target[parts[i]]) {
+						target[parts[i]] = {};
+					}
+					target = target[parts[i]];
+				}
+				target[parts[parts.length - 1]] = result;
+				console.log("updated function", target, parts[parts.length - 1], result);
+			}
+			catch (exception) {
+				this.transformerError = exception.message;
+				console.error("Could not create transformer", exception.message);
+			}
+			return this.$services.swagger.execute("nabu.web.page.core.rest.transformer.write", { name:transformer.id, body: {content: JSON.stringify(transformer, null, 2) } });
+		},
+		createTransformer: function() {
+			var self = this;	
+			var name = prompt("Transformer Id");
+			if (name && this.transformers.map(function(x) { return x.id.toLowerCase() }).indexOf(name.toLowerCase()) < 0) {
+				var transformer = { id:name, inputs:[], outputs:[], content: "" };
+				this.saveTransformer(transformer).then(function() {
+					self.transformers.push(transformer);
+				});
+			}
 		},
 		createStyle: function() {
 			var self = this;

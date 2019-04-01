@@ -93,6 +93,43 @@
 					<n-ace v-model="style.content" :timeout="600" @input="$services.page.saveStyle(style)" :ref="'editors_' + style.name"/>
 				</n-collapsible>
 			</n-collapsible>
+			<n-collapsible title="Transformers" class="list">
+				<footer class="list-actions">
+					<button @click="$services.page.createTransformer">Create New Transformer</button>
+				</footer>
+				<n-collapsible :title="transformer.id" v-for="transformer in $services.page.transformers" class="page-cell layout2 list-item">
+					<n-collapsible title="Input" class="page-cell layout2 list-item io">
+						<div class="list-actions">
+							<button @click="addTransformerParameter(transformer, 'inputs')">Add Input Parameter</button>
+						</div>
+						<n-collapsible class="list-item" v-for="parameter in transformer.inputs" :title="parameter.name">
+							<n-form-text v-model="parameter.name" :required="true" label="Name"/>
+							<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :filter="$services.page.getAvailableTypes"/>
+							<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
+							<n-form-text v-model="parameter.default" label="Default Value"/>
+							<div class="list-item-actions">
+								<button @click="transformer.inputs.splice(transformer.inputs.indexOf(parameter), 1)"><span class="fa fa-trash"></span></button>	
+							</div>
+						</n-collapsible>
+					</n-collapsible>
+					<n-collapsible title="Output" class="page-cell layout2 list-item io">
+						<div class="list-actions">
+							<button @click="addTransformerParameter(transformer, 'outputs')">Add Output Parameter</button>
+						</div>
+						<n-collapsible class="list-item" v-for="parameter in transformer.outputs" :title="parameter.name">
+							<n-form-text v-model="parameter.name" :required="true" label="Name"/>
+							<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :filter="$services.page.getAvailableTypes"/>
+							<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
+							<n-form-text v-model="parameter.default" label="Default Value"/>
+							<div class="list-item-actions">
+								<button @click="transformer.outputs.splice(transformer.outputs.indexOf(parameter), 1)"><span class="fa fa-trash"></span></button>	
+							</div>
+						</n-collapsible>
+					</n-collapsible>
+					<n-ace v-model="transformer.content" :ref="'editors_' + transformer.id"/>
+					<button @click="$services.page.saveTransformer(transformer)">Save</button>
+				</n-collapsible>
+			</n-collapsible>
 		</n-form>
 		<div v-else>%{You don't have permission to view this page, you might want to try to <a v-route:login>log in</a> as a user with sufficient privileges}</div>
 	</div>

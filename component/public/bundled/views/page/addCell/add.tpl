@@ -9,8 +9,8 @@
 		</n-form-section>
 		<n-page-mapper :to="parameters" v-if="parameters.length" :from="availableParameters" v-model="bindings"/>
 		<footer class="actions">
-			<a href="javascript:void(0)" @click="$reject()">%{Cancel}</a>
-			<button @click="set" :disabled="!route">%{Set Content}</button>
+			<a href="javascript:void(0)" @click="$reject()">Cancel</a>
+			<button @click="set" :disabled="!route">Set Content</button>
 		</footer>
 	</n-form>
 </template>

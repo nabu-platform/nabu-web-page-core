@@ -654,9 +654,9 @@ nabu.page.views.PageForm = Vue.extend({
 			Vue.set(this.localState, "form", this.createResult());
 		},
 		doIt: function() {
+			var self = this;
 			if (!this.doingIt) {
 				var date = new Date();
-				var self = this;
 				var stop = function(error) {
 					if (self.$services.analysis && self.$services.analysis.emit) {
 						self.$services.analysis.emit(error ? "form-fail" : "form-finalize", self.analysisId, 
@@ -694,7 +694,7 @@ nabu.page.views.PageForm = Vue.extend({
 						if (self.cell.state.allowReadOnly) {
 							self.readOnly = true;
 						}
-						this.doingIt = false;
+						self.doingIt = false;
 					}
 					else if (this.cell.state.operation) {
 						try {
@@ -732,7 +732,7 @@ nabu.page.views.PageForm = Vue.extend({
 								if (self.cell.state.allowReadOnly) {
 									self.readOnly = true;
 								}
-								this.doingIt = false;
+								self.doingIt = false;
 								stop();
 							}, function(error) {
 								self.error = "Form submission failed";
@@ -751,12 +751,13 @@ nabu.page.views.PageForm = Vue.extend({
 										title: "%{An error has occurred on the server, please try again}"
 									})
 								}
-								this.doingIt = false;
+								self.doingIt = false;
 								stop(error && error.responseText ? error.responseText : "Form submission failed");
 							});
 						}
 						catch(exception) {
-							this.doingIt = false;
+							self.doingIt = false;
+							console.error("Could not submit form", exception);
 							stop(exception.message);
 						}
 					}
@@ -772,12 +773,12 @@ nabu.page.views.PageForm = Vue.extend({
 						if (self.cell.state.allowReadOnly) {
 							self.readOnly = true;
 						}
-						this.doingIt = false;
+						self.doingIt = false;
 						stop();
 					}
 				}
 				else {
-					this.doingIt = false;
+					self.doingIt = false;
 				}
 			}
 		},

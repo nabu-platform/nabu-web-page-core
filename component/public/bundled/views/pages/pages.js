@@ -100,6 +100,9 @@ nabu.page.views.Pages = Vue.extend({
 		this.$services.page.disableReload = false;	
 	},
 	methods: {
+		addTransformerParameter: function(transformer, type) {
+			transformer[type].push({});
+		},
 		updatePageName: function(page, newValue) {
 			console.log("page name is", page.name, newValue);
 			var result = this.$refs["category_" + page.content.category][0].validate(true);

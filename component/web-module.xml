@@ -11,4 +11,8 @@
     <webFragments>nabu.web.page.core.rest.style.write</webFragments>
     <webFragments>nabu.web.page.core.rest.style.delete</webFragments>
     <webFragments>nabu.web.page.core.rest.configuration.updateContent</webFragments>
+    <webFragments>nabu.web.page.core.rest.transformer.delete</webFragments>
+    <webFragments>nabu.web.page.core.rest.transformer.list</webFragments>
+    <webFragments>nabu.web.page.core.rest.transformer.write</webFragments>
+    <webFragments>nabu.web.page.core.rest.transformer.compiled</webFragments>
 </webModule>

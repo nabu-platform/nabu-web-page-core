@@ -1,3 +1,4 @@
+// by default no regex because we can/want to set it in the backend
 Vue.component("page-form-input-password-configure", {
 	template: "<n-form-section>"
 		+ "	<n-form-text v-model='field.repeatLabel' label='Label for password repeat'/>"
@@ -18,11 +19,6 @@ Vue.component("page-form-input-password-configure", {
 			type: Object,
 			required: true
 		}
-	},
-	created: function() {
-		if (!this.field.regex) {
-			Vue.set(this.field, "regex", "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}");
-		}
 	}
 });
 
@@ -41,7 +37,7 @@ Vue.component("page-form-input-password", {
 			+ "		:disabled='disabled'/>"
 			+ "	<n-form-text type='password' v-if='field.repeatLabel && !readOnly'"
 			+ "		:placeholder='placeholder'"
-			+ "		:schema='schema'"
+			+ "		:required='true'"
 			+ "		:label='$services.page.translate(field.repeatLabel)'"
 			+ "		v-model='repeat'"
 			+ "		:name='field.name + 2'"
@@ -92,7 +88,7 @@ Vue.component("page-form-input-password", {
 		regexLabel: function() {
 			return this.field.regexLabel != null && this.field.regexLabel != "" 
 				? this.$services.page.interpret(this.field.regexLabel, this)
-				: "%{The password should be at least 8 characters long and contain one capital, one lowercase letter and a number}";
+				: null;
 		}
 	},
 	created: function() {

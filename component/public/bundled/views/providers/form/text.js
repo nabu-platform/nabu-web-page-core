@@ -1,5 +1,6 @@
 Vue.component("page-form-input-text-configure", {
-	template: "<n-form-combo v-model='field.textType' label='Text Type' :items=\"['text', 'area', 'number', 'color', 'email', 'password']\"/>",
+	template: "<n-form-section><n-form-combo v-model='field.textType' label='Text Type' :items=\"['text', 'area', 'number', 'color', 'email', 'password']\"/>"
+		+ "<n-form-text v-model='field.regexLabel' label='Regex Label'/></n-form-section>",
 	props: {
 		cell: {
 			type: Object,
@@ -27,6 +28,7 @@ Vue.component("page-form-input-text", {
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
 			+ "		:schema='schema'"
+			+ "		:pattern-comment='field.regexLabel ? $services.page.translate(field.regexLabel) : null'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"

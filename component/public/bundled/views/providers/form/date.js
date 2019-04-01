@@ -1,10 +1,10 @@
 Vue.component("page-form-input-date-configure", {
 	template: "<n-form-section>"
-		+ "	<n-form-switch v-model='field.includeHours' label='%{Include hours?}'/>"
-		+ "	<n-form-switch v-model='field.includeMinutes' label='%{Include minutes?}' v-if='field.includeHours'/>"
-		+ "	<n-form-switch v-model='field.includeSeconds' label='%{Include seconds?}' v-if='field.includeHours && field.includeMinutes'/>"
-		+ "	<n-form-switch v-model='field.isTimestamp' label='%{Is a timestamp in milliseconds?}' v-if='!field.isSecondsTimestamp'/>"
-		+ "	<n-form-switch v-model='field.isSecondsTimestamp' label='%{Is a timestamp in seconds?}' v-if='!field.isTimestamp'/>"
+		+ "	<n-form-switch v-model='field.includeHours' label='Include hours?'/>"
+		+ "	<n-form-switch v-model='field.includeMinutes' label='Include minutes?' v-if='field.includeHours'/>"
+		+ "	<n-form-switch v-model='field.includeSeconds' label='Include seconds?' v-if='field.includeHours && field.includeMinutes'/>"
+		+ "	<n-form-switch v-model='field.isTimestamp' label='Is a timestamp in milliseconds?' v-if='!field.isSecondsTimestamp'/>"
+		+ "	<n-form-switch v-model='field.isSecondsTimestamp' label='Is a timestamp in seconds?' v-if='!field.isTimestamp'/>"
 		+ "</n-form-section>",
 	props: {
 		cell: {

@@ -1,0 +1,37 @@
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		disabled="false"
+		id="e73897ab-c80d-47de-b7f9-61bbb123884c">
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			disabled="false"
+			id="aff18870-5592-4bdd-975c-b072433bf60f">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="c259962c-0eca-4215-a2be-5c06826194bd"
+				serviceId="nabu.utils.Resource.write"
+				resultName="result84f2125dfabc46be96cf821ecbf67479"
+				temporaryMapping="true"
+				x="132"
+				y="116"
+				invocationOrder="0"
+				asynchronous="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="0e3f72d6-8e74-45e8-8ef3-3d22f2ffbc62"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/content/content</from>
+				<to>stream</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="7be70e2e-46ef-45d1-8e8d-0f292df5a52d"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>="repository:" + input/webApplicationId + ":/public/artifacts/transformers/compiled.js"</from>
+				<to>uri</to>
+			</steps>
+		</steps>
+	</steps>
+</sequence>
