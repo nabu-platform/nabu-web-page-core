@@ -1110,7 +1110,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			var parts = null;
 			var updateUrl = false;
 			// update something in the page parameters
-			if (name.indexOf("page.") == 0) {
+			if (name.indexOf && name.indexOf("page.") == 0) {
 				if (!this.masked) {
 					updateUrl = true;
 				}
@@ -1146,24 +1146,32 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 				parts = name.substring("page.".length).split(".");
 			}
-			else {
+			else if (name.split) {
 				parts = name.split(".");
 				target = this.variables;
 			}
-			for (var i = 0; i < parts.length - 1; i++) {
-				if (!target[parts[i]]) {
-					Vue.set(target, parts[i], {});
+			// TODO: if single input, single output => can automatically bypass transformer?
+			// or set a reverse transformer?
+			// for now, transformers are only for going forward, not syncing data back, use events + reload if needed atm
+			if (parts && target) {
+				for (var i = 0; i < parts.length - 1; i++) {
+					if (!target[parts[i]]) {
+						Vue.set(target, parts[i], {});
+					}
+					target = target[parts[i]];
 				}
-				target = target[parts[i]];
+				Vue.set(target, parts[parts.length - 1], value);
+				if (updateUrl) {
+					var route = this.$services.router.get(this.$services.page.alias(this.page));
+					this.$services.router.router.updateUrl(
+						route.alias,
+						route.url,
+						this.parameters,
+						route.query)
+				}
 			}
-			Vue.set(target, parts[parts.length - 1], value);
-			if (updateUrl) {
-				var route = this.$services.router.get(this.$services.page.alias(this.page));
-				this.$services.router.router.updateUrl(
-					route.alias,
-					route.url,
-					this.parameters,
-					route.query)
+			else {
+				console.log("Could not set", name, value);
 			}
 		},
 		pageTag: function() {
@@ -1626,11 +1634,14 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			});
 			var consensus =  Object.keys(cell.bindings).reduce(function(consensus, name) {
 				// fixed values are always ok
-				if (cell.bindings[name] && cell.bindings[name].indexOf("fixed") == 0) {
+				if (cell.bindings[name] && cell.bindings[name].indexOf && cell.bindings[name].indexOf("fixed") == 0) {
+					return consensus;
+				}
+				else if (cell.bindings[name] && cell.bindings[name].label && cell.bindings[name].label == "fixed") {
 					return consensus;
 				}
 				// always allow enumerated values
-				else if (cell.bindings[name] && providers.indexOf(cell.bindings[name].split(".")[0]) >= 0) {
+				else if (cell.bindings[name] && cell.bindings[name].split && providers.indexOf(cell.bindings[name].split(".")[0]) >= 0) {
 					return consensus;
 				}
 				// if we have a bound value and it does not originate from the (ever present) page, it must come from an event

@@ -406,8 +406,35 @@ nabu.services.VueService(Vue.extend({
 					return bindingValue.value;
 				}
 				else if (bindingValue.label == "$transformer") {
-					console.log("TODO: we should calculate the transformer!", bindingValue);
-					return null;
+					var parts = bindingValue.value.split(".");
+					var target = window;
+					for (var i = 0; i < parts.length - 1; i++) {
+						if (!target[parts[i]]) {
+							throw "Could not find transformer: " + bindingValue.value;
+						}
+						target = target[parts[i]];
+					}
+					var func = target[parts[parts.length - 1]];
+					if (!func) {
+						throw "Could not find transformer: " + bindingValue.value;
+					}
+					var input = {};
+					var self = this;
+					if (bindingValue.bindings) {
+						Object.keys(bindingValue.bindings).forEach(function(key) {
+							if (bindingValue.bindings[key]) {
+								var value = self.getBindingValue(pageInstance, bindingValue.bindings[key], context);
+								self.setValue(input, key, value);
+							}
+						});
+					}
+					var result = func(input, this.$services);
+					if (bindingValue.output) {
+						return this.getValue(result, bindingValue.output);
+					}
+					else {
+						return result;
+					}
 				}
 			}
 			
@@ -713,7 +740,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		saveTransformer: function(transformer) {
 			try {
-				var result = new Function('input', transformer.content);
+				var result = new Function('input', '$services', transformer.content);
 				var parts = transformer.id.split(".");
 				var target = window;
 				for (var i = 0; i < parts.length - 1; i++) {
@@ -723,7 +750,19 @@ nabu.services.VueService(Vue.extend({
 					target = target[parts[i]];
 				}
 				target[parts[parts.length - 1]] = result;
-				console.log("updated function", target, parts[parts.length - 1], result);
+				// if we get this far, also recompile all transformers
+				var compiled = "";
+				this.transformers.forEach(function(transformer) {
+					var parts = transformer.id.split(".");
+					// make global namespace
+					for (var i = 0; i < parts.length - 1; i++) {
+						compiled += "if (!" + parts[i] + ") " + (i == 0 ? "var " : "") + parts[i] + " = {};\n";
+					}
+					compiled += (parts.length == 1 ? "var " : "") + transformer.id + " = function(input, $services) {\n";
+					compiled += "\t" + transformer.content.replace(/\n/g, "\n\t") + "\n";
+					compiled += "}\n";
+				});
+				this.$services.swagger.execute("nabu.web.page.core.rest.transformer.compiled", {body:{content: compiled}});
 			}
 			catch (exception) {
 				this.transformerError = exception.message;
