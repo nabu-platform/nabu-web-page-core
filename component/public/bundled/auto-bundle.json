@@ -265,6 +265,9 @@
 							}, 
 							"location.js": {
 								"url": "views/providers/form/location.js"
+							},
+							"address.js": {
+								"url": "views/providers/form/address.js"
 							}
 						}, 
 						"format": {

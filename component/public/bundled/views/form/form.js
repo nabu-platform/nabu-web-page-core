@@ -871,6 +871,10 @@ Vue.component("page-form-field", {
 		readOnly: {
 			type: Boolean,
 			required: false
+		},
+		schemaResolver: {
+			type: Function,
+			required: false
 		}
 	},
 	created: function() {

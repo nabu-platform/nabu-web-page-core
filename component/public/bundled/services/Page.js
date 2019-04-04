@@ -18,7 +18,7 @@ nabu.page.providers = function(spec) {
 nabu.page.instances = {};
 
 nabu.services.VueService(Vue.extend({
-	services: ["swagger"],
+	services: ["swagger", "user"],
 	data: function() {
 		return {
 			counter: 1,
@@ -455,9 +455,26 @@ nabu.services.VueService(Vue.extend({
 			return value;
 		},
 		translate: function(value, component) {
-			var available = value;
-			var translation = null;
-			if (value && value.indexOf && value.indexOf("%") == 0 && value.indexOf("{") == 1) {
+			if (value && value.indexOf) {
+				while (value.indexOf("%" + "{") >= 0) {
+					var start = value.indexOf("%" + "{");
+					var end = value.indexOf("}", start);
+					// no end tag
+					if (end < 0) {
+						break;
+					}
+					var available = value.substring(start + 2, end);
+					var parts = available.split(":");
+					var translation = this.translations.filter(function(x) {
+						return ((parts.length == 1 && x.context == null)
+								|| (parts.length == 2 && x.context == parts[0]))
+							&& (x.name == parts.length == 1 ? parts[0] : parts[1]);
+					})[0];
+					value = value.substring(0, index) + (translation && translation.translation ? translation.translation : (parts.length == 1 ? parts[0] : parts[1])) + value.substring(end + 1);
+				}
+				return value;
+			}
+			/*if (value && value.indexOf && value.indexOf("%") == 0 && value.indexOf("{") == 1) {
 				available = value.replace(/^%\{([^}]+)\}$/, "$1");
 				var parts = available.split(":");
 				translation = this.translations.filter(function(x) {
@@ -465,7 +482,7 @@ nabu.services.VueService(Vue.extend({
 							|| (parts.length == 2 && x.context == parts[0]))
 						&& (x.name == parts.length == 1 ? parts[0] : parts[1]);
 				})[0];
-			}
+			}*/
 			return translation == null || translation.translation == null ? available : translation.translation;
 		},
 		interpret: function(value, component) {

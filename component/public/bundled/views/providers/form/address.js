@@ -1,20 +1,19 @@
-Vue.component("page-form-input-location-configure", {
+Vue.component("page-form-input-address-configure", {
 	template: "<n-form-section>"
 		+ "	<n-form-text v-model='field.countryRestriction' label='Country limitation (two letter code, comma separated)'/>"
 		+ "	<n-form-combo v-model='field.latitude' label='Latitude Field' :filter='getKeys'/>"
 		+ "	<n-form-combo v-model='field.longitude' label='Longitude Field' :filter='getKeys'/>"
 		+ "	<n-form-combo v-model='field.country' label='Country Field' :filter='getKeys'/>"
 		+ "	<n-form-combo v-model='field.countryCode' label='Country Code Field' :filter='getKeys'/>"
-		+ "	<n-form-combo v-model='field.region' label='Region Field' :filter='getKeys'/>"
-		+ "	<n-form-combo v-model='field.province' label='Province Field' :filter='getKeys'/>"
 		+ "	<n-form-combo v-model='field.city' label='City Field' :filter='getKeys'/>"
 		+ "	<n-form-combo v-model='field.postCode' label='Post Code Field' :filter='getKeys'/>"
 		+ "	<n-form-combo v-model='field.street' label='Street Field' :filter='getKeys'/>"
-		+ "	<n-form-switch v-model='field.streetIncludeNumber' label='Include Street Number' v-if='field.street && !field.streetNumber'/>"
 		+ "	<n-form-combo v-model='field.streetNumber' label='Street Number Field' :filter='getKeys' v-if='!field.streetIncludeNumber'/>"
-		+ "	<n-form-combo v-model='field.formatted' label='Fully Formatted Address Field' :filter='getKeys'/>"
-		+ " <n-form-switch v-model='field.allowVague' label='Allow Vague Addresses'/>"
-		+ " <n-form-switch v-model='field.required' label='Required'/>"
+		+ "	<n-form-text v-model='field.countryLabel' label='Country Label' />"
+		+ "	<n-form-text v-model='field.cityLabel' label='City Label' />"
+		+ "	<n-form-text v-model='field.postCodeLabel' label='Postcode Label' />"
+		+ "	<n-form-text v-model='field.streetLabel' label='Street Label' />"
+		+ "	<n-form-text v-model='field.streetNumberLabel' label='Street Number Label' />"
 		+ "</n-form-section>",
 	props: {
 		cell: {
@@ -50,13 +49,12 @@ Vue.component("page-form-input-location-configure", {
 	}
 });
 
-Vue.component("page-form-input-location", {
-	template: "<n-form-location ref='form'"
+Vue.component("page-form-input-address", {
+	template: "<n-form-address ref='form'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
-			+ "		:schema='schema'"
+			+ "		:schema-resolver='schemaResolver'"
 			+ "		v-bubble:label"
-			+ "		:required='field.required'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
@@ -66,16 +64,16 @@ Vue.component("page-form-input-location", {
 			+ "     :longitude='field.longitude'"
 			+ "     :country='field.country'"
 			+ "     :country-code='field.countryCode'"
-			+ "     :province='field.province'"
-			+ "     :region='field.region'"
 			+ "     :city='field.city'"
 			+ "     :post-code='field.postCode'"
 			+ "     :street='field.street'"
-			+ "     :street-include-number='field.streetIncludeNumber'"
 			+ "     :street-number='field.streetNumber'"
-			+ "     :formatted='field.formatted'"
+			+ "     :country-label='$services.page.translate(field.countryLabel)'"
+			+ "     :city-label='$services.page.translate(field.cityLabel)'"
+			+ "     :post-code-label='$services.page.translate(field.postCodeLabel)'"
+			+ "     :street-label='$services.page.translate(field.streetLabel)'"
+			+ "     :street-number-label='$services.page.translate(field.streetNumberLabel)'"
 			+ "		:country-restriction='field.countryRestriction'"
-			+ "     :allow-vague='field.allowVague'"
 			+ "		:disabled='disabled'/>",
 	props: {
 		cell: {
@@ -104,8 +102,8 @@ Vue.component("page-form-input-location", {
 			type: Boolean,
 			required: false
 		},
-		schema: {
-			type: Object,
+		schemaResolver: {
+			type: Function,
 			required: false
 		},
 		readOnly: {

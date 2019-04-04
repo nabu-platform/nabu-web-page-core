@@ -87,8 +87,10 @@
 							@changed="changed"
 							:timeout="cell.state.immediate ? 600 : 0"
 							:schema="getSchemaFor(field.name)"/>
-						<page-form-field v-else-if="!field.arbitrary" :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="getCurrentValue(field)"
+						<page-form-field v-else-if="!field.arbitrary" :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" 
+							:value="getCurrentValue(field)"
 							:parent-value="result"
+							:schema-resolver="getSchemaFor"
 							@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
 							:timeout="cell.state.immediate ? 600 : 0"
 							:page="page"
@@ -149,6 +151,7 @@
 		:label="field.hideLabel ? null : $services.page.translate($services.page.interpret(fieldLabel, $self))"
 		:timeout="timeout"
 		:schema="schema"
+		:schema-resolver="schemaResolver"
 		:disabled="isDisabled"/>
 </template>
 

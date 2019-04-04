@@ -736,7 +736,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					promise.then(function() { stop() }, function(error) { stop(error) });
 					
 					if (action.confirmation) {
-						self.$confirm({message:action.confirmation}).then(function() {
+						self.$confirm({message:self.$services.page.translate(action.confirmation)}).then(function() {
 							var element = null;
 							var async = false;
 							// already get the element, it can be triggered with or without a route

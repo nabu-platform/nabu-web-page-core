@@ -5,6 +5,7 @@ Vue.component("page-form-input-date-configure", {
 		+ "	<n-form-switch v-model='field.includeSeconds' label='Include seconds?' v-if='field.includeHours && field.includeMinutes'/>"
 		+ "	<n-form-switch v-model='field.isTimestamp' label='Is a timestamp in milliseconds?' v-if='!field.isSecondsTimestamp'/>"
 		+ "	<n-form-switch v-model='field.isSecondsTimestamp' label='Is a timestamp in seconds?' v-if='!field.isTimestamp'/>"
+		+ "	<n-form-text v-model='field.regexLabel' label='Regex label'/>"
 		+ "</n-form-section>",
 	props: {
 		cell: {
@@ -34,6 +35,7 @@ Vue.component("page-form-input-date", {
 			+ "		:value='value'"
 			+ "		:timeout='timeout'"
 			+ "		:include-hours='field.includeHours'"
+			+ "		:pattern-comment='field.regexLabel'"
 			+ "		:include-minutes='field.includeHours && field.includeMinutes'"
 			+ "		:include-seconds='field.includeHours && field.includeMinutes && field.includeSeconds'"
 			+ "		:timestamp='field.isTimestamp'"

@@ -394,6 +394,9 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 					pageInstance.emit(action.event, content ? content : {});
 					this.lastAction = action;
 				}
+				if (action.close) {
+					this.$emit("close");
+				}
 			}
 		},
 		unsetEvent: function(actions) {

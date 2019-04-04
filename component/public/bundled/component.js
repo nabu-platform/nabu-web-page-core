@@ -187,6 +187,13 @@ window.addEventListener("load", function() {
 			namespace: "google",
 			multipleFields: true
 		});
+		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-address", 
+			configure: "page-form-input-address-configure", 
+			name: "address",
+			namespace: "google",
+			multipleFields: true
+		});
 		
 		// form list providers
 		nabu.page.provide("page-form-list-input", { 
