@@ -105,6 +105,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	activate: function(done) {
+		// the page has a path, set it in the body so we can do additional stuff
+		// in the beginning we set this in the ready hook, however if you have a slow loading page it would only get set after the slow thingy ended
+		// however in the mean time your (presumably synchronous) skeletons have already loaded and perhaps even showing a nice loading icon but on the "old" background styling
+		if (this.page.content.path)	{
+			document.body.setAttribute("page", this.page.name);
+			document.body.setAttribute("category", this.page.content.category);
+		}
+		
 		var self = this;
 		var finalize = function() {
 			if (self.page.content.title) {
@@ -148,14 +156,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 	},
 	mounted: function() {
 		console.log("mounted page", this.page.name, this.embedded);
-	},
-	ready: function() {
-		console.log("ready page", this.page.name, this.embedded);
-		// the page has a path, set it in the body so we can do additional stuff
-		if (this.page.content.path)	{
-			document.body.setAttribute("page", this.page.name);
-			document.body.setAttribute("category", this.page.content.category);
-		}
 	},
 	created: function() {
 		console.log("creating page", this.page.name, this.stopRerender);

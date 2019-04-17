@@ -70,7 +70,7 @@ nabu.page.views.Image = Vue.extend({
 				href = "${server.root()}" + href;
 			}
 			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && this.cell.state.absolute) {
-				href = "${environment('url')" + href;
+				href = "${environment('url')}" + href;
 			}
 			return href;
 		}

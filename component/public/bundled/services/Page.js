@@ -493,6 +493,26 @@ nabu.services.VueService(Vue.extend({
 			}
 			return value;
 		},
+		translateErrorCode: function(value, defaultValue) {
+			var translations = this.translations.filter(function(x) {
+				return value.toLowerCase() == x.name.toLowerCase()
+					|| value.match(new RegExp(x.name.replace(/\*/g, ".*")));
+			});
+			var translation = null;
+			if (translations.length > 1) {
+				translations.forEach(function(x) {
+					if (translation == null || translation.name.length < x.name.length)	 {
+						translation = x;
+					}
+				});
+			}
+			else if (translations.length) {
+				translation = translations[0];
+			}
+			return translation && translation.translation 
+				? translation.translation 
+				: (defaultValue ? defaultValue : "%{An error has occurred while trying to complete your action}");
+		},
 		translate: function(value, component) {
 			if (value && value.indexOf) {
 				while (value.indexOf("%" + "{") >= 0) {

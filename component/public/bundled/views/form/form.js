@@ -737,22 +737,24 @@ nabu.page.views.PageForm = Vue.extend({
 							}, function(error) {
 								self.error = "Form submission failed";
 								try {
-									var parsed = JSON.parse(error.responseText);
+									if (error.responseText) {
+										error = JSON.parse(error.responseText);
+									}
 									self.messages.push({
 										type: "request",
 										severity: "error",
-										title: parsed.message
+										title: self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message)
 									})
 								}
 								catch (exception) {
 									self.messages.push({
 										type: "request",
 										severity: "error",
-										title: "%{An error has occurred on the server, please try again}"
+										title: self.$services.page.translateErrorCode("HTTP-500")
 									})
 								}
 								self.doingIt = false;
-								stop(error && error.responseText ? error.responseText : "Form submission failed");
+								stop(error && error.title ? error.title : "Form submission failed");
 							});
 						}
 						catch(exception) {
