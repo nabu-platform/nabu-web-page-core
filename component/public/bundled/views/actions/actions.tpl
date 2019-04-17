@@ -63,6 +63,7 @@
 									<n-form-text v-model="action.eventFixedState" v-if="action.event && action.hasFixedState" label="Event Fixed Value"/>
 									<n-form-combo v-model="action.route" v-if="!action.event && !action.url" :filter="listRoutes" label="Route"/>
 									<n-form-combo v-model="action.anchor" v-if="action.route" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
+									<n-form-switch v-model="action.absolute" v-if="action.route && !cell.state.useButtons" label="Absolute"/>
 									<n-form-switch v-model="action.mask" label="Mask" v-if="action.route"/>
 									<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.event"/>
 									<n-form-combo v-model="action.anchor" v-if="action.url" label="Anchor" :items="['$blank', '$window']"/>
@@ -110,12 +111,12 @@
 			
 			<template v-else>
 				<span v-if="edit && !action.dynamic" class="fa fa-cog" @click="configureAction(action)"></span>
-				<a auto-close-actions class="page-action-link page-action-entry" href="javascript:void(0)"
+				<a auto-close-actions class="page-action-link page-action-entry" :href="getActionHref(action)"
 					:class="getDynamicClasses(action)"
 					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
 					:disabled="isDisabled(action)"
 					:id="$services.page.interpret(action.id, $self)"
-					@click="handle(action)" 
+					@click="handle(action)"
 					v-if="!cell.state.useButtons && (action.route || action.event || action.url)"
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
 						><span>{{ $services.page.translate($services.page.interpret(action.label, $self)) }}</span></a>

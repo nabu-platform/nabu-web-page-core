@@ -313,9 +313,55 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		isDisabled: function(action) {
 			return action.disabled && this.$services.page.isCondition(action.disabled, this.state, this);
 		},
+		getActionHref: function(action) {
+			if (!this.cell.state.useButtons && action.url) {
+				return action.url;
+			}
+			if (action.absolute && action.route) {
+				var route = action.route;
+				if (route.charAt(0) == "=") {
+					route = this.$services.page.interpret(route, this);
+				}
+				var parameters = {};
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(this.page, this);
+				Object.keys(action.bindings).map(function(key) {
+					var value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], self);
+					// the old way... should disable it?
+					if (value == null) {
+						var parts = action.bindings[key].split(".");
+						var value = self.state;
+						parts.map(function(part) {
+							if (value) {
+								value = value[part];
+							}
+						});
+						if (value) {
+							parameters[key] = value;
+						}
+					}
+					if (value != null) {
+						parameters[key] = value;
+					}
+				});
+				var url = this.$services.router.template(route, parameters);
+				if (action.absolute) {
+					url = "${environment('url')}" + url;
+				}
+				return url;
+			}
+			return "javascript:void(0)";
+		},
 		handle: function(action, force) {
 			if (action.name && this.$services.analysis && this.$services.analysis.emit) {
 				this.$services.analysis.emit("trigger-" + (this.cell.state.analysisId ? this.cell.state.analysisId : "action"), action.name, {url: window.location}, true);
+			}
+			// we already have a valid href on there, no need to do more
+			if (!this.cell.state.useButtons && action.route && action.absolute) {
+				return;
+			}
+			else if (!this.cell.state.useButtons && action.url) {
+				return;
 			}
 			if (force || !this.isDisabled(action)) {
 				if (action.route) {

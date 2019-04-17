@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <restInterface>
     <method>GET</method>
-    <path>/transformer</path>
+    <path>/function</path>
     <role>editor</role>
     <permissionContext>="webApplication:" + input/path/applicationId</permissionContext>
-    <permissionAction>transformer.read</permissionAction>
+    <permissionAction>function.read</permissionAction>
     <output>nabu.web.page.core.types.rest.styleList</output>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
@@ -18,4 +18,5 @@
     <allowHeaderAsQueryParameter>false</allowHeaderAsQueryParameter>
     <useServerCache>false</useServerCache>
     <source>false</source>
+    <allowRaw>false</allowRaw>
 </restInterface>

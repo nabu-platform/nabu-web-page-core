@@ -35,6 +35,7 @@
 					<n-form-text v-model="page.content.category" label="Category" />
 					<n-form-text v-model="page.content.path" label="Path"/>
 					<n-form-text v-model="page.content.class" label="Class"/>
+					<n-form-text v-model="page.content.title" label="Title"/>
 					<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow"/>
 					<n-form-combo label="Page Type" :items="['page', 'email']" v-model="page.content.pageType"/>
 					<n-form-combo label="Page Parent" :filter="filterRoutes" v-model="page.content.pageParent"/>
@@ -107,12 +108,13 @@
 						<n-form-text v-model="action.name" label="Name" :required="true"/>
 						<n-form-text v-model="action.confirmation" label="Confirmation Message"/>
 						<n-form-combo v-model="action.on" label="Trigger On" :filter="getAvailableEvents"/>
-						<n-form-text v-model="action.scroll" label="Scroll to" v-if="!action.operation"/>
-						<n-form-combo v-model="action.route" v-if="!action.operation && !action.url" label="Redirect" :filter="filterRoutes"/>
+						<n-form-text v-model="action.scroll" label="Scroll to" v-if="!action.operation && !action.function"/>
+						<n-form-combo v-model="action.route" v-if="!action.operation && !action.url && !action.function" label="Redirect" :filter="filterRoutes"/>
 						<n-form-combo v-model="action.anchor" v-if="action.route || (action.operation && isGet(action.operation))" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
-						<n-form-combo v-model="action.operation" v-if="!action.route && !action.scroll && !action.url" label="Operation" :filter="getOperations" />
-						<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll"/>
-						<n-form-switch v-if="action.operation" v-model="action.isSlow" label="Is slow operation?"/>
+						<n-form-combo v-model="action.operation" v-if="!action.route && !action.scroll && !action.url && !action.function" label="Operation" :filter="getOperations" />
+						<n-form-combo v-model="action.function" v-if="!action.route && !action.scroll && !action.url && !action.operation" label="Function" :filter="$services.page.listFunctions" />
+						<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function"/>
+						<n-form-switch v-if="action.operation || action.function" v-model="action.isSlow" label="Is slow operation?"/>
 						<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" :timeout="600" @input="resetEvents()"/>
 						<n-form-switch v-if="action.operation" v-model="action.expandBindings" label="Field level bindings"/>
 						<div class="list-row">
@@ -129,6 +131,10 @@
 						<n-page-mapper v-if="action.route" :to="$services.page.getRouteParameters($services.router.get(action.route))"
 							:from="availableParameters" 
 							v-model="action.bindings"/>
+						<n-page-mapper v-if="action.function && !action.operation && !action.route" :to="$services.page.getFunctionInput(action.function)"
+							:from="availableParameters" 
+							v-model="action.bindings"/>
+							
 						<div class="list-item-actions">
 							<button @click="page.content.actions.splice(page.content.actions.indexOf(action), 1)"><span class="fa fa-trash"></span></button>
 						</div>

@@ -22,8 +22,8 @@ Vue.component("n-page-mapper", {
 			var sources = Object.keys(this.from);
 			// allow fixed values
 			sources.push("fixed");
-			if (this.$services.page.transformers.length > 0) {
-				sources.push("$transformer");
+			if (this.$services.page.functions.length > 0) {
+				sources.push("$function");
 			}
 			// allow enumerations
 			nabu.utils.arrays.merge(sources, nabu.page.providers("page-enumerate").map(function(x) {
@@ -49,12 +49,12 @@ Vue.component("n-page-mapper", {
 	methods: {
 		// get the possible field names for this label
 		fieldsFrom: function(value, label, fields) {
-			if (label == "$transformer") {
-				var transformers = this.$services.page.transformers.map(function(x) { return x.id });
+			if (label == "$function") {
+				var functions = this.$services.page.functions.map(function(x) { return x.id });
 				if (value) {
-					transformers = transformers.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase() >= 0 )});
+					functions = functions.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase() >= 0 )});
 				}
-				return transformers;
+				return functions;
 			}
 			if (label == "fixed") {
 				return value ? [value] : [];
@@ -74,8 +74,8 @@ Vue.component("n-page-mapper", {
 			fields.push("$all");
 			return fields;
 		},
-		getTransformerInput: function(id) {
-			var transformer = this.$services.page.transformers.filter(function(x) { return x.id == id })[0];
+		getFunctionInput: function(id) {
+			var transformer = this.$services.page.functions.filter(function(x) { return x.id == id })[0];
 			var parameters = {};
 			var self = this;
 			if (transformer) {
@@ -85,8 +85,8 @@ Vue.component("n-page-mapper", {
 			}
 			return {properties:parameters};
 		},
-		getTransformerOutput: function(id, value) {
-			var transformer = this.$services.page.transformers.filter(function(x) { return x.id == id })[0];
+		getFunctionOutput: function(id, value) {
+			var transformer = this.$services.page.functions.filter(function(x) { return x.id == id })[0];
 			var parameters = {};
 			var self = this;
 			if (transformer) {
@@ -103,7 +103,7 @@ Vue.component("n-page-mapper", {
 					value: newValue
 				};
 			}
-			else if (label == "$transformer" && newValue) {
+			else if (label == "$function" && newValue) {
 				this.value[field] = {
 					label: label,
 					value: newValue,

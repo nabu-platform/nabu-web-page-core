@@ -33,8 +33,8 @@ nabu.services.VueService(Vue.extend({
 			devices: [],
 			// application styles
 			styles: [],
-			// transformers
-			transformers: [],
+			// functions
+			functions: [],
 			// custom content
 			contents: [],
 			// any imports
@@ -50,8 +50,9 @@ nabu.services.VueService(Vue.extend({
 			useEval: false,
 			cssLastModified: null,
 			cssError: null,
-			transformerError: null,
-			disableReload: false
+			functionError: null,
+			disableReload: false,
+			validations: []
 		}
 	},
 	activate: function(done) {
@@ -77,10 +78,10 @@ nabu.services.VueService(Vue.extend({
 			}
 		});
 		this.isServerRendering = navigator.userAgent.match(/Nabu-Renderer/);
-		this.activate(done);
+		this.activate(done, true);
 	},
 	clear: function(done) {
-		this.activate(done ? done : function() {});
+		this.activate(done ? done : function() {}, false);
 	},
 	computed: {
 		enumerators: function() {
@@ -140,7 +141,7 @@ nabu.services.VueService(Vue.extend({
 				
 			}
 		},
-		activate: function(done) {
+		activate: function(done, initial) {
 			var self = this;
 		
 			var injectJavascript = function() {
@@ -173,7 +174,6 @@ nabu.services.VueService(Vue.extend({
 				self.properties.splice(0, self.properties.length);
 				self.devices.splice(0, self.devices.length);
 				self.contents.splice(0);
-				self.imports.splice(0);
 				self.translations.splice(0);
 				if (configuration.pages) {
 					nabu.utils.arrays.merge(self.pages, configuration.pages);
@@ -222,9 +222,9 @@ nabu.services.VueService(Vue.extend({
 							nabu.utils.arrays.merge(self.styles, list.styles);
 						}
 					}));
-					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.transformer.list").then(function(list) {
+					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.function.list").then(function(list) {
 						if (list.styles) {
-							nabu.utils.arrays.merge(self.transformers, list.styles.map(function(x) { return JSON.parse(x.content) }));
+							nabu.utils.arrays.merge(self.functions, list.styles.map(function(x) { return JSON.parse(x.content) }));
 						}
 					}));
 					self.$services.q.all(promises).then(function() {
@@ -387,6 +387,40 @@ nabu.services.VueService(Vue.extend({
 				setTimeout(self.reloadCss, 2000);
 			});
 		},
+		getRunnableFunction: function(id) {
+			var parts = id.split(".");
+			var target = window;
+			for (var i = 0; i < parts.length - 1; i++) {
+				if (!target[parts[i]]) {
+					throw "Could not find function: " + bindingValue.value;
+				}
+				target = target[parts[i]];
+			}
+			return target[parts[parts.length - 1]];	
+		},
+		runFunction: function(func, input, context, promise) {
+			if (typeof(func) == "string") {
+				var id = func;
+				func = this.getRunnableFunction(id);
+				if (!func) {
+					throw "Could not find function: " + id;
+				}
+			}
+			var done = function() {
+				if (promise) {
+					promise.resolve();
+				}
+			};
+			try {
+				return func(input, this.$services, context && context.$value ? context.$value : function() {}, done);
+			}
+			catch (exception) {
+				if (promise) {
+					promise.reject();
+				}
+				throw exception;
+			}
+		},
 		getBindingValue: function(pageInstance, bindingValue, context) {
 			// only useful if the binding value is a string
 			if (typeof(bindingValue) == "string") {
@@ -405,18 +439,22 @@ nabu.services.VueService(Vue.extend({
 				if (bindingValue.label == "fixed") {
 					return bindingValue.value;
 				}
-				else if (bindingValue.label == "$transformer") {
+				else if (bindingValue.label == "$function") {
+					/*
 					var parts = bindingValue.value.split(".");
 					var target = window;
 					for (var i = 0; i < parts.length - 1; i++) {
 						if (!target[parts[i]]) {
-							throw "Could not find transformer: " + bindingValue.value;
+							throw "Could not find function: " + bindingValue.value;
 						}
 						target = target[parts[i]];
 					}
 					var func = target[parts[parts.length - 1]];
+					*/
+					
+					var func = this.getRunnableFunction(bindingValue.value);
 					if (!func) {
-						throw "Could not find transformer: " + bindingValue.value;
+							throw "Could not find function: " + bindingValue.value;
 					}
 					var input = {};
 					var self = this;
@@ -428,7 +466,8 @@ nabu.services.VueService(Vue.extend({
 							}
 						});
 					}
-					var result = func(input, this.$services);
+					//var result = func(input, this.$services);
+					var result = this.runFunction(func, input, context);
 					if (bindingValue.output) {
 						return this.getValue(result, bindingValue.output);
 					}
@@ -468,7 +507,7 @@ nabu.services.VueService(Vue.extend({
 					var translation = this.translations.filter(function(x) {
 						return ((parts.length == 1 && x.context == null)
 								|| (parts.length == 2 && x.context == parts[0]))
-							&& (x.name == parts.length == 1 ? parts[0] : parts[1]);
+							&& (x.name == (parts.length == 1 ? parts[0] : parts[1]));
 					})[0];
 					value = value.substring(0, index) + (translation && translation.translation ? translation.translation : (parts.length == 1 ? parts[0] : parts[1])) + value.substring(end + 1);
 				}
@@ -642,7 +681,7 @@ nabu.services.VueService(Vue.extend({
 			}
 			else {
 				try {
-					var result = Function('"use strict";return (function(state, $services, $value) { return ' + condition + ' })')()(state, this.$services, instance ? instance.$value : function() { throw "No value function" });
+					var result = Function('"use strict";return (function(state, $services, $value, application) { return ' + condition + ' })')()(state, this.$services, instance ? instance.$value : function() { throw "No value function" }, application);
 				}
 				catch (exception) {
 					if (${environment("development")}) {
@@ -747,6 +786,33 @@ nabu.services.VueService(Vue.extend({
 				}
 			});
 		},
+		listFunctions: function(value) {
+			return this.functions.map(function(x) { return x.id }).filter(function(x) {
+				return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+			});
+		},
+		getFunctionInput: function(id, value) {
+			var transformer = this.$services.page.functions.filter(function(x) { return x.id == id })[0];
+			var parameters = {};
+			var self = this;
+			if (transformer) {
+				transformer.inputs.map(function(x) {
+					parameters[x.name] = self.$services.page.getResolvedPageParameterType(x.type);
+				});
+			}
+			return {properties:parameters};
+		},
+		getFunctionOutput: function(id, value) {
+			var transformer = this.$services.page.functions.filter(function(x) { return x.id == id })[0];
+			var parameters = {};
+			var self = this;
+			if (transformer) {
+				transformer.outputs.map(function(x) {
+					parameters[x.name] = self.$services.page.getResolvedPageParameterType(x.type);
+				});
+			}
+			return this.$services.page.getSimpleKeysFor({properties:parameters}, true, true);
+		},
 		saveCompiledCss: function() {
 			this.$services.swagger.execute("nabu.web.page.core.rest.style.compile", {
 				applicationId: this.applicationId,
@@ -755,9 +821,9 @@ nabu.services.VueService(Vue.extend({
 				}
 			});
 		},
-		saveTransformer: function(transformer) {
+		saveFunction: function(transformer) {
 			try {
-				var result = new Function('input', '$services', transformer.content);
+				var result = new Function('input', '$services', '$value', 'done', transformer.content);
 				var parts = transformer.id.split(".");
 				var target = window;
 				for (var i = 0; i < parts.length - 1; i++) {
@@ -769,31 +835,31 @@ nabu.services.VueService(Vue.extend({
 				target[parts[parts.length - 1]] = result;
 				// if we get this far, also recompile all transformers
 				var compiled = "";
-				this.transformers.forEach(function(transformer) {
+				this.functions.forEach(function(transformer) {
 					var parts = transformer.id.split(".");
 					// make global namespace
 					for (var i = 0; i < parts.length - 1; i++) {
 						compiled += "if (!" + parts[i] + ") " + (i == 0 ? "var " : "") + parts[i] + " = {};\n";
 					}
-					compiled += (parts.length == 1 ? "var " : "") + transformer.id + " = function(input, $services) {\n";
+					compiled += (parts.length == 1 ? "var " : "") + transformer.id + " = function(input, $services, $value, done) {\n";
 					compiled += "\t" + transformer.content.replace(/\n/g, "\n\t") + "\n";
 					compiled += "}\n";
 				});
-				this.$services.swagger.execute("nabu.web.page.core.rest.transformer.compiled", {body:{content: compiled}});
+				this.$services.swagger.execute("nabu.web.page.core.rest.function.compiled", {body:{content: compiled}});
 			}
 			catch (exception) {
-				this.transformerError = exception.message;
-				console.error("Could not create transformer", exception.message);
+				this.functionError = exception.message;
+				console.error("Could not create function", exception.message);
 			}
-			return this.$services.swagger.execute("nabu.web.page.core.rest.transformer.write", { name:transformer.id, body: {content: JSON.stringify(transformer, null, 2) } });
+			return this.$services.swagger.execute("nabu.web.page.core.rest.function.write", { name:transformer.id, body: {content: JSON.stringify(transformer, null, 2) } });
 		},
-		createTransformer: function() {
+		createFunction: function() {
 			var self = this;	
-			var name = prompt("Transformer Id");
-			if (name && this.transformers.map(function(x) { return x.id.toLowerCase() }).indexOf(name.toLowerCase()) < 0) {
+			var name = prompt("Function Id");
+			if (name && this.functions.map(function(x) { return x.id.toLowerCase() }).indexOf(name.toLowerCase()) < 0) {
 				var transformer = { id:name, inputs:[], outputs:[], content: "" };
-				this.saveTransformer(transformer).then(function() {
-					self.transformers.push(transformer);
+				this.saveFunction(transformer).then(function() {
+					self.functions.push(transformer);
 				});
 			}
 		},
@@ -896,31 +962,40 @@ nabu.services.VueService(Vue.extend({
 			});
 		},
 		inject: function(link, callback, async) {
-			var script = document.createElement("script");
-			script.setAttribute("src", link);
-			script.setAttribute("type", "text/javascript");
-			if (async) {
-				script.setAttribute("async", "true");
+			// only inject it once!
+			var existing = document.head.querySelector('script[src="' + link + '"]');
+			if (existing) {
+				if (callback) {
+					callback();
+				}
 			}
-			
-			if (callback) {
-				// IE
-				if (script.readyState){  
-					script.onreadystatechange = function() {
-						if (script.readyState == "loaded" || script.readyState == "complete") {
-							script.onreadystatechange = null;
+			else {
+				var script = document.createElement("script");
+				script.setAttribute("src", link);
+				script.setAttribute("type", "text/javascript");
+				if (async) {
+					script.setAttribute("async", "true");
+				}
+				
+				if (callback) {
+					// IE
+					if (script.readyState){  
+						script.onreadystatechange = function() {
+							if (script.readyState == "loaded" || script.readyState == "complete") {
+								script.onreadystatechange = null;
+								callback();
+							}
+						};
+					}
+					// rest
+					else { 
+						script.onload = function() {
 							callback();
-						}
-					};
+						};
+					}
 				}
-				// rest
-				else { 
-					script.onload = function() {
-						callback();
-					};
-				}
+				document.head.appendChild(script);
 			}
-			document.head.appendChild(script);
 		},
 		canEdit: function() {
 			return !this.isServerRendering && this.editable;	
@@ -1398,12 +1473,25 @@ nabu.services.VueService(Vue.extend({
 			})
 			return translations;
 		},
+		notify: function(severity, message) {
+			this.validations.push({
+				severity: severity,
+				message: message,
+				title: message
+			});
+		},
 		getResolvedPageParameterType: function(type) {
 			if (type == null || ['string', 'boolean', 'number', 'integer'].indexOf(type) >= 0) {
 				return {type:type == null ? "string" : type};
 			}
 			else {
-				return this.$services.swagger.resolve(this.$services.swagger.definition(type));
+				try {
+					return this.$services.swagger.resolve(this.$services.swagger.definition(type));
+				}
+				catch (exception) {
+					this.notify("error", "Could not resolve type: " + type);
+					return {type: "string"};
+				}
 			}
 		},
 		getApplicationParameters: function() {

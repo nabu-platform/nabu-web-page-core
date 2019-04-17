@@ -6,6 +6,7 @@ Vue.component("page-form-input-date-configure", {
 		+ "	<n-form-switch v-model='field.isTimestamp' label='Is a timestamp in milliseconds?' v-if='!field.isSecondsTimestamp'/>"
 		+ "	<n-form-switch v-model='field.isSecondsTimestamp' label='Is a timestamp in seconds?' v-if='!field.isTimestamp'/>"
 		+ "	<n-form-text v-model='field.regexLabel' label='Regex label'/>"
+		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"allow\"]'></n-page-mapper>"
 		+ "</n-form-section>",
 	props: {
 		cell: {
@@ -21,6 +22,16 @@ Vue.component("page-form-input-date-configure", {
 			type: Object,
 			required: true
 		}
+	},
+	created: function () {
+		if ( !this.field.bindings ) {
+			Vue.set(this.field, "bindings", {});
+		}
+	},
+	computed: {
+		availableParameters: function() {
+			return this.$services.page.getAvailableParameters(this.page, this.cell, true);
+		}
 	}
 });
 
@@ -34,6 +45,7 @@ Vue.component("page-form-input-date", {
 			+ "		:label='label'"
 			+ "		:value='value'"
 			+ "		:timeout='timeout'"
+			+ "		:allow='getAllow()'"
 			+ "		:include-hours='field.includeHours'"
 			+ "		:pattern-comment='field.regexLabel'"
 			+ "		:include-minutes='field.includeHours && field.includeMinutes'"
@@ -82,6 +94,12 @@ Vue.component("page-form-input-date", {
 		}
 	},
 	methods: {
+		getAllow: function () {
+			if (this.field.bindings && this.field.bindings.allow) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				return this.$services.page.getBindingValue(pageInstance, this.field.bindings.allow, this);
+			}
+		},
 		validate: function(soft) {
 			return this.$refs.form.validate(soft);
 		}

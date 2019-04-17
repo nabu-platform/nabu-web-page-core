@@ -8,4 +8,5 @@
     <field maxOccurs="unbounded" minOccurs="0" name="parts" type="java.lang.String"/>
     <field minOccurs="0" name="amountOfParts" type="java.lang.Integer"/>
     <structure definition="nabu.web.page.core.types.translation" minOccurs="0" name="translation"/>
+    <field maxOccurs="unbounded" minOccurs="0" name="pageGroups" type="java.lang.String"/>
 </structure>

@@ -93,14 +93,14 @@
 					<n-ace v-model="style.content" :timeout="600" @input="$services.page.saveStyle(style)" :ref="'editors_' + style.name"/>
 				</n-collapsible>
 			</n-collapsible>
-			<n-collapsible title="Transformers" class="list">
+			<n-collapsible title="Functions" class="list">
 				<footer class="list-actions">
-					<button @click="$services.page.createTransformer">Create New Transformer</button>
+					<button @click="$services.page.createFunction">Create New Function</button>
 				</footer>
-				<n-collapsible :title="transformer.id" v-for="transformer in $services.page.transformers" class="page-cell layout2 list-item">
+				<n-collapsible :title="transformer.id" v-for="transformer in $services.page.functions" class="page-cell layout2 list-item">
 					<n-collapsible title="Input" class="page-cell layout2 list-item io">
 						<div class="list-actions">
-							<button @click="addTransformerParameter(transformer, 'inputs')">Add Input Parameter</button>
+							<button @click="addFunctionParameter(transformer, 'inputs')">Add Input Parameter</button>
 						</div>
 						<n-collapsible class="list-item" v-for="parameter in transformer.inputs" :title="parameter.name">
 							<n-form-text v-model="parameter.name" :required="true" label="Name"/>
@@ -114,7 +114,7 @@
 					</n-collapsible>
 					<n-collapsible title="Output" class="page-cell layout2 list-item io">
 						<div class="list-actions">
-							<button @click="addTransformerParameter(transformer, 'outputs')">Add Output Parameter</button>
+							<button @click="addFunctionParameter(transformer, 'outputs')">Add Output Parameter</button>
 						</div>
 						<n-collapsible class="list-item" v-for="parameter in transformer.outputs" :title="parameter.name">
 							<n-form-text v-model="parameter.name" :required="true" label="Name"/>
@@ -127,7 +127,7 @@
 						</n-collapsible>
 					</n-collapsible>
 					<n-ace v-model="transformer.content" :ref="'editors_' + transformer.id"/>
-					<button @click="$services.page.saveTransformer(transformer)">Save</button>
+					<button @click="$services.page.saveFunction(transformer)">Save</button>
 				</n-collapsible>
 			</n-collapsible>
 		</n-form>

@@ -46,6 +46,9 @@ Vue.mixin({
 				}
 			}
 			var application = {};
+			if (this.$services.page.title) {
+				application.title = this.$services.page.title;
+			}
 			this.$services.page.properties.map(function(x) {
 				application[x.key] = x.value;
 			});
@@ -102,8 +105,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	activate: function(done) {
+		var self = this;
+		var finalize = function() {
+			if (self.page.content.title) {
+				self.oldTitle = document.title;
+				document.title = self.$services.page.translate(self.$services.page.interpret(self.page.content.title, self));
+			}
+			done();
+		};
 		if (this.page.content.states.length) {
-			var self = this;
 			var promises = this.page.content.states.map(function(state) {
 				var parameters = {};
 				Object.keys(state.bindings).map(function(key) {
@@ -125,11 +135,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 					return promise;
 				}
 			});
-			this.$services.q.all(promises).then(done, done);
+			this.$services.q.all(promises).then(finalize, finalize);
 		}
 		else {
-			done();
+			finalize();
 		}
+	},
+	beforeDestroy: function() {
+		if (this.oldTitle) {
+			document.title = this.oldTitle;
+		}	
 	},
 	mounted: function() {
 		console.log("mounted page", this.page.name, this.embedded);
@@ -154,7 +169,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 						// check if we have a content setting
 						var value = self.$services.page.getContent(x.global ? null : self.page.name, x.name);
 						if (value == null) {
-							value = x.default;
+							value = self.$services.page.interpret(x.default, self);
 						}
 						else {
 							value = value.content;
@@ -709,8 +724,32 @@ nabu.page.views.Page = Vue.component("n-page", {
 			
 			// check all the actions to see if we need to run something
 			this.page.content.actions.map(function(action) {
+				
+				
 				if (action.on == name) {
 					var promise = self.$services.q.defer();
+					
+					var runFunction = function() {
+						if (action.isSlow) {
+							self.$wait({promise: promise});
+						}
+						var func = self.$services.page.getRunnableFunction(action.function);
+						if (!func) {
+							throw "Could not find function: " + action.function; 
+						}
+						var input = {};
+						if (action.bindings) {
+							var pageInstance = self;
+							Object.keys(action.bindings).forEach(function(key) {
+								if (action.bindings[key]) {
+									var value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], self);
+									self.$services.page.setValue(input, key, value);
+								}
+							});
+						}
+						return self.$services.page.runFunction(func, input, self, promise);
+					}
+					
 					promises.push(promise);
 					var parameters = {};
 					Object.keys(action.bindings).map(function(key) {
@@ -807,6 +846,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 									}, promise);
 								}
 							}
+							else if (action.function) {
+								runFunction();
+							}
 							else {
 								eventReset();
 							}
@@ -872,6 +914,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 									promise.resolve(result);
 								}, promise);
 							}
+						}
+						else if (action.function) {
+							runFunction();
 						}
 						else {
 							eventReset();
@@ -972,6 +1017,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			if (name == "page") {
 				return this.parameters;
+			}
+			else if (name == "application.title") {
+				return this.$services.page.title;
+			}
+			else if (name.indexOf("application.") == 0) {
+				var name = name.substring("application.".length);
+				var value = this.$services.page.properties.filter(function(x) {
+					return x.key == name;
+				})[0];
+				return value ? value.value : null;
 			}
 			else if (name.indexOf("page.") == 0) {
 				var name = name.substring("page.".length);

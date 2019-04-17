@@ -20,7 +20,7 @@
 					mask="false"
 					optional="false"
 					fixedValue="true">
-				<from>="repository:" + input/webApplicationId + ":/public/artifacts/transformers"</from>
+				<from>="repository:" + input/webApplicationId + ":/public/artifacts/functions"</from>
 				<to>uri</to>
 			</steps>
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"

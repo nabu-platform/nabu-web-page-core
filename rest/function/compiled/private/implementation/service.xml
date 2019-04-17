@@ -29,7 +29,7 @@
 					mask="false"
 					optional="false"
 					fixedValue="true">
-				<from>="repository:" + input/webApplicationId + ":/public/artifacts/transformers/compiled.js"</from>
+				<from>="repository:" + input/webApplicationId + ":/public/artifacts/functions/compiled.js"</from>
 				<to>uri</to>
 			</steps>
 		</steps>

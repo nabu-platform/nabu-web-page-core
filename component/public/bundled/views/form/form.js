@@ -375,8 +375,8 @@ nabu.page.views.PageForm = Vue.extend({
 				if (this.cell.state.cancelEvent) {
 					var pageInstance = this.$services.page.getPageInstance(this.page, this);
 					var content = null;
-					if (this.cell.page.on) {
-						content = pageInstance.get(this.cell.page.on);
+					if (this.cell.on) {
+						content = pageInstance.get(this.cell.on);
 					}
 					if (content == null) {
 						content = {};

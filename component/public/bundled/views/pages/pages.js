@@ -100,7 +100,7 @@ nabu.page.views.Pages = Vue.extend({
 		this.$services.page.disableReload = false;	
 	},
 	methods: {
-		addTransformerParameter: function(transformer, type) {
+		addFunctionParameter: function(transformer, type) {
 			transformer[type].push({});
 		},
 		updatePageName: function(page, newValue) {

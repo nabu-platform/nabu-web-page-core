@@ -5,13 +5,13 @@
 				:value="getValueFor(field)"
 				:initial-label="getLabelFor(field)"
 				@input="function(newValue, label) { setValue(field, newValue, label) }"/>
-			<n-collapsible :title="'Mapping for: ' + getValueFor(field)" v-if="getLabelFor(field) == '$transformer'">
+			<n-collapsible :title="'Mapping for: ' + getValueFor(field)" v-if="getLabelFor(field) == '$function'">
 				<n-page-mapper 
-					:to="getTransformerInput(getValueFor(field))" 
+					:to="$services.page.getFunctionInput(getValueFor(field))" 
 					:from="from"
 					v-model="getBindingsFor(field)"/>
 				<n-form-combo label="Output field"
-					:filter="getTransformerOutput.bind($self, getValueFor(field))"
+					:filter="$services.page.getFunctionOutput.bind($self, getValueFor(field))"
 					v-model="getObjectFor(field).output"/>
 			</n-collapsible>
 		</n-form-section>

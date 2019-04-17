@@ -21,7 +21,7 @@
 					mask="false"
 					optional="false"
 					fixedValue="true">
-				<from>=input/webApplicationId + ":/public/artifacts/pages/" + input/content/name + ".json"</from>
+				<from>=input/webApplicationId + ":/public/artifacts/pages/" + input/path/name + ".json"</from>
 				<to>uri</to>
 			</steps>
 		</steps>

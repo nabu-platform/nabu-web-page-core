@@ -170,7 +170,17 @@
 						"actions.tpl": {
 							"url": "views/actions/actions.tpl"
 						}
-					}, 
+					},
+					"skeletons": {
+						"email": {
+							"email.tpl": {
+								"url": "views/skeletons/email/email.tpl"
+							}, 
+							"email.js": {
+								"url": "views/skeletons/email/email.js"
+							}
+						}
+					},
 					"providers": {
 						"fragment": {
 							"image": {

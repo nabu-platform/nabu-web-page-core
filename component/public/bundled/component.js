@@ -62,6 +62,13 @@ window.addEventListener("load", function() {
 			}
 		});
 		
+		$services.router.register({
+			alias: "page-skeleton-email",
+			enter: function(parameters) {
+				return new nabu.page.skeletons.Email({propsData: parameters});
+			}
+		});
+		
 		// fragment providers
 		nabu.page.provide("page-field-fragment", { 
 			component: "page-field-fragment-data", 
