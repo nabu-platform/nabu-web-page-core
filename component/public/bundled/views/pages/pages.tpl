@@ -127,6 +127,7 @@
 						</n-collapsible>
 					</n-collapsible>
 					<n-ace v-model="transformer.content" :ref="'editors_' + transformer.id"/>
+					<n-form-switch v-model="transformer.async" label="Asynchronous"/>
 					<button @click="$services.page.saveFunction(transformer)">Save</button>
 				</n-collapsible>
 			</n-collapsible>

@@ -6,9 +6,13 @@
 					<n-form-combo label="Operation" :value="operation" :filter="getOperations"
 						@input="updateOperation"
 						:formatter="function(x) { return x.id }"
-						v-if="!cell.state.pageForm"/>
+						v-if="!cell.state.pageForm && !cell.state.functionForm"/>
 					<n-form-switch label="Page form" v-model="cell.state.pageForm"
-						v-if="!cell.state.operation"/>
+						v-if="!cell.state.operation && !cell.state.functionForm"/>
+					<n-form-switch label="Function form" v-model="cell.state.functionForm"
+						v-if="!cell.state.operation && !cell.state.pageForm"/>
+					<n-form-combo label="Function" v-model="cell.state.functionId" v-if="cell.state.functionForm" 
+						:filter="$services.page.listFunctions"/>
 					<n-form-text v-model="cell.state.title" label="Title"/>
 					<n-form-text v-model="cell.state.formId" label="Form Id"/>
 					<n-form-text v-model="cell.state.analysisId" label="Analysis Id"/>

@@ -392,11 +392,22 @@ nabu.services.VueService(Vue.extend({
 			var target = window;
 			for (var i = 0; i < parts.length - 1; i++) {
 				if (!target[parts[i]]) {
-					throw "Could not find function: " + bindingValue.value;
+					target = null;
+					break;
 				}
 				target = target[parts[i]];
 			}
-			return target[parts[parts.length - 1]];	
+			var func = target == null ? null : target[parts[parts.length - 1]];	
+			// if we didn't find a custom function, check provided ones
+			if (!func) {
+				var result = nabu.page.providers("page-function").filter(function(x) {
+					return x.id == id;
+				})[0];
+				if (result) {
+					func = result.implementation;
+				}
+			}
+			return func;
 		},
 		runFunction: function(func, input, context, promise) {
 			if (typeof(func) == "string") {
@@ -406,13 +417,23 @@ nabu.services.VueService(Vue.extend({
 					throw "Could not find function: " + id;
 				}
 			}
-			var done = function() {
+			var resolve = function(result) {
 				if (promise) {
-					promise.resolve();
+					promise.resolve(result);
+				}
+			};
+			var reject = function(result) {
+				if (promise) {
+					promise.reject(result);
 				}
 			};
 			try {
-				return func(input, this.$services, context && context.$value ? context.$value : function() {}, done);
+				var returnValue = func(input, this.$services, context && context.$value ? context.$value : function() {}, func.async ? resolve : null, func.async ? reject : null);
+				// if not async, call the done yourself
+				if (!func.async) {
+					resolve(returnValue);
+				}
+				return returnValue;
 			}
 			catch (exception) {
 				if (promise) {
@@ -807,23 +828,34 @@ nabu.services.VueService(Vue.extend({
 			});
 		},
 		listFunctions: function(value) {
-			return this.functions.map(function(x) { return x.id }).filter(function(x) {
+			var result = this.functions.map(function(x) { return x.id });
+			nabu.utils.arrays.merge(result, nabu.page.providers("page-function").map(function(x) { return x.id }));
+			return result.filter(function(x) {
 				return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
 			});
 		},
 		getFunctionInput: function(id, value) {
 			var transformer = this.$services.page.functions.filter(function(x) { return x.id == id })[0];
+			if (!transformer) {
+				transformer = nabu.page.providers("page-function").filter(function(x) { return x.id == id })[0];
+			}
 			var parameters = {};
 			var self = this;
 			if (transformer) {
 				transformer.inputs.map(function(x) {
 					parameters[x.name] = self.$services.page.getResolvedPageParameterType(x.type);
+					if (!parameters[x.name].required && x.required) {
+						parameters[x.name].required = x.required;
+					}
 				});
 			}
 			return {properties:parameters};
 		},
 		getFunctionOutput: function(id, value) {
 			var transformer = this.$services.page.functions.filter(function(x) { return x.id == id })[0];
+			if (!transformer) {
+				transformer = nabu.page.providers("page-function").filter(function(x) { return x.id == id })[0];
+			}
 			var parameters = {};
 			var self = this;
 			if (transformer) {
@@ -843,7 +875,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		saveFunction: function(transformer) {
 			try {
-				var result = new Function('input', '$services', '$value', 'done', transformer.content);
+				var result = new Function('input', '$services', '$value', 'resolve', 'reject', transformer.content);
 				var parts = transformer.id.split(".");
 				var target = window;
 				for (var i = 0; i < parts.length - 1; i++) {
@@ -861,7 +893,7 @@ nabu.services.VueService(Vue.extend({
 					for (var i = 0; i < parts.length - 1; i++) {
 						compiled += "if (!" + parts[i] + ") " + (i == 0 ? "var " : "") + parts[i] + " = {};\n";
 					}
-					compiled += (parts.length == 1 ? "var " : "") + transformer.id + " = function(input, $services, $value, done) {\n";
+					compiled += (parts.length == 1 ? "var " : "") + transformer.id + " = function(input, $services, $value, resolve, reject) {\n";
 					compiled += "\t" + transformer.content.replace(/\n/g, "\n\t") + "\n";
 					compiled += "}\n";
 				});

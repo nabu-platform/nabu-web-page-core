@@ -76,6 +76,12 @@ nabu.page.views.PageForm = Vue.extend({
 				//nabu.utils.arrays.merge(fields, Object.keys(parameters.properties));
 				nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor(parameters, true, true));
 			}
+			else if (this.cell.state.functionForm) {
+				if (this.cell.state.functionId) {
+					var parameters = this.$services.page.getFunctionInput(this.cell.state.functionId);
+					nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor(parameters, true, true));
+				}
+			}
 			else {
 				Object.keys(this.cell.bindings).map(function(key) {
 					fields.push(key);
@@ -331,7 +337,12 @@ nabu.page.views.PageForm = Vue.extend({
 		},
 		getEvents: function() {
 			var result = {};
-			if (this.operation && this.cell.state.event) {
+			if (this.cell.state.functionForm && this.cell.state.event) {
+				result[this.cell.state.event] = this.cell.state.functionId
+					? this.$services.page.getFunctionOutput(this.cell.state.functionId)
+					: {};
+			}
+			else if (this.operation && this.cell.state.event) {
 				var response = this.operation.responses["200"];
 				var schema = null;
 				if (response && response.schema) {
@@ -339,7 +350,6 @@ nabu.page.views.PageForm = Vue.extend({
 				}
 				if (schema == null) {
 					schema = {properties:this.getOperationInput()};
-					console.log("schema properties are", schema);
 				}
 				result[this.cell.state.event] = schema ? schema : {};
 			}
@@ -499,40 +509,47 @@ nabu.page.views.PageForm = Vue.extend({
 			if (!field) {
 				return null;
 			}
-			var operation = this.$services.swagger.operations[this.cell.state.operation];
-			var result = null;
-			if (operation) {
-				var self = this;
-				// body parameter
-				if (field.indexOf("body.") == 0) {
-					var recursiveGet = function(schema, parts, index) {
-						if (schema.items) {
-							schema = schema.items;
-						}
-						var properties = schema.properties;
-						if (properties && properties[parts[index]]) {
-							if (index < parts.length - 1) {
-								return recursiveGet(properties[parts[index]], parts, index + 1);
-							}
-							else {
-								var result = properties[parts[index]];
-								result.required = schema.required && schema.required.indexOf(parts[index]) >= 0;
-								return result;
-							}
-						}
-					}
-					var body = this.body;
-					var parts = field.substring("body.".length).split(".");
-					result = body.schema ? recursiveGet(body.schema, parts, 0) : null;
+			var recursiveGet = function(schema, parts, index) {
+				if (schema.items) {
+					schema = schema.items;
 				}
-				// non-body parameter
-				else {
-					for (var i = 0; i < operation.parameters.length; i++) {
-						var parameter = operation.parameters[i];
-						if (parameter.in != "body" && parameter.name == field) {
-							result = parameter;
-						}
-					};
+				var properties = schema.properties;
+				if (properties && properties[parts[index]]) {
+					if (index < parts.length - 1) {
+						return recursiveGet(properties[parts[index]], parts, index + 1);
+					}
+					else {
+						var result = properties[parts[index]];
+						result.required = result.required || schema.required && schema.required.indexOf(parts[index]) >= 0;
+						return result;
+					}
+				}
+			}
+			if (this.cell.state.functionForm) {
+				var properties = this.$services.page.getFunctionInput(this.cell.state.functionId);
+				var parts = field.split(".");
+				result = properties ? recursiveGet(properties, parts, 0) : null;
+			}
+			else {
+				var operation = this.$services.swagger.operations[this.cell.state.operation];
+				var result = null;
+				if (operation) {
+					var self = this;
+					// body parameter
+					if (field.indexOf("body.") == 0) {
+						var body = this.body;
+						var parts = field.substring("body.".length).split(".");
+						result = body.schema ? recursiveGet(body.schema, parts, 0) : null;
+					}
+					// non-body parameter
+					else {
+						for (var i = 0; i < operation.parameters.length; i++) {
+							var parameter = operation.parameters[i];
+							if (parameter.in != "body" && parameter.name == field) {
+								result = parameter;
+							}
+						};
+					}
 				}
 			}
 			return result;
@@ -695,6 +712,32 @@ nabu.page.views.PageForm = Vue.extend({
 							self.readOnly = true;
 						}
 						self.doingIt = false;
+					}
+					else if (this.cell.state.functionForm) {
+						var promise = this.$services.q.defer();
+						var returnValue = this.$services.page.runFunction(this.cell.state.functionId, result, this, promise);
+						promise.then(function(result) {
+							if (self.cell.state.event) {
+								pageInstance.emit(self.cell.state.event, result == null ? returnValue : result);
+							}
+							if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
+								self.$emit("close");
+							}
+							// if we allow read only, revert to it after a successful edit
+							if (self.cell.state.allowReadOnly) {
+								self.readOnly = true;
+							}
+							self.doingIt = false;
+							stop();
+						}, function() {
+							self.messages.push({
+								type: "request",
+								severity: "error",
+								title: self.$services.page.translateErrorCode("HTTP-500")
+							});
+							self.doingIt = false;
+							stop("Form submission failed");
+						})
 					}
 					else if (this.cell.state.operation) {
 						try {
@@ -1195,7 +1238,6 @@ Vue.component("page-configure-arbitrary", {
 			var available = this.$services.page.getAvailableParameters(this.page, this.cell, true);
 			if (this.keys.length) {
 				available.record = {properties:{}};
-				console.log("keys are", this.keys);
 				this.keys.forEach(function(key) {
 					available.record.properties[key] = {
 						type: "string"
