@@ -143,7 +143,34 @@ nabu.page.views.Page = Vue.component("n-page", {
 					return promise;
 				}
 			});
-			this.$services.q.all(promises).then(finalize, finalize);
+			var inSelf = this.page.content.errorInSelf;
+			var routeError = function(error, counter) {
+				if (!counter) {
+					counter = 1;
+				}
+				if (!self.$el && counter < 5 && inSelf) {
+					Vue.nextTick(function() {
+						routeError(error, counter + 1);
+					});
+				}
+				else {
+					// masked route so we can reload
+					self.$services.router.route("error", {
+						code: "page-load-failed",
+						message: "%{error:The page you requested could not be loaded, please <a href='javascript:void(0)' @click='$window.location.reload()'>try again</a>}"
+					}, inSelf && self.$el ? nabu.utils.router.self(self.$el) : null, true);
+				}
+			};
+			this.$services.q.all(promises).then(finalize, function(error) {
+				done();
+				// if we are in edit mode, we can be expected to fix this
+				if (self.edit || self.$services.page.wantEdit) {
+					finalize();
+				}
+				else {
+					routeError(error, 0);
+				}
+			});
 		}
 		else {
 			finalize();
@@ -725,7 +752,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 			// check all the actions to see if we need to run something
 			this.page.content.actions.map(function(action) {
 				
-				
 				if (action.on == name) {
 					var promise = self.$services.q.defer();
 					
@@ -964,7 +990,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 											self.variables[state.name] = null;
 										}
 									});
-									nabu.utils.objects.merge(self.variables[state.name], result);
+									// make sure we use vue.set to trigger other reactivity
+									resultKeys.forEach(function(key) {
+										Vue.set(self.variables[state.name][key], result[key]);
+									});
+									// TODO: do a proper recursive merge to maintain reactivity with deeply nested
+									
+									//nabu.utils.objects.merge(self.variables[state.name], result);
 								}
 							}
 							else {
@@ -1461,6 +1493,18 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			else {
 				return this.mapCalculated(row.cells);
 			}
+		},
+		getSideBarStyles: function(cell) {
+			var styles = [];
+			if (cell.width != null) {
+				if (typeof(cell.width) == "number" || (cell.width.match && cell.width.match(/^[0-9.]+$/))) {
+					styles.push({'flex-grow': cell.width});
+				}
+				else {
+					styles.push({'min-width': cell.width});
+				}
+			}
+			return styles;
 		},
 		getStyles: function(cell) {
 			var width = typeof(cell.width) == "undefined" ? 1 : cell.width;

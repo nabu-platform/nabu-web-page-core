@@ -40,6 +40,7 @@
 					<n-form-combo label="Page Type" :items="['page', 'email']" v-model="page.content.pageType"/>
 					<n-form-combo label="Page Parent" :filter="filterRoutes" v-model="page.content.pageParent"/>
 					<n-form-text v-model="page.content.defaultAnchor" label="Default Content Anchor"/>
+					<n-form-switch label="Route Error in Self" v-model="page.content.errorInSelf"/>
 					
 					<div class="list" v-if="page.content.roles">
 						<div v-for="i in Object.keys(page.content.roles)" class="list-row">
@@ -284,7 +285,7 @@
 							<n-collapsible title="Eventing" key="cell-events">
 								<n-form-switch label="Closeable" v-model="cell.closeable" v-if="!cell.on"/>
 								<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents" v-if="!cell.closeable"/>
-								<n-form-combo label="Target" v-if="cell.on" :items="['page', 'sidebar', 'prompt']" v-model="cell.target"/>
+								<n-form-combo label="Target" :items="['page', 'sidebar', 'prompt']" v-model="cell.target"/>
 								<n-form-switch label="Prevent Auto Close" v-model="cell.preventAutoClose" v-if="cell.target == 'sidebar'"/>
 							</n-collapsible>
 						</n-form-section>
@@ -315,7 +316,7 @@
 						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 				</div>
 				<template v-else-if="shouldRenderCell(row, cell)">
-					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)" :popout="false" :autocloseable="!cell.preventAutoClose" class="content-sidebar">
+					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)" :popout="false" :autocloseable="!cell.preventAutoClose" class="content-sidebar" :style="getSideBarStyles(cell)">
 						<div @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:parameters="parameters"

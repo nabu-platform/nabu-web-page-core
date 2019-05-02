@@ -45,6 +45,10 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 			type: Boolean,
 			required: false,
 			default: true
+		},
+		allowEvents: {
+			type: Boolean,
+			default: true
 		}
 	},
 	created: function() {
@@ -268,6 +272,21 @@ nabu.page.views.PageFields = Vue.component("page-fields", {
 			if (!state.class) {
 				Vue.set(state, "class", null);
 			}
+		},
+		getEvents: function() {
+			var result = {};
+			if (this.cell.state[this.fieldsName]) {
+				this.cell.state[this.fieldsName].forEach(function(field) {
+					if (field.fragments) {
+						field.fragments.forEach(function(fragment) {
+							if (fragment.clickEvent) {
+								result[fragment.clickEvent] = {};
+							}	
+						});
+					}	
+				});
+			}
+			return result;
 		}
 	}
 });
@@ -305,6 +324,13 @@ Vue.component("page-field", {
 		}
 	},
 	methods: {
+		handleClick: function(fragment) {
+			if (fragment.clickEvent) {
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				pageInstance.emit(fragment.clickEvent, {});
+			}	
+		},
 		getDynamicClasses: function(field) {
 			var classes = null;
 			if (this.shouldStyle) {

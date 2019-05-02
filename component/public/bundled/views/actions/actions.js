@@ -315,7 +315,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		},
 		getActionHref: function(action) {
 			if (!this.cell.state.useButtons && action.url) {
-				return action.url;
+				return this.$services.page.interpret(action.url, this);
 			}
 			if (action.absolute && action.route) {
 				var route = action.route;

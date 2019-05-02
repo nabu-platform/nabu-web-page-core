@@ -203,7 +203,7 @@ Vue.component("page-form-list-input-predefined", {
 								var result = {
 									type: type == null ? "string" : type,
 									name: name == null ? "unnamed" + nameCounter++ : name,
-									label: label == null ? (name == null ? "%{Unnamed}" : name) : label,
+									label: label == null ? (name == null ? "Unnamed" : name) : label,
 									value: value,
 									optional: optional
 								}

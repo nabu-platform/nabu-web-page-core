@@ -21,6 +21,7 @@
 					<n-form-text v-if="!basic" v-model="fragment.hidden" label="Hide fragment if"/>
 					<n-form-combo v-if="fragment.type == 'data'" v-model="fragment.key" label="Data Key" :filter="getKeys"/>
 					<n-form-text v-if="!basic" v-model="fragment.class" label="Fragment Class"/>
+					<n-form-text v-if="allowEvents" v-model="fragment.clickEvent" label="Click Event" @input="$emit('updatedEvents')" :timeout="600"/>
 					
 					<component v-if="fragment.type" :cell="cell" :page="page" :keys="getKeys()"
 						:fragment="fragment"
@@ -90,6 +91,7 @@
 					:cell="cell"
 					:data="data"
 					:fragment="fragment"
+					@click.native="handleClick(fragment)"
 					@updated="function(value) { $emit('updated', value) }"/>
 			</dd>
 			<dd class="page-field-fragment" v-else>
@@ -110,6 +112,7 @@
 				:cell="cell"
 				:data="data"
 				:fragment="fragment"
+				@click.native="handleClick(fragment)"
 				@updated="function(value) { $emit('updated', value) }"/>
 		</template>
 		<page-arbitrary v-else

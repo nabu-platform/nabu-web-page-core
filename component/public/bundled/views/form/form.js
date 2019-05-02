@@ -34,7 +34,8 @@ nabu.page.views.PageForm = Vue.extend({
 			// keeps track of the labels set by the fields (if relevant)
 			labels: {},
 			doingIt: false,
-			started: null
+			started: null,
+			error: null
 		}
 	},
 	computed: {
@@ -81,6 +82,9 @@ nabu.page.views.PageForm = Vue.extend({
 					var parameters = this.$services.page.getFunctionInput(this.cell.state.functionId);
 					nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor(parameters, true, true));
 				}
+			}
+			else if (true) {
+				nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor({properties:this.getOperationInput()}, true, true));
 			}
 			else {
 				Object.keys(this.cell.bindings).map(function(key) {
@@ -226,7 +230,7 @@ nabu.page.views.PageForm = Vue.extend({
 		},
 		setPage: function(page) {
 			var messages = this.$refs.form.validate();
-			if (!messages.length) {
+			if (!messages.length || this.edit) {
 				this.currentPage = page;
 				if (this.$services.analysis && this.$services.analysis.emit) {
 					this.$services.analysis.emit("form-page-" + this.cell.state.pages.indexOf(this.currentPage), this.analysisId, {method: "choose"}, true);
@@ -359,7 +363,23 @@ nabu.page.views.PageForm = Vue.extend({
 			if (this.cell.state.cancelEvent) {
 				result[this.cell.state.cancelEvent] = this.cell.on ? this.cell.on : {};
 			}
+			nabu.utils.objects.merge(result, this.getEventsRecursively(this));
 			return result;
+		},
+		getEventsRecursively: function(component) {
+			var events = {};
+			if (component.$children) {
+				var self = this;
+				component.$children.forEach(function(child) {
+					if (child.getEvents) {
+						nabu.utils.objects.merge(events, child.getEvents());
+					}
+					else {
+						nabu.utils.objects.merge(events, self.getEventsRecursively(child));
+					}
+				});
+			}
+			return events;
 		},
 		getOperationInput: function() {
 			var result = {};
@@ -718,6 +738,7 @@ nabu.page.views.PageForm = Vue.extend({
 						var returnValue = this.$services.page.runFunction(this.cell.state.functionId, result, this, promise);
 						promise.then(function(result) {
 							if (self.cell.state.event) {
+								var pageInstance = self.$services.page.getPageInstance(self.page, self);
 								pageInstance.emit(self.cell.state.event, result == null ? returnValue : result);
 							}
 							if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
@@ -729,14 +750,27 @@ nabu.page.views.PageForm = Vue.extend({
 							}
 							self.doingIt = false;
 							stop();
-						}, function() {
-							self.messages.push({
-								type: "request",
-								severity: "error",
-								title: self.$services.page.translateErrorCode("HTTP-500")
-							});
+						}, function(error) {
+							self.error = "Form submission failed";
+							if (error) {
+								if (!error.code && error.status != null) {
+									error.code = "HTTP-" + error.status;
+								}
+								self.messages.push({
+									type: "request",
+									severity: "error",
+									title: self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message)
+								})
+							}
+							else {
+								self.messages.push({
+									type: "request",
+									severity: "error",
+									title: self.$services.page.translateErrorCode("HTTP-500")
+								});
+							}
 							self.doingIt = false;
-							stop("Form submission failed");
+							stop(self.error);
 						})
 					}
 					else if (this.cell.state.operation) {
@@ -783,10 +817,18 @@ nabu.page.views.PageForm = Vue.extend({
 									if (error.responseText) {
 										error = JSON.parse(error.responseText);
 									}
+									if (self.cell.state.errorEvent) {
+										if (!self.cell.state.errorEventCodes || self.cell.state.errorEventCodes.split(/[\\s]*,[\\s]*/).indexOf(error.code)) {
+											var pageInstance = self.$services.page.getPageInstance(self.page, self);
+											pageInstance.emit(self.cell.state.errorEvent, {});
+										}
+									}
+									var translated = self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message);
+									self.error = translated;
 									self.messages.push({
 										type: "request",
 										severity: "error",
-										title: self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message)
+										title: translated
 									})
 								}
 								catch (exception) {
@@ -797,7 +839,7 @@ nabu.page.views.PageForm = Vue.extend({
 									})
 								}
 								self.doingIt = false;
-								stop(error && error.title ? error.title : "Form submission failed");
+								stop(self.error);
 							});
 						}
 						catch(exception) {
@@ -1336,6 +1378,11 @@ Vue.component("page-arbitrary", {
 		},
 		mounted: function(instance) {
 			this.instance = instance;
+			if (this.instance.getEvents) {
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				pageInstance.resetEvents();
+			}
 		},
 		validate: function(soft) {
 			if (this.instance && this.instance.validate) {

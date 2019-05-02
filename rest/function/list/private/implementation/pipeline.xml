@@ -3,4 +3,5 @@
     <structure name="output"/>
     <structure definition="be.nabu.libs.resources.api.ResourceProperties" maxOccurs="unbounded" minOccurs="0" name="children"/>
     <structure definition="nabu.web.page.core.types.rest.style" name="style"/>
+    <field name="editable" type="java.lang.Boolean"/>
 </structure>

@@ -387,6 +387,9 @@ nabu.services.VueService(Vue.extend({
 				setTimeout(self.reloadCss, 2000);
 			});
 		},
+		getFunctionDefinition: function(id) {
+			return this.listFunctionDefinitions().filter(function(x) { return x.id == id })[0];
+		},
 		getRunnableFunction: function(id) {
 			var parts = id.split(".");
 			var target = window;
@@ -410,7 +413,9 @@ nabu.services.VueService(Vue.extend({
 			return func;
 		},
 		runFunction: function(func, input, context, promise) {
+			var definition = null;
 			if (typeof(func) == "string") {
+				definition = this.getFunctionDefinition(func);
 				var id = func;
 				func = this.getRunnableFunction(id);
 				if (!func) {
@@ -418,31 +423,35 @@ nabu.services.VueService(Vue.extend({
 				}
 			}
 			var resolve = function(result) {
+				console.log("resolving", result);
 				if (promise) {
 					promise.resolve(result);
 				}
 			};
 			var reject = function(result) {
+				if (result.responseText) {
+					result = JSON.parse(result.responseText);
+				}
+				console.log("rejecting", result);
 				if (promise) {
 					promise.reject(result);
 				}
 			};
 			try {
-				var returnValue = func(input, this.$services, context && context.$value ? context.$value : function() {}, func.async ? resolve : null, func.async ? reject : null);
+				var returnValue = func(input, this.$services, context && context.$value ? context.$value : function() {}, definition && definition.async ? resolve : null, definition && definition.async ? reject : null);
 				// if not async, call the done yourself
-				if (!func.async) {
+				if (definition && !definition.async) {
 					resolve(returnValue);
 				}
 				return returnValue;
 			}
 			catch (exception) {
-				if (promise) {
-					promise.reject();
-				}
+				reject(exception);
 				throw exception;
 			}
 		},
 		getBindingValue: function(pageInstance, bindingValue, context) {
+			var self = this;
 			// only useful if the binding value is a string
 			if (typeof(bindingValue) == "string") {
 				while (context && !context.localState) {
@@ -476,6 +485,23 @@ nabu.services.VueService(Vue.extend({
 					var func = this.getRunnableFunction(bindingValue.value);
 					if (!func) {
 							throw "Could not find function: " + bindingValue.value;
+					}
+					if (bindingValue.lambda) {
+						return function() {
+							var def = self.getFunctionDefinition(bindingValue.value);
+							var input = {};
+							if (def.inputs) {
+								var tmp = arguments;
+								def.inputs.forEach(function(x, i) {
+									input[x.name] = tmp[i];
+								});
+							}
+							var output = self.runFunction(func, input, context);
+							if (bindingValue.output) {
+								output = output[bindingValue.output];
+							}
+							return output;
+						}
 					}
 					var input = {};
 					var self = this;
@@ -515,7 +541,11 @@ nabu.services.VueService(Vue.extend({
 			return value;
 		},
 		translateErrorCode: function(value, defaultValue) {
-			var translations = this.translations.filter(function(x) {
+			var translations = !value ? [] : this.translations.filter(function(x) {
+				// this is not actually a translation, fall back to defaults
+				if (x.translation == x.name) {
+					return false;
+				}
 				return value.toLowerCase() == x.name.toLowerCase()
 					|| value.match(new RegExp(x.name.replace(/\*/g, ".*")));
 			});
@@ -527,7 +557,7 @@ nabu.services.VueService(Vue.extend({
 					}
 				});
 			}
-			else if (translations.length) {
+			else if (translations.length == 1) {
 				translation = translations[0];
 			}
 			return translation && translation.translation 
@@ -827,9 +857,14 @@ nabu.services.VueService(Vue.extend({
 				}
 			});
 		},
+		listFunctionDefinitions: function() {
+			var result = [];
+			nabu.utils.arrays.merge(result, this.functions);
+			nabu.utils.arrays.merge(result, nabu.page.providers("page-function"));
+			return result;
+		},
 		listFunctions: function(value) {
-			var result = this.functions.map(function(x) { return x.id });
-			nabu.utils.arrays.merge(result, nabu.page.providers("page-function").map(function(x) { return x.id }));
+			var result = this.listFunctionDefinitions().map(function(x) { return x.id });
 			return result.filter(function(x) {
 				return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
 			});
@@ -841,7 +876,7 @@ nabu.services.VueService(Vue.extend({
 			}
 			var parameters = {};
 			var self = this;
-			if (transformer) {
+			if (transformer && transformer.inputs) {
 				transformer.inputs.map(function(x) {
 					parameters[x.name] = self.$services.page.getResolvedPageParameterType(x.type);
 					if (!parameters[x.name].required && x.required) {
@@ -858,7 +893,7 @@ nabu.services.VueService(Vue.extend({
 			}
 			var parameters = {};
 			var self = this;
-			if (transformer) {
+			if (transformer && transformer.outputs) {
 				transformer.outputs.map(function(x) {
 					parameters[x.name] = self.$services.page.getResolvedPageParameterType(x.type);
 				});
@@ -897,6 +932,24 @@ nabu.services.VueService(Vue.extend({
 					compiled += "\t" + transformer.content.replace(/\n/g, "\n\t") + "\n";
 					compiled += "}\n";
 				});
+				compiled += "Vue.service('functionRegistrar', {\n";
+				compiled += "	services: ['page'],\n";
+				compiled += "	activate: function(done) {\n"
+				// we only load the functions if we are not editing, otherwise they are available as per usual
+				compiled += "		if (!this.$services.page.editable) {\n";
+				this.functions.forEach(function(transformer) {
+					compiled += "			nabu.page.provide('page-function', {\n";
+					compiled += "				id: '" + transformer.id + "',\n";
+					compiled += "				async: " + !!transformer.async + ",\n";
+					compiled += "				implementation: " + transformer.id + ",\n";
+					compiled += "				inputs: " + (transformer.inputs ? JSON.stringify(transformer.inputs) : []) + ",\n";
+					compiled += "				outputs: " + (transformer.inputs ? JSON.stringify(transformer.outputs) : []) + "\n";
+					compiled += "			});\n";
+				});
+				compiled += "		}\n";
+				compiled += "		done();\n";
+				compiled += "	}\n";
+				compiled += "})\n";
 				this.$services.swagger.execute("nabu.web.page.core.rest.function.compiled", {body:{content: compiled}});
 			}
 			catch (exception) {

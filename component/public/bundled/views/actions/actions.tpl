@@ -53,7 +53,8 @@
 								
 								<n-form-combo v-model="action.class" label="Class" :filter="$services.page.classes.bind($self, 'page-action')" />
 								<n-form-combo v-model="action.buttonClass" label="Button Class" :filter="$services.page.getSimpleClasses"/>
-								<n-form-combo v-model="action.event" v-if="!action.route && !action.url" label="Event" :filter="function(value) { return value ? [value, '$close'] : ['$close'] }"/>
+								<n-form-combo v-model="action.event" v-if="!action.route && !action.url" label="Event" :filter="function(value) { return value ? [value, '$close'] : ['$close'] }"
+									 @input="$emit('updatedEvents')" :timeout="600"/>
 								<n-form-switch v-model="action.close" v-if="action.event != '$close'" label="Close"/>
 								
 								<n-form-section v-if="!action.dynamic">

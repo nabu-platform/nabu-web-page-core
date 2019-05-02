@@ -24,6 +24,8 @@
 					<n-form-text v-model="cell.state.previous" v-if="!cell.state.immediate && cell.state.pages.length > 1" label="Previous Label"/>
 					<n-form-text v-model="cell.state.event" label="Success Event" :timeout="600" @input="$emit('updatedEvents')"/>
 					<n-form-text v-model="cell.state.cancelEvent" label="Cancel Event" :timeout="600" @input="$emit('updatedEvents')"/>
+					<n-form-text v-if="cell.state.operation" v-model="cell.state.errorEvent" label="Error Event" :timeout="600" @input="$emit('updatedEvents')"/>
+					<n-form-text v-model="cell.state.errorEventCodes" label="Error Event Codes" v-if="cell.state.errorEvent"/>
 					<n-form-switch v-model="cell.state.synchronize" label="Synchronize Changes"/>
 					<n-form-switch v-model="cell.state.autofocus" label="Autofocus"/>
 					<n-form-switch v-model="cell.state.autoclose" label="Autoclose"/>
@@ -41,7 +43,7 @@
 						<n-form-combo :items="Object.keys(availableParameters)" v-model="autoMapFrom"/>
 						<button @click="automap" :disabled="!autoMapFrom">Automap</button>
 					</div>
-					<n-page-mapper :to="Object.keys(cell.bindings)" :from="availableParameters" 
+					<n-page-mapper :to="fieldsToAdd" :from="availableParameters" 
 						v-model="cell.bindings"/>
 				</n-collapsible>
 				<div v-for="cellPage in cell.state.pages">
@@ -71,12 +73,12 @@
 				</div>
 			</n-form>
 		</n-sidebar>
-		<div class="form-tabs" v-if="cell.state.pages.length >= 2 && cell.state.pageTabs">
+		<div class="form-tabs" v-if="cell.state.pages.length >= 2 && (cell.state.pageTabs || edit)">
 			<button v-for="page in cell.state.pages" @click="setPage(page)"
 				:class="{'is-active': currentPage == page}">{{$services.page.interpret(page.name, self)}}</button>
 		</div>
-		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
-		<n-form :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}]" ref="form" :id="cell.state.formId" :mode="cell.state.mode">
+		<h2 v-if="cell.state.title">{{$services.page.translate($services.page.interpret(cell.state.title, $self))}}</h2>
+		<n-form :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}, {'form-error': !!error }]" ref="form" :id="cell.state.formId" :mode="cell.state.mode">
 			<header slot="header" v-if="cell.state.dynamicHeader"><component :is="cell.state.dynamicHeader" :form="$self" :page="page" :cell="cell"/></header>
 			<n-form-section :key="'form_page_' + cell.state.pages.indexOf(currentPage)">
 				<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">

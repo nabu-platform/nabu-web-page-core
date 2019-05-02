@@ -6,7 +6,7 @@ Vue.component("page-form-input-date-configure", {
 		+ "	<n-form-switch v-model='field.isTimestamp' label='Is a timestamp in milliseconds?' v-if='!field.isSecondsTimestamp'/>"
 		+ "	<n-form-switch v-model='field.isSecondsTimestamp' label='Is a timestamp in seconds?' v-if='!field.isTimestamp'/>"
 		+ "	<n-form-text v-model='field.regexLabel' label='Regex label'/>"
-		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"allow\"]'></n-page-mapper>"
+		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"allow\", \"default\"]'/>"
 		+ "</n-form-section>",
 	props: {
 		cell: {
@@ -24,7 +24,7 @@ Vue.component("page-form-input-date-configure", {
 		}
 	},
 	created: function () {
-		if ( !this.field.bindings ) {
+		if (!this.field.bindings) {
 			Vue.set(this.field, "bindings", {});
 		}
 	},
@@ -44,6 +44,7 @@ Vue.component("page-form-input-date", {
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
+			+ "		:default='getDefault()'"
 			+ "		:timeout='timeout'"
 			+ "		:allow='getAllow()'"
 			+ "		:include-hours='field.includeHours'"
@@ -94,6 +95,12 @@ Vue.component("page-form-input-date", {
 		}
 	},
 	methods: {
+		getDefault: function() {
+			if (this.field.bindings && this.field.bindings.default) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				return this.$services.page.getBindingValue(pageInstance, this.field.bindings.default, this);
+			}
+		},
 		getAllow: function () {
 			if (this.field.bindings && this.field.bindings.allow) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);

@@ -50,7 +50,11 @@ Vue.component("n-page-mapper", {
 		// get the possible field names for this label
 		fieldsFrom: function(value, label, fields) {
 			if (label == "$function") {
-				var functions = this.$services.page.functions.map(function(x) { return x.id });
+				//var functions = this.$services.page.functions.map(function(x) { return x.id });
+				// can not use async functions as mappers (for now?)
+				var functions = this.$services.page.listFunctionDefinitions()
+					.filter(function(x) { return !x.async })
+					.map(function(x) { return x.id });
 				if (value) {
 					functions = functions.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase() >= 0 )});
 				}
@@ -108,8 +112,12 @@ Vue.component("n-page-mapper", {
 					label: label,
 					value: newValue,
 					bindings: {},
+					lambda: false,
+					lambdable: false,
 					output: null
 				};
+				var def = this.$services.page.getFunctionDefinition(newValue);
+				this.value[field].lambdable = def && !def.async;
 			}
 			else {
 				this.value[field] = label && newValue ? label + '.' + newValue : null;
@@ -140,6 +148,9 @@ Vue.component("n-page-mapper", {
 			return this.value[field]
 				? this.value[field].split(".")[0]
 				: null;
+		},
+		isLambdable: function(field) {
+			return this.value[field] && this.value[field].lambdable;
 		}
 	}
 });
