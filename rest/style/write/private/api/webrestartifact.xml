@@ -3,7 +3,7 @@
     <method>POST</method>
     <path>/style/{name: .*}</path>
     <role>editor</role>
-    <permissionContext>="webApplication:" + input/path/applicationId</permissionContext>
+    <permissionContext>="webApplication:" + input/webApplicationId</permissionContext>
     <permissionAction>style.write</permissionAction>
     <input>nabu.web.page.core.types.rest.styleInput</input>
     <lenient>false</lenient>
@@ -18,4 +18,6 @@
     <allowHeaderAsQueryParameter>false</allowHeaderAsQueryParameter>
     <useServerCache>false</useServerCache>
     <source>false</source>
+    <allowRaw>false</allowRaw>
+    <domain>false</domain>
 </restInterface>

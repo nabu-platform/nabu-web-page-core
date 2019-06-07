@@ -101,6 +101,15 @@
 			<from>input/content/homeUser</from>
 			<to>configuration/homeUser</to>
 		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="d5c955ff-904d-43b1-9cf5-ab10cb708910"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>input/content/googleSiteVerification</from>
+			<to>configuration/googleSiteVerification</to>
+		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"

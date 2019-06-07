@@ -54,8 +54,8 @@ nabu.page.views.Youtube = Vue.extend({
 				if (url.match(/\\?v=/)) {
 					code = url.replace(/^.*\\?v=([^&]+).*/, "$1");
 				}
-				else if (url.match(/youtu\\.be/)) {
-					code = url.replace(/^.*youtu\\.be\/(.*)+/, "$1");
+				else if (url.match(/.*youtu\.be/)) {
+					code = url.replace(/^.*youtu\.be\/(.*)+/, "$1");
 				}
 				if (code != null) {
 					url = "https://www.youtube.com/embed/" + code;
@@ -63,7 +63,6 @@ nabu.page.views.Youtube = Vue.extend({
 				if (this.cell.state.hideControls) {
 					url += "?controls=0";
 				}
-				console.log("youtube", url, code);
 				return url;
 			}
 			return null;

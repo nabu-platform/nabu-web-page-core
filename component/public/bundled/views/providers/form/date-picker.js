@@ -1,11 +1,8 @@
-Vue.component("page-form-input-date-configure", {
+Vue.component("page-form-input-date-picker-configure", {
 	template: "<n-form-section>"
-		+ "	<n-form-switch v-model='field.includeHours' label='Include hours?'/>"
-		+ "	<n-form-switch v-model='field.includeMinutes' label='Include minutes?' v-if='field.includeHours'/>"
-		+ "	<n-form-switch v-model='field.includeSeconds' label='Include seconds?' v-if='field.includeHours && field.includeMinutes'/>"
-		+ "	<n-form-switch v-model='field.isTimestamp' label='Is a timestamp in milliseconds?' v-if='!field.isSecondsTimestamp'/>"
-		+ "	<n-form-switch v-model='field.isSecondsTimestamp' label='Is a timestamp in seconds?' v-if='!field.isTimestamp'/>"
-		+ "	<n-form-text v-model='field.regexLabel' label='Regex label'/>"
+		+ "	<n-form-text v-model='field.minimumOffset' label='Minimum Offset'/>"
+		+ "	<n-form-text v-model='field.maximumOffset' label='Maximum Offset'/>"
+		+ "	<n-form-text v-model='field.description' label='Description'/>"
 		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"allow\", \"default\"]'/>"
 		+ "</n-form-section>",
 	props: {
@@ -35,12 +32,15 @@ Vue.component("page-form-input-date-configure", {
 	}
 });
 
-Vue.component("page-form-input-date", {
-	template: "<n-form-date ref='form'"
+Vue.component("page-form-input-date-picker", {
+	template: "<n-form-date-picker ref='form'"
+			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
 			+ "		:placeholder='placeholder'"
 			+ "		:edit='!readOnly'"
 			+ "		:schema='schema'"
 			+ "		v-bubble:label"
+			+ "		:minimum-offset='field.minimumOffset'"
+			+ "		:maximum-offset='field.maximumOffset'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"

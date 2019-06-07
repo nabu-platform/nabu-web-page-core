@@ -1,5 +1,5 @@
 <template id="nabu-page">
-	<component :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
+	<component :edit="edit" :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
 		<div class="page-menu n-page-menu" v-if="edit">
 			<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
 			<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
@@ -37,7 +37,7 @@
 					<n-form-text v-model="page.content.class" label="Class"/>
 					<n-form-text v-model="page.content.title" label="Title"/>
 					<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow"/>
-					<n-form-combo label="Page Type" :items="['page', 'email']" v-model="page.content.pageType"/>
+					<n-form-combo label="Page Type" :filter="getPageTypes" v-model="page.content.pageType"/>
 					<n-form-combo label="Page Parent" :filter="filterRoutes" v-model="page.content.pageParent"/>
 					<n-form-text v-model="page.content.defaultAnchor" label="Default Content Anchor"/>
 					<n-form-switch label="Route Error in Self" v-model="page.content.errorInSelf"/>
@@ -117,6 +117,7 @@
 						<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function"/>
 						<n-form-switch v-if="action.operation || action.function" v-model="action.isSlow" label="Is slow operation?"/>
 						<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" :timeout="600" @input="resetEvents()"/>
+						<n-form-text v-if="action.operation" v-model="action.errorEvent" label="Error Event" :timeout="600" @input="resetEvents()"/>
 						<n-form-switch v-if="action.operation" v-model="action.expandBindings" label="Field level bindings"/>
 						<div class="list-row">
 							<n-form-combo v-if="action.operation && !action.route && action.expandBindings" 
@@ -188,7 +189,8 @@
 					:edit="edit"/>
 			</n-form>
 		</n-sidebar>
-		<n-page-rows :rows="page.content.rows" v-if="page.content.rows" :page="page" :edit="edit"
+		<n-page-rows v-if="page.content.rows" :rows="page.content.rows" :page="page" :edit="edit"
+			:depth="0"
 			:parameters="parameters"
 			:events="events"
 			:ref="page.name + '_rows'"
@@ -200,34 +202,38 @@
 </template>
 
 <template id="page-rows">
-	<div class="page-rows">
+	<component :is="rowsTag()" class="page-rows">
 		<component :is="rowTagFor(row)" v-for="row in getCalculatedRows()" class="page-row" :id="page.name + '_' + row.id" 
 				:class="['page-row-' + row.cells.length, row.class ? row.class : null ]" 
 				:key="'page_' + pageInstanceId + '_row_' + row.id"
 				:row-key="'page_' + pageInstanceId + '_row_' + row.id"
 				v-if="edit || shouldRenderRow(row)"
 				:style="rowStyles(row)"
+				@mouseout="mouseOut($event, row)"
+				@mouseover="mouseOver($event, row)"
 				v-bind="getRendererProperties(row)">
-			<div v-if="(edit || $services.page.wantEdit) && row.name && !row.collapsed" :style="getRowEditStyle(row)" class="row-edit-label"
+			<div v-if="(edit || $services.page.wantEdit || row.wantVisibleName) && row.name && !row.collapsed" :style="getRowEditStyle(row)" class="row-edit-label"
 				:class="'direction-' + (row.direction ? row.direction : 'horizontal')"><span>{{row.name}}</span></div>
 			<div class="page-row-menu n-page-menu" v-if="edit">
 				<label v-if="row.collapsed">{{row.name}}</label>
-				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="configuring = row.id"><span class="fa fa-cog"></span></button>
-				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button>
-				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button>
-				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="addCell(row)"><span class="fa fa-plus" title="Add Cell"></span></button>
-				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="copyRow(row)"><span class="fa fa-copy" title="Copy Row"></span></button>
-				<button v-if="!row.collapsed && $services.page.copiedCell" :style="rowButtonStyle(row)" @click="pasteCell(row)"><span class="fa fa-paste" title="Paste Cell"></span></button>
-				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
-				<button :style="rowButtonStyle(row)" @click="row.collapsed = !row.collapsed"><span class="fa" :class="{'fa-minus-square': !row.collapsed, 'fa-plus-square': row.collapsed }"></span></button>
+				<button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="configuring = row.id"><span class="fa fa-cog"></span></button
+				><button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button
+				><button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button
+				><button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="addCell(row)"><span class="fa fa-plus" title="Add Cell"></span></button
+				><button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="copyRow(row)"><span class="fa fa-copy" title="Copy Row"></span></button
+				><button v-if="!row.collapsed && $services.page.copiedCell" :style="rowButtonStyle(row)" @click="pasteCell(row)"><span class="fa fa-paste" title="Paste Cell"></span></button
+				><button v-if="!row.collapsed" :style="rowButtonStyle(row)" @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button
+				><button :style="rowButtonStyle(row)" @click="row.collapsed = !row.collapsed"><span class="fa" :class="{'fa-minus-square': !row.collapsed, 'fa-plus-square': row.collapsed }"></span></button>
 			</div>
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 			<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" 
 					:id="page.name + '_' + row.id + '_' + cell.id" 
 					:class="[{'clickable': !!cell.clickEvent}, {'page-cell': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar'}, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root} ]" 
-					:key="'page_' + pageInstanceId + '_cell_' + cell.id"
+					:key="cellId(cell)"
 					:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
 					@click="clickOnCell(cell)"
+					@mouseout="mouseOut($event, row, cell)"
+					@mouseover="mouseOver($event, row, cell)"
 					v-bind="getRendererProperties(cell)">
 				<div v-if="(edit || $services.page.wantEdit) && cell.name" :style="getCellEditStyle(cell)" class="cell-edit-label"><span>{{cell.name}}</span></div>
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
@@ -307,6 +313,7 @@
 				<div v-if="edit">
 					<div v-if="cell.alias" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return false } }"></div>
 					<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
+						:depth="depth + 1"
 						:parameters="parameters"
 						:events="events"
 						:ref="page.name + '_' + cell.id + '_rows'"
@@ -319,6 +326,7 @@
 					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)" :popout="false" :autocloseable="!cell.preventAutoClose" class="content-sidebar" :style="getSideBarStyles(cell)">
 						<div @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
+							:depth="depth + 1"
 							:parameters="parameters"
 							:events="events"
 							:ref="page.name + '_' + cell.id + '_rows'"
@@ -330,6 +338,7 @@
 					<n-prompt v-else-if="cell.target == 'prompt'" @close="close(cell)">
 						<div @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
+							:depth="depth + 1"
 							:parameters="parameters"
 							:events="events"
 							:ref="page.name + '_' + cell.id + '_rows'"
@@ -341,6 +350,7 @@
 					<template v-else>
 						<div :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
+							:depth="depth + 1"
 							:parameters="parameters"
 							:events="events"
 							:ref="page.name + '_' + cell.id + '_rows'"
@@ -366,6 +376,7 @@
 						<n-form-combo label="Direction" v-model="row.direction" :items="['horizontal', 'vertical']"/>
 						<n-form-combo label="Alignment" v-model="row.align" :items="['center', 'flex-start', 'flex-end', 'stretch', 'baseline']"/>
 						<n-form-combo label="Justification" v-model="row.justify" :items="['center', 'flex-start', 'flex-end', 'space-between', 'space-around', 'space-evenly']"/>
+						<n-form-switch v-if="false" label="Always show row name" v-model="row.wantVisibleName"/>
 						<div class="list-actions">
 							<button @click="addDevice(row)">Add device rule</button>
 						</div>
@@ -393,7 +404,7 @@
 				</n-form>
 			</n-sidebar>
 		</component>
-	</div>
+	</component>
 </template>
 
 <template id="n-prompt">

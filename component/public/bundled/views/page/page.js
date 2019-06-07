@@ -111,6 +111,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		if (this.page.content.path)	{
 			document.body.setAttribute("page", this.page.name);
 			document.body.setAttribute("category", this.page.content.category);
+			document.body.setAttribute("page-type", this.page.content.pageType ? this.page.content.pageType : "page");
 		}
 		
 		var self = this;
@@ -660,6 +661,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 							events[action.event] = schema ? schema : {};
 						}
 					});
+					this.page.content.actions.filter(function(x) { return x.errorEvent != null && x.operation != null }).map(function(action) {
+						events[action.errorEvent] = self.$services.swagger.resolve("#/definitions/StructuredErrorResponse");
+					});
 				}
 				
 				// add the cell events
@@ -865,11 +869,17 @@ nabu.page.views.Page = Vue.component("n-page", {
 									async = true;
 									self.$services.swagger.execute(action.operation, parameters).then(function(result) {
 										if (action.event) {
-											self.emit(action.event, result);
+											// we get null from a 204
+											self.emit(action.event, result == null ? {} : result);
 										}
 										eventReset();
 										promise.resolve(result);
-									}, promise);
+									}, function(error) {
+										if (action.errorEvent) {
+											self.emit(action.errorEvent, error);
+										}
+										promise.reject(error);
+									});
 								}
 							}
 							else if (action.function) {
@@ -934,11 +944,17 @@ nabu.page.views.Page = Vue.component("n-page", {
 								async = true;
 								self.$services.swagger.execute(action.operation, parameters).then(function(result) {
 									if (action.event) {
-										self.emit(action.event, result);
+										// we get null from a 204
+										self.emit(action.event, result == null ? {} : result);
 									}
 									eventReset();
 									promise.resolve(result);
-								}, promise);
+								}, function(error) {
+									if (action.errorEvent) {
+										self.emit(action.errorEvent, error);
+									}
+									promise.reject(error);
+								});
 							}
 						}
 						else if (action.function) {
@@ -1261,8 +1277,38 @@ nabu.page.views.Page = Vue.component("n-page", {
 				console.log("Could not set", name, value);
 			}
 		},
+		pageContentTag: function() {
+			if (!this.page.content.pageType || this.page.content.pageType == "page") {
+				return null;
+			}
+			var self = this;
+			var provider = nabu.page.providers("page-type").filter(function(x) {
+				return x.name == self.page.content.pageType;
+			})[0];
+			return provider ? provider.pageContentTag : null;
+		},
 		pageTag: function() {
-			return this.page.content.pageType == "email" ? "e-root" : "div";
+			// the default
+			if (!this.page.content.pageType || this.page.content.pageType == "page") {
+				return "div";
+			}
+			var self = this;
+			var provider = nabu.page.providers("page-type").filter(function(x) {
+				return x.name == self.page.content.pageType;
+			})[0];
+			// special override for editing purposes
+			if (this.edit && provider && provider.pageTagEdit) {
+				return provider.pageTagEdit;
+			}
+			return provider && provider.pageTag ? provider.pageTag : "div";
+		},
+		getPageTypes: function(value) {
+			var items = ['page'];
+			nabu.utils.arrays.merge(items, nabu.page.providers("page-type").map(function(x) { return x.name }));
+			if (value) {
+				items = items.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+			}
+			return items;
 		}
 	},
 	watch: {
@@ -1329,6 +1375,10 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		depth: {
+			type: Number,
+			default: 0
 		}
 	},
 	data: function() {
@@ -1363,10 +1413,39 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		getRenderers: function(type) {
 			return nabu.page.providers("page-renderer").filter(function(x) { return x.type == null || x.type == type });
 		},
+		rowsTag: function() {
+			if (this.depth > 0 || !this.page.content.pageType || this.page.content.pageType == "page") {
+				return "div";	
+			}
+			var self = this;
+			var provider = nabu.page.providers("page-type").filter(function(x) {
+				return x.name == self.page.content.pageType;
+			})[0];
+			// special override for editing purposes
+			if (this.edit && provider && provider.pageContentTagEdit) {
+				return provider.pageContentTagEdit;
+			}
+			return provider && provider.pageContentTag ? provider.pageContentTag : "div";
+		},
 		rowTagFor: function(row) {
 			var renderer = row.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == row.renderer })[0];
 			if (this.edit || renderer == null) {
-				return this.page.content.pageType == "email" ? "e-row" : "div";
+				if (!this.page.content.pageType || this.page.content.pageType == "page") {
+					return "div";	
+				}
+				var self = this;
+				var provider = nabu.page.providers("page-type").filter(function(x) {
+					return x.name == self.page.content.pageType;
+				})[0];
+				// if it is a function, we can do more stuff
+				if (provider && provider.rowTag instanceof Function) {
+					return provider.rowTag(row, this.depth, this.edit);
+				}
+				// special override for editing purposes
+				else if (this.edit && provider && provider.rowTagEdit) {
+					return provider.rowTagEdit;
+				}
+				return provider && provider.rowTag ? provider.rowTag : "div";
 			}
 			else {
 				return renderer.component;
@@ -1375,7 +1454,22 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		cellTagFor: function(row, cell) {
 			var renderer = cell.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == cell.renderer })[0];
 			if (this.edit || renderer == null) {
-				return this.page.content.pageType == "email" ? "e-columns" : "div";	
+				if (!this.page.content.pageType || this.page.content.pageType == "page") {
+					return "div";	
+				}
+				var self = this;
+				var provider = nabu.page.providers("page-type").filter(function(x) {
+					return x.name == self.page.content.pageType;
+				})[0];
+				// if it is a function, we can do more stuff
+				if (provider && provider.cellTag instanceof Function) {
+					return provider.cellTag(row, cell, this.depth, this.edit);
+				}
+				// special override for editing purposes
+				else if (this.edit && provider && provider.cellTagEdit) {
+					return provider.cellTagEdit;
+				}
+				return provider && provider.cellTag ? provider.cellTag : "div";
 			}
 			else {
 				return renderer.component;
@@ -1688,6 +1782,18 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				}
 			}
 			return true;
+		},
+		cellId: function(cell) {
+			var cellId = 'page_' + this.pageInstanceId + '_cell_' + cell.id;
+			if (cell.on) {
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				var on = pageInstance.get(cell.on);
+				if (on) {
+					cellId += JSON.stringify(on);
+				}
+			}
+			return cellId;
 		},
 		shouldRenderCell: function(row, cell) {
 			if (this.edit) {
@@ -2024,6 +2130,35 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		pasteRow: function(cell) {
 			cell.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
 			this.$services.page.copiedRow = null;
+		},
+		mouseOut: function(event, row, cell) {
+			if (this.edit) {
+				var rowTarget = document.getElementById(this.page.name + '_' + row.id);
+				if (rowTarget) {
+					rowTarget.classList.remove("hovering");
+				}
+				if (cell) {
+					var cellTarget = document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
+					if (cellTarget) {
+						cellTarget.classList.remove("hovering");
+					}
+				}
+			}
+		},
+		mouseOver: function(event, row, cell) {
+			if (this.edit) {
+				var rowTarget = document.getElementById(this.page.name + '_' + row.id);
+				if (rowTarget) {
+					rowTarget.classList.add("hovering");
+				}
+				if (cell) {
+					var cellTarget = document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
+					if (cellTarget) {
+						cellTarget.classList.add("hovering");
+					}
+					event.stopPropagation();
+				}
+			}
 		}
 	}
 });

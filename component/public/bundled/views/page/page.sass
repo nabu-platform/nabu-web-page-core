@@ -12,7 +12,7 @@
 	.page-row {
 		display: flex;
 		.page-row-menu {
-			padding: 0.7rem;
+			//padding: 0.7rem;
 			padding-left: 0;
 			align-self: center;
 			label {
@@ -20,6 +20,7 @@
 				display: block;
 				margin-bottom: 0.3rem;
 			}
+			/*
 			button {
 				display: block;
 				margin-left: auto;
@@ -29,7 +30,9 @@
 				padding: 0.3rem 0.7rem;
 				background-color: #f6f6f6;
 				color: #333;
+				margin: 0;
 			}
+			*/
 		}
 		.page-cell-menu {
 			padding: 0.3rem 0.5rem;
@@ -157,16 +160,65 @@
 	}
 }
 
-/*
 .page-cell-menu {
 	display: none;
 	position: absolute;
-	left: 0;
-	bottom: 0;
+	right: 0rem;
+	top: 0;
+	z-index: 1000;
 }
-.page-cell:hover {
-	> .page-cell-menu {
-		display: block;
+.page-row {
+	position: relative;
+	padding: 0;
+	margin: 0;
+	.page-row-menu {
+		display: none;
+		position: absolute;
+		left: 0;
+		top: 0;
+		background-color: green;
+		padding: 0;
+		button {
+			display: inline-block;
+			background-color: green;
+			color: #fff;
+			border-radius: 0;
+		}
 	}
 }
-*/
+.page.edit {
+	.page-cell.hovering {
+		border: solid 2px blue;
+		position: relative;
+		> .page-cell-menu {
+			background-color: blue;
+			display: block;
+			button {
+				color: #fff;
+				&:not(:last-child) {
+					display: none;
+				}
+			}
+			&:hover {
+				button {
+					display: inline-block;
+				}
+			}
+		}
+	}
+	.page-row.hovering {
+		border: solid 2px green;
+		> .page-row-menu {
+			z-index: 1000;
+			display: block;
+			button:not(:first-child) {
+				display: none;
+			}
+			&:hover {
+				button {
+					display: inline-block;
+				}
+			}
+		}
+	}
+}

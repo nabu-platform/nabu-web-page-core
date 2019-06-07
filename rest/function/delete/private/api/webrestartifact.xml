@@ -3,7 +3,7 @@
     <method>DELETE</method>
     <path>/function/{name: .*}</path>
     <role>editor</role>
-    <permissionContext>="webApplication:" + input/path/applicationId</permissionContext>
+    <permissionContext>="webApplication:" + input/webApplicationId</permissionContext>
     <permissionAction>function.write</permissionAction>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
@@ -18,4 +18,5 @@
     <useServerCache>false</useServerCache>
     <source>false</source>
     <allowRaw>false</allowRaw>
+    <domain>false</domain>
 </restInterface>

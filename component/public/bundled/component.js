@@ -34,6 +34,20 @@ window.addEventListener("load", function() {
 		});
 		
 		$services.router.register({
+			alias: "page-markdown",
+			enter: function(parameters) {
+				return new nabu.page.views.Markdown({propsData: parameters});
+			}
+		});
+		
+		$services.router.register({
+			alias: "page-code",
+			enter: function(parameters) {
+				return new nabu.page.views.Code({propsData: parameters});
+			}
+		});
+		
+		$services.router.register({
 			alias: "page-fields",
 			enter: function(parameters) {
 				return new nabu.page.views.PageFields({propsData: parameters});
@@ -146,6 +160,12 @@ window.addEventListener("load", function() {
 			namespace: "nabu.page"
 		});
 		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-date-picker", 
+			configure: "page-form-input-date-picker-configure", 
+			name: "date-picker",
+			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-form-input", { 
 			component: "page-form-input-switch", 
 			configure: "page-form-input-switch-configure", 
 			name: "switch",
@@ -222,6 +242,13 @@ window.addEventListener("load", function() {
 			component: "page-renderer-slider",
 			type: "row",
 			properties: ["group", "tag"]
+		});
+		
+		nabu.page.provide("page-type", {
+			name: "email",
+			pageTag: "e-root",
+			rowTag: "e-row",
+			cellTag: "e-columns"
 		});
 		
 		// formatters
@@ -306,25 +333,28 @@ window.addEventListener("load", function() {
 			namespace: "nabu.cms"
 		});
 		
-		nabu.page.provide("page-format", {
-			format: function(value) {
-				if ($services.vue.$highlightCounter == null) {
-					$services.vue.$highlightCounter = 1;
+		var blocksToHighlight = [];
+		var highlightFormatter = function(value, syntax) {
+			if ($services.vue.$highlightCounter == null) {
+				$services.vue.$highlightCounter = 1;
+			}
+			var id = "format_highlight_" + $services.vue.$highlightCounter++;
+			var clazz = syntax ? " class='" + syntax + "'" : "";
+			var result = value == null ? null :
+				"<pre id='" + id + "'" + clazz + "><code>" + value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</code></pre>";
+				
+			setTimeout(function() {
+				if (!$services.vue.$highlightLoaded) {
+					$services.vue.$highlightLoaded = [];
 				}
-				var id = "format_highlight_" + $services.vue.$highlightCounter++;
-				var result = value == null ? null :
-					"<pre id='" + id + "'><code>" + value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</code></pre>";
-					
-				setTimeout(function() {
-					if (!$services.vue.$highlightLoaded) {
-						$services.vue.$highlightLoaded = [];
-					}
-					var loaded = $services.vue.$highlightLoaded;
-					
-					var highlight = function() {
-						hljs.highlightBlock(document.getElementById(id));
-					}
-					
+				var loaded = $services.vue.$highlightLoaded;
+				
+				var highlight = function(id) {
+					hljs.highlightBlock(document.getElementById(id));
+				}
+				
+				if (!window.hljs) {
+					blocksToHighlight.push(id);
 					if (loaded.indexOf("$main") < 0) {
 						loaded.push("$main");
 						var script = document.createElement("script");
@@ -332,15 +362,61 @@ window.addEventListener("load", function() {
 						script.setAttribute("src", "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js");
 						document.head.appendChild(script);
 						script.onload = function() {
-							highlight();
+							blocksToHighlight.forEach(highlight);
 						}
 						var link = document.createElement("link");
 						link.rel = "stylesheet";
 						link.href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/default.min.css";
 						document.head.appendChild(link);
 					}
+				}
+				else {
+					highlight(id);
+				}
+			}, 1);
+			
+			return result;
+		};
+		nabu.page.provide("page-format", {
+			format: highlightFormatter,
+			html: true,
+			skipCompile: true,
+			name: "highlight",
+			namespace: "nabu.cms"
+		});
+		
+		var markdownToParse = [];
+		nabu.page.provide("page-format", {
+			format: function(value) {
+				if ($services.vue.$highlightCounter == null) {
+					$services.vue.$highlightCounter = 1;
+				}
+				var id = "format_markdown_" + $services.vue.$highlightCounter++;
+				var result = value == null ? null : "<div id='" + id + "'>" + value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</div>";
+				var compile = function(id) {
+					var converter = new showdown.Converter();
+					converter.setFlavor('github');
+					var part = document.getElementById(id);
+					if (part) {
+						part.innerHTML = nabu.utils.elements.sanitize(converter.makeHtml(part.innerHTML));
+					}
+				};
+				setTimeout(function() {
+					if (!window.showdown) {
+						markdownToParse.push(id);
+						if (!$services.vue.$markdownLoaded) {
+							$services.vue.$markdownLoaded = true;
+							var script = document.createElement("script");
+							script.setAttribute("type", "text/javascript");
+							script.setAttribute("src", "https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js");
+							document.head.appendChild(script);
+							script.onload = function() {
+								markdownToParse.forEach(compile);
+							}
+						}
+					}
 					else {
-						highlight();
+						compile(id);
 					}
 				}, 1);
 				
@@ -348,7 +424,7 @@ window.addEventListener("load", function() {
 			},
 			html: true,
 			skipCompile: true,
-			name: "highlight",
+			name: "markdown",
 			namespace: "nabu.cms"
 		});
 		

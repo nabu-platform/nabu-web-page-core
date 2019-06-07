@@ -63,6 +63,15 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		}
 	},
 	methods: {
+		addStyle: function(action) {
+			if (!action.styles) {
+				Vue.set(action, "styles", []);
+			}
+			action.styles.push({
+				class: null,
+				condition: null
+			});
+		},
 		getEvents: function(actions, result) {
 			var self = this;
 			if (!result) {
@@ -187,6 +196,9 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		},
 		getDynamicClasses: function(action) {
 			var classes = [];
+			if (action.styles) {
+				nabu.utils.arrays.merge(classes, this.$services.page.getDynamicClasses(action.styles, this.state, this));
+			}
 			if (action.buttonClass) {
 				classes.push(action.buttonClass);
 			}
@@ -346,7 +358,10 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				});
 				var url = this.$services.router.template(route, parameters);
 				if (action.absolute) {
-					url = "${environment('url')}" + url;
+					// in multi-domain situations the fixed environment url is not always correct
+					//url = "${when(environment('secure'), 'https', 'http')}://" + window.location.host + url;
+					url = window.location.protocol + "//" + window.location.host + url;
+					//url = "${environment('url')}" + url;
 				}
 				return url;
 			}

@@ -52,7 +52,8 @@ nabu.services.VueService(Vue.extend({
 			cssError: null,
 			functionError: null,
 			disableReload: false,
-			validations: []
+			validations: [],
+			googleSiteVerification: null
 		}
 	},
 	activate: function(done) {
@@ -98,7 +99,7 @@ nabu.services.VueService(Vue.extend({
 	created: function() {
 		var self = this;
 		document.addEventListener("keydown", function(event) {
-			if (event.ctrlKey && event.keyCode == 88) {
+			if (event.ctrlKey && event.altKey && event.keyCode == 88) {
 				if (self.canEdit()) {
 					self.wantEdit = !self.wantEdit;
 				}
@@ -203,8 +204,17 @@ nabu.services.VueService(Vue.extend({
 				if (configuration.imports) {
 					nabu.utils.arrays.merge(self.imports, configuration.imports);
 				}
+				if (configuration.googleSiteVerification) {
+					self.googleSiteVerification = configuration.googleSiteVerification;
+				}
 				if (self.home || self.homeUser) {
 					self.registerHome(self.home, self.homeUser);
+				}
+				if (self.googleSiteVerification) {
+					var meta = document.createElement("meta");
+					meta.setAttribute("name", "google-site-verification");
+					meta.setAttribute("content", self.googleSiteVerification);
+					document.head.appendChild(meta);
 				}
 				// don't do imports for server rendering, they should not be critical to the page and might not be parseable
 				if (!navigator.userAgent.match(/Nabu-Renderer/)) {
@@ -853,7 +863,8 @@ nabu.services.VueService(Vue.extend({
 					homeUser: this.homeUser,
 					properties: self.properties,
 					devices: self.devices,
-					imports: self.imports
+					imports: self.imports,
+					googleSiteVerification: self.googleSiteVerification
 				}
 			});
 		},
@@ -1181,6 +1192,18 @@ nabu.services.VueService(Vue.extend({
 				}
 			}
 			return null;
+		},
+		filterRoutes: function(value) {
+			if (value != null && value.substring(0, 1) == "=") {
+				return [value];
+			}
+			var routes = this.$services.router.list().filter(function(x) {
+				return x.alias && (!value || x.alias.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+			});
+			routes.sort(function(a, b) {
+				return a.alias.localeCompare(b.alias);
+			});
+			return routes.map(function(x) { return x.alias });
 		},
 		loadPages: function(pages) {
 			var self = this;

@@ -97,12 +97,34 @@
 							"url": "views/form/form.js"
 						}
 					}, 
+					"markdown": {
+						"markdown.tpl": {
+							"url": "views/markdown/markdown.tpl"
+						}, 
+						"markdown.js": {
+							"url": "views/markdown/markdown.js"
+						}
+					},
 					"richtext": {
 						"richtext.tpl": {
 							"url": "views/richtext/richtext.tpl"
-						}, 
+						},
+						"richtext.scss": {
+							"url": "views/richtext/richtext.scss"
+						},
 						"richtext.js": {
 							"url": "views/richtext/richtext.js"
+						}
+					},
+					"code": {
+						"code.tpl": {
+							"url": "views/code/code.tpl"
+						}, 
+						"code.js": {
+							"url": "views/code/code.js"
+						}, 
+						"code.scss": {
+							"url": "views/code/code.scss"
 						}
 					},
 					"youtube": {
@@ -272,6 +294,9 @@
 							}, 
 							"date.js": {
 								"url": "views/providers/form/date.js"
+							},
+							"date-picker.js": {
+								"url": "views/providers/form/date-picker.js"
 							}, 
 							"location.js": {
 								"url": "views/providers/form/location.js"

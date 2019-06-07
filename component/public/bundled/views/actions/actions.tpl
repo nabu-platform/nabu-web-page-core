@@ -87,6 +87,17 @@
 							</n-form-section>
 							
 							<div class="list-item-actions">
+								<button @click="addStyle(action)">Add Style</button>
+							</div>
+							<div v-if="action.styles">
+								<n-form-section class="list-row" v-for="style in action.styles">
+									<n-form-text v-model="style.class" label="Class"/>
+									<n-form-text v-model="style.condition" label="Condition"/>
+									<button @click="action.styles.splice(action.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
+								</n-form-section>
+							</div>
+							
+							<div class="list-item-actions">
 								<button @click="action.activeRoutes.push('')">Add Active Route</button>
 								<button @click="up(action)"><span class="fa fa-chevron-circle-up"></span></button>
 								<button @click="down(action)"><span class="fa fa-chevron-circle-down"></span></button>
@@ -113,6 +124,7 @@
 			<template v-else>
 				<span v-if="edit && !action.dynamic" class="fa fa-cog" @click="configureAction(action)"></span>
 				<a auto-close-actions class="page-action-link page-action-entry" :href="getActionHref(action)"
+					:target="action.anchor == '$blank' ? '_blank' : null"
 					:class="getDynamicClasses(action)"
 					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
 					:disabled="isDisabled(action)"

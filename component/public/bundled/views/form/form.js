@@ -219,6 +219,17 @@ nabu.page.views.PageForm = Vue.extend({
 					this.$services.analysis.emit("form-page-" + this.cell.state.pages.indexOf(this.currentPage), this.analysisId, {method: "next"}, true);
 				}
 			}
+			else {
+				this.scrollToException(messages);
+			}
+		},
+		scrollToException: function(messages) {
+			for (var i = 0; i < messages.length; i++) {
+				if (messages[i].component && messages[i].component.$el) {
+					messages[i].component.$el.scrollIntoView(true);
+					break;
+				}
+			}
 		},
 		previousPage: function() {
 			if (this.cell.state.pages.indexOf(this.currentPage) >= 1) {
@@ -362,6 +373,9 @@ nabu.page.views.PageForm = Vue.extend({
 			}
 			if (this.cell.state.cancelEvent) {
 				result[this.cell.state.cancelEvent] = this.cell.on ? this.cell.on : {};
+			}
+			if (this.cell.state.errorEvent) {
+				result[this.cell.state.errorEvent] = this.$services.swagger.resolve("#/definitions/StructuredErrorResponse");
 			}
 			nabu.utils.objects.merge(result, this.getEventsRecursively(this));
 			return result;
@@ -800,7 +814,9 @@ nabu.page.views.PageForm = Vue.extend({
 									});
 								}
 								if (self.cell.state.event) {
-									pageInstance.emit(self.cell.state.event, returnValue == null ? result : returnValue);
+									// if we have a 204 return, we get null back, we don't want to emit null however
+									var emitValue = returnValue == null ? result : returnValue;
+									pageInstance.emit(self.cell.state.event, emitValue == null ? {} : emitValue);
 								}
 								if (self.cell.state.autoclose == null || self.cell.state.autoclose) {
 									self.$emit("close");
@@ -820,7 +836,7 @@ nabu.page.views.PageForm = Vue.extend({
 									if (self.cell.state.errorEvent) {
 										if (!self.cell.state.errorEventCodes || self.cell.state.errorEventCodes.split(/[\\s]*,[\\s]*/).indexOf(error.code)) {
 											var pageInstance = self.$services.page.getPageInstance(self.page, self);
-											pageInstance.emit(self.cell.state.errorEvent, {});
+											pageInstance.emit(self.cell.state.errorEvent, error);
 										}
 									}
 									var translated = self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message);
@@ -835,7 +851,7 @@ nabu.page.views.PageForm = Vue.extend({
 									self.messages.push({
 										type: "request",
 										severity: "error",
-										title: self.$services.page.translateErrorCode("HTTP-500")
+										title: self.$services.page.translateErrorCode(error.status ? "HTTP-" + error.status : "HTTP-500")
 									})
 								}
 								self.doingIt = false;
@@ -866,6 +882,7 @@ nabu.page.views.PageForm = Vue.extend({
 				}
 				else {
 					self.doingIt = false;
+					this.scrollToException(messages);
 				}
 			}
 		},

@@ -5,7 +5,7 @@
 				<n-form-section>
 					<n-collapsible title="Rich text settings">
 						<n-form-switch v-model='cell.state.cleanStyle' label='Clean style on paste'/>
-						<n-form-switch v-model='cell.state.highlight' label='Highlight'/>
+						<n-form-switch v-if="false" v-model='cell.state.highlight' label='Highlight'/>
 					</n-collapsible>
 				</n-form-section>
 			</n-form>

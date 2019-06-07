@@ -1,6 +1,8 @@
 Vue.component("page-form-input-text-configure", {
 	template: "<n-form-section><n-form-combo v-model='field.textType' label='Text Type' :items=\"['text', 'area', 'number', 'color', 'email', 'password']\"/>"
 		+ "	<n-form-text v-model='field.regexLabel' label='Regex Label'/>"
+		+ "	<n-form-text v-model='field.maxLength' label='Max Length'/>"
+		+ "	<n-form-switch v-model='field.showLength' label='Show Length' v-if='field.maxLength'/>"
 		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"
 		+ "</n-form-section>",
 	props: {
@@ -37,6 +39,7 @@ Vue.component("page-form-input-text", {
 	template: "<n-form-text :type='textType' ref='form'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
+			+ "		:max-length='field.maxLength ? field.maxLength : null'"
 			+ "		:schema='schema'"
 			+ "		:pattern-comment='field.regexLabel ? $services.page.translate(field.regexLabel) : null'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
