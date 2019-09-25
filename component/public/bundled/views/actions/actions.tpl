@@ -158,7 +158,7 @@
 					:local-state="localState"
 					:actions="action.actions"
 					@close="$emit('close')"
-					v-show="edit || showing.indexOf(action) >= 0"/>
+					v-show="(edit && false) || showing.indexOf(action) >= 0"/>
 			</template>
 		</li>
 	</ul>

@@ -228,12 +228,12 @@ nabu.services.VueService(Vue.extend({
 					var promises = [];
 					promises.push(injectJavascript());
 					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.style.list").then(function(list) {
-						if (list.styles) {
+						if (list && list.styles) {
 							nabu.utils.arrays.merge(self.styles, list.styles);
 						}
 					}));
 					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.function.list").then(function(list) {
-						if (list.styles) {
+						if (list && list.styles) {
 							nabu.utils.arrays.merge(self.functions, list.styles.map(function(x) { return JSON.parse(x.content) }));
 						}
 					}));
@@ -590,7 +590,7 @@ nabu.services.VueService(Vue.extend({
 								|| (parts.length == 2 && x.context == parts[0]))
 							&& (x.name == (parts.length == 1 ? parts[0] : parts[1]));
 					})[0];
-					value = value.substring(0, index) + (translation && translation.translation ? translation.translation : (parts.length == 1 ? parts[0] : parts[1])) + value.substring(end + 1);
+					value = value.substring(0, start) + (translation && translation.translation ? translation.translation : (parts.length == 1 ? parts[0] : parts[1])) + value.substring(end + 1);
 				}
 				return value;
 			}
@@ -824,7 +824,8 @@ nabu.services.VueService(Vue.extend({
 			if (definition && definition.properties) {
 				Object.keys(definition.properties).map(function(key) {
 					// arrays can not be chosen, you need to bind them first
-					if (definition.properties[key].type != "array" || includeArrays) {
+					// simple arrays are always allowed currently
+					if (definition.properties[key].type != "array" || includeArrays || (definition.properties[key].items && !definition.properties[key].items.properties)) {
 						var childPath = (path ? path + "." : "") + key;
 						var isArray = definition.properties[key].type == "array";
 						var isComplex = !!definition.properties[key].properties;

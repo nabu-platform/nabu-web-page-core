@@ -1,10 +1,24 @@
+.page.edit {
+	.page-actions {
+		li:hover {
+			> .fa-cog {
+				display: inline-block !important;
+			}
+		}
+	}
+}
 .page-actions {
 	li {
 		position: relative;
 		list-style: none;
-		.n-icon-cog {
+		.fa-cog {
+			cursor: pointer;
+			left: 0;
+			display: none !important;
 			position: absolute;
-			right: -10px;
+			padding: 0.5rem;
+			background-color: rgba(50,50,50,0.7);
+			color: #fff;
 		}
 		&.click-based {
 			> span {

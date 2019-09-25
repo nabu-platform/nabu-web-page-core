@@ -371,6 +371,14 @@ nabu.page.views.PageForm = Vue.extend({
 			else if (this.cell.state.event) {
 				result[this.cell.state.event] = this.cell.on ? this.cell.on : {};
 			}
+			if (this.cell.state.submitEvent) {
+				if (this.cell.state.functionForm) {
+					result[this.cell.state.submitEvent] = this.$services.page.getFunctionInput(this.cell.state.functionId);
+				}
+				else {
+					result[this.cell.state.submitEvent] = {properties:this.getOperationInput()};
+				}
+			}
 			if (this.cell.state.cancelEvent) {
 				result[this.cell.state.cancelEvent] = this.cell.on ? this.cell.on : {};
 			}
@@ -725,6 +733,13 @@ nabu.page.views.PageForm = Vue.extend({
 					// globale parameters that we can pass along
 					var self = this;
 					var result = this.createResult();
+					
+					if (self.cell.state.submitEvent) {
+						var pageInstance = self.$services.page.getPageInstance(self.page, self);
+						// if we have a 204 return, we get null back, we don't want to emit null however
+						pageInstance.emit(self.cell.state.submitEvent, result);
+					}
+					
 					//console.log("result is", JSON.stringify(result, null, 2));
 					if (this.cell.state.pageForm) {
 						// close before the page is updated
@@ -766,15 +781,37 @@ nabu.page.views.PageForm = Vue.extend({
 							stop();
 						}, function(error) {
 							self.error = "Form submission failed";
+							// if we get an XMLHTTPResponse thingy, parse it
+							if (error && error.responseText) {
+								error = JSON.parse(error.responseText);
+							}
+							// we get a (hopefully) standardized event back from the function
 							if (error) {
-								if (!error.code && error.status != null) {
-									error.code = "HTTP-" + error.status;
+								if (!error.code) {
+									error.code = "HTTP-" + (error.status != null ? error.status : 500);
 								}
-								self.messages.push({
-									type: "request",
-									severity: "error",
-									title: self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message)
-								})
+								try {
+									if (self.cell.state.errorEvent) {
+										if (!self.cell.state.errorEventCodes || self.cell.state.errorEventCodes.split(/[\\s]*,[\\s]*/).indexOf(error.code) >= 0) {
+											var pageInstance = self.$services.page.getPageInstance(self.page, self);
+											pageInstance.emit(self.cell.state.errorEvent, error);
+										}
+									}
+									var translated = self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message);
+									self.error = translated;
+									self.messages.push({
+										type: "request",
+										severity: "error",
+										title: translated
+									})
+								}
+								catch (exception) {
+									self.messages.push({
+										type: "request",
+										severity: "error",
+										title: self.$services.page.translateErrorCode(error.status ? "HTTP-" + error.status : "HTTP-500")
+									})
+								}
 							}
 							else {
 								self.messages.push({
@@ -834,7 +871,7 @@ nabu.page.views.PageForm = Vue.extend({
 										error = JSON.parse(error.responseText);
 									}
 									if (self.cell.state.errorEvent) {
-										if (!self.cell.state.errorEventCodes || self.cell.state.errorEventCodes.split(/[\\s]*,[\\s]*/).indexOf(error.code)) {
+										if (!self.cell.state.errorEventCodes || self.cell.state.errorEventCodes.split(/[\\s]*,[\\s]*/).indexOf(error.code) >= 0) {
 											var pageInstance = self.$services.page.getPageInstance(self.page, self);
 											pageInstance.emit(self.cell.state.errorEvent, error);
 										}

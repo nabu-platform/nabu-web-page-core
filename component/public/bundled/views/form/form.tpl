@@ -24,7 +24,8 @@
 					<n-form-text v-model="cell.state.previous" v-if="!cell.state.immediate && cell.state.pages.length > 1" label="Previous Label"/>
 					<n-form-text v-model="cell.state.event" label="Success Event" :timeout="600" @input="$emit('updatedEvents')"/>
 					<n-form-text v-model="cell.state.cancelEvent" label="Cancel Event" :timeout="600" @input="$emit('updatedEvents')"/>
-					<n-form-text v-if="cell.state.operation" v-model="cell.state.errorEvent" label="Error Event" :timeout="600" @input="$emit('updatedEvents')"/>
+					<n-form-text v-if="cell.state.event" v-model="cell.state.submitEvent" label="Submit Event" :timeout="600" @input="$emit('updatedEvents')"/>
+					<n-form-text v-if="cell.state.operation || cell.state.functionForm" v-model="cell.state.errorEvent" label="Error Event" :timeout="600" @input="$emit('updatedEvents')"/>
 					<n-form-text v-model="cell.state.errorEventCodes" label="Error Event Codes" v-if="cell.state.errorEvent"/>
 					<n-form-switch v-model="cell.state.synchronize" label="Synchronize Changes"/>
 					<n-form-switch v-model="cell.state.autofocus" label="Autofocus"/>
@@ -233,9 +234,9 @@
 </template>
 
 <template id="page-arbitrary">
-	<div>
-		<div v-if="instance && instance.configure && edit">
-			<button @click="instance.configure"><span class="fa fa-cog"></span></button>
+	<div class="page-arbitrary">
+		<div v-if="instance && instance.configure && edit" class="page-arbitrary-menu">
+			<button @click="function($event) { instance.configure(); $event.stopPropagation(); return false }"><span class="fa fa-cog"></span></button>
 		</div>
 		<div :class="target.class" v-route-render="{ alias: target.route, parameters: getParameters(), mounted: mounted }"></div>
 	</div>

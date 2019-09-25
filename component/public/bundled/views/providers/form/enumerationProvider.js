@@ -159,7 +159,6 @@ Vue.component("page-form-input-enumeration-provider", {
 		},
 		enumerationExtracter: function(value) {
 			var provider = this.provider;
-			console.log("wtf?", value, this.field.enumerationProviderValue, provider.value);
 			if (value && this.field.enumerationProviderValue) {
 				return value[this.field.enumerationProviderValue];
 			}

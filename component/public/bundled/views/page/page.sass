@@ -1,3 +1,9 @@
+$empty-row-color: lighten($warning-color, 30%) !default;
+$empty-row-contrast: $warning-color !default;
+
+$empty-cell-color: lighten($success-color, 30%) !default;
+$empty-cell-contrast: $success-color !default;
+
 .nabu-pages-paste {
 	background-color: #fff;
 	padding: 2rem;
@@ -35,7 +41,6 @@
 			*/
 		}
 		.page-cell-menu {
-			padding: 0.3rem 0.5rem;
 			background-color: #eaeaea;
 			button {
 				background-color: transparent;
@@ -50,16 +55,23 @@
 			flex-grow: 1;
 			flex-basis: 0;
 		}
+		&:hover {
+			.row-edit-label {
+				span {
+					display: block;
+				}
+			}
+		}
 	}
 	.row-edit-label {
 		position: relative;
 		&.direction-horizontal {
-			width: 4rem;
-			min-width: 4rem;
-			min-height: 15rem;
+			width: 1rem;
+			min-width: 1rem;
+			//min-height: 15rem;
 			span {
-				width: 4rem;
-				display: block;
+				width: 1rem;
+				display: none;
 				tranform: rotate(-90deg);
 				-moz-transform: rotate(-90deg);
 				-webkit-transform: rotate(-90deg);
@@ -68,7 +80,9 @@
 				position: absolute;
 				white-space: nowrap;
 				left: 0;
-				top: 80%;
+				bottom: 0.1rem;
+				font-size: 0.8rem;
+				overflow: hide;
 			}
 		}
 		&.direction-vertical {
@@ -157,6 +171,34 @@
 	&.edit {
 		.page-row {
 		}
+		.page-row.empty {
+			position: relative;
+			min-height: 15rem;
+			background-color: $empty-row-color;
+			&:after {
+				content: 'ROW';
+				position: absolute;
+				left: 45%;
+				top: 45%;
+				color: $empty-row-contrast;
+				font-size: 20pt;
+				weight: bold;
+			}
+		}
+		.page-cell.empty {
+			position: relative;
+			min-height: 15rem;
+			background-color: $empty-cell-color !important;
+			&:after {
+				content: 'CELL';
+				position: absolute;
+				left: 45%;
+				top: 45%;
+				color: $empty-cell-contrast;
+				font-size: 20pt;
+				weight: bold;
+			}
+		}
 	}
 }
 
@@ -166,27 +208,115 @@
 	right: 0rem;
 	top: 0;
 	z-index: 1000;
+	//padding: 0.3rem 0.5rem;
 }
 .page-row {
 	position: relative;
-	padding: 0;
-	margin: 0;
+//	padding: 0;
+//	margin: 0;
 	.page-row-menu {
 		display: none;
 		position: absolute;
 		left: 0;
-		top: 0;
+		margin-left: 1rem;
+		bottom: 0;
 		background-color: green;
-		padding: 0;
+		//padding: 0.3rem 0.5rem;
 		button {
 			display: inline-block;
 			background-color: green;
 			color: #fff;
 			border-radius: 0;
+			padding: 0.3rem 0.7rem;
 		}
 	}
 }
 .page.edit {
+	.page-row {
+		.page-row {
+			> .page-row-menu {
+				left: 2rem;
+			}
+			.page-row {
+				> .page-row-menu {
+					left: 4rem;
+				}
+				.page-row {
+					> .page-row-menu {
+						left: 6rem;
+					}
+					.page-row {
+						> .page-row-menu {
+							left: 8rem;
+						}
+						.page-row {
+							> .page-row-menu {
+								left: 10rem;
+							}
+							.page-row {
+								> .page-row-menu {
+									left: 12rem;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	.page-cell {
+		.page-cell {
+			> .page-cell-menu {
+				right: 2rem;
+			}
+			.page-cell {
+				> .page-cell-menu {
+					right: 4rem;
+				}
+				.page-cell {
+					> .page-cell-menu {
+						right: 6rem;
+					}
+					.page-cell {
+						> .page-cell-menu {
+							right: 8rem;
+						}
+						.page-cell {
+							> .page-cell-menu {
+								right: 10rem;
+							}
+							.page-cell {
+								> .page-cell-menu {
+									right: 12rem;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	.page-row {
+		/*.page-row {
+			&:after {
+				content: '';
+				//background-color: #ddd;
+				opacity: 0.5;
+				width: 2.3rem;
+			}
+		}
+		&:before {
+			content: '';
+			//background-color: #ddd;
+			opacity: 0.5;
+			width: 2.3rem;
+		}*/
+	}
+	> .page-row {
+		&:after {
+			display: none;
+		}
+	}
 	.page-cell.hovering {
 		border: solid 2px blue;
 		position: relative;
@@ -199,24 +329,43 @@
 					display: none;
 				}
 			}
-			&:hover {
+			&.menu-hovering {
 				button {
 					display: inline-block;
 				}
 			}
 		}
 	}
+	.page-row {
+		min-height: 2.5rem;
+	}
 	.page-row.hovering {
 		border: solid 2px green;
-		> .page-row-menu {
-			z-index: 1000;
-			display: block;
-			button:not(:first-child) {
-				display: none;
+		&.collapsed {
+			> .page-row-menu {
+				z-index: 1000;
+				display: block;
+				button:not(:last-child) {
+					display: none;
+				}
+				&.menu-hovering {
+					button {
+						display: inline-block;
+					}
+				}
 			}
-			&:hover {
-				button {
-					display: inline-block;
+		}
+		&:not(.collapsed) {
+			> .page-row-menu {
+				z-index: 1000;
+				display: block;
+				button:not(:first-child) {
+					display: none;
+				}
+				&.menu-hovering {
+					button {
+						display: inline-block;
+					}
 				}
 			}
 		}

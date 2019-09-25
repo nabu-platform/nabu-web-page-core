@@ -95,6 +95,9 @@
 						}, 
 						"form.js": {
 							"url": "views/form/form.js"
+						},
+						"form.scss": {
+							"url": "views/form/form.scss"
 						}
 					}, 
 					"markdown": {
@@ -103,6 +106,9 @@
 						}, 
 						"markdown.js": {
 							"url": "views/markdown/markdown.js"
+						}, 
+						"markdown.scss": {
+							"url": "views/markdown/markdown.scss"
 						}
 					},
 					"richtext": {

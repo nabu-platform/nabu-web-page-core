@@ -16,7 +16,7 @@
 					</n-collapsible>
 					<n-collapsible title="Image Content" class="images">
 						<n-input-file v-model="files" @change="upload" :types="['image']"/>
-						<div class="image-container" v-for="image in images" :class="{'selected': image.path == cell.state.href }" @click="cell.state.href = image.relativePath">
+						<div class="image-container" v-for="image in images" :class="{'selected': image.relativePath == cell.state.href }" @click="cell.state.href = image.relativePath">
 							<div class="image"
 								:title="image.path"
 								:style="{'background-image': 'url(${server.root()}' + image.relativePath + ')', height: '10rem', 'background-size': 'cover', width:'15rem' }"></div>

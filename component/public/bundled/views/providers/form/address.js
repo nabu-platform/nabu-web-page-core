@@ -59,7 +59,7 @@ Vue.component("page-form-input-address", {
 			+ "		:label='label'"
 			+ "		:value='value'"
 			+ "		:name='field.name'"
-			+ "		:timeout='timeout'"
+			+ "		:timeout='timeout ? timeout : 400'"
 			+ "     :latitude='field.latitude'"
 			+ "     :longitude='field.longitude'"
 			+ "     :country='field.country'"

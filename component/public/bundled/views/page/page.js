@@ -120,6 +120,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 				self.oldTitle = document.title;
 				document.title = self.$services.page.translate(self.$services.page.interpret(self.page.content.title, self));
 			}
+			if (self.page.content.autoRefresh) {
+				setTimeout(function() {
+					if (!self.edit && !self.$services.page.wantEdit) {
+						var target = nabu.utils.router.self(self.$el);
+						console.log("routing in", target);
+						//window.history.go(0);
+						self.$services.router.route(self.$services.page.alias(self.page), self.parameters, target);
+					}
+				}, parseInt(self.page.content.autoRefresh));
+			}
 			done();
 		};
 		if (this.page.content.states.length) {
@@ -1008,7 +1018,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 									});
 									// make sure we use vue.set to trigger other reactivity
 									resultKeys.forEach(function(key) {
-										Vue.set(self.variables[state.name][key], result[key]);
+										Vue.set(self.variables[state.name], key, result[key]);
 									});
 									// TODO: do a proper recursive merge to maintain reactivity with deeply nested
 									
@@ -1785,7 +1795,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		},
 		cellId: function(cell) {
 			var cellId = 'page_' + this.pageInstanceId + '_cell_' + cell.id;
-			if (cell.on) {
+			if (cell.on && cell.optimizeVueKey) {
 				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				var on = pageInstance.get(cell.on);
@@ -2132,13 +2142,14 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			this.$services.page.copiedRow = null;
 		},
 		mouseOut: function(event, row, cell) {
-			if (this.edit) {
-				var rowTarget = document.getElementById(this.page.name + '_' + row.id);
+			var self = this;
+			if (self.edit) {
+				var rowTarget = document.getElementById(self.page.name + '_' + row.id);
 				if (rowTarget) {
 					rowTarget.classList.remove("hovering");
 				}
 				if (cell) {
-					var cellTarget = document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
+					var cellTarget = document.getElementById(self.page.name + '_' + row.id + '_' + cell.id);
 					if (cellTarget) {
 						cellTarget.classList.remove("hovering");
 					}
@@ -2156,8 +2167,29 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 					if (cellTarget) {
 						cellTarget.classList.add("hovering");
 					}
-					event.stopPropagation();
+					if (!event.shiftKey) {
+						event.stopPropagation();
+					}
 				}
+			}
+		},
+		menuHover: function($event) {
+			if (this.edit) {
+				var self = this;
+				if ($event.target.$unhover) {
+					clearTimeout($event.target.$unhover);
+					$event.target.$unhover = null;
+				}
+				$event.target.classList.add("menu-hovering");
+			}
+		},
+		menuUnhover: function($event) {
+			if (this.edit) {
+				var self = this;
+				$event.target.$unhover = setTimeout(function() {
+					$event.target.classList.remove("menu-hovering");
+					$event.target.$unhover = null;
+				}, 500);
 			}
 		}
 	}
