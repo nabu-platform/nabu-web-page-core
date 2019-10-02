@@ -110,6 +110,20 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		isClickable: function(element) {
+			if (element.classList && element.classList.contains("clickable")) {
+				return true;
+			}
+			else if (element.classList && element.classList.contains("unclickable")) {
+				return false;
+			}
+			else if (element.parentNode) {
+				return this.isClickable(element.parentNode);
+			}
+			else {
+				return true;
+			}
+		},
 		getAvailableTypes: function(value) {
 			var types = ['string', 'boolean', 'number', 'integer'];
 			nabu.utils.arrays.merge(types, Object.keys(this.$services.swagger.swagger.definitions));
@@ -148,24 +162,33 @@ nabu.services.VueService(Vue.extend({
 			var injectJavascript = function() {
 				var promise = self.$services.q.defer();
 			
-				// inject some javascript stuff if we are in edit mode
-				//self.inject("https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.js");
-				// inject ace editor
-				// check out https://cdnjs.com/libraries/ace/
-				self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ace.js", function() {
-					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-scss.js");
-					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-javascript.js");
-					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-html.js");
-					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-language_tools.js");
-					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-whitespace.js");
+				if (navigator.userAgent.indexOf("Trident") >= 0) {
 					promise.resolve();
-					// inject sass compiler
-					/*self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.js", function() {
-						self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.worker.js", function() {
-							promise.resolve();
-						});
-					});*/
-				});
+				}
+				else {
+					// inject some javascript stuff if we are in edit mode
+					//self.inject("https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.js");
+					// inject ace editor
+					// check out https://cdnjs.com/libraries/ace/
+					// if it fails, we ignore it and set editing to false
+					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ace.js", function() {
+						self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-scss.js");
+						self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-javascript.js");
+						self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-html.js");
+						self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-language_tools.js");
+						self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-whitespace.js");
+						promise.resolve();
+						// inject sass compiler
+						/*self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.js", function() {
+							self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.worker.js", function() {
+								promise.resolve();
+							});
+						});*/
+					}, function() {
+						self.editable = false;
+						promise.resolve();
+					});
+				}
 				return promise;
 			}
 	
@@ -534,6 +557,9 @@ nabu.services.VueService(Vue.extend({
 				}
 			}
 			
+			if (bindingValue == null) {
+				return null;
+			}
 			var enumerators = this.enumerators;
 			// allow for fixed values
 			var value = bindingValue.indexOf("fixed") == 0 ? bindingValue.substring("fixed.".length) : pageInstance.get(bindingValue);
@@ -1095,7 +1121,7 @@ nabu.services.VueService(Vue.extend({
 				}
 				
 				if (callback) {
-					// IE
+					// IE (not 11)
 					if (script.readyState){  
 						script.onreadystatechange = function() {
 							if (script.readyState == "loaded" || script.readyState == "complete") {
@@ -1103,6 +1129,17 @@ nabu.services.VueService(Vue.extend({
 								callback();
 							}
 						};
+					}
+					// IE 11?
+					else if (script.attachEvent) {
+						script.attachEvent("onload", function() {
+							callback();
+						});
+					}
+					else if (script.addEventListener) {
+						script.addEventListener("load", function() {
+							callback();
+						});
 					}
 					// rest
 					else { 

@@ -121,7 +121,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				document.title = self.$services.page.translate(self.$services.page.interpret(self.page.content.title, self));
 			}
 			if (self.page.content.autoRefresh) {
-				setTimeout(function() {
+				self.autoRefreshTimeout = setTimeout(function() {
 					if (!self.edit && !self.$services.page.wantEdit) {
 						var target = nabu.utils.router.self(self.$el);
 						console.log("routing in", target);
@@ -188,6 +188,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	beforeDestroy: function() {
+		if (this.autoRefreshTimeout) {
+			clearTimeout(this.autoRefreshTimeout);
+			this.autoRefreshTimeout = null;
+		}
 		if (this.oldTitle) {
 			document.title = this.oldTitle;
 		}	
@@ -280,6 +284,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 	},
 	data: function() {
 		return {
+			autoRefreshTimeout: null,
 			refs: {},
 			edit: false,
 			// contains all the component instances
@@ -450,9 +455,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			return options;
 		},
-		getAvailableEvents: function() {
+		getAvailableEvents: function(event) {
 			var available = this.getEvents();
-			return Object.keys(available);
+			var result = Object.keys(available);
+			if (event) {
+				result = result.filter(function(x) {
+					return x.toLowerCase().indexOf(event.toLowerCase()) >= 0;
+				});
+			}
+			result.sort();
+			return result;
 		},
 		addAction: function() {
 			this.page.content.actions.push({
@@ -1702,9 +1714,16 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		getAvailableParameters: function(cell) {
 			return this.$services.page.getAvailableParameters(this.page, cell, true);
 		},
-		getAvailableEvents: function() {
+		getAvailableEvents: function(event) {
 			var available = this.$services.page.getPageInstance(this.page, this).getEvents();
-			return Object.keys(available);
+			var result = Object.keys(available);
+			if (event) {
+				result = result.filter(function(x) {
+					return x.toLowerCase().indexOf(event.toLowerCase()) >= 0;
+				});
+			}
+			result.sort();
+			return result;
 		},
 		canConfigure: function(cell) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
