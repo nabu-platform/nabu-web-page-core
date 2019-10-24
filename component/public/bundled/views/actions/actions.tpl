@@ -79,6 +79,13 @@
 										<label class="n-form-label">Show if</label>
 										<n-ace mode="javascript" v-model="action.condition"/>
 									</div>
+									<n-form-combo v-model="action.validate" label="Only if valid" :filter="validatableItems"/>
+									<div v-if="action.triggers">
+										<div class="list-row" v-for="i in Object.keys(action.triggers)">
+											<n-form-combo v-model="action.triggers[i]" label="Trigger" :items="$window.Object.keys($services.page.getAllAvailableParameters(page))"/>
+											<button @click="action.triggers.splice(i, 1)"><span class="fa fa-trash"></span></button>
+										</div>
+									</div>
 									<div class="list-row" v-for="i in Object.keys(action.activeRoutes)">
 										<n-form-combo v-model="action.activeRoutes[i]" label="Active Route" :filter="function(value) { return listRoutes(value, true) }"/>
 										<button @click="action.activeRoutes.splice(i, 1)"><span class="fa fa-trash"></span></button>
@@ -98,6 +105,7 @@
 							</div>
 							
 							<div class="list-item-actions">
+								<button @click="action.triggers ? action.triggers.push('') : $window.Vue.set(action, 'triggers', [''])">Add Trigger</button>
 								<button @click="action.activeRoutes.push('')">Add Active Route</button>
 								<button @click="up(action)"><span class="fa fa-chevron-circle-up"></span></button>
 								<button @click="down(action)"><span class="fa fa-chevron-circle-down"></span></button>

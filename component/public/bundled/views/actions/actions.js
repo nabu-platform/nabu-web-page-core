@@ -45,8 +45,14 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			showing: [],
 			lastAction: null,
 			configuringAction: null,
-			resolvedActions: []
+			resolvedActions: [],
+			subscriptions: []
 		}
+	},
+	beforeDestroy: function() {
+		this.subscriptions.splice(0).map(function(x) {
+			x();
+		});
 	},
 	ready: function() {
 		var self = this;
@@ -61,8 +67,36 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				this.handle(action, true);
 			}
 		}
+		var self = this;
+		var pageInstance = self.$services.page.getPageInstance(self.page, self);
+		
+		this.getActions().forEach(function(action) {
+			if (action.triggers) {
+				action.triggers.forEach(function(trigger) {
+					self.subscriptions.push(pageInstance.subscribe(trigger, function() {
+						self.handle(action, true);
+					}));
+				})
+			}
+		});
 	},
 	methods: {
+		validatableItems: function(value) {
+			var values = [];
+			var elements = document.getElementsByTagName("form");
+			if (elements) {
+				for (var i = 0; i < elements.length; i++) {
+					var id = elements[i].getAttribute("id");
+					if (id) {
+						values.push(id);
+					}
+				}
+			}
+			if (value) {
+				values = values.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+			}
+			return values;
+		},
 		addStyle: function(action) {
 			if (!action.styles) {
 				Vue.set(action, "styles", []);
@@ -87,7 +121,12 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 							result[action.event] = self.getOperationDefinition(action);
 						}
 					}
-					else if (action.eventState || action.eventFixedState) {
+					// we have a custom event
+					else if (action.event && action.event.eventFields && action.event.eventFields.length) {
+						result[nabu.page.event.getName(action, "event")] = nabu.page.event.getType(action, "event");
+					}
+					// backwards compatible, should not be necessary anymore
+					else if (typeof(action.event) == "string" && (action.eventState || action.eventFixedState)) {
 						result[action.event] = {
 							properties: {
 								value: {
@@ -105,7 +144,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 						};
 					}
 					else {
-						result[action.event] = self.cell.on ? self.cell.on : {};
+						result[nabu.page.event.getName(action, "event")] = self.cell.on ? self.cell.on : {};
 					}
 				}
 				if (action.actions) {
@@ -371,6 +410,33 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			if (action.name && this.$services.analysis && this.$services.analysis.emit) {
 				this.$services.analysis.emit("trigger-" + (this.cell.state.analysisId ? this.cell.state.analysisId : "action"), action.name, {url: window.location}, true);
 			}
+			// we must validate some target before we can proceed
+			if (action.validate && !force) {
+				var element = document.getElementById(action.validate);
+				if (element && element.__vue__ && element.__vue__.validate) {
+					var result = element.__vue__.validate();
+					// if we have a promise, wait for the results
+					if (result.then) {
+						var self = this;
+						result.then(function(validations) {
+							if (!validations || !validations.length) {
+								if (element.__vue__.$parent.doIt) {
+									element.__vue__.$parent.doIt();
+								}
+								self.handle(action, true);
+							}
+						});
+						return null;
+					}
+					// if we have validation problems, don't proceed
+					else if (result.length) {
+						return null;
+					}
+					else if (element.__vue__.$parent.doIt) {
+						element.__vue__.$parent.doIt();
+					}
+				}
+			}
 			// we already have a valid href on there, no need to do more
 			if (!this.cell.state.useButtons && action.route && action.absolute) {
 				return;
@@ -429,30 +495,42 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 					var pageInstance = self.$services.page.getPageInstance(self.page, self);
 					var content = null;
 					var addDefaults = false;
-					if (action.hasFixedState && action.eventFixedState) {
-						content = {
-							value: action.eventFixedState
+					var eventName = null;
+					// backwards compatible
+					if (typeof(action.event) == "string") {
+						eventName = action.event;
+						if (action.hasFixedState && action.eventFixedState) {
+							content = {
+								value: this.$services.page.interpret(action.eventFixedState, this)
+							}
+							addDefaults = true;
 						}
-						addDefaults = true;
-					}
-					else if (action.eventState) {
-						content = {
-							value: pageInstance.get(action.eventState)
+						else if (action.eventState) {
+							content = {
+								value: pageInstance.get(action.eventState)
+							}
+							addDefaults = true;
 						}
-						addDefaults = true;
 					}
-					else if (action.content) {
-						content = action.content;
-					}
-					else if (this.cell.on) {
-						content = pageInstance.get(this.cell.on);
+					else if (action.event) {
+						eventName = nabu.page.event.getName(action, "event");
+						// you have a custom event
+						if (action.event.eventFields && action.event.eventFields.length) {
+							content = nabu.page.event.getInstance(action, "event", this.page, this);
+						}
+						else if (action.content) {
+							content = action.content;
+						}
+						else if (this.cell.on) {
+							content = pageInstance.get(this.cell.on);
+						}
 					}
 					if (addDefaults) {
 						content.sequence = this.resolvedActions.indexOf(action) + 1;
 						content.length = this.resolvedActions.length;
 						content.actor = this.cell.id;
 					}
-					pageInstance.emit(action.event, content ? content : {});
+					pageInstance.emit(eventName, content ? content : {});
 					this.lastAction = action;
 				}
 				if (action.close) {
@@ -567,3 +645,4 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		}
 	}
 });
+

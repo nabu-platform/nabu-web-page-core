@@ -3,6 +3,7 @@ Vue.component("page-form-input-text-configure", {
 		+ "	<n-form-text v-model='field.regexLabel' label='Regex Label'/>"
 		+ "	<n-form-text v-model='field.maxLength' label='Max Length'/>"
 		+ "	<n-form-switch v-model='field.showLength' label='Show Length' v-if='field.maxLength'/>"
+		+ "	<n-form-combo v-model='field.required' label='Required' :items=\"[true,false]\" />"
 		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"
 		+ "</n-form-section>",
 	props: {
@@ -45,6 +46,7 @@ Vue.component("page-form-input-text", {
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
+			+ "		:required='field.required'"
 			+ "		:validator='getValidator()'"
 			+ "		:name='field.name'"
 			+ "		:timeout='timeout'"
@@ -105,4 +107,7 @@ Vue.component("page-form-input-text", {
 			}
 		}
 	}
-});
+}); 
+
+
+

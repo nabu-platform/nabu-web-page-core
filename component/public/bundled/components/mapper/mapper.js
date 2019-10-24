@@ -28,7 +28,7 @@ Vue.component("n-page-mapper", {
 			// allow enumerations
 			nabu.utils.arrays.merge(sources, nabu.page.providers("page-enumerate").map(function(x) {
 				return x.name;
-			}));
+			}).filter(function(x) { return sources.indexOf(x) < 0 }));
 			sources.sort();
 			return sources;
 		}

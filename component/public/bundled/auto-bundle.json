@@ -28,6 +28,14 @@
 						"ace.gcss": {
 							"url": "components/ace/ace.gcss"
 						}
+					},
+					"event-value": {
+						"event-value.js": {
+							"url": "components/event-value/event-value.js"
+						}, 
+						"event-value.tpl": {
+							"url": "components/event-value/event-value.tpl"
+						}
 					}, 
 					"form-page": {
 						"form-page.tpl": {

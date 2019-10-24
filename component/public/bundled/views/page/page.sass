@@ -135,6 +135,12 @@ $empty-cell-contrast: $success-color !default;
 		align-items: center;
 	}
 	.page-edit {
+		&.page-component {
+			background-color: steelblue;
+			span {
+				font-size: 0.7rem;
+			}
+		}
 		padding: 0.3rem;
 		position: absolute;
 		top: 0rem;
@@ -145,7 +151,7 @@ $empty-cell-contrast: $success-color !default;
 		span {
 			font-size: 0.8rem;
 			text-transform: uppercase;
-			margin: 0 1rem;
+			margin: 0 0.7rem;
 			display: inline-block;
 			cursor: pointer;
 		}
@@ -169,6 +175,16 @@ $empty-cell-contrast: $success-color !default;
 		}
 	}
 	&.edit {
+		> .page-content {
+			>.page-sidemenu {
+				border: solid 1px #ccc;
+				margin: 0.7rem;
+			}
+			display: flex;
+			> .page-rows {
+				flex-grow: 1;
+			}
+		}
 		.page-row {
 		}
 		.page-row.empty {
@@ -207,7 +223,7 @@ $empty-cell-contrast: $success-color !default;
 	position: absolute;
 	right: 0rem;
 	top: 0;
-	z-index: 1000;
+	z-index: 200;
 	//padding: 0.3rem 0.5rem;
 }
 .page-row {
@@ -343,7 +359,7 @@ $empty-cell-contrast: $success-color !default;
 		border: solid 2px green;
 		&.collapsed {
 			> .page-row-menu {
-				z-index: 1000;
+				z-index: 200;
 				display: block;
 				button:not(:last-child) {
 					display: none;
@@ -357,7 +373,7 @@ $empty-cell-contrast: $success-color !default;
 		}
 		&:not(.collapsed) {
 			> .page-row-menu {
-				z-index: 1000;
+				z-index: 200;
 				display: block;
 				button:not(:first-child) {
 					display: none;
@@ -369,5 +385,61 @@ $empty-cell-contrast: $success-color !default;
 				}
 			}
 		}
+	}
+}
+
+
+.page-sidemenu {
+	background-color: white;
+	white-space: nowrap;
+	.row > .page-sideentry .page-sideentry-menu {
+		button {
+			background-color: green;
+			color: white;
+			border-radius: 0px;
+		}
+	}
+	.cell > .page-sideentry .page-sideentry-menu {
+		button {
+			background-color: blue;
+			color: white;
+			border-radius: 0px;
+		}
+	}
+	.row, .cell {
+		margin-left: 0.5rem;
+		font-size: 0.8rem;
+		&:hover {
+			> .page-sideentry {
+				background-color: #efefef;
+			}
+		}
+		> .page-sideentry {
+			border: solid 1px #ccc;
+			border-style: none none solid none;
+			padding: 0.2rem;
+			position: relative;
+			.page-sideentry-menu {
+				display: none;
+			}
+			&:hover {
+				.page-sideentry-menu {
+					display: block;
+					position: absolute;
+					left: 75%;
+					top: 0;
+					display: flex;
+					z-index: 1000;
+				}
+			}
+		}
+	}
+	.row {
+		> .page-sideentry {
+			font-weight: bold;
+		}
+	}
+	> .row {
+		margin-left: 0;
 	}
 }

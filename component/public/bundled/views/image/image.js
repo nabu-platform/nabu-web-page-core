@@ -59,11 +59,11 @@ nabu.page.views.Image = Vue.extend({
 	computed: {
 		fullHref: function() {
 			var href = null;
-			if (this.cell.state.href) {
-				href = this.cell.state.href;
-			}
-			else if (this.href) {
+			if (this.href) {
 				href = this.href;
+			}
+			else if (this.cell.state.href) {
+				href = this.cell.state.href;
 			}
 			// if the href is not an absolute one (either globally absolute or application absolute), we inject the server root
 			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && href.substring(0, 1) != "/") {
@@ -71,6 +71,10 @@ nabu.page.views.Image = Vue.extend({
 			}
 			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && this.cell.state.absolute) {
 				href = "${environment('url')}" + href;
+			}
+			// on mobile we don't want absolute paths starting with "/", otherwise it won't fetch from the file system
+			else if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && ${environment("mobile") == true} && href.indexOf("/") == 0) {
+				href = href.substring(1);
 			}
 			return href;
 		}
@@ -80,15 +84,18 @@ nabu.page.views.Image = Vue.extend({
 			var self = this;
 			return this.$services.swagger.execute("nabu.web.page.core.rest.resource.list", {path:this.cell.state.imagePath}).then(function(list) {
 				self.images.splice(0, self.images.length);
-				if (list.resources) {
+				if (list && list.resources) {
 					nabu.utils.arrays.merge(self.images, list.resources);
 				}
 			});
 		},
 		upload: function() {
 			var self = this;
-			this.$services.swagger.execute("nabu.web.page.core.rest.resource.create", { path:this.cell.state.imagePath, body: this.files[0] }).then(function() {
+			this.$services.swagger.execute("nabu.web.page.core.rest.resource.create", { path:this.cell.state.imagePath, body: this.files[0] }).then(function(result) {
 				self.load();
+				if (result && result.relativePath) {
+					self.cell.state.href = result.relativePath;
+				}
 				self.files.splice(0, self.files.length);
 			});
 		},

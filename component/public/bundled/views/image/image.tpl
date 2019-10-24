@@ -35,5 +35,6 @@
 		<div v-else-if="cell.state.href || href" class="image" 
 			:style="{'background-image': 'url(' + fullHref + ')', 'height': cell.state.height ? cell.state.height : 'inherit', 'background-size': cell.state.size }"
 			:title="cell.state.title"></div>
+		<n-input-file v-else-if="edit" v-model="files" @change="upload" :types="['image']"/>
 	</div>
 </template>

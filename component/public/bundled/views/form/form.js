@@ -572,6 +572,11 @@ nabu.page.views.PageForm = Vue.extend({
 				var parts = field.split(".");
 				result = properties ? recursiveGet(properties, parts, 0) : null;
 			}
+			else if (this.cell.state.pageForm) {
+				var definition = this.$services.page.getPageParameters(this.page);
+				var parts = field.split(".");
+				return definition ? recursiveGet(definition, parts, 0) : null;
+			}
 			else {
 				var operation = this.$services.swagger.operations[this.cell.state.operation];
 				var result = null;
@@ -671,8 +676,8 @@ nabu.page.views.PageForm = Vue.extend({
 					}
 					tmp = tmp[parts[i]];
 				}
-				// merge them
-				if (typeof(tmp[parts[parts.length - 1]]) == "object") {
+				// merge them, note that typeof(null) == "object"...
+				if (tmp[parts[parts.length - 1]] != null && typeof(tmp[parts[parts.length - 1]]) == "object") {
 					nabu.utils.objects.merge(tmp[parts[parts.length - 1]], result[name]);
 				}
 				else {
@@ -1041,7 +1046,7 @@ Vue.component("page-form-field", {
 			if (!this.label) {
 				return null;
 			}
-			return this.field.label ? this.field.label : this.field.name;
+			return this.field.label ? this.field.label : null;
 		}
 	},
 	methods: {

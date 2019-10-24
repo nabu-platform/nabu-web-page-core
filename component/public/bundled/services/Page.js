@@ -562,7 +562,7 @@ nabu.services.VueService(Vue.extend({
 			}
 			var enumerators = this.enumerators;
 			// allow for fixed values
-			var value = bindingValue.indexOf("fixed") == 0 ? bindingValue.substring("fixed.".length) : pageInstance.get(bindingValue);
+			var value = bindingValue.indexOf("fixed") == 0 ? this.translate(bindingValue.substring("fixed.".length)) : pageInstance.get(bindingValue);
 			var key = bindingValue.split(".")[0];
 			// allow for enumerated values, if there is a provider with that name, check it
 			if (!value && enumerators[key]) {
@@ -812,10 +812,6 @@ nabu.services.VueService(Vue.extend({
 					for (var i = 0; i < rules.length; i++) {
 						var rule = rules.item(i);
 						if (rule.selectorText) {
-							if (rule.selectorText.indexOf(clazz) > 0) {
-							console.log(rule.selectorText);
-								
-							}
 							if (rule.selectorText.match(new RegExp(".*\\." + clazz + "\\.([\\w-]+)\\b.*", "g"))) {
 								var match = rule.selectorText.replace(new RegExp(".*\\." + clazz + "\\.([\\w-]+)\\b.*", "g"), "$1");
 								if (result.indexOf(match) < 0) {
@@ -1431,6 +1427,22 @@ nabu.services.VueService(Vue.extend({
 			Object.keys(available).map(function(key) {
 				result[key] = available[key];
 			});
+			
+			nabu.page.providers("page-enumerate").forEach(function(x) {
+				if (x.enumerate && x.label) {
+					var tmp = {};
+					var entries = x.enumerate();
+					if (entries) {
+						entries.forEach(function(y) {
+							tmp[y[x.label]] = {
+								type: "string"
+							};
+						});
+						result[x.name] = {properties:tmp};
+					}
+				}
+			})
+			
 			return result;
 		},
 		getAllAvailableKeys: function(page) {

@@ -398,7 +398,7 @@ window.addEventListener("load", function() {
 					converter.setFlavor('github');
 					var part = document.getElementById(id);
 					if (part) {
-						part.innerHTML = nabu.utils.elements.sanitize(converter.makeHtml(part.innerHTML));
+						part.innerHTML = nabu.utils.elements.sanitize(converter.makeHtml(part.innerHTML)).replace(/&amp;lt;/g, "&lt;").replace(/&amp;gt;/g, "&gt;");
 					}
 				};
 				setTimeout(function() {

@@ -240,4 +240,4 @@
 		</div>
 		<div :class="target.class" v-route-render="{ alias: target.route, parameters: getParameters(), mounted: mounted }"></div>
 	</div>
-</template>
+</template> 

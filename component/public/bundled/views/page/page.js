@@ -316,6 +316,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		listFields: function(type) {
+			var type = this.$services.swagger.resolve(type);
+			return this.$services.page.getSimpleKeysFor(type);
+		},
 		validateStateName: function(name) {
 			var blacklisted = ["page", "application", "record", "state", "localState"];
 			var messages = [];
@@ -358,12 +362,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 		automap: function(action) {
 			var source = this.availableParameters[this.autoMapFrom];
 			var self = this;
+			var keys = self.$services.page.getSimpleKeysFor(source);
 			this.getOperationParameters(action.operation, true).map(function(key) {
 				// only automap those that are not filled in
 				if (!action.bindings[key]) {
 					var keyToCheck = key.indexOf(".") < 0 ? key : key.substring(key.indexOf(".") + 1);
-					if (!!source.properties[keyToCheck]) {
-						Vue.set(action.bindings, key, self.autoMapFrom + "." + keyToCheck);
+					//if (!!source.properties[keyToCheck]) {
+					var matching = keys.filter(function(x) { return x == keyToCheck || (x.length > keyToCheck.length + 1 && x.substring(x.length - (keyToCheck.length + 1)) == "." + keyToCheck) });
+					if (matching.length > 0) {
+						Vue.set(action.bindings, key, self.autoMapFrom + "." + matching[0]);
 					}
 				}
 			});
@@ -724,9 +731,20 @@ nabu.page.views.Page = Vue.component("n-page", {
 			var self = this;
 			if (cellContainer.cells) {
 				cellContainer.cells.map(function(cell) {
-					if (cell.clickEvent) {
-						events[cell.clickEvent] = {};
+					if (nabu.page.event.getName(cell, "clickEvent")) {
+						events[nabu.page.event.getName(cell, "clickEvent")] = nabu.page.event.getType(cell, "clickEvent");
 					}
+					// <DEPRECATED>
+					if (cell.clickEvent) {
+						events[cell.clickEvent] = {
+							properties: {
+								value: {
+									type: "string"
+								}
+							}
+						};
+					}
+					// </DEPRECATED>
 					if (cell.rows) {
 						cell.rows.map(function(row) {
 							self.getCellEvents(row, events);
@@ -758,15 +776,22 @@ nabu.page.views.Page = Vue.component("n-page", {
 			if (this.page.content.parameters) {
 				this.page.content.parameters.map(function(parameter) {
 					parameter.listeners.map(function(listener) {
-						var parts = listener.split(".");
+						// backwards compatibility
+						var parts = listener.to ? listener.to.split(".") : listener.split(".");
 						// we are setting the variable we are interested in
 						if (parts[0] == name) {
-							var interested = self.get(listener);
-							if (!interested) {
-								Vue.delete(self.variables, parameter.name);
+							var interested = value == null ? null : self.$services.page.getValue(value, listener.to ? listener.to.substring(parts[0].length + 1) : listener.substring(parts[0].length + 1));     
+							console.log("checking listener", name, listener.to, listener.field, value, interested);
+							if (listener.field) {
+								self.$services.page.setValue(self.variables, parameter.name + "." + listener.field, interested);
 							}
 							else {
-								Vue.set(self.variables, parameter.name, interested);
+								if (!interested) {
+									Vue.delete(self.variables, parameter.name);
+								}
+								else {
+									Vue.set(self.variables, parameter.name, interested);
+								}
 							}
 						}
 					})
@@ -779,6 +804,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 			this.page.content.actions.map(function(action) {
 				
 				if (action.on == name) {
+					// if we have a condition, run it
+					if (action.condition && !self.$services.page.isCondition(action.condition, value, self)) {
+						return;
+					}
+					
 					var promise = self.$services.q.defer();
 					
 					var runFunction = function() {
@@ -805,6 +835,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					promises.push(promise);
 					var parameters = {};
 					Object.keys(action.bindings).map(function(key) {
+						console.log("mapping", key, action.bindings[key], self.$services.page.getBindingValue(self, action.bindings[key]));
 						self.$services.page.setValue(parameters, key, self.$services.page.getBindingValue(self, action.bindings[key]));
 					});
 					
@@ -824,6 +855,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 					};
 					
+					if (nabu.page.event.getName(action, "chainEvent")) {
+						promise.then(function() {
+							var pageInstance = self.$services.page.getPageInstance(self.page, self);
+							pageInstance.emit(
+								nabu.page.event.getName(action, "chainEvent"),
+								nabu.page.event.getInstance(action, "chainEvent", self.page, self)
+							);
+						});
+					}
 					promise.then(function() { stop() }, function(error) { stop(error) });
 					
 					if (action.confirmation) {
@@ -1240,12 +1280,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 					updateUrl = true;
 				}
 				var pageParameter = this.page.content.parameters ? this.page.content.parameters.filter(function(parameter) {
-					return parameter.name == name.substring("page.".length);
+					return parameter.name == name.substring("page.".length).split(".")[0];
 				})[0] : null;
 				if (pageParameter) {
 					target = this.variables;
 					// also set it as the default value if in edit mode or light edit mode
-					if (this.edit || (this.$services.page.canEdit() && this.$services.page.wantEdit)) {
+					// we no longer support this?
+					if (false && (this.edit || (this.$services.page.canEdit() && this.$services.page.wantEdit))) {
 						// if we have no language service, update the default value
 						// alternatively if we have explicitly not selected a language and we are in development mode, we want to set the default as well
 						// if however we are not in development mode, these are also sent to the backend and saved in the default language (that must be configured)
@@ -1636,7 +1677,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			if (cell.height) {
 				styles.push({'height': cell.height});
 			}
-			if ((this.edit || this.$services.page.wantEdit) && cell.name) {
+			if (false && (this.edit || this.$services.page.wantEdit) && cell.name) {
 				styles.push({"border": "solid 2px " + this.getNameColor(cell.name), "border-style": "none solid solid solid"})
 			}
 			return styles;
@@ -1823,6 +1864,17 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				}
 			}
 			return cellId;
+		},
+		cellClasses: function(cell) {
+			if (cell.styles) {
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				// if we use state here, it does not get modified as we send out new events
+				// so let's watch the variables instead
+				//return this.$services.page.getDynamicClasses(cell.styles, this.state, this);
+				return this.$services.page.getDynamicClasses(cell.styles, pageInstance.variables, this);
+			}
+			return [];
 		},
 		shouldRenderCell: function(row, cell) {
 			if (this.edit) {
@@ -2020,10 +2072,13 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			pageInstance.resetEvents();	
 		},
 		clickOnCell: function(cell) {
-			if (cell.clickEvent && !this.edit) {
+			if (nabu.page.event.getName(cell, "clickEvent") && !this.edit) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
-				pageInstance.emit(cell.clickEvent, {});
-			}	
+				pageInstance.emit(
+					nabu.page.event.getName(cell, "clickEvent"),
+					nabu.page.event.getInstance(cell, "clickEvent", this.page, this)
+				);
+			}
 		},
 		addCell: function(target) {
 			if (!target.cells) {
@@ -2128,7 +2183,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			if (!!row.justify) {
 				styles.push({"justify-content": row.justify});
 			}
-			if ((this.edit || this.$services.page.wantEdit) && row.name) {
+			if (false && (this.edit || this.$services.page.wantEdit) && row.name) {
 				styles.push({"border": "solid 2px " + this.getNameColor(row.name), "border-style": "none solid solid solid"})
 			}
 			return styles;
@@ -2217,3 +2272,209 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 Vue.component("n-prompt", {
 	template: "#n-prompt"
 });
+
+
+Vue.component("page-sidemenu", {
+	template: "#page-sidemenu",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		rows: {
+			type: Array,
+			required: true
+		}
+	},
+	data: function() {
+		return {
+			closed: []
+		}	
+	},
+	methods: {
+		up: function(row) {
+			var index = this.rows.indexOf(row);
+			if (index > 0) {
+				var replacement = this.rows[index - 1];
+				this.rows.splice(index - 1, 1, row);
+				this.rows.splice(index, 1, replacement);
+			}
+		},
+		down: function(row) {
+			var index = this.rows.indexOf(row);
+			if (index < this.rows.length - 1) {
+				var replacement = this.rows[index + 1];
+				this.rows.splice(index + 1, 1, row);
+				this.rows.splice(index, 1, replacement);
+			}
+		},
+		cellDown: function(row, cell) {
+			var index = this.rows.indexOf(row);
+			if (index < this.rows.length - 1) {
+				var target = this.rows[index + 1];
+				row.cells.splice(row.cells.indexOf(cell));
+				target.cells.push(cell);
+			}
+		},
+		cellUp: function(row, cell) {
+			var index = this.rows.indexOf(row);
+			if (index > 0) {
+				var target = this.rows[index - 1];
+				row.cells.splice(row.cells.indexOf(cell));
+				target.cells.push(cell);
+			}
+		},
+		left: function(row, cell) {
+			var index = row.cells.indexOf(cell);
+			if (index > 0) {
+				var replacement = row.cells[index - 1];
+				row.cells.splice(index - 1, 1, cell);
+				row.cells.splice(index, 1, replacement);
+			}
+		},
+		right: function(row, cell) {
+			var index = row.cells.indexOf(cell);
+			if (index < row.cells.length - 1) {
+				var replacement = row.cells[index + 1];
+				row.cells.splice(index + 1, 1, cell);
+				row.cells.splice(index, 1, replacement);
+			}
+		},
+		mouseOut: function(event, row, cell) {
+			var self = this;
+			var rowTarget = document.getElementById(self.page.name + '_' + row.id);
+			if (rowTarget) {
+				rowTarget.classList.remove("hovering");
+			}
+			if (cell) {
+				var cellTarget = document.getElementById(self.page.name + '_' + row.id + '_' + cell.id);
+				if (cellTarget) {
+					cellTarget.classList.remove("hovering");
+				}
+			}
+		},
+		mouseOver: function(event, row, cell) {
+			var rowTarget = document.getElementById(this.page.name + '_' + row.id);
+			if (rowTarget) {
+				rowTarget.classList.add("hovering");
+			}
+			if (cell) {
+				var cellTarget = document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
+				if (cellTarget) {
+					cellTarget.classList.add("hovering");
+				}
+				if (!event.shiftKey) {
+					event.stopPropagation();
+				}
+			}
+		},
+		scrollIntoView: function(row, cell) {
+			var target = this.page.name + '_' + row.id;
+			if (cell) {
+				target += "_" + cell.id;
+			}
+			document.getElementById(target).scrollIntoView();
+		},
+		configure: function(cell) {
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			var cellInstance = pageInstance.components[cell.id];
+			cellInstance.configure();
+		},
+		configureRow: function(row) {
+			var target = document.getElementById(this.page.name + "_" + row.id);
+			target.parentNode.__vue__.configuring = row.id;
+		},
+		configureCell: function(row, cell) {
+			var target = document.getElementById(this.page.name + "_" + row.id + "_" + cell.id);
+			target.parentNode.parentNode.__vue__.configuring = cell.id;
+		},
+		addRow: function(target) {
+			if (!target.rows) {
+				Vue.set(target, "rows", []);
+			}
+			target.rows.push({
+				id: this.page.content.counter++,
+				cells: [],
+				class: null,
+				// a custom id for this row
+				customId: null,
+				// you can map an instance of an array to a row
+				// for instance if you have an array of "contracts", you could map it to the variable "contract"
+				// the key is the local name, the value is the name of the object in the page
+				instances: {},
+				condition: null,
+				direction: null,
+				align: null,
+				on: null,
+				collapsed: false,
+				name: null
+			});
+		},
+		removeCell: function(cells, cell) {
+			this.$confirm({
+				message: "Are you sure you want to remove this cell?"
+			}).then(function() {
+				cells.splice(cells.indexOf(cell), 1);
+			});
+		},
+		removeRow: function(cell, row) { 
+			cell.rows.splice(cell.rows(indexOf(row), 1));
+		},
+		addCell: function(target) {
+			if (!target.cells) {
+				Vue.set(target, "cells", []);
+			}
+			target.cells.push({
+				id: this.page.content.counter++,
+				rows: [],
+				// the alias of the route we want to render here (if any)
+				alias: null,
+				// the route may have input parameters (path + query), these are the relevant bindings
+				// the binding variable contains keys for each path/query parameter in the route
+				bindings: {},
+				name: null,
+				// state that is maintained by the cell owner (the route alias)
+				// for example it might offer additional configuration
+				state: {},
+				// the rendering target (e.g. sidebar, prompt,...)
+				target: 'page',
+				// it can depend on an event of taking place
+				on: null,
+				// a class for this cell
+				class: null,
+				// a custom id for this cell
+				customId: null,
+				// flex width
+				width: 1,
+				height: null,
+				instances: {},
+				condition: null,
+				devices: [],
+				clickEvent: null
+			});
+		},
+		copyCell: function(cell) {
+			nabu.utils.objects.copy({
+				type: "page-cell",
+				content: cell
+			});
+		},
+		copyRow: function(row) {
+			nabu.utils.objects.copy({
+				type: "page-row",
+				content: row
+			});
+		},
+		pasteCell: function(row) {
+			row.cells.push(this.$services.page.renumber(this.page, this.$services.page.copiedCell));
+			this.$services.page.copiedCell = null;
+		},
+		pasteRow: function(cell) {
+			cell.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
+			this.$services.page.copiedRow = null;
+		}
+	}
+});
+
+
