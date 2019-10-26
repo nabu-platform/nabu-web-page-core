@@ -15,6 +15,7 @@
 						:filter="$services.page.listFunctions"/>
 					<n-form-text v-model="cell.state.title" label="Title"/>
 					<n-form-text v-model="cell.state.formId" label="Form Id"/>
+					<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
 					<n-form-text v-model="cell.state.analysisId" label="Analysis Id"/>
 					<n-form-text v-model="cell.state.class" label="Form Class"/>
 					<n-form-switch v-model="cell.state.immediate" label="Save On Change"/>
@@ -79,7 +80,7 @@
 				:class="{'is-active': currentPage == page}">{{$services.page.interpret(page.name, self)}}</button>
 		</div>
 		<h2 v-if="cell.state.title">{{$services.page.translate($services.page.interpret(cell.state.title, $self))}}</h2>
-		<n-form :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}, {'form-error': !!error }]" ref="form" :id="cell.state.formId" :mode="cell.state.mode">
+		<n-form :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}, {'form-error': !!error }]" ref="form" :id="cell.state.formId" :component-group="cell.state.componentGroup" :mode="cell.state.mode">
 			<header slot="header" v-if="cell.state.dynamicHeader"><component :is="cell.state.dynamicHeader" :form="$self" :page="page" :cell="cell"/></header>
 			<n-form-section :key="'form_page_' + cell.state.pages.indexOf(currentPage)">
 				<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">
@@ -240,4 +241,4 @@
 		</div>
 		<div :class="target.class" v-route-render="{ alias: target.route, parameters: getParameters(), mounted: mounted }"></div>
 	</div>
-</template> 
+</template>

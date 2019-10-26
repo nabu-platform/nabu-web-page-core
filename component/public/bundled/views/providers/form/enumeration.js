@@ -1,9 +1,17 @@
 Vue.component("page-form-input-enumeration-configure", {
-	template: "<n-form-section><n-form-switch v-model='field.allowCustom' label='Allow Custom Values'/><button @click=\"field.enumerations.push('')\">Add enumeration</button>"
-		+ "		<n-form-section class='enumeration list-row' v-for='i in Object.keys(field.enumerations)' :key=\"field.name + 'enumeration_' + i\">"
+	template: "<n-form-section><n-form-switch v-model='field.complex' label='Complex Values' v-if='!field.allowCustom'/>"
+		+ "		<n-form-switch v-if='!field.complex' v-model='field.allowCustom' label='Allow Custom Values'/>"
+		+ "		<button @click='addEnumeration'>Add enumeration</button>"
+		+ "		<div v-if='!field.complex'><n-form-section class='enumeration list-row' v-for='i in Object.keys(field.enumerations)' :key=\"field.name + 'enumeration_' + i\">"
 		+ "			<n-form-text v-model='field.enumerations[i]'/>"
 		+ "			<button @click='field.enumerations.splice(i, 1)'><span class='fa fa-trash'></span></button>"
-		+ "		</n-form-section></n-form-section>",
+		+ "		</n-form-section></div>"
+		+ "		<div v-else><n-form-section class='enumeration list-row' v-for='i in Object.keys(field.enumerations)' :key=\"field.name + 'enumeration_' + i\">"
+		+ "			<n-form-text v-model='field.enumerations[i].key' placeholder='key'/>"
+		+ "			<n-form-text v-model='field.enumerations[i].value' placeholder='value'/>"
+		+ "			<button @click='field.enumerations.splice(i, 1)'><span class='fa fa-trash'></span></button>"
+		+ "		</n-form-section>"
+		+ "	</div></n-form-section>",
 	props: {
 		cell: {
 			type: Object,
@@ -23,6 +31,40 @@ Vue.component("page-form-input-enumeration-configure", {
 		if (!this.field.enumerations) {
 			Vue.set(this.field, "enumerations", []);
 		}
+	},
+	methods: {
+		addEnumeration: function() {
+			if (this.field.complex) {
+				this.field.enumerations.push({value:null,key:null});
+			}
+			else {
+				this.field.enumerations.push('');
+			}
+		}
+	},
+	watch: {
+		'field.complex': function(newValue) {
+			if (newValue) {
+				Vue.set(this.field, "enumerations", this.field.enumerations.splice(0).map(function(x) {
+					if (typeof(x) == "string") {
+						return {key:x, value: null};
+					}
+					else {
+						return x;
+					}
+				}));
+			}
+			else {
+				Vue.set(this.field, "enumerations", this.field.enumerations.splice(0).map(function(x) {
+					if (typeof(x) != "string") {
+						return x.key;
+					}
+					else {
+						return x;
+					}
+				}));
+			}
+		}
 	}
 });
 
@@ -31,6 +73,7 @@ Vue.component("page-form-input-enumeration", {
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		:formatter='formatter'"
 			+ "		:label='label'"
 			+ "		:value='value'"
 			+ "		:schema='schema'"
@@ -78,6 +121,32 @@ Vue.component("page-form-input-enumeration", {
 	methods: {
 		validate: function(soft) {
 			return this.$refs.form.validate(soft);
+		},
+		formatter: function(value) {
+			if (typeof(value) == "string") {
+				return value;
+			}
+			else if (value) {
+				if (value.value) {
+					return this.$services.page.translate(value.value, this);
+				}
+				else {
+					return value.key;
+				}
+			}
+		},
+		extracter: function(value) {
+			if (typeof(value) == "string") {
+				return value;
+			}
+			else if (value) {
+				if (value.key) {
+					return this.$services.page.interpret(value.key, this);
+				}
+				else {
+					return value.value;
+				}
+			}
 		},
 		enumerate: function(value) {
 			var result = this.field.enumerations.filter(function(x) {

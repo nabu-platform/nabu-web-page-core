@@ -31,7 +31,6 @@
 			<span class="fa fa-sign-in-alt" v-route:login></span>
 		</div>
 		
-		<div class="page-content">
 			<page-sidemenu v-if="edit && page.content.rows" :rows="page.content.rows" :page="page"
 				@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
 			<n-page-rows v-if="page.content.rows" :rows="page.content.rows" :page="page" :edit="edit"
@@ -205,7 +204,6 @@
 						:edit="edit"/>
 				</n-form>
 			</n-sidebar>
-		</div>
 	</component>
 </template>
 

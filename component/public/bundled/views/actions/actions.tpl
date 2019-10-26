@@ -53,20 +53,24 @@
 								
 								<n-form-combo v-model="action.class" label="Class" :filter="$services.page.classes.bind($self, 'page-action')" />
 								<n-form-combo v-model="action.buttonClass" label="Button Class" :filter="$services.page.getSimpleClasses"/>
-								<n-form-combo v-model="action.event" v-if="!action.route && !action.url" label="Event" :filter="function(value) { return value ? [value, '$close'] : ['$close'] }"
+								
+								<n-form-combo v-model="action.event" v-if="false && !action.route && !action.url" label="Event" :filter="function(value) { return value ? [value, '$close'] : ['$close'] }"
 									 @input="$emit('updatedEvents')" :timeout="600"/>
-								<n-form-switch v-model="action.close" v-if="action.event != '$close'" label="Close"/>
+									 
+								<n-form-switch v-model="action.close" label="Close"/>
 								
 								<n-form-section v-if="!action.dynamic">
-									<n-form-switch v-model="action.hasFixedState" v-if="action.event" label="Does the event have a fixed value?"/>
-									<n-form-combo v-model="action.eventState" v-if="action.event && !action.hasFixedState" label="Event Value"
-										:filter="function() { return $services.page.getAvailableKeys(page, cell) }"/>
-									<n-form-text v-model="action.eventFixedState" v-if="action.event && action.hasFixedState" label="Event Fixed Value"/>
-									<n-form-combo v-model="action.route" v-if="!action.event && !action.url" :filter="listRoutes" label="Route"/>
+									<div v-if="false">
+										<n-form-switch v-model="action.hasFixedState" v-if="action.event" label="Does the event have a fixed value?"/>
+										<n-form-combo v-model="action.eventState" v-if="action.event && !action.hasFixedState" label="Event Value"
+											:filter="function() { return $services.page.getAvailableKeys(page, cell) }"/>
+										<n-form-text v-model="action.eventFixedState" v-if="action.event && action.hasFixedState" label="Event Fixed Value"/>
+									</div>
+									<n-form-combo v-model="action.route" v-if="(!action.event || !action.event.name) && !action.url" :filter="listRoutes" label="Route"/>
 									<n-form-combo v-model="action.anchor" v-if="action.route" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 									<n-form-switch v-model="action.absolute" v-if="action.route && !cell.state.useButtons" label="Absolute"/>
 									<n-form-switch v-model="action.mask" label="Mask" v-if="action.route"/>
-									<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.event"/>
+									<n-form-text v-model="action.url" label="URL" v-if="!action.route && (!action.event || !action.event.name)"/>
 									<n-form-combo v-model="action.anchor" v-if="action.url" label="Anchor" :items="['$blank', '$window']"/>
 									<n-page-mapper v-if="action.route && $services.router.get(action.route)" :to="$services.page.getRouteParameters($services.router.get(action.route))"
 										:from="$services.page.getAvailableParameters(page, cell)" 
@@ -111,6 +115,7 @@
 								<button @click="down(action)"><span class="fa fa-chevron-circle-down"></span></button>
 								<button @click="getActions().splice(getActions().indexOf(action), 1)"><span class="fa fa-trash"></span></button>
 							</div>
+							<page-event-value :page="page" :container="action" title="Action Event" v-if="!action.dynamic && !action.route && !action.url" name="event" v-bubble.resetEvents/>
 						</n-collapsible>
 					</n-collapsible>
 				</n-form-section>

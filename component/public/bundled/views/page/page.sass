@@ -119,13 +119,14 @@ $empty-cell-contrast: $success-color !default;
 		background-color: steelblue;
 		text-align: center;
 		button {
+			display: block;
 			background-color: transparent;
 			box-shadow: none;
 			border: none;
 			color: #fff;
 			cursor: pointer;
 		}
-		padding: 0.3rem 1rem;
+		//padding: 0.3rem 1rem;
 		.path {
 			display: inline-block;
 		}
@@ -175,17 +176,13 @@ $empty-cell-contrast: $success-color !default;
 		}
 	}
 	&.edit {
-		> .page-content {
-			>.page-sidemenu {
-				border: solid 1px #ccc;
-				margin: 0.7rem;
-			}
-			display: flex;
-			> .page-rows {
-				flex-grow: 1;
-			}
+		>.page-sidemenu {
+			border: solid 1px #ccc;
+			margin: 0.7rem;
 		}
-		.page-row {
+		display: flex;
+		> .page-rows {
+			flex-grow: 1;
 		}
 		.page-row.empty {
 			position: relative;

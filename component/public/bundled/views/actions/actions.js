@@ -95,6 +95,9 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			if (value) {
 				values = values.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
 			}
+			if (values.indexOf(value) < 0) {
+				values.unshift(value);
+			}
 			return values;
 		},
 		addStyle: function(action) {
@@ -406,36 +409,80 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			}
 			return "javascript:void(0)";
 		},
+		validateTarget: function(target) {
+			var element = document.getElementById(target);
+			var elements = [];
+			if (element.__vue__ && element.__vue__.validate) {
+				elements.push(element);
+			}
+			else {
+				var forms = document.body.querySelectorAll("[component-group='" + target + "']");
+				if (forms && forms.length) {
+					for (var i = 0; i < forms.length; i++) {
+						elements.push(forms.item(i));
+					}
+				}
+			}
+			var self = this;
+			var promises = elements.map(function(x) {
+				return self.validateSingle(x);
+			}).filter(function(x) {
+				return x != null;
+			});
+			var promise = null;
+			if (promises.length) {
+				promise = this.$services.q.all(promises);
+			}
+			else {
+				promise = this.$services.q.defer();
+				promise.resolve();
+			}
+			promise.then(function() {
+				elements.forEach(function(element) {
+					if (element.__vue__.$parent.doIt) {
+						element.__vue__.$parent.doIt();
+					}
+				});
+			});
+			return promise;
+		},
+		validateSingle: function(element) {
+			if (element && element.__vue__ && element.__vue__.validate) {
+				var result = element.__vue__.validate();
+				var promise = this.$services.q.defer();
+				if (result.then) {
+					result.then(function(x) {
+						if (x && x.length) {
+							promise.reject(x);
+						}
+						else {
+							promise.resolve([]);
+						}
+					});
+				}
+				else {
+					if (result.length) {
+						promise.reject(result);
+					}
+					else {
+						promise.resolve(result);
+					}
+				}
+				return promise;
+			}
+			return null;
+		},
 		handle: function(action, force) {
 			if (action.name && this.$services.analysis && this.$services.analysis.emit) {
 				this.$services.analysis.emit("trigger-" + (this.cell.state.analysisId ? this.cell.state.analysisId : "action"), action.name, {url: window.location}, true);
 			}
 			// we must validate some target before we can proceed
 			if (action.validate && !force) {
-				var element = document.getElementById(action.validate);
-				if (element && element.__vue__ && element.__vue__.validate) {
-					var result = element.__vue__.validate();
-					// if we have a promise, wait for the results
-					if (result.then) {
-						var self = this;
-						result.then(function(validations) {
-							if (!validations || !validations.length) {
-								if (element.__vue__.$parent.doIt) {
-									element.__vue__.$parent.doIt();
-								}
-								self.handle(action, true);
-							}
-						});
-						return null;
-					}
-					// if we have validation problems, don't proceed
-					else if (result.length) {
-						return null;
-					}
-					else if (element.__vue__.$parent.doIt) {
-						element.__vue__.$parent.doIt();
-					}
-				}
+				var self = this;
+				this.validateTarget(action.validate).then(function(x) {
+					self.handle(action, true);
+				});
+				return null;
 			}
 			// we already have a valid href on there, no need to do more
 			if (!this.cell.state.useButtons && action.route && action.absolute) {
@@ -472,7 +519,15 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 							parameters[key] = value;
 						}
 					});
-					this.$services.router.route(route, parameters, action.anchor, action.mask);
+					if (action.anchor == "$blank") {
+						window.open(self.$services.router.template(route, parameters));
+					}
+					else if (action.anchor == "$window") {
+						window.location = self.$services.router.template(route, parameters);
+					}
+					else {
+						this.$services.router.route(route, parameters, action.anchor, action.mask);
+					}
 				}
 				else if (action.url) {
 					var url = this.$services.page.interpret(action.url, this);
