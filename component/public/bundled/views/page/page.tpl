@@ -66,7 +66,7 @@
 					</n-collapsible>
 					<n-collapsible title="Initial State" class="list">
 						<div class="list-actions">
-							<button @click="addState">Add State</button>
+							<button @click="addState">Add Initial State</button>
 						</div>
 						<n-collapsible class="list-item" :title="state.name" v-for="state in page.content.states">
 							<n-form-text :value="state.name" @input="function(newValue) { if (!validateStateName(newValue).length) state.name = newValue; }" label="Name" :required="true" :validator="validateStateName"/>
@@ -86,6 +86,20 @@
 							<button @click="state.refreshOn ? state.refreshOn.push('') : $window.Vue.set(state, 'refreshOn', [''])">Add Refresh Event</button>
 						</n-collapsible>
 					</n-collapsible>
+					<n-collapsible title="Computed State" class="list">
+						<div class="list-actions">
+							<button @click="addComputed">Add Computed State</button>
+						</div>
+						<div v-if="page.content.computed">
+							<n-collapsible class="list-item" :title="state.name" v-for="state in page.content.computed">
+								<n-form-text :value="state.name" @input="function(newValue) { if (!validateStateName(newValue).length) state.name = newValue; }" label="Name" :required="true" :validator="validateStateName"/>
+								<n-page-mapper v-if="state.name" :to="[state.name]"
+									:from="availableParameters" 
+									v-model="state.bindings"/>
+							</n-collapsible>
+						</div>
+					</n-collapsible>
+					
 					<n-collapsible title="Query Parameters">
 						<div class="list-actions">
 							<button @click="page.content.query.push('unnamed')">Add Query Parameter</button>
@@ -116,6 +130,7 @@
 							</div>
 						</n-collapsible>
 					</n-collapsible>
+					
 					<n-collapsible title="Actions" class="list">
 						<div class="list-actions">
 							<button @click="addAction">Add Action</button>
@@ -124,12 +139,14 @@
 							<n-form-text v-model="action.name" label="Name" :required="true"/>
 							<n-form-text v-model="action.confirmation" label="Confirmation Message"/>
 							<n-form-combo v-model="action.on" label="Trigger On" :filter="getAvailableEvents"/>
+							<n-form-text v-model="action.condition" label="Condition" v-if="action.on"/>
 							<n-form-text v-model="action.scroll" label="Scroll to" v-if="!action.operation && !action.function"/>
 							<n-form-combo v-model="action.route" v-if="!action.operation && !action.url && !action.function" label="Redirect" :filter="filterRoutes"/>
 							<n-form-combo v-model="action.anchor" v-if="action.route || (action.operation && isGet(action.operation))" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 							<n-form-combo v-model="action.operation" v-if="!action.route && !action.scroll && !action.url && !action.function" label="Operation" :filter="getOperations" />
 							<n-form-combo v-model="action.function" v-if="!action.route && !action.scroll && !action.url && !action.operation" label="Function" :filter="$services.page.listFunctions" />
 							<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function"/>
+							<page-event-value :page="page" :container="action" title="Chain Event" name="chainEvent" v-bubble.resetEvents/>
 							<n-form-switch v-if="action.operation || action.function" v-model="action.isSlow" label="Is slow operation?"/>
 							<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" :timeout="600" @input="resetEvents()"/>
 							<n-form-text v-if="action.operation" v-model="action.errorEvent" label="Error Event" :timeout="600" @input="resetEvents()"/>
@@ -210,7 +227,7 @@
 <template id="page-rows">
 	<component :is="rowsTag()" class="page-rows">
 		<component :is="rowTagFor(row)" v-for="row in getCalculatedRows()" class="page-row" :id="page.name + '_' + row.id" 
-				:class="['page-row-' + row.cells.length, row.class ? row.class : null, {'collapsed': row.collapsed}, {'empty': !row.cells || !row.cells.length } ]" 
+				:class="$window.nabu.utils.arrays.merge(['page-row-' + row.cells.length, row.class ? row.class : null, {'collapsed': row.collapsed}, {'empty': !row.cells || !row.cells.length } ], rowClasses(row))"                    
 				:key="'page_' + pageInstanceId + '_row_' + row.id"
 				:row-key="'page_' + pageInstanceId + '_row_' + row.id"
 				v-if="edit || shouldRenderRow(row)"
@@ -427,6 +444,18 @@
 							</div>
 						</n-collapsible>
 					</n-collapsible>
+					<n-collapsible title="Row Styling">
+						<div class="list-actions">
+							<button @click="row.styles == null ? $window.Vue.set(row, 'styles', [{class:null,condition:null}]) : row.styles.push({class:null,condition:null})">Add Style</button>
+						</div>
+						<div v-if="row.styles">
+							<n-form-section class="list-row" v-for="style in row.styles">
+								<n-form-text v-model="style.class" label="Class"/>
+								<n-form-text v-model="style.condition" label="Condition"/>
+								<button @click="row.styles.splice(row.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
+							</n-form-section>
+						</div>
+					</n-collapsible>
 				</n-form>
 			</n-sidebar>
 		</component>
@@ -485,6 +514,5 @@
 		</div>
 	</div>
 </template>
-
 
 

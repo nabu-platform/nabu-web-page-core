@@ -124,10 +124,6 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 							result[action.event] = self.getOperationDefinition(action);
 						}
 					}
-					// we have a custom event
-					else if (action.event && action.event.eventFields && action.event.eventFields.length) {
-						result[nabu.page.event.getName(action, "event")] = nabu.page.event.getType(action, "event");
-					}
 					// backwards compatible, should not be necessary anymore
 					else if (typeof(action.event) == "string" && (action.eventState || action.eventFixedState)) {
 						result[action.event] = {
@@ -146,7 +142,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 							}
 						};
 					}
-					else {
+					else if (nabu.page.event.getName(action, "event")) {
 						result[nabu.page.event.getName(action, "event")] = self.cell.on ? self.cell.on : {};
 					}
 				}

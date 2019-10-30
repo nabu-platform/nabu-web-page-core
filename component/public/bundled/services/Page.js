@@ -920,7 +920,8 @@ nabu.services.VueService(Vue.extend({
 			}
 			return {properties:parameters};
 		},
-		getFunctionOutput: function(id, value) {
+		// really poor naming decisions lead to this...
+		getFunctionOutputFull: function(id, value) {
 			var transformer = this.$services.page.functions.filter(function(x) { return x.id == id })[0];
 			if (!transformer) {
 				transformer = nabu.page.providers("page-function").filter(function(x) { return x.id == id })[0];
@@ -932,7 +933,10 @@ nabu.services.VueService(Vue.extend({
 					parameters[x.name] = self.$services.page.getResolvedPageParameterType(x.type);
 				});
 			}
-			return this.$services.page.getSimpleKeysFor({properties:parameters}, true, true);
+			return {properties:parameters};
+		},
+		getFunctionOutput: function(id, value) {
+			return this.$services.page.getSimpleKeysFor(this.getFunctionOutputFull(id, value), true, true);
 		},
 		saveCompiledCss: function() {
 			this.$services.swagger.execute("nabu.web.page.core.rest.style.compile", {
@@ -1422,6 +1426,19 @@ nabu.services.VueService(Vue.extend({
 				}
 			});
 			
+			// the available computed
+			if (page.content.computed) {
+				page.content.computed.map(function(state) {
+					if (state.name && state.bindings && state.bindings[state.name] && state.bindings[state.name].label == "$function") {
+						var output = self.getFunctionOutputFull(state.bindings[state.name].value);
+						if (state.bindings && state.bindings[state.name].output) {
+							output = output.properties[state.bindings[state.name].output];
+						}
+						result[state.name] = output;
+					}
+				});
+			}
+			
 			// and map all events
 			var available = pageInstance.getEvents();
 			Object.keys(available).map(function(key) {
@@ -1503,6 +1520,19 @@ nabu.services.VueService(Vue.extend({
 					}
 				}
 			});
+			
+			// the available computed
+			if (page.content.computed) {
+				page.content.computed.map(function(state) {
+					if (state.name && state.bindings && state.bindings[state.name] && state.bindings[state.name].label == "$function") {
+						var output = self.getFunctionOutputFull(state.bindings[state.name].value);
+						if (state.bindings && state.bindings[state.name].output) {
+							output = output.properties[state.bindings[state.name].output];
+						}
+						result[state.name] = output;
+					}
+				});
+			}
 			
 			// cell specific stuff overwrites everything else
 			if (cell) {

@@ -145,6 +145,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					// can throw hard errors
 					return self.$services.swagger.execute(state.operation, parameters).then(function(result) {
 						Vue.set(self.variables, state.name, result ? result : null);
+						self.updatedVariable(state.name);
 					});
 				}
 				catch (exception) {
@@ -465,6 +466,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 		getAvailableEvents: function(event) {
 			var available = this.getEvents();
 			var result = Object.keys(available);
+			result = result.filter(function(x) {
+				return x != null && typeof(x) == "string";
+			});
 			if (event) {
 				result = result.filter(function(x) {
 					return x.toLowerCase().indexOf(event.toLowerCase()) >= 0;
@@ -735,7 +739,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 						events[nabu.page.event.getName(cell, "clickEvent")] = nabu.page.event.getType(cell, "clickEvent");
 					}
 					// <DEPRECATED>
-					if (cell.clickEvent) {
+					if (cell.clickEvent && typeof(cell.clickEvent) == "string") {
 						events[cell.clickEvent] = {
 							properties: {
 								value: {
@@ -766,11 +770,60 @@ nabu.page.views.Page = Vue.component("n-page", {
 		reset: function(name) {
 			Vue.delete(this.variables, name);
 		},
+		updatedVariable: function(name) {
+			if (this.page.content.computed) {
+				var self = this;
+				this.page.content.computed.forEach(function(x) {
+					if (x.bindings) {
+						var recalculate = false;
+						// in theory there could be multiple, in really we currently only allow the one you defined explicitly
+						var keys = Object.keys(x.bindings);
+						// this ia short hack to do that, in the future we might want to do other stuff, the recalculate will need some work then
+						keys = [x.name];
+						for (var i = 0; i < keys.length; i++) {
+							var binding = x.bindings[keys[i]];
+							// if we have a dependency to it, reload it!!
+							if (binding && typeof(binding) == "string") {
+								if (binding == name || binding.indexOf(name + ".") == 0) {
+									recalculate = true;
+								}
+							}
+							else if (binding && binding.bindings) {
+								var subKeys = Object.keys(binding.bindings);
+								for (var j = 0; j < subKeys.length; j++) {
+									var subBinding = binding.bindings[subKeys[j]];
+									if (subBinding && (subBinding == name || subBinding.indexOf(name + ".") == 0)) {
+										recalculate = true;
+									}
+								}
+							}
+							if (recalculate) {
+								var value = self.$services.page.getBindingValue(self, binding, self);
+								console.log("reloading state", name, x.name, value, binding);
+								self.emit(x.name, value);
+								break;
+							}
+						}
+					}	
+				});
+			}
+		},
+		addComputed: function() {
+			if (!this.page.content.computed) {
+				Vue.set(this.page.content, "computed", []);
+			}	
+			this.page.content.computed.push({
+				name: null,
+				triggers: [],
+				bindings: {}
+			});
+		},
 		emit: function(name, value) {
 			var self = this;
 
 			// used to be a regular assign and that seemed to work as well?
 			Vue.set(this.variables, name, value);
+			this.updatedVariable(name);
 			
 			// check parameters that may listen to the given value
 			if (this.page.content.parameters) {
@@ -1873,6 +1926,17 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				// so let's watch the variables instead
 				//return this.$services.page.getDynamicClasses(cell.styles, this.state, this);
 				return this.$services.page.getDynamicClasses(cell.styles, pageInstance.variables, this);
+			}
+			return [];
+		},
+		rowClasses: function(row) {
+			if (row.styles) {
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				// if we use state here, it does not get modified as we send out new events
+				// so let's watch the variables instead
+				//return this.$services.page.getDynamicClasses(row.styles, this.state, this);
+				return this.$services.page.getDynamicClasses(row.styles, pageInstance.variables, this);
 			}
 			return [];
 		},

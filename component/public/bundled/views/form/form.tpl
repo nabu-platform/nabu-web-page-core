@@ -149,6 +149,7 @@
 		:readOnly="readOnly"
 		:placeholder="field.placeholder ? $services.page.translate(field.placeholder) : null"
 		class="page-form-field"
+		:class="fieldClasses(field)"
 		:is="getProvidedComponent(field.type)"
 		:value="usesMultipleFields(field.type) ? parentValue : value"
 		:page="page"
@@ -201,14 +202,14 @@
 
 <template id="page-form-configure-single">
 	<div class="page-form-single-field">
-		<n-form-combo v-model="field.name" label="Field Name" :items="possibleFields" v-if="!usesMultipleFields(field.type)"/>
+		<n-form-combo v-model="field.name" label="Field Name" :filter="filterFieldNames" v-if="!usesMultipleFields(field.type)"/>
 		<n-form-text v-model="field.label" label="Label" v-if="allowLabel" />
 		<n-form-text v-model="field.placeholder" label="Placeholder" />
 		<n-form-text v-model="field.hidden" label="Hide field if" v-if="hidable" />
 		<n-form-text v-model="field.group" label="Field Group" v-if="groupable && !field.joinGroup" />
 		<n-form-checkbox v-model="field.joinGroup" label="Join Field Group" v-if="groupable && !field.group" />
 		<n-form-text v-model="field.description" label="Description" v-if="allowDescription" />
-		<n-form-combo v-model="field.type" label="Type" :items="types"/>
+		<n-form-combo v-model="field.type" :filter="filterTypes" label="Type"/>
 		<n-form-text v-model="field.value" v-if="field.type == 'fixed'" label="Fixed Value"/>
 		<n-form-switch v-model="field.hideLabel" label="Hide label"/>
 		
@@ -219,7 +220,17 @@
 			:cell="cell"
 			:schema="schema"
 			:field="field"/>
-			
+		
+		<div class="list-actions">
+			<button @click="field.styles == null ? $window.Vue.set(field, 'styles', [{class:null,condition:null}]) : field.styles.push({class:null,condition:null})">Add Style</button>
+		</div>
+		<div v-if="field.styles">
+			<n-form-section class="list-row" v-for="style in field.styles">
+				<n-form-text v-model="style.class" label="Class"/>
+				<n-form-text v-model="style.condition" label="Condition"/>
+				<button @click="field.styles.splice(field.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
+			</n-form-section>
+		</div>	
 	</div>
 </template>
 
@@ -241,4 +252,4 @@
 		</div>
 		<div :class="target.class" v-route-render="{ alias: target.route, parameters: getParameters(), mounted: mounted }"></div>
 	</div>
-</template>
+</template> 

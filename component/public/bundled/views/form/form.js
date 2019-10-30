@@ -126,6 +126,21 @@ nabu.page.views.PageForm = Vue.extend({
 		});
 	},
 	methods: {
+ 		filterFieldNames: function(value) {
+ 			var names = this.possibleFields.filter(function(x) {
+ 				return (!value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+ 			});
+			names.sort(function(a, b) {
+				return a.alias.localeCompare(b.alias);
+			});
+ 			return names;
+ 		},
+		filterTypes: function (value) {
+			var types = this.types.filter(function(x) {
+				return (!value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+			});
+			return types;	
+		},		
 		getCurrentValue: function(field) {
 			var currentValue = this.result[field.name];
 			if (!this.result.hasOwnProperty(field.name)) {
@@ -1061,6 +1076,14 @@ Vue.component("page-form-field", {
 				 return x.name == type;
 			})[0];
 			return provided ? provided.component : null;	
+		},
+		fieldClasses: function(field) {
+			if (field.styles) {
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				return this.$services.page.getDynamicClasses(field.styles, this.state, this);
+			}
+			return [];
 		},
 		validate: function(soft) {
 			var messages = nabu.utils.vue.form.validateChildren(this, soft);

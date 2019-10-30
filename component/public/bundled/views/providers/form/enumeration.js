@@ -1,5 +1,5 @@
 Vue.component("page-form-input-enumeration-configure", {
-	template: "<n-form-section><n-form-switch v-model='field.complex' label='Complex Values' v-if='!field.allowCustom'/>"
+	template: "<n-form-section><n-form-switch v-model='field.showRadioView' label='Show radio visualisation'/><n-form-switch v-model='field.complex' label='Complex Values' v-if='!field.allowCustom'/>"
 		+ "		<n-form-switch v-if='!field.complex' v-model='field.allowCustom' label='Allow Custom Values'/>"
 		+ "		<button @click='addEnumeration'>Add enumeration</button>"
 		+ "		<div v-if='!field.complex'><n-form-section class='enumeration list-row' v-for='i in Object.keys(field.enumerations)' :key=\"field.name + 'enumeration_' + i\">"
@@ -69,7 +69,7 @@ Vue.component("page-form-input-enumeration-configure", {
 });
 
 Vue.component("page-form-input-enumeration", {
-	template: "<n-form-combo :filter='enumerate' ref='form'"
+	template: "<div><n-form-radio v-if='field.showRadioView' :items='field.enumerations' ref='form'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
@@ -77,7 +77,17 @@ Vue.component("page-form-input-enumeration", {
 			+ "		:label='label'"
 			+ "		:value='value'"
 			+ "		:schema='schema'"
-			+ "		:disabled='disabled'/>",
+			+ "		:disabled='disabled'/>"
+			+ "<n-form-combo v-else :filter='enumerate' ref='form'"
+			+ "		:edit='!readOnly'"
+			+ "		:placeholder='placeholder'"
+			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		:formatter='formatter'"
+			+ "		:label='label'"
+			+ "		:value='value'"
+			+ "		:schema='schema'"
+			+ "		:disabled='disabled'/>"
+			+ " </div>",
 	props: {
 		cell: {
 			type: Object,
@@ -117,7 +127,7 @@ Vue.component("page-form-input-enumeration", {
 			type: String,
 			required: false
 		}
-	},
+	}, 
 	methods: {
 		validate: function(soft) {
 			return this.$refs.form.validate(soft);

@@ -75,6 +75,7 @@
 									<n-page-mapper v-if="action.route && $services.router.get(action.route)" :to="$services.page.getRouteParameters($services.router.get(action.route))"
 										:from="$services.page.getAvailableParameters(page, cell)" 
 										v-model="action.bindings"/>
+									<page-event-value :page="page" :container="action" title="Action Event" v-if="!action.dynamic && !action.route && !action.url" name="event" v-bubble.resetEvents/>
 									<div class="n-form-component">
 										<label class="n-form-label">Disabled if</label>
 										<n-ace mode="javascript" v-model="action.disabled"/>
@@ -115,7 +116,7 @@
 								<button @click="down(action)"><span class="fa fa-chevron-circle-down"></span></button>
 								<button @click="getActions().splice(getActions().indexOf(action), 1)"><span class="fa fa-trash"></span></button>
 							</div>
-							<page-event-value :page="page" :container="action" title="Action Event" v-if="!action.dynamic && !action.route && !action.url" name="event" v-bubble.resetEvents/>
+
 						</n-collapsible>
 					</n-collapsible>
 				</n-form-section>
