@@ -748,7 +748,7 @@ nabu.services.VueService(Vue.extend({
 			return styles.filter(function(style) {
 				return self.isCondition(style.condition, state, instance);
 			}).map(function(style) {
-				return style.class;
+				return self.$services.page.interpret(style.class, instance);
 			});
 		},
 		getPageParameterValues: function(page, pageInstance) {

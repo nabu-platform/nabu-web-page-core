@@ -408,7 +408,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		validateTarget: function(target) {
 			var element = document.getElementById(target);
 			var elements = [];
-			if (element.__vue__ && element.__vue__.validate) {
+			if (element && element.__vue__ && element.__vue__.validate) {
 				elements.push(element);
 			}
 			else {

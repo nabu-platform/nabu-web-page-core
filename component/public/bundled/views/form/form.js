@@ -126,21 +126,6 @@ nabu.page.views.PageForm = Vue.extend({
 		});
 	},
 	methods: {
- 		filterFieldNames: function(value) {
- 			var names = this.possibleFields.filter(function(x) {
- 				return (!value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0);
- 			});
-			names.sort(function(a, b) {
-				return a.alias.localeCompare(b.alias);
-			});
- 			return names;
- 		},
-		filterTypes: function (value) {
-			var types = this.types.filter(function(x) {
-				return (!value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0);
-			});
-			return types;	
-		},		
 		getCurrentValue: function(field) {
 			var currentValue = this.result[field.name];
 			if (!this.result.hasOwnProperty(field.name)) {
@@ -768,10 +753,12 @@ nabu.page.views.PageForm = Vue.extend({
 						}
 						var pageInstance = self.$services.page.getPageInstance(self.page, self);
 						var parameters = this.$services.page.getPageParameters(self.page);
-						// TODO: if it is a complex object (or array) use merging instead of setting?
-						// otherwise we do not have reactivity on these changes
-						Object.keys(parameters.properties).map(function(key) {
-							pageInstance.set("page." + key, result[key]);
+						Object.keys(result).forEach(function(x) {
+							// we have both the object-based notation and the . separated notation in the result
+							// in this case, for correct merging, we want to use the . separated, never the object in its entirety
+							if (result[x] != null && Object(result[x]) !== result[x]) {
+								pageInstance.set("page." + x, result[x]);
+							}
 						});
 						if (self.cell.state.event) {
 							pageInstance.emit(self.cell.state.event, self.cell.on ? pageInstance.get(self.cell.on) : {});
@@ -1296,6 +1283,18 @@ Vue.component("page-form-configure-single", {
 		}
 	},
 	methods: {
+		filterFieldNames: function(value) {
+ 			var names = this.possibleFields.filter(function(x) {
+ 				return (!value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+ 			});
+ 			return names;
+ 		},
+		filterTypes: function (value) {
+			var types = this.types.filter(function(x) {
+				return (!value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+			});
+			return types;	
+		},	
 		usesMultipleFields: function(type) {
 			var provided = nabu.page.providers("page-form-input").filter(function(x) {
 				 return x.name == type;
