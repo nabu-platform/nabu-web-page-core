@@ -788,7 +788,10 @@ nabu.services.VueService(Vue.extend({
 			}
 			else {
 				try {
-					var result = Function('"use strict";return (function(state, $services, $value, application) { return ' + condition + ' })')()(state, this.$services, instance ? instance.$value : function() { throw "No value function" }, application);
+					var resultFunction = Function('"use strict";return (function(state, $services, $value, application) { return ' + condition + ' })')();
+					// by default it is bound to "undefined" apparently
+					resultFunction = resultFunction.bind(this);
+					var result = resultFunction(state, this.$services, instance ? instance.$value : function() { throw "No value function" }, application);
 				}
 				catch (exception) {
 					if (${environment("development")}) {

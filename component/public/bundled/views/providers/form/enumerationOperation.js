@@ -279,12 +279,13 @@ Vue.component("page-form-input-enumeration-operation", {
 						label: false,
 						fieldsName: "enumerationFields"
 					});
-					var component = new nabu.page.views.PageFields({ propsData: parameters, updated: function() {
+					var onUpdate = function() {
 						var content = component.$el.innerHTML.replace(/<[^>]+>/g, "");
 						if (pageInstance.retrieve(storageId) != content) {
 							pageInstance.store(storageId, content);
 						}
-					} });
+					};
+					var component = new nabu.page.views.PageFields({ propsData: parameters, updated: onUpdate, ready: onUpdate });
 					component.$mount();
 				}, 1);
 				//pageInstance.store(storageId, component.$el.innerHTML.replace(/<[^>]+>/g, ""));
