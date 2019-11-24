@@ -19,6 +19,7 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			+ "			v-model='field.enumerationOperationBinding'"
 			+ "			:from='$services.page.getAvailableParameters(page, cell)'"
 			+ "			:to='getMappableEnumerationParameters(field)'/>"
+			+ "		<n-form-combo v-if='field.enumerationOperation' :filter='function() { return getEnumerationFields(field.enumerationOperation) }' v-model='field.enumerationCachingKey' label='Enumeration Caching Key'/>"    
 			+ "</n-form-section>",
 	props: {
 		cell: {
@@ -261,6 +262,9 @@ Vue.component("page-form-input-enumeration-operation", {
 			else if (this.field.enumerationOperationLabelComplex) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				var storageId = "enumerate." + this.field.enumerationOperation + "." + value[this.field.enumerationOperationValue];
+				if (this.field.enumerationCachingKey) {
+					storageId += "." + value[this.field.enumerationCachingKey];
+				}
 				storageId = storageId.replace(/\./g, "_");
 				
 				if (pageInstance.retrieve(storageId) != null) {
@@ -295,7 +299,6 @@ Vue.component("page-form-input-enumeration-operation", {
 				return this.field.enumerationFormatter(value);
 			}
 			else if (this.field.enumerationOperationLabel) {
-				console.log("rendering", this.field.name);
 				return value[this.field.enumerationOperationLabel];
 			}
 			else {

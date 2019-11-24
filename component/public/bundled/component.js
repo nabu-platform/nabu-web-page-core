@@ -281,6 +281,11 @@ window.addEventListener("load", function() {
 					
 					// not sure why, but need to take it out of the synchronous execution...
 					setTimeout(function() {
+						var updateFunction = function() {
+							if (pageInstance.retrieve(storageId) != component.$el.innerHTML) {
+								pageInstance.store(storageId, component.$el.innerHTML);
+							}
+						};
 						var component = new nabu.page.views.PageFields({ propsData: {
 							page: nabu.utils.objects.deepClone(page),
 							cell: nabu.utils.objects.deepClone({state:fragment}),
@@ -288,11 +293,7 @@ window.addEventListener("load", function() {
 							data: result,
 							label: false,
 							fieldsName: "resolveFields"
-						}, updated: function() {
-							if (pageInstance.retrieve(storageId) != component.$el.innerHTML) {
-								pageInstance.store(storageId, component.$el.innerHTML);
-							}
-						}});
+						}, updated: updateFunction, ready: updateFunction });
 						component.$mount();
 					}, 1);
 					

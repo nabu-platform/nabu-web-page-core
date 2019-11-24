@@ -195,6 +195,9 @@ nabu.page.views.PageForm = Vue.extend({
 		isHidden: function(field) {
 			return field.hidden && this.$services.page.isCondition(field.hidden, this.createResult(), this);
 		},
+		isDisabled: function(field) {
+			return field.disabled && this.$services.page.isCondition(field.disabled, this.createResult(), this);
+		},
 		getGroupedFields: function(page) {
 			var groupedFields = [];
 			page.fields.map(function(field) {
@@ -756,7 +759,7 @@ nabu.page.views.PageForm = Vue.extend({
 						Object.keys(result).forEach(function(x) {
 							// we have both the object-based notation and the . separated notation in the result
 							// in this case, for correct merging, we want to use the . separated, never the object in its entirety
-							if (result[x] != null && Object(result[x]) !== result[x]) {
+							if (result[x] != null && (Object(result[x]) !== result[x] || result[x] instanceof Date || result[x] instanceof File)) {       
 								pageInstance.set("page." + x, result[x]);
 							}
 						});

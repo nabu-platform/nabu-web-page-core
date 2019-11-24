@@ -130,6 +130,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 					}
 				}, parseInt(self.page.content.autoRefresh));
 			}
+			if (self.page.content.initialEvents) {
+				self.page.content.initialEvents.forEach(function(x) {
+					if (nabu.page.event.getName(x, "definition") && (!x.condition || self.$services.page.isCondition(x.condition, self.$services.page.getPageState(self), self))) {           
+						self.emit(
+							nabu.page.event.getName(x, "definition"),
+							nabu.page.event.getInstance(x, "definition", self.page, self)
+						);
+					}
+				})
+			}
 			done();
 		};
 		if (this.page.content.states.length) {
@@ -216,6 +226,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 						else {
 							value = value.content;
+						}
+						// inherit from global state (especially interesting for mails/pdfs...)
+						if (value == null && application.state && application.state[x.name] != null) {
+							value = application.state[x.name];
 						}
 						Vue.set(self.variables, x.name, value == null ? null : value);
 					}
@@ -317,6 +331,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		addInitialEvent: function() {
+			if (!this.page.content.initialEvents) {
+				Vue.set(this.page.content, "initialEvents", []);
+			}
+			this.page.content.initialEvents.push({condition:null, definition: {}});
+		},
 		listFields: function(type) {
 			var type = this.$services.swagger.resolve(type);
 			return this.$services.page.getSimpleKeysFor(type);

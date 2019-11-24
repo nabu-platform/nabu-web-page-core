@@ -99,11 +99,12 @@
 							:value="getCurrentValue(field)"
 							:parent-value="result"
 							:schema-resolver="getSchemaFor"
-							@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"
+							@input="function(newValue, otherField) { $window.Vue.set(result, otherField ? otherField : field.name, newValue); changed(); }"    
 							:timeout="cell.state.immediate ? 600 : 0"
 							:page="page"
 							:read-only="readOnly"
 							:cell="cell"
+							:is-disabled="isDisabled(field)"
 							@label="function(value) { $window.Vue.set(labels, field.name, value) }"
 							v-focus="cell.state.autofocus == true && currentPage.fields.indexOf(field) == 0"/>
 						<page-arbitrary v-else
@@ -155,7 +156,7 @@
 		:page="page"
 		:cell="cell"
 		:field="field"
-		@input="function(newValue) { $emit('input', newValue) }"
+		@input="function(newValue, otherField) { $emit('input', newValue, otherField) }"
 		v-bubble:label
 		:label="field.hideLabel ? null : $services.page.translate($services.page.interpret(fieldLabel, $self))"
 		:timeout="timeout"
@@ -206,6 +207,7 @@
 		<n-form-text v-model="field.label" label="Label" v-if="allowLabel" />
 		<n-form-text v-model="field.placeholder" label="Placeholder" />
 		<n-form-text v-model="field.hidden" label="Hide field if" v-if="hidable" />
+		<n-form-text v-model="field.disabled" label="Disable field if" />
 		<n-form-text v-model="field.group" label="Field Group" v-if="groupable && !field.joinGroup" />
 		<n-form-checkbox v-model="field.joinGroup" label="Join Field Group" v-if="groupable && !field.group" />
 		<n-form-text v-model="field.description" label="Description" v-if="allowDescription" />

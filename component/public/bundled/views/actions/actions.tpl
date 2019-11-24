@@ -90,6 +90,7 @@
 											<n-form-combo v-model="action.triggers[i]" label="Trigger" :items="$window.Object.keys($services.page.getAllAvailableParameters(page))"/>
 											<button @click="action.triggers.splice(i, 1)"><span class="fa fa-trash"></span></button>
 										</div>
+										<n-form-switch v-model="action.triggerIfHidden" v-if="action.triggers.length && action.condition" label="Allow trigger if hidden"/>
 									</div>
 									<div class="list-row" v-for="i in Object.keys(action.activeRoutes)">
 										<n-form-combo v-model="action.activeRoutes[i]" label="Active Route" :filter="function(value) { return listRoutes(value, true) }"/>

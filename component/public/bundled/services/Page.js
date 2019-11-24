@@ -769,6 +769,29 @@ nabu.services.VueService(Vue.extend({
 			var result = this.eval(condition, state, instance);
 			return result == true;
 		},
+		getPageState: function(pageInstance) {
+			var state = {};
+			// inherit state from above
+			if (pageInstance.localState) {
+				Object.keys(pageInstance.localState).map(function(key) {
+					state[key] = pageInstance.localState[key];
+				})
+			}
+			Object.keys(pageInstance.variables).map(function(key) {
+				if (typeof(state[key]) == "undefined") {
+					state[key] = pageInstance.variables[key];
+				}
+			});
+			var parameters = pageInstance.parameters ? nabu.utils.objects.clone(pageInstance.parameters) : {};
+			Object.keys(parameters).forEach(function(key) {
+				var page = {};
+				if (parameters[key] != null) {
+					page[key] = parameters[key];
+				}
+				state.page = page;
+			});
+			return state;
+		},
 		eval: function(condition, state, instance) {
 			if (!condition) {
 				return null;
@@ -789,7 +812,7 @@ nabu.services.VueService(Vue.extend({
 			else {
 				try {
 					var resultFunction = Function('"use strict";return (function(state, $services, $value, application) { return ' + condition + ' })')();
-					// by default it is bound to "undefined" apparently
+					// by default it is bound to "undefined"
 					resultFunction = resultFunction.bind(this);
 					var result = resultFunction(state, this.$services, instance ? instance.$value : function() { throw "No value function" }, application);
 				}
@@ -800,6 +823,8 @@ nabu.services.VueService(Vue.extend({
 					return null;
 				}
 				if (result instanceof Function) {
+					// by default it is bound to "undefined"
+					result = result.bind(this);
 					result = result(state);
 				}
 				return result;

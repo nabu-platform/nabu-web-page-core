@@ -86,6 +86,18 @@
 							<button @click="state.refreshOn ? state.refreshOn.push('') : $window.Vue.set(state, 'refreshOn', [''])">Add Refresh Event</button>
 						</n-collapsible>
 					</n-collapsible>
+					<n-collapsible title="Initial Events" class="list">
+						<div class="list-actions">
+							<button @click="addInitialEvent">Add Initial Event</button>
+						</div>
+						<n-collapsible class="list-item" :title="event.name" v-for="event in page.content.initialEvents">
+							<n-form-text v-model="event.condition" label="Condition"/>
+							<page-event-value :page="page" :container="event" title="Initial Event" name="definition" v-bubble.resetEvents/>
+							<div class="list-item-actions">
+								<button @click="page.content.initialEvents.splice(page.content.initialEvents.indexOf(state), 1)"><span class="fa fa-trash"></span></button>
+							</div>
+						</n-collapsible>
+					</n-collapsible>
 					<n-collapsible title="Computed State" class="list">
 						<div class="list-actions">
 							<button @click="addComputed">Add Computed State</button>
@@ -118,7 +130,7 @@
 							<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :filter="getParameterTypes"/>
 							<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
 							<n-form-text v-model="parameter.default" label="Default Value" v-if="!parameter.type || parameter.type.indexOf('.') < 0"/>
-							<n-form-switch v-model="parameter.global" label="Is translation global?"/>
+							<n-form-switch v-if="false" v-model="parameter.global" label="Is translation global?"/>
 							<div class="list-row" v-for="i in Object.keys(parameter.listeners)">
 								<n-form-combo v-model="parameter.listeners[i].to" :filter="function() { return $services.page.getAllAvailableKeys(page) }" />
 								<n-form-combo v-model="parameter.listeners[i].field" v-if="parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($this, parameter.type)" />
@@ -135,7 +147,7 @@
 						<div class="list-actions">
 							<button @click="addAction">Add Action</button>
 						</div>
-						<n-collapsible class="list-item" :title="action.name" v-for="action in page.content.actions">
+						<n-collapsible class="list-item" :title="(action.on ? '[' + action.on + '] ' : '') + action.name" v-for="action in page.content.actions">
 							<n-form-text v-model="action.name" label="Name" :required="true"/>
 							<n-form-text v-model="action.confirmation" label="Confirmation Message"/>
 							<n-form-combo v-model="action.on" label="Trigger On" :filter="getAvailableEvents"/>
@@ -479,7 +491,7 @@
 						@mouseover="mouseOver($event, row)">
 				<span class="fa fa-minus" v-if="!row.collapsed" @click="row.collapsed = !row.collapsed"></span>
 				<span class="fa fa-plus" v-else @click="row.collapsed = !row.collapsed"></span>
-				<span class="name" @click.ctrl="scrollIntoView(row)">{{row.name ? row.name : row.id}}</span>
+				<span class="name" @click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
 				<div class="page-sideentry-menu">
 					<button @click="configureRow(row)"><span class="fa fa-magic"></span></button
 					><button @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button
@@ -495,7 +507,7 @@
 				<div v-for="cell in row.cells" class="cell">
 					<div class="page-sideentry" @mouseout="mouseOut($event, row, cell)"
 							@mouseover="mouseOver($event, row, cell)">
-						<span class="name"  @click.ctrl="scrollIntoView(row, cell)">{{cell.name ? cell.name : (cell.alias ? cell.alias : cell.id)}}</span>
+						<span class="name"  @click.ctrl="scrollIntoView(row, cell)">{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
 						<div class="page-sideentry-menu" >
 							<button @click="configureCell(row, cell);"><span class="fa fa-magic" title="Set Cell Content"></span></button
 							><button @click="configure(cell)" v-if="cell.alias"><span class="fa fa-cog" title="Configure Cell Content"></span></button    

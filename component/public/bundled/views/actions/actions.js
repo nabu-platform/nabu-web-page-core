@@ -74,7 +74,10 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			if (action.triggers) {
 				action.triggers.forEach(function(trigger) {
 					self.subscriptions.push(pageInstance.subscribe(trigger, function() {
-						self.handle(action, true);
+						// we need to check that the action is not hidden or if we explicitly allow hidden actions to be triggered
+						if (action.triggerIfHidden || self.isVisible(action)) {
+							self.handle(action, true);
+						}
 					}));
 				})
 			}
@@ -142,7 +145,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 							}
 						};
 					}
-					else if (nabu.page.event.getName(action, "event")) {
+					else if (nabu.page.event.getName(action, "event") && nabu.page.event.getName(action, "event") != "$close") {
 						result[nabu.page.event.getName(action, "event")] = self.cell.on ? self.cell.on : {};
 					}
 				}
@@ -242,7 +245,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			}
 			// set the active class if applicable
 			var activeClass = this.cell.state.activeClass ? this.cell.state.activeClass : "is-active";
-			if (this.lastAction == action) {
+			if (this.lastAction == action && (action.route || action.url || typeof(action.event) == "string")) {
 				classes.push(activeClass);
 			}
 			else if (this.$services.vue.route) {
@@ -376,22 +379,24 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(this.page, this);
 				Object.keys(action.bindings).map(function(key) {
-					var value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], self);
-					// the old way... should disable it?
-					if (value == null) {
-						var parts = action.bindings[key].split(".");
-						var value = self.state;
-						parts.map(function(part) {
+					if (action.bindings[key] != null) {
+						var value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], self);
+						// the old way... should disable it?
+						if (value == null) {
+							var parts = action.bindings[key].split(".");
+							var value = self.state;
+							parts.map(function(part) {
+								if (value) {
+									value = value[part];
+								}
+							});
 							if (value) {
-								value = value[part];
+								parameters[key] = value;
 							}
-						});
-						if (value) {
+						}
+						if (value != null) {
 							parameters[key] = value;
 						}
-					}
-					if (value != null) {
-						parameters[key] = value;
 					}
 				});
 				var url = this.$services.router.template(route, parameters);
@@ -497,22 +502,24 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 					var self = this;
 					var pageInstance = self.$services.page.getPageInstance(this.page, this);
 					Object.keys(action.bindings).map(function(key) {
-						var value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], self);
-						// the old way... should disable it?
-						if (value == null) {
-							var parts = action.bindings[key].split(".");
-							var value = self.state;
-							parts.map(function(part) {
+						if (action.bindings[key] != null) {
+							var value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], self);
+							// the old way... should disable it?
+							if (value == null) {
+								var parts = action.bindings[key].split(".");
+								var value = self.state;
+								parts.map(function(part) {
+									if (value) {
+										value = value[part];
+									}
+								});
 								if (value) {
-									value = value[part];
+									parameters[key] = value;
 								}
-							});
-							if (value) {
+							}
+							if (value != null) {
 								parameters[key] = value;
 							}
-						}
-						if (value != null) {
-							parameters[key] = value;
 						}
 					});
 					if (action.anchor == "$blank") {
@@ -534,7 +541,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 						window.location = url;
 					}
 				}
-				else if (action.event == "$close") {
+				else if (action.event == "$close" || nabu.page.event.getName(action, "event") == "$close") {
 					this.$emit("close");
 				}
 				else if (action.event) {
