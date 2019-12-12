@@ -23,7 +23,8 @@
 					<span v-if="$services.language.current && ${environment('development')}" @click="$services.language.current = null">unset</span>
 				</div>
 			</span>
-			<span v-if="page.content.path" class="fa fa-sign-out-alt" v-route:logout></span>
+			<span v-if="false && page.content.path" class="fa fa-sign-out-alt" v-route:logout></span>
+			<span class="fa fa-terminal" @click="$window.console.log('Page: ' + page.name, $self)"></span>
 		</div>
 		<div class="page-edit" v-else-if="false && !$services.page.canEdit() && !embedded && $services.page.wantEdit && $services.user && !$services.user.loggedIn"
 				:style="{'top': '0px', 'left': '0px'}">
@@ -139,6 +140,18 @@
 							<div class="list-item-actions">
 								<button @click="parameter.listeners.push({to:null, field: null})">Add Listener</button>
 								<button @click="page.content.parameters.splice(page.content.parameters.indexOf(parameter), 1)"><span class="fa fa-trash"></span></button>	
+							</div>
+							<div v-if="parameter.type && parameter.type.indexOf('.') > 0">
+								<div class="list-actions">
+									<button @click="parameter.defaults ? parameter.defaults.push({query:null,value:null}) : $window.Vue.set(parameter, 'defaults', [{query:null,value:null}])">Add Default Value</button>
+								</div>
+								<div v-if="parameter.defaults">
+									<n-form-section class="list-row" v-for="defaultValue in parameter.defaults">
+										<n-form-combo v-model="defaultValue.query" placeholder="Query" :filter="listFields.bind($this, parameter.type)"/>
+										<n-form-text v-model="defaultValue.value" placeholder='Value'/>
+										<button @click="parameter.defaults.splice(parameter.defaults.indexOf(defaultValue), 1)"><span class="fa fa-trash"></span></button>
+									</n-form-section>
+								</div>
 							</div>
 						</n-collapsible>
 					</n-collapsible>
@@ -261,7 +274,7 @@
 				><button :style="rowButtonStyle(row)" @click="row.collapsed = !row.collapsed"><span class="fa" :class="{'fa-minus-square': !row.collapsed, 'fa-plus-square': row.collapsed }"></span></button>
 			</div>
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-			<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" 
+			<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" v-show="!edit || !row.collapsed"
 					:id="page.name + '_' + row.id + '_' + cell.id" 
 					:class="$window.nabu.utils.arrays.merge([{'clickable': !!cell.clickEvent}, {'page-cell': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar'}, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))"                         
 					:key="cellId(cell)"

@@ -146,7 +146,8 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 						};
 					}
 					else if (nabu.page.event.getName(action, "event") && nabu.page.event.getName(action, "event") != "$close") {
-						result[nabu.page.event.getName(action, "event")] = self.cell.on ? self.cell.on : {};
+						var eventDefinition = nabu.page.event.getType(action, "event");
+						result[nabu.page.event.getName(action, "event")] = eventDefinition ? eventDefinition : (self.cell.on ? self.cell.on : {});   
 					}
 				}
 				if (action.actions) {

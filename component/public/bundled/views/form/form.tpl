@@ -48,6 +48,18 @@
 					<n-page-mapper :to="fieldsToAdd" :from="availableParameters" 
 						v-model="cell.bindings"/>
 				</n-collapsible>
+				<n-collapsible title="Error Codes">
+					<div v-if="cell.state.codes">
+						<div class="list-row" v-for="code in cell.state.codes">
+							<n-form-text v-model="code.code" label="Code"/>
+							<n-form-text v-model="code.title" label="Title"/>
+							<button @click="cell.state.codes.splice(cell.state.codes.indexOf(code), 1)"><span class="fa fa-trash"></span></button>
+						</div>
+					</div>
+					<div class="list-actions">
+						<button @click="cell.state.codes ? cell.state.codes.push({code:null,title:null}) : $window.Vue.set(cell.state, 'codes', [{code:null,title:null}])">Add code</button>
+					</div>
+				</n-collapsible>
 				<div v-for="cellPage in cell.state.pages">
 					<page-form-configure :title="cellPage.name"
 						:allow-read-only="cell.state.allowReadOnly"
@@ -80,7 +92,7 @@
 				:class="{'is-active': currentPage == page}">{{$services.page.interpret(page.name, self)}}</button>
 		</div>
 		<h2 v-if="cell.state.title">{{$services.page.translate($services.page.interpret(cell.state.title, $self))}}</h2>
-		<n-form :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}, {'form-error': !!error }]" ref="form" :id="cell.state.formId" :component-group="cell.state.componentGroup" :mode="cell.state.mode">
+		<n-form :codes="codes" :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}, {'form-error': !!error }]" ref="form" :id="cell.state.formId" :component-group="cell.state.componentGroup" :mode="cell.state.mode">
 			<header slot="header" v-if="cell.state.dynamicHeader"><component :is="cell.state.dynamicHeader" :form="$self" :page="page" :cell="cell"/></header>
 			<n-form-section :key="'form_page_' + cell.state.pages.indexOf(currentPage)">
 				<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">
@@ -211,6 +223,8 @@
 		<n-form-text v-model="field.group" label="Field Group" v-if="groupable && !field.joinGroup" />
 		<n-form-checkbox v-model="field.joinGroup" label="Join Field Group" v-if="groupable && !field.group" />
 		<n-form-text v-model="field.description" label="Description" v-if="allowDescription" />
+		<n-form-combo v-model="field.descriptionType" label="Description type" v-if="field.description" :items="['info','before','after']"/>
+		<n-form-text v-model="field.descriptionIcon" label="Description icon" v-if="field.description"/>
 		<n-form-combo v-model="field.type" :filter="filterTypes" label="Type"/>
 		<n-form-text v-model="field.value" v-if="field.type == 'fixed'" label="Fixed Value"/>
 		<n-form-switch v-model="field.hideLabel" label="Hide label"/>

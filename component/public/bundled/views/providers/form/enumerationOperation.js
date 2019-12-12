@@ -147,6 +147,9 @@ Vue.component("page-form-input-enumeration-operation", {
 			+ "		:timeout='600'"
 			+ "		:label='label'"
 			+ "		:value='value'"
+			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
+			+ "		:description-type='field.descriptionType'"
+			+ "		:description-icon='field.descriptionIcon'"
 			+ "		:schema='schema'"
 			+ "		:disabled='disabled'/>",
 	props: {

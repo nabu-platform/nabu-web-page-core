@@ -24,6 +24,9 @@ Vue.component("page-form-input-checkbox", {
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
+			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
+			+ "		:description-type='field.descriptionType'"
+			+ "		:description-icon='field.descriptionIcon'"
 			+ "		:timeout='timeout'"
 			+ "		:disabled='disabled'/>",
 	props: {

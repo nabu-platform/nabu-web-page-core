@@ -23,7 +23,7 @@ Vue.component("page-field-fragment-richtext-configure", {
 });
 
 Vue.component("page-field-fragment-richtext", {
-	template: "<div v-content.compile.sanitize='fragment.content'></div>",
+	template: "<div v-content.compile.sanitize='$services.page.translate(fragment.content)'></div>",
 	props: {
 		cell: {
 			type: Object,

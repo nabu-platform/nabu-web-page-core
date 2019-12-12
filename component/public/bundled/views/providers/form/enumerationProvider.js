@@ -1,5 +1,6 @@
 Vue.component("page-form-input-enumeration-provider-configure", {
 	template: "<n-form-section><n-form-combo v-model='field.enumerationProvider' :filter='enumerationFilter' label='Enumeration Provider'/>"
+		+ " <n-form-switch v-model='field.showRadioView' label='Show radio visualisation'/>"
 		+ "	<n-form-combo v-if='valueOptions' :items='valueOptions' v-model='field.enumerationProviderValue' label='Value Field'/>"
 		+ "	<n-form-combo v-if='labelOptions' :items='labelOptions' v-model='field.enumerationProviderLabel' label='Label Field'/>"
 		+ "</n-form-section>",
@@ -60,15 +61,31 @@ Vue.component("page-form-input-enumeration-provider-configure", {
 });
 
 Vue.component("page-form-input-enumeration-provider", {
-	template: "<n-form-combo ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter'"
+	template: "<div><n-form-radio v-if='field.showRadioView' :items='provider.enumerate()' ref='form'"
+			+ "		:placeholder='placeholder'"
+			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		:formatter='enumerationFormatter'"
+			+ "		:label='label'"
+			+ "		:value='value'"
+			+ "		:schema='schema'"
+			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
+			+ "		:descriptionType='field.descriptionType'"
+			+ "		:descriptionIcon='field.descriptionIcon'"
+			+ "		:required='field.required'"
+			+ "		:extracter='enumerationExtracter'"
+			+ "		:disabled='disabled'/>"
+			+ " <n-form-combo v-else ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
 			+ "		v-bubble:label"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
+			+ "		:description='field.description'"
+			+ "		:description-type='field.descriptionType'"
+			+ "		:description-icon='field.descriptionIcon'"
 			+ "		:schema='schema'"
-			+ "		:disabled='disabled'/>",
+			+ "		:disabled='disabled'/></div>",
 	props: {
 		cell: {
 			type: Object,

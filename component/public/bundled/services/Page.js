@@ -110,6 +110,24 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		parseValue: function(value) {
+			if (value == null || value == "null") {
+				 return null;
+			}
+			else if (value === "true") {
+				return true;
+			}
+			else if (value === "false") {
+				return false;
+			}
+			else if (value.match && value.match(/^[0-9]+$/)) {
+				return parseInt(value);
+			}
+			else if (value.match && value.match(/^[0-9.]+$/)) {
+				return parseFloat(value);
+			}
+			return value;
+		},
 		isClickable: function(element) {
 			if (element.classList && element.classList.contains("clickable")) {
 				return true;
@@ -261,7 +279,6 @@ nabu.services.VueService(Vue.extend({
 						}
 					}));
 					self.$services.q.all(promises).then(function() {
-						console.log("resolved!");
 						Vue.nextTick(function() {
 							self.loading = false;
 						});
@@ -407,7 +424,6 @@ nabu.services.VueService(Vue.extend({
 						var links = document.head.getElementsByTagName("link");
 						for (var i = 0; i < links.length; i++) {
 							var original = links[i].getAttribute("original");
-							console.log("Reloading style", links[i].href);
 							if (!original) {
 								original = links[i].href;
 								links[i].setAttribute("original", original);
@@ -456,7 +472,6 @@ nabu.services.VueService(Vue.extend({
 				}
 			}
 			var resolve = function(result) {
-				console.log("resolving", result);
 				if (promise) {
 					promise.resolve(result);
 				}
@@ -465,18 +480,17 @@ nabu.services.VueService(Vue.extend({
 				if (result.responseText) {
 					result = JSON.parse(result.responseText);
 				}
-				console.log("rejecting", result);
 				if (promise) {
 					promise.reject(result);
 				}
 			};
 			try {
-				var returnValue = func(input, this.$services, context && context.$value ? context.$value : function() {}, definition && definition.async ? resolve : null, definition && definition.async ? reject : null);
+				var returnValue = func(input, this.$services, context && context.$value ? context.$value : function() {}, resolve, reject);
 				// if not async, call the done yourself
 				if (definition && !definition.async) {
 					resolve(returnValue);
 				}
-				return returnValue;
+				return returnValue == null ? promise : returnValue;
 			}
 			catch (exception) {
 				reject(exception);
@@ -523,17 +537,43 @@ nabu.services.VueService(Vue.extend({
 						return function() {
 							var def = self.getFunctionDefinition(bindingValue.value);
 							var input = {};
-							if (def.inputs) {
-								var tmp = arguments;
-								def.inputs.forEach(function(x, i) {
-									input[x.name] = tmp[i];
+							// we map the bindings we have a value for
+							if (bindingValue.bindings) {
+								Object.keys(bindingValue.bindings).forEach(function(key) {
+									if (bindingValue.bindings[key]) {
+										var value = self.getBindingValue(pageInstance, bindingValue.bindings[key], context);
+										self.setValue(input, key, value);
+									}
 								});
 							}
-							var output = self.runFunction(func, input, context);
-							if (bindingValue.output) {
-								output = output[bindingValue.output];
+							if (def.inputs) {
+								var tmp = arguments;
+								var counter = 0;
+								def.inputs.forEach(function(x, i) {
+									if (!bindingValue.bindings[x.name]) {
+										input[x.name] = tmp[counter++];
+									}
+								});
 							}
-							return output;
+							if (def.async) {
+								var promise = self.$services.q.defer();
+								var promiseToReturn = promise;
+								if (bindingValue.output) {
+									promiseToReturn = self.$services.q.defer();
+									promise.then(function(result) {
+										promiseToReturn.resolve(result ? result[bindingValue.output] : result);
+									}, promise);
+								}
+								self.runFunction(func, input, context, promise);
+								return promiseToReturn;
+							}
+							else {
+								var output = self.runFunction(func, input, context);
+								if (bindingValue.output) {
+									output = output[bindingValue.output];
+								}
+								return output;
+							}
 						}
 					}
 					var input = {};
@@ -675,6 +715,10 @@ nabu.services.VueService(Vue.extend({
 					continue;
 				}
 				if (!tmp[parts[i]]) {
+					// if it does not exist and we are trying to set null, leave it
+					if (value == null) {
+						return;
+					}
 					Vue.set(tmp, parts[i], {});
 				}
 				tmp = tmp[parts[i]];
@@ -753,11 +797,13 @@ nabu.services.VueService(Vue.extend({
 		},
 		getPageParameterValues: function(page, pageInstance) {
 			// copy things like query parameters & path parameters
-			var result = pageInstance.parameters ? nabu.utils.objects.clone(pageInstance.parameters) : {};
+			var result = pageInstance.variables ? nabu.utils.objects.clone(pageInstance.variables) : {};
 			// copy internal parameters as well
-			if (page.content.parameters) {
-				page.content.parameters.forEach(function(parameter) {
-					result[parameter.name] = pageInstance.get("page." + parameter.name);
+			if (pageInstance.parameters) {
+				Object.keys(pageInstance.parameters).forEach(function(key) {
+					if (pageInstance.parameters[key] != null) {
+						result[key] = pageInstance.parameters[key];
+					}
 				});
 			}
 			return result;

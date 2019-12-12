@@ -4,6 +4,11 @@ Vue.component("page-form-input-text-configure", {
 		+ "	<n-form-text v-model='field.maxLength' label='Max Length'/>"
 		+ "	<n-form-switch v-model='field.showLength' label='Show Length' v-if='field.maxLength'/>"
 		+ "	<n-form-combo v-model='field.required' label='Required' :items=\"[true,false]\" />"
+		+ "	<n-form-text v-model='field.description' label='Description'/>"
+		+ "	<n-form-combo v-model='field.descriptionType' label='Description type' :items=\"['before','after','info']\" />"
+		+ "	<n-form-text v-model='field.descriptionIcon' label='Description icon'/>"					
+		+ "	<n-form-text v-model='field.suffix' label='Suffix'/>"
+		+ "	<n-form-text v-model='field.suffixIcon' label='Suffix icon'/>"		
 		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"
 		+ "</n-form-section>",
 	props: {
@@ -48,6 +53,11 @@ Vue.component("page-form-input-text", {
 			+ "		:value='value'"
 			+ "		:required='field.required'"
 			+ "		:validator='getValidator()'"
+			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
+			+ "		:description-type='field.descriptionType'"
+			+ "		:description-icon='field.descriptionIcon'"
+			+ "		:suffix='field.suffix'"
+			+ "		:suffix-icon='field.suffixIcon'"
 			+ "		:name='field.name'"
 			+ "		:timeout='timeout'"
 			+ "		:disabled='disabled'/>",

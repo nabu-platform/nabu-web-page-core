@@ -53,7 +53,7 @@ Vue.component("n-page-mapper", {
 				//var functions = this.$services.page.functions.map(function(x) { return x.id });
 				// can not use async functions as mappers (for now?)
 				var functions = this.$services.page.listFunctionDefinitions()
-					.filter(function(x) { return !x.async })
+					//.filter(function(x) { return !x.async })
 					.map(function(x) { return x.id });
 				if (value) {
 					functions = functions.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase() >= 0 )});
@@ -108,15 +108,15 @@ Vue.component("n-page-mapper", {
 				};
 			}
 			else if (label == "$function" && newValue) {
+				var def = this.$services.page.getFunctionDefinition(newValue);
 				this.value[field] = {
 					label: label,
 					value: newValue,
 					bindings: {},
-					lambda: false,
+					lambda: def && def.async ? true : false,
 					lambdable: false,
 					output: null
 				};
-				var def = this.$services.page.getFunctionDefinition(newValue);
 				this.value[field].lambdable = def && !def.async;
 			}
 			else {

@@ -11,7 +11,7 @@
 
 			<n-collapsible :title="'Mapping for: ' + getValueFor(field)" v-if="getLabelFor(field) == '$function'">
 				<n-page-mapper 
-					v-if="!value[field].lambda"
+					v-if="true || !value[field].lambda"
 					:to="$services.page.getFunctionInput(getValueFor(field))" 
 					:from="from"
 					v-model="getBindingsFor(field)"/>

@@ -3,6 +3,11 @@ if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 
 // there is a hardcoded exception in the focus for fields known to use the combo box as this immediately shows the combo box dropdown
+// this component uses a mixture of objects and "." separated syntax for legacy reasons
+
+// the form tries to copy state (for pages) before allowing you to edit it, to then merge the result back into the source
+// however because the form copies all page data, if a value differs, it is not entirely sure whether that is because YOU updated it or something else did
+// that's why we keep the reference
 nabu.page.views.PageForm = Vue.extend({
 	template: "#page-form",
 	props: {
@@ -27,6 +32,8 @@ nabu.page.views.PageForm = Vue.extend({
 		return {
 			configuring: false,
 			result: {},
+			// the original data (if possible), we want to be able to only update changed values
+			reference: {},
 			currentPage: null,
 			autoMapFrom: null,
 			messages: [],
@@ -39,6 +46,15 @@ nabu.page.views.PageForm = Vue.extend({
 		}
 	},
 	computed: {
+		codes: function() {
+			var codes = {};
+			if (this.cell.state.codes) {
+				this.cell.state.codes.forEach(function(code) {
+					codes[code.code] = self.$services.page.translate(code.title);
+				});
+			}
+			return codes;
+		},
 		analysisId: function() {
 			var id = this.cell.state.analysisId;
 			if (!id) {
@@ -137,15 +153,44 @@ nabu.page.views.PageForm = Vue.extend({
 			}
 			return currentValue;
 		},
+		initializePageForm: function() {
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			// we currently only copy the root variables, this means complex objects have their values copied "by reference"
+			// we use getCurrentValue to get the current value recursively to bind them to our fields
+			// but at that point we persist them as "." separated values which means updated values don't end up in the resulting object
+			// this means if we have a . separated field, it is already synced "correctly" as a diff, it is only for root fields that we have an issue
+			var reference = {};
+			Vue.set(this, "result", {});
+			var page = this.$services.page.getPageParameterValues(self.page, pageInstance);
+			Object.keys(page).map(function(key) {
+				reference[key] = page[key];
+				Vue.set(self.result, key, page[key]);
+			});
+			Vue.set(this, "reference", JSON.parse(JSON.stringify(reference)));
+		},
+		hasChanged: function(path, value) {
+			if (this.cell.state.pageForm) {
+				var originalValue = this.$services.page.getValue(this.reference, path);
+				return value !== originalValue;
+			}
+			// for now...
+			else {
+				return true;
+			}
+		},
 		initialize: function() {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			// if we are updating the page itself, get the parameters from there
 			if (this.cell.state.pageForm) {
+				/*
 				var page = this.$services.page.getPageParameterValues(self.page, pageInstance);
 				Object.keys(page).map(function(key) {
 					Vue.set(self.result, key, page[key]);
 				});
+				*/
+				this.initializePageForm();
 			}
 			else if (this.cell.bindings) {
 				Object.keys(this.cell.bindings).map(function(key) {
@@ -759,8 +804,11 @@ nabu.page.views.PageForm = Vue.extend({
 						Object.keys(result).forEach(function(x) {
 							// we have both the object-based notation and the . separated notation in the result
 							// in this case, for correct merging, we want to use the . separated, never the object in its entirety
-							if (result[x] != null && (Object(result[x]) !== result[x] || result[x] instanceof Date || result[x] instanceof File)) {       
-								pageInstance.set("page." + x, result[x]);
+							if (result[x] == null || (result != null && (Object(result[x]) !== result[x] || result[x] instanceof Date || result[x] instanceof File))) {
+								// only set if changed, otherwise we might overwrite external changes to the page state
+								if (self.hasChanged(x, result[x])) {
+									pageInstance.set("page." + x, result[x]);
+								}
 							}
 						});
 						if (self.cell.state.event) {
@@ -771,6 +819,9 @@ nabu.page.views.PageForm = Vue.extend({
 							self.readOnly = true;
 						}
 						self.doingIt = false;
+						// don't update the reference without updating the result!!
+						// update reference value for accurate checks next time around
+						self.initializePageForm();
 					}
 					else if (this.cell.state.functionForm) {
 						var promise = this.$services.q.defer();

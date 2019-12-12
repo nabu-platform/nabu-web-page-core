@@ -124,7 +124,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 				self.autoRefreshTimeout = setTimeout(function() {
 					if (!self.edit && !self.$services.page.wantEdit) {
 						var target = nabu.utils.router.self(self.$el);
-						console.log("routing in", target);
 						//window.history.go(0);
 						self.$services.router.route(self.$services.page.alias(self.page), self.parameters, target);
 					}
@@ -139,6 +138,25 @@ nabu.page.views.Page = Vue.component("n-page", {
 						);
 					}
 				})
+			}
+			if (self.page.content.parameters) {
+				self.page.content.parameters.forEach(function(parameter) {
+					if (parameter.name != null && parameter.defaults && parameter.defaults.length) {
+							console.log("setting defaults", parameter.name, parameter.defaults);
+						parameter.defaults.forEach(function(defaultValue) {
+							if (defaultValue.query && defaultValue.value) {
+								var currentValue = self.$services.page.getValue(self.variables[parameter.name], defaultValue.query);
+								if (currentValue == null) {
+									if (self.variables[parameter.name] == null) {
+										Vue.set(self.variables, parameter.name, {});
+									}
+									var result = self.$services.page.parseValue(self.$services.page.translate(self.$services.page.interpret(defaultValue.value, self)));               
+									self.$services.page.setValue(self.variables[parameter.name], defaultValue.query, result);
+								}
+							}
+						});
+					}	
+				});
 			}
 			done();
 		};
@@ -526,7 +544,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 			component.$on("hook:beforeDestroy", function() {
 				// clear subscriptions
 				if (component.$pageSubscriptions != null) {
-					console.log("clearing subscriptions", component.$pageSubscriptions);
 					component.$pageSubscriptions.forEach(function(sub) {
 						sub();
 					});
@@ -609,7 +626,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 				var self = this;
 				Object.keys(component.$options.events).forEach(function(name) {
-					console.log("subscribing to", name);
 					component.$pageSubscriptions.push(self.subscribe(name, component.$options.events[name].bind(component)));
 				});
 			}
@@ -692,9 +708,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				// check which events are picked up globally
 				if (this.page.content.globalEventSubscriptions) {
 					var globalEventDefinitions = this.$services.page.getGlobalEvents();
-					console.log("global events", JSON.stringify(globalEventDefinitions, null, 2));
 					this.page.content.globalEventSubscriptions.map(function(sub) {
-						console.log("wtf", sub.globalName, sub.localName, globalEventDefinitions[sub.globalName]);
 						events[sub.localName == null ? sub.globalName : sub.localName] = globalEventDefinitions[sub.globalName] ? globalEventDefinitions[sub.globalName] : {properties:{}};	
 					});
 				}
@@ -819,7 +833,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 							}
 							if (recalculate) {
 								var value = self.$services.page.getBindingValue(self, binding, self);
-								console.log("reloading state", name, x.name, value, binding);
 								self.emit(x.name, value);
 								break;
 							}
@@ -854,7 +867,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 						// we are setting the variable we are interested in
 						if (parts[0] == name) {
 							var interested = value == null ? null : self.$services.page.getValue(value, listener.to ? listener.to.substring(parts[0].length + 1) : listener.substring(parts[0].length + 1));     
-							console.log("checking listener", name, listener.to, listener.field, value, interested);
 							if (listener.field) {
 								self.$services.page.setValue(self.variables, parameter.name + "." + listener.field, interested);
 							}
@@ -908,7 +920,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 					promises.push(promise);
 					var parameters = {};
 					Object.keys(action.bindings).map(function(key) {
-						console.log("mapping", key, action.bindings[key], self.$services.page.getBindingValue(self, action.bindings[key]));
 						self.$services.page.setValue(parameters, key, self.$services.page.getBindingValue(self, action.bindings[key]));
 					});
 					
@@ -1962,9 +1973,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		},
 		shouldRenderCell: function(row, cell) {
 			if (this.edit) {
-				if (row.collapsed) {
+				/*if (row.collapsed) {
 					return false;
-				}
+				}*/
 				return true;
 			}
 			else if (!cell.alias && !cell.rows.length && !cell.customId) {
