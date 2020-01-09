@@ -93,13 +93,13 @@
 						</div>
 						<n-collapsible class="list-item" :title="event.name" v-for="event in page.content.initialEvents">
 							<n-form-text v-model="event.condition" label="Condition"/>
-							<page-event-value :page="page" :container="event" title="Initial Event" name="definition" v-bubble.resetEvents/>
+							<page-event-value :page="page" :container="event" title="Initial Event" name="definition" v-bubble:resetEvents/>
 							<div class="list-item-actions">
 								<button @click="page.content.initialEvents.splice(page.content.initialEvents.indexOf(state), 1)"><span class="fa fa-trash"></span></button>
 							</div>
 						</n-collapsible>
 					</n-collapsible>
-					<n-collapsible title="Computed State" class="list">
+					<n-collapsible title="Computed State" class="list" v-if="false">
 						<div class="list-actions">
 							<button @click="addComputed">Add Computed State</button>
 						</div>
@@ -171,7 +171,7 @@
 							<n-form-combo v-model="action.operation" v-if="!action.route && !action.scroll && !action.url && !action.function" label="Operation" :filter="getOperations" />
 							<n-form-combo v-model="action.function" v-if="!action.route && !action.scroll && !action.url && !action.operation" label="Function" :filter="$services.page.listFunctions" />
 							<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function"/>
-							<page-event-value :page="page" :container="action" title="Chain Event" name="chainEvent" v-bubble.resetEvents/>
+							<page-event-value :page="page" :container="action" title="Chain Event" name="chainEvent" v-bubble:resetEvents/>
 							<n-form-switch v-if="action.operation || action.function" v-model="action.isSlow" label="Is slow operation?"/>
 							<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" :timeout="600" @input="resetEvents()"/>
 							<n-form-text v-if="action.operation" v-model="action.errorEvent" label="Error Event" :timeout="600" @input="resetEvents()"/>
@@ -342,7 +342,7 @@
 									</div>
 								</div>
 							</n-collapsible>
-							<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" v-bubble.resetEvents/>
+							<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" v-bubble:resetEvents/>
 							<n-collapsible title="Cell Styling">
 								<div class="list-actions">
 									<button @click="cell.styles == null ? $window.Vue.set(cell, 'styles', [{class:null,condition:null}]) : cell.styles.push({class:null,condition:null})">Add Style</button>

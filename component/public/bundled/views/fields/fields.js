@@ -321,9 +321,37 @@ Vue.component("page-field", {
 		edit: {
 			type: Boolean,
 			required: false
+		},
+		actions: {
+			type: Array,
+			required: false,
+			default: function() {
+				return [];
+			}
+		}
+	},
+	computed: {
+		// the action that applies to the entire field (if any)
+		fieldAction: function() {
+			return this.actions.filter(function(x) {
+				return !x.icon && !x.label;
+			})[0];
+		},
+		otherActions: function() {
+			return this.actions.filter(function(x) {
+				return x.icon || x.label;
+			})
 		}
 	},
 	methods: {
+		trigger: function(action) {
+			if (action) {
+				if (!action.condition || this.$services.page.isCondition(action.condition, {record:this.data}, this)) {
+					var pageInstance = this.$services.page.getPageInstance(this.page, this);
+					return pageInstance.emit(action.name, this.data);
+				}
+			}
+		},
 		handleClick: function(fragment) {
 			if (fragment.clickEvent) {
 				var self = this;
@@ -341,6 +369,9 @@ Vue.component("page-field", {
 			}
 			if (this.label) {
 				classes.push("with-label");
+			}
+			if (this.fieldAction) {
+				classes.push("with-action");
 			}
 			return classes;
 		},

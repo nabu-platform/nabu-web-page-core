@@ -1,4 +1,4 @@
-<structure name="configuration" superType="nabu.web.page.core.types.rest.configurationInput">
+<structure comment="Nabu Page Builder configuration options" name="configuration" superType="nabu.web.page.core.types.rest.configurationInput">
     <structure minOccurs="0" name="providers">
         <field minOccurs="0" name="getAllContent" type="java.lang.String"/>
         <field minOccurs="0" name="setContent" type="java.lang.String"/>

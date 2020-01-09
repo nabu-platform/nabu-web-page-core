@@ -146,8 +146,11 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 						};
 					}
 					else if (nabu.page.event.getName(action, "event") && nabu.page.event.getName(action, "event") != "$close") {
-						var eventDefinition = nabu.page.event.getType(action, "event");
-						result[nabu.page.event.getName(action, "event")] = eventDefinition ? eventDefinition : (self.cell.on ? self.cell.on : {});   
+						var type = nabu.page.event.getType(action, "event");
+						if (type.properties && Object.keys(type.properties).length == 0 && self.cell.on) {
+							type = self.cell.on;
+						}
+						result[nabu.page.event.getName(action, "event")] = type;
 					}
 				}
 				if (action.actions) {
@@ -563,6 +566,9 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 								value: this.$services.page.interpret(action.eventFixedState, this)
 							}
 							addDefaults = true;
+						}
+						else if (action.content) {
+							content = action.content;
 						}
 						else if (action.eventState) {
 							content = {

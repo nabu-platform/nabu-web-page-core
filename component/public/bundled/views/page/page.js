@@ -731,6 +731,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 					this.page.content.actions.filter(function(x) { return x.errorEvent != null && x.operation != null }).map(function(action) {
 						events[action.errorEvent] = self.$services.swagger.resolve("#/definitions/StructuredErrorResponse");
 					});
+					this.page.content.actions.filter(function(action) {
+						return nabu.page.event.getName(action, "chainEvent") != null;
+					}).forEach(function(action) {
+						var type = nabu.page.event.getType(action, "chainEvent");
+						if (type.properties && Object.keys(type.properties).length == 0 && action.on) {
+							type = action.on;
+						}
+						events[nabu.page.event.getName(action, "chainEvent")] = type;
+					});
 				}
 				
 				// add the cell events
@@ -804,6 +813,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 		reset: function(name) {
 			Vue.delete(this.variables, name);
 		},
+		// not sure anymore why this is necessary?
+		// the clue seems to be that if a single field is update in a computed property, the entire property is emitted again as an event
+		// the same can probably be done with chained events so it is not entirely clear if this is relevant?
+		// perhaps it is for page forms or something? enable again if relevant
+		// also check out 850: we seem to emit once a single binding is updated, but multiple bindings might be impacted? only one emit is necessary
 		updatedVariable: function(name) {
 			if (this.page.content.computed) {
 				var self = this;
@@ -942,9 +956,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 					if (nabu.page.event.getName(action, "chainEvent")) {
 						promise.then(function() {
 							var pageInstance = self.$services.page.getPageInstance(self.page, self);
+							var content = nabu.page.event.getInstance(action, "chainEvent", self.page, self);
+							if (Object.keys(content).length == 0) {
+								content = value;
+							}
 							pageInstance.emit(
 								nabu.page.event.getName(action, "chainEvent"),
-								nabu.page.event.getInstance(action, "chainEvent", self.page, self)
+								content
 							);
 						});
 					}
@@ -1391,8 +1409,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 					}
 				}
-				else {
+				else if (this.$services.page.isPublicPageParameter(this.page, name.substring("page.".length))) {
+					// check if it is explicitly a query or path parameter, if not, we still put it in the variables!!
+					// otherwise we might accidently update the parameters object which is passed along to all children
 					target = this.parameters;
+				}
+				else {
+					target = this.variables;
 				}
 				parts = name.substring("page.".length).split(".");
 			}
@@ -1540,6 +1563,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		});
 	},
 	methods: {
+		setRowConfiguring: function(id) {
+			this.configuring = id;	
+		},
 		getRendererProperties: function(container) {
 			return container.rendererProperties != null ? container.rendererProperties : {};	
 		},
@@ -2478,11 +2504,25 @@ Vue.component("page-sidemenu", {
 		},
 		configureRow: function(row) {
 			var target = document.getElementById(this.page.name + "_" + row.id);
-			target.parentNode.__vue__.configuring = row.id;
+			var parent = target.parentNode;
+			while (parent != null && (!parent.__vue__ || !parent.__vue__.setRowConfiguring)) {
+				parent = parent.parentNode;
+			}
+			if (parent) {
+				parent.__vue__.setRowConfiguring(row.id);
+			}
+			//target.parentNode.__vue__.configuring = row.id;
 		},
 		configureCell: function(row, cell) {
 			var target = document.getElementById(this.page.name + "_" + row.id + "_" + cell.id);
-			target.parentNode.parentNode.__vue__.configuring = cell.id;
+			//target.parentNode.parentNode.__vue__.configuring = cell.id;
+			var parent = target.parentNode;
+			while (parent != null && (!parent.__vue__ || !parent.__vue__.setRowConfiguring)) {
+				parent = parent.parentNode;
+			}
+			if (parent) {
+				parent.__vue__.setRowConfiguring(cell.id);
+			}
 		},
 		addRow: function(target) {
 			if (!target.rows) {

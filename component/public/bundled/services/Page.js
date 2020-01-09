@@ -372,6 +372,18 @@ nabu.services.VueService(Vue.extend({
 				}
 			});
 		},
+		getCurrentInstance: function(component) {
+			var page = null;
+			while (!page && component) {
+				if (component.page) {
+					page = component.page;
+				}
+				else {
+					component = component.$parent;
+				}
+			}
+			return page ? this.getPageInstance(page, component) : null;
+		},
 		getPageInstance: function(page, component) {
 			var pageInstance = null;
 			if (component && component.pageInstanceId != null) {
@@ -1680,10 +1692,46 @@ nabu.services.VueService(Vue.extend({
 					return child;
 				}
 				else {
-					return this.getDefinition(child, path, parts, index + 1);
+					return this.getChildDefinition(child, path, parts, index + 1);
 				}
 			}
 			return null;
+		},
+		explode: function(into, from, path) {
+			var self = this;
+			Object.keys(from).forEach(function(key) {
+				if (key != null) {
+					var value = from[key];
+					if (value != null) {
+						var childPath = path ? path + "." + key : key;
+						if (self.isObject(value)) {
+							self.explode(into, value, childPath);
+						}
+						// only set root values if we have a path?
+						else if (path != null) {
+							Vue.set(into, childPath, from[key]);
+						}
+					}
+				}	
+			});
+		},
+		isObject: function(object) {
+			return Object(object) === object 
+				&& !(object instanceof Date)
+				&& !(object instanceof File);
+		},
+		isPublicPageParameter: function(page, name) {
+			if (page && page.content && page.content.path) {
+				if (this.pathParameters(page.content.path).indexOf(name) >= 0) {
+					return true;
+				}
+			}
+			if (page && page.content && page.content.query) {
+				if (page.content.query.indexOf(name) >= 0) {
+					return true;
+				}
+			}
+			return false;
 		},
 		getPageParameters: function(page) {
 			var parameters = {

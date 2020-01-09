@@ -10,7 +10,7 @@
 			<button @click="container[name].eventFields.splice(container[name].eventFields.indexOf(eventField), 1) & $emit('resetEvents')"><span class="fa fa-trash"></span></button>
 		</div>
 		<div class="list-actions">
-			<button @click="container[name].eventFields.push({name:null,fixedValue:null,isFixed:false,stateValue:null}) & $emit('resetEvents')">Add Event Field</button>
+			<button @click="addEventField(container[name]) & $emit('resetEvents')">Add Event Field</button>
 		</div>
 	</n-collapsible>
 </template>

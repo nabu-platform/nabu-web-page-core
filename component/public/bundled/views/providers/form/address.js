@@ -55,6 +55,7 @@ Vue.component("page-form-input-address", {
 			+ "		:placeholder='placeholder'"
 			+ "		:schema-resolver='schemaResolver'"
 			+ "		v-bubble:label"
+			+ "		v-bubble:changed"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"

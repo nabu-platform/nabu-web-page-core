@@ -80,7 +80,7 @@
 </template>
 
 <template id="page-field">
-	<div class="page-field" :class="getDynamicClasses(field)">
+	<div class="page-field" :class="getDynamicClasses(field)" @click="trigger(fieldAction)">
 		<template v-if="label">
 			<dt v-if="label && field.label">{{$services.page.translate($services.page.interpret(field.label,$self))}}</dt>
 			<dd class="page-field-fragment" v-if="!field.arbitrary">
@@ -103,6 +103,12 @@
 					:component="$self"
 					:record="data"/>
 			</dd>
+			<dd v-if="otherActions.length">
+				<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
+					v-for="action in otherActions" 
+					@click="trigger(action)"
+					:class="[action.class, {'has-icon': action.icon}, {'inline': !action.class }]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></button>
+			</dd>
 		</template>
 		<template v-else-if="!field.arbitrary">
 			<component v-if="!isHidden(fragment)"
@@ -114,14 +120,28 @@
 				:fragment="fragment"
 				@click.native="handleClick(fragment)"
 				@updated="function(value) { $emit('updated', value) }"/>
+			<span v-if="otherActions.length">
+				<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
+					v-for="action in otherActions" 
+					@click="trigger(action)"
+					:class="[action.class, {'has-icon': action.icon}, {'inline': !action.class }]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></button>
+			</span>
 		</template>
-		<page-arbitrary v-else
-			:edit="edit"
-			:page="page"
-			:cell="cell"
-			:target="field"
-			:component="$self"
-			:record="data"/>
+		<template v-else>
+			<page-arbitrary
+				:edit="edit"
+				:page="page"
+				:cell="cell"
+				:target="field"
+				:component="$self"
+				:record="data"/>
+			<span v-if="otherActions.length">
+				<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
+					v-for="action in otherActions" 
+					@click="trigger(action)"
+					:class="[action.class, {'has-icon': action.icon}, {'inline': !action.class }]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></button>
+			</span>
+		</template>
 	</div>
 </template>
 

@@ -49,6 +49,7 @@ nabu.page.views.PageForm = Vue.extend({
 		codes: function() {
 			var codes = {};
 			if (this.cell.state.codes) {
+				var self = this;
 				this.cell.state.codes.forEach(function(code) {
 					codes[code.code] = self.$services.page.translate(code.title);
 				});
@@ -167,6 +168,9 @@ nabu.page.views.PageForm = Vue.extend({
 				reference[key] = page[key];
 				Vue.set(self.result, key, page[key]);
 			});
+			// must recreate the "." separated values, necessary for "complex" multifield form components like address
+			// other components get a correct initial value because we get the field from the result (getCurrentValue)
+			this.$services.page.explode(this.result, this.result);
 			Vue.set(this, "reference", JSON.parse(JSON.stringify(reference)));
 		},
 		hasChanged: function(path, value) {

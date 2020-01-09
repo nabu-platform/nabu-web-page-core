@@ -34,6 +34,14 @@ Vue.component("page-event-value", {
 				name: null
 			});
 		}
+	},
+	methods: {
+		addEventField: function(target) {
+			if (!target.eventFields) {
+				Vue.set(target, "eventFields", []);
+			}
+			target.eventFields.push({name:null,fixedValue:null,isFixed:false,stateValue:null});
+		}
 	}
 });
 

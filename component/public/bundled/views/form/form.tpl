@@ -111,6 +111,7 @@
 							:value="getCurrentValue(field)"
 							:parent-value="result"
 							:schema-resolver="getSchemaFor"
+							@changed="changed"
 							@input="function(newValue, otherField) { $window.Vue.set(result, otherField ? otherField : field.name, newValue); changed(); }"    
 							:timeout="cell.state.immediate ? 600 : 0"
 							:page="page"
@@ -170,6 +171,7 @@
 		:field="field"
 		@input="function(newValue, otherField) { $emit('input', newValue, otherField) }"
 		v-bubble:label
+		v-bubble:changed
 		:label="field.hideLabel ? null : $services.page.translate($services.page.interpret(fieldLabel, $self))"
 		:timeout="timeout"
 		:schema="schema"
