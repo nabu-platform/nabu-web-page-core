@@ -1081,6 +1081,10 @@ Vue.component("page-form-field", {
 		schemaResolver: {
 			type: Function,
 			required: false
+		},
+		validateTimeout: {
+			type: Number,
+			required: false
 		}
 	},
 	created: function() {
@@ -1110,6 +1114,15 @@ Vue.component("page-form-field", {
 		}
 	},
 	methods: {
+		slowValidate: function() {
+			if (this.validateTimer != null) {
+				clearTimeout(this.validateTimer);
+				this.validateTimer = null;
+			}
+			if (this.validateTimeout) {
+				this.validateTimer = setTimeout(this.validate, this.validateTimeout);
+			}
+		},
 		usesMultipleFields: function(type) {
 			var provided = nabu.page.providers("page-form-input").filter(function(x) {
 				 return x.name == type;

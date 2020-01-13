@@ -39,6 +39,7 @@
 					<n-form-text v-if="cell.state.allowReadOnly" v-model="cell.state.edit" label="Edit Label"/>
 					<n-form-text v-if="cell.state.allowReadOnly" v-model="cell.state.editIcon" label="Edit Icon"/>
 					<n-form-text v-model="cell.state.mode" label="Message Mode (the literal 'component' or a number)"/>
+					<n-form-text v-model="cell.state.validationTimeout" label="Validation Timeout"/>
 				</n-collapsible>
 				<n-collapsible title="Value Binding" v-if="!cell.state.pageForm">
 					<div class="list-row">
@@ -119,7 +120,8 @@
 							:cell="cell"
 							:is-disabled="isDisabled(field)"
 							@label="function(value) { $window.Vue.set(labels, field.name, value) }"
-							v-focus="cell.state.autofocus == true && currentPage.fields.indexOf(field) == 0"/>
+							v-focus="cell.state.autofocus == true && currentPage.fields.indexOf(field) == 0"
+							:validate-timeout="cell.state.validationTimeout"/>
 						<page-arbitrary v-else
 							:edit="edit"
 							:page="page"
@@ -169,7 +171,7 @@
 		:page="page"
 		:cell="cell"
 		:field="field"
-		@input="function(newValue, otherField) { $emit('input', newValue, otherField) }"
+		@input="function(newValue, otherField) { $emit('input', newValue, otherField); slowValidate(); }"
 		v-bubble:label
 		v-bubble:changed
 		:label="field.hideLabel ? null : $services.page.translate($services.page.interpret(fieldLabel, $self))"

@@ -14,6 +14,103 @@ $empty-cell-contrast: $success-color !default;
 .n-sidebar.content-sidebar {
 	width: auto;
 }
+.n-sidebar.settings {
+	h2 {
+		margin: 0.7rem 0rem;
+		margin-bottom: 1.7rem;
+		font-size: 1.2rem;
+		font-weight: normal;
+		color: #000;
+		&:first-child {
+			margin-top: 0;
+		}
+		&:not(:first-child) {
+			border: solid 1px #ccc;
+			border-style: solid none none none;
+			margin-top: 1rem;
+			padding-top: 1rem;
+		}
+	}
+	.subscript {
+		font-size: 0.8rem;
+		display: block;
+		font-weight: normal;
+		color: #888;	
+		margin: 0.7rem 0rem;
+		text-transform: none;
+	}
+	label {
+		font-size: 0.8rem;
+		padding: 0.3rem;
+		color: #555;
+	}
+	width: 400px;
+	.n-info-content {
+		min-width: 300px;
+		max-width: 300px;
+		left: -50px;
+	}
+	.n-form {
+		.n-info {
+			top: 0.2rem;
+			margin-left: 0.3rem;
+		}
+		.n-form-input-wrapper {
+			flex-grow: 1;
+		}
+		.n-form-switch.n-form-checkbox {
+			label.n-form-label {
+				line-height: 1.5rem !important;
+				padding-left: 2.5rem !important;
+				&:before {
+					height: 1.5rem !important;
+					width: 2.7rem !important;
+					border-radius: 8px;
+				}
+				&:after {
+					height: 1.0rem !important;
+					width: 1rem;
+					border-radius: 8px;
+				}
+			}
+		}
+		.n-form-component {
+			display: flex;
+			&:not(.n-form-checkbox) {
+				> .n-form-label {
+					width: 135px;
+					min-width: 135px;
+					max-width: 135px;
+				}
+			}
+			> .n-form-label-wrapper {
+				display: flex;
+				width: 135px;
+				min-width: 135px;
+				max-width: 135px;
+			}
+			input {
+				line-height: 1.7rem !important;
+				height: 1.7rem !important;
+				font-size: 0.8rem !important;
+				width: 100%;
+			}
+			.n-input-combo {
+				width: 100%;
+				.fa {
+					 top: 0.4rem;
+				}
+				.n-input-combo-dropdown-value {
+					padding: 0.3rem 0.7rem;
+					font-size: 0.8rem;
+				}
+			}
+		}
+	}
+}
+body[has-sidebar="true"] {
+	margin-right: 400px;
+}
 .page-rows {
 	.page-row {
 		display: flex;
@@ -116,7 +213,7 @@ $empty-cell-contrast: $success-color !default;
 	}
 	.page-menu {
 		z-index: 1;
-		background-color: steelblue;
+		background-color: #333;
 		text-align: center;
 		button {
 			display: block;
@@ -178,7 +275,7 @@ $empty-cell-contrast: $success-color !default;
 	&.edit {
 		>.page-sidemenu {
 			border: solid 1px #ccc;
-			margin: 0.7rem;
+			margin: 0rem;
 		}
 		display: flex;
 		> .page-rows {
@@ -385,11 +482,16 @@ $empty-cell-contrast: $success-color !default;
 	}
 }
 
-
+.page-menu {
+	+ .page-sidemenu {
+		width: 200px;
+		max-width: 200px;
+		min-width: 200px;
+	}
+}
 .page-sidemenu {
-	min-width: 10rem;
 	background-color: white;
-	white-space: nowrap;
+	//white-space: nowrap;
 	.row > .page-sideentry .page-sideentry-menu {
 		button {
 			background-color: green;

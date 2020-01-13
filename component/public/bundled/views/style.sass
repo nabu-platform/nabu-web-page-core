@@ -41,6 +41,7 @@
 }
 
 .settings {
+	background-color: #f3f3f3;
 	i {
 		&.n-icon {
 			font-style: normal;
@@ -65,34 +66,39 @@
 		}
 	}
 	button {
-		background-color: steelblue;
+		background-color: #951111;
 		color: #fff;
 		font-size: 0.7rem;
 		font-weight: normal;
 		text-transform: uppercase;
 		border: none;
 		box-shadow: none;
-		padding: 0.5rem 1rem;
+		padding: 0.3rem 1rem;
 	}
 	.list-item-actions {
 		text-align: right;
 		padding: 1rem;
 	}
 	.n-collapsible-title {
-		background-color: steelblue;
-		color: #fff;
-		font-size: 0.9rem;
-		//font-weight: normal;
+		background-color: #ccc;
+		color: #333;
+		font-size: 0.8rem;
+		font-weight: normal;
 		//text-transform: uppercase;
-		padding: 1rem;
+		padding: 0.3rem 1rem;
 		margin: 0;
 		.n-collapsible-title-content {
 			display: inline-block;
 			margin-left: 1rem;
 		}
-	}	
+	}
+	.n-collapsible + .n-collapsible {
+		border: solid 2px #f3f3f3;
+		border-style: solid none none none;
+	}
 	.n-collapsible-content {
-		padding: 1rem 2rem;
+		padding: 1rem 1.7rem;
+		background-color: #f3f3f3;
 	}
 	.list-actions {
 		text-align: center;
@@ -101,8 +107,13 @@
 	.list-row {
 		display: flex;
 		align-items: center;
+		> * {
+			+ * {
+				margin-left: 0.3rem;
+			}
+		}
 		button {
-			padding: 0.5rem;
+			padding: 0.3rem 0.5rem;
 			font-weight: normal;
 		}
 	}

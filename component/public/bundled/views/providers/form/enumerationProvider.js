@@ -62,6 +62,7 @@ Vue.component("page-form-input-enumeration-provider-configure", {
 
 Vue.component("page-form-input-enumeration-provider", {
 	template: "<div><n-form-radio v-if='field.showRadioView' :items='provider.enumerate()' ref='form'"
+			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:formatter='enumerationFormatter'"

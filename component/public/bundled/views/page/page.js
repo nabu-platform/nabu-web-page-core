@@ -1025,7 +1025,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 									self.$wait({promise: promise});
 								}
 								var operation = self.$services.swagger.operations[action.operation];
-								if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
+								// currently we hardcode an exception for this service
+								// in the future we should use swagger extensions to mark the id & secret fields for downloads with temporary authentication
+								// that way we can support it for more services
+								if (operation.operationId == "nabu.cms.attachment.rest.internal.get") {
+									this.$services.attachment.download(parameters.nodeId, parameters.attachmentId);
+									eventReset();
+								}
+								else if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {             
 									window.location = self.$services.swagger.parameters(action.operation, parameters).url;
 									eventReset();
 								}
@@ -1100,7 +1107,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 								self.$wait({promise: promise});
 							}
 							var operation = self.$services.swagger.operations[action.operation];
-							if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
+							if (operation.operationId == "nabu.cms.attachment.rest.internal.get") {
+								this.$services.attachment.download(parameters.nodeId, parameters.attachmentId);
+								eventReset();
+							}
+							else if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
 								window.location = self.$services.swagger.parameters(action.operation, parameters).url;
 								eventReset();
 							}
