@@ -2,6 +2,7 @@
 	<n-form-section>
 		<n-form-section v-for="field in fieldsToMap">
 			<n-form-combo :label="'Map to ' + field" :labels="sources" :filter="fieldsFrom" 
+				class="vertical"
 				:value="getValueFor(field)"
 				:initial-label="getLabelFor(field)"
 				@input="function(newValue, label) { setValue(field, newValue, label) }"/>

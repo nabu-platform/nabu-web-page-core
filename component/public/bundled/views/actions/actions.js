@@ -120,7 +120,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			if (!actions) {
 				actions = this.cell.state.actions;
 			}
-			actions.map(function(action) {
+			actions.forEach(function(action) {
 				if (action.event && action.event != "$close") {
 					if (action.dynamic) {
 						if (action.operation) {
@@ -155,6 +155,21 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				}
 				if (action.actions) {
 					self.getEvents(action.actions, result);
+				}
+				if (action.validationErrorEvent) {
+					result[action.validationErrorEvent] = {
+						type: "array", 
+						items: {
+							type: "object",
+							properties: {
+								code: { type: "string" },
+								severity: { type: "string" },
+								title: { type: "string" },
+								priority: { type: "integer", format: "int64" },
+								soft: { type: "boolean" }
+							}
+						}
+					}
 				}
 			});
 			return result;
@@ -451,6 +466,14 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			});
 			return promise;
 		},
+		getValidationResults: function(promiseResult) {
+			console.log("validation results are", promiseResult);
+			var messages = [];
+			promiseResult.forEach(function(x) {
+				nabu.utils.arrays.merge(messages, x);
+			});
+			return messages;
+		},
 		validateSingle: function(element) {
 			if (element && element.__vue__ && element.__vue__.validate) {
 				var result = element.__vue__.validate();
@@ -486,6 +509,21 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				var self = this;
 				this.validateTarget(action.validate).then(function(x) {
 					self.handle(action, true);
+				}, function(x) {
+					var messages = self.getValidationResults(x);
+					if (action.validationErrorScroll) {
+						var elementToFocus = messages.filter(function(x) {
+							return !!x.component;
+						})[0];
+						if (elementToFocus) {
+							elementToFocus.scrollIntoView();
+							elementToFocus.focus();
+						}
+					}
+					if (action.validationErrorEvent) {
+						var pageInstance = self.$services.page.getPageInstance(self.page, self);
+						pageInstance.emit(action.validationErrorEvent, { messages: messages });
+					}
 				});
 				return null;
 			}

@@ -524,9 +524,9 @@
 		<div v-for="row in rows" class="row">
 			<div class="page-sideentry" @mouseout="mouseOut($event, row)"
 						@mouseover="mouseOver($event, row)">
-				<span class="fa fa-minus" v-if="!row.collapsed" @click="row.collapsed = !row.collapsed"></span>
-				<span class="fa fa-plus" v-else @click="row.collapsed = !row.collapsed"></span>
+				<span class="fa opener" :class="{'fa-chevron-down': opened.indexOf(row.id) >= 0, 'fa-chevron-right': opened.indexOf(row.id) < 0}" @click="opened.indexOf(row.id) >= 0 ? opened.splice(opened.indexOf(row.id), 1) : opened.push(row.id)"></span>
 				<span class="name" @click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
+				<span class="fa collapser" :class="{'fa-eye': !row.collapsed, 'fa-eye-slash': row.collapsed}" @click="row.collapsed = !row.collapsed"></span>
 				<div class="page-sideentry-menu">
 					<button @click="configureRow(row)"><span class="fa fa-magic"></span></button
 					><button @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button
@@ -534,14 +534,14 @@
 					><button @click="addCell(row)"><span class="fa fa-plus" title="Add Cell"></span></button
 					><button @click="copyRow(row)"><span class="fa fa-copy" title="Copy Row"></span></button
 					><button v-if="$services.page.copiedCell" @click="pasteCell(row)"><span class="fa fa-paste" title="Paste Cell"></span></button
-					><button @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button
-					><button @click="row.collapsed = !row.collapsed"><span class="fa" :class="{'fa-minus-square': !row.collapsed, 'fa-plus-square': row.collapsed }"></span></button>
+					><button @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
 				</div>
 			</div>
-			<div v-if="row.cells && !row.collapsed" class="cells">
+			<div v-if="row.cells && opened.indexOf(row.id) >= 0" class="cells">
 				<div v-for="cell in row.cells" class="cell">
 					<div class="page-sideentry" @mouseout="mouseOut($event, row, cell)"
 							@mouseover="mouseOver($event, row, cell)">
+						<span class="cell-icon fa" :class="cell.alias"></span>
 						<span class="name"  @click.ctrl="scrollIntoView(row, cell)">{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
 						<div class="page-sideentry-menu" >
 							<button @click="configureCell(row, cell);"><span class="fa fa-magic" title="Set Cell Content"></span></button

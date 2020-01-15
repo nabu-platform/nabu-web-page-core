@@ -261,7 +261,7 @@ nabu.services.VueService(Vue.extend({
 				if (!navigator.userAgent.match(/Nabu-Renderer/)) {
 					self.imports.forEach(function(x) {
 						if (x.type == 'javascript') {
-							self.inject(x.link, function() {}, x.async);
+							self.inject(x.link, function() {}, function() {}, x.async);
 						}
 					});
 				}
@@ -1190,7 +1190,7 @@ nabu.services.VueService(Vue.extend({
 				}
 			});
 		},
-		inject: function(link, callback, async) {
+		inject: function(link, callback, failure, async) {
 			// only inject it once!
 			var existing = document.head.querySelector('script[src="' + link + '"]');
 			if (existing) {
@@ -1221,11 +1221,21 @@ nabu.services.VueService(Vue.extend({
 						script.attachEvent("onload", function() {
 							callback();
 						});
+						if (failure) {
+							script.attachEvent("onerror", function() {
+								failure();
+							});
+						}
 					}
 					else if (script.addEventListener) {
 						script.addEventListener("load", function() {
 							callback();
 						});
+						if (failure) {
+							script.addEventListener("error", function() {
+								failure();
+							});
+						}
 					}
 					// rest
 					else { 

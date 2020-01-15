@@ -76,15 +76,17 @@
 										:from="$services.page.getAvailableParameters(page, cell)" 
 										v-model="action.bindings"/>
 									<page-event-value :page="page" :container="action" title="Action Event" v-if="!action.dynamic && !action.route && !action.url" name="event" v-bubble.resetEvents/>
-									<div class="n-form-component">
+									<div class="n-form-component n-form-ace">
 										<label class="n-form-label">Disabled if</label>
 										<n-ace mode="javascript" v-model="action.disabled"/>
 									</div>
-									<div class="n-form-component">
+									<div class="n-form-component n-form-ace">
 										<label class="n-form-label">Show if</label>
 										<n-ace mode="javascript" v-model="action.condition"/>
 									</div>
 									<n-form-combo v-model="action.validate" label="Only if valid" :filter="validatableItems"/>
+									<n-form-text info="The event to send out if we have a validation error" v-if="action.validate" v-model="action.validationErrorEvent" label="Validation Error Event" />
+									<n-form-switch info="Whether we want to scroll to the first exception" v-if="action.validate" v-model="action.validationErrorScroll" label="Scroll to Validation Error" />
 									<div v-if="action.triggers">
 										<div class="list-row" v-for="i in Object.keys(action.triggers)">
 											<n-form-combo v-model="action.triggers[i]" label="Trigger" :items="$window.Object.keys($services.page.getAllAvailableParameters(page))"/>

@@ -50,7 +50,9 @@ Vue.mixin({
 				application.title = this.$services.page.title;
 			}
 			this.$services.page.properties.map(function(x) {
-				application[x.key] = x.value;
+				if (x) {
+					application[x.key] = x.value;
+				}
 			});
 			Vue.set(self.state, "application", application);
 		}
@@ -2420,7 +2422,7 @@ Vue.component("page-sidemenu", {
 	},
 	data: function() {
 		return {
-			closed: []
+			opened: []
 		}	
 	},
 	methods: {
