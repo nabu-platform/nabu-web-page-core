@@ -548,7 +548,7 @@
 					><button @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
 				</div>
 			</div>
-			<div v-if="row.cells && opened.indexOf(row.id) >= 0" class="cells">
+			<div v-show="row.cells && opened.indexOf(row.id) >= 0" class="cells">
 				<div v-for="cell in row.cells" class="cell">
 					<div class="page-sideentry" @mouseout="mouseOut($event, row, cell)" :class="{'selected': selected && selected.id == cell.id}"
 							@mouseover="mouseOver($event, row, cell)">
@@ -566,7 +566,9 @@
 							><button @click="pasteRow(cell)" v-if="$services.page.copiedRow"><span class="fa fa-paste" title="Paste Row"></span></button>   
 						</div>
 					</div>
-					<page-sidemenu v-if="cell.rows" :rows="cell.rows" :page="page" v-bubble:select :selected="selected"
+					<page-sidemenu v-show="cell.rows" :rows="cell.rows" :page="page" v-bubble:select :selected="selected"
+						@open="function() { if (opened.indexOf(row) < 0) opened.push(row.id) }"
+						v-bubble:open
 						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 				</div>
 			</div>

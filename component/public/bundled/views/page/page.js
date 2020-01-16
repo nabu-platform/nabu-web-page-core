@@ -2707,6 +2707,31 @@ Vue.component("page-sidemenu", {
 			cell.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
 			this.$services.page.copiedRow = null;
 		}
+	},
+	watch: {
+		selected: function(newValue) {
+			if (this.rows.indexOf(newValue) >= 0) {
+				var index = this.opened.indexOf(newValue.id);
+				if (index < 0) {
+					this.opened.push(newValue.id);
+				}
+				console.log("emitting an open row");
+				this.$emit("open");
+			}
+			else {
+				var self = this;
+				this.rows.forEach(function(row) {
+					if (row.cells && row.cells.indexOf(newValue) >= 0) {
+						var index = self.opened.indexOf(row.id);
+						if (index < 0) {
+							self.opened.push(row.id);
+						}
+						console.log("emitting an open cell");
+						self.$emit("open");
+					}
+				});
+			}
+		}
 	}
 });
 
