@@ -105,7 +105,19 @@
 		padding: 1rem;
 	}
 	.list-row {
+		position: relative;
+		.fa-times {
+			position: absolute;
+			top: 0.3rem;
+			right: 0.3rem;
+			cursor: pointer;
+			color: #333;
+		}
 		display: flex;
+		flex-direction: column;
+		border-left: solid 5px #ccc;
+		padding: 0.7rem 1.3rem;
+		background-color: #eee;
 		align-items: center;
 		> * {
 			+ * {
@@ -115,6 +127,9 @@
 		button {
 			padding: 0.3rem 0.5rem;
 			font-weight: normal;
+		}
+		+ .list-row {
+			border-top: solid 1px #ccc;
 		}
 	}
 	.list {

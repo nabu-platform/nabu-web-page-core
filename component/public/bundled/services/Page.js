@@ -53,7 +53,9 @@ nabu.services.VueService(Vue.extend({
 			functionError: null,
 			disableReload: false,
 			validations: [],
-			googleSiteVerification: null
+			googleSiteVerification: null,
+			// the page we are editing?
+			editing: null
 		}
 	},
 	activate: function(done) {

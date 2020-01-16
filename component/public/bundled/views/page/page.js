@@ -134,12 +134,17 @@ nabu.page.views.Page = Vue.component("n-page", {
 			if (self.page.content.initialEvents) {
 				self.page.content.initialEvents.forEach(function(x) {
 					if (nabu.page.event.getName(x, "definition") && (!x.condition || self.$services.page.isCondition(x.condition, self.$services.page.getPageState(self), self))) {           
-						self.emit(
-							nabu.page.event.getName(x, "definition"),
-							nabu.page.event.getInstance(x, "definition", self.page, self)
-						);
+						try {
+							self.emit(
+								nabu.page.event.getName(x, "definition"),
+								nabu.page.event.getInstance(x, "definition", self.page, self)
+							);
+						}
+						catch (exception) {
+							console.error("Could not fire initial event", exception);
+						}
 					}
-				})
+				});
 			}
 			if (self.page.content.parameters) {
 				self.page.content.parameters.forEach(function(parameter) {
@@ -219,6 +224,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	beforeDestroy: function() {
+		this.stopEdit();
 		if (this.autoRefreshTimeout) {
 			clearTimeout(this.autoRefreshTimeout);
 			this.autoRefreshTimeout = null;
@@ -347,10 +353,34 @@ nabu.page.views.Page = Vue.component("n-page", {
 			saveContentTimer: null,
 			// the actual contents to save
 			saveContents: [],
-			savePageTimer: null
+			savePageTimer: null,
+			// the selected item in the side menu
+			selectedItem: null
 		}
 	},
 	methods: {
+		selectItem: function(item) {
+			Vue.set(this, 'selectedItem', item);	
+		},
+		stopEdit: function() {
+			if (this.$refs.sidemenu) {
+				this.$refs.sidemenu.close();
+			}
+			if (this.edit) {
+				this.$services.page.editing.edit = false;
+				this.$services.page.editing = null;
+			}
+		},
+		goIntoEdit: function() {
+			if (!this.edit) {
+				if (this.$services.page.editing) {
+					this.$services.page.editing.stopEdit();
+					this.$services.page.editing = null;
+				}
+				this.edit = true;
+				this.$services.page.editing = this;
+			}	
+		},
 		addInitialEvent: function() {
 			if (!this.page.content.initialEvents) {
 				Vue.set(this.page.content, "initialEvents", []);
@@ -773,6 +803,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 					}
 				});
+				
+				if (this.page.content.initialEvents) {
+					this.page.content.initialEvents.forEach(function(event) {
+						var name = nabu.page.event.getName(event, "definition");
+						if (name) {
+							events[name] = nabu.page.event.getType(event, "definition");
+						}
+					});
+				}
 			}
 			return this.cachedEvents;
 		},
@@ -2349,6 +2388,13 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			cell.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
 			this.$services.page.copiedRow = null;
 		},
+		goto: function(event, row, cell) {
+			if (this.edit) {
+				this.$emit("select", cell ? cell : row);
+				this.configuring = cell ? cell.id : row.id;
+				event.stopPropagation();
+			}
+		},
 		mouseOut: function(event, row, cell) {
 			var self = this;
 			if (self.edit) {
@@ -2418,6 +2464,10 @@ Vue.component("page-sidemenu", {
 		rows: {
 			type: Array,
 			required: true
+		},
+		selected: {
+			type: Object,
+			required: false
 		}
 	},
 	data: function() {
@@ -2509,11 +2559,41 @@ Vue.component("page-sidemenu", {
 			}
 			document.getElementById(target).scrollIntoView();
 		},
+		hasConfigure: function(cell) {
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			var cellInstance = pageInstance.components[cell.id];
+			return cellInstance && cellInstance.configure;
+		},
 		configure: function(cell) {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			var cellInstance = pageInstance.components[cell.id];
 			cellInstance.configure();
+		},
+		toggleRow: function(row) {
+			var index = this.opened.indexOf(row.id);
+			if (index < 0) {
+				this.opened.push(row.id);
+			}
+			else {
+				this.opened.splice(index, 1);
+			}
+		},
+		selectRow: function(row) {
+			var wasSelected = this.selected == row;
+			this.$emit("select", row);
+			var index = this.opened.indexOf(row.id);
+			if (index < 0) {
+				this.configureRow(row);
+				this.opened.push(row.id);
+			}	
+			else if (wasSelected) {
+				this.opened.splice(index, 1);
+			}
+			else {
+				this.configureRow(row);
+			}
 		},
 		configureRow: function(row) {
 			var target = document.getElementById(this.page.name + "_" + row.id);
@@ -2525,6 +2605,11 @@ Vue.component("page-sidemenu", {
 				parent.__vue__.setRowConfiguring(row.id);
 			}
 			//target.parentNode.__vue__.configuring = row.id;
+		},
+		selectCell: function(row, cell) {
+			var wasSelected = this.selected == cell;
+			this.$emit("select", cell);
+			this.configureCell(row, cell);
 		},
 		configureCell: function(row, cell) {
 			var target = document.getElementById(this.page.name + "_" + row.id + "_" + cell.id);

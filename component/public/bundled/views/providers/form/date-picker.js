@@ -42,7 +42,7 @@ Vue.component("page-form-input-date-picker", {
 			+ "		:minimum-offset='field.minimumOffset'"
 			+ "		:maximum-offset='field.maximumOffset'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
-			+ "		:label='label'"
+			+ "		:label='field.label ? $services.page.translate(field.label) : null'"
 			+ "		:value='value'"
 			+ "		:default='getDefault()'"
 			+ "		:timeout='timeout'"

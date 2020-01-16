@@ -2,10 +2,6 @@
 	<component :edit="edit" :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
 		<div class="page-menu n-page-menu" v-if="edit">
 			<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
-			<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
-			<button v-if="!embedded" @click="$services.page.update(page)"><span class="fa fa-save" title="Save"></span></button>
-			<button @click="pasteRow" v-if="$services.page.copiedRow"><span class="fa fa-paste"></span></button>
-			<button v-if="!embedded" @click="edit = false"><span class="fa fa-sign-out-alt" title="Stop Editing"></span></button>
 		</div>
 		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit && !embedded" :draggable="true" 
 				@dragstart="dragMenu($event)"
@@ -13,7 +9,7 @@
 				:style="{'top': page.content.menuY ? page.content.menuY + 'px' : '0px', 'left': page.content.menuX ? page.content.menuX + 'px' : '0px'}">
 			<span>{{page.name}}</span>
 			<span class="fa fa-cog" v-if="page.content.path && hasConfigureListener()" @click="triggerConfiguration()"/>
-			<span class="fa fa-pencil-alt" @click="edit = !edit"></span>
+			<span class="fa fa-pencil-alt" @click="goIntoEdit"></span>
 			<span class="fa fa-copy" v-route:pages></span>
 			<span class="n-icon" :class="'n-icon-' + $services.page.cssStep" v-if="false && $services.page.cssStep"></span>
 			<span v-if="page.content.path && $services.language && $services.language.available.length" class="language-selector">
@@ -32,8 +28,21 @@
 			<span class="fa fa-sign-in-alt" v-route:login></span>
 		</div>
 		
-		<page-sidemenu v-if="edit && page.content.rows" :rows="page.content.rows" :page="page"
-			@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
+		<n-sidebar v-if="edit && page.content.rows" position="left" class="settings sidemenu" :inline="true" :autocloseable="false" ref="sidemenu"
+				@close="stopEdit">
+			<div class="sidebar-actions">
+				<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
+				<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
+				<button v-if="!embedded" @click="$services.page.update(page)"><span class="fa fa-save" title="Save"></span></button>
+				<button @click="pasteRow" v-if="$services.page.copiedRow"><span class="fa fa-paste"></span></button>
+				<button v-if="!embedded && false" @click="stopEdit"><span class="fa fa-sign-out-alt" title="Stop Editing"></span></button>
+			</div>
+			<page-sidemenu v-if="edit && page.content.rows" :rows="page.content.rows" :page="page"
+				:selected="selectedItem"
+				@select="selectItem"
+				@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
+		</n-sidebar>
+		
 		<n-page-rows v-if="page.content.rows" :rows="page.content.rows" :page="page" :edit="edit"
 			:depth="0"
 			:parameters="parameters"
@@ -42,6 +51,7 @@
 			:root="true"
 			:page-instance-id="pageInstanceId"
 			:stop-rerender="stopRerender"
+			@select="selectItem"
 			@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
 		<n-sidebar v-if="configuring" @close="configuring = false" class="settings" inline="true">
 			<n-form class="layout2">
@@ -105,7 +115,7 @@
 					<div class="list-actions">
 						<button @click="addInitialEvent">Add Initial Event</button>
 					</div>
-					<n-collapsible class="list-item" :title="event.name" v-for="event in page.content.initialEvents">
+					<n-collapsible class="list-item" :title="event ? $window.nabu.page.event.getName(event, 'definition') : 'unnamed'" v-for="event in page.content.initialEvents">
 						<n-form-text v-model="event.condition" label="Condition"/>
 						<page-event-value :page="page" :container="event" title="Initial Event" name="definition" v-bubble:resetEvents/>
 						<div class="list-item-actions">
@@ -280,6 +290,7 @@
 				:style="rowStyles(row)"
 				@mouseout="mouseOut($event, row)"
 				@mouseover="mouseOver($event, row)"
+				@click.ctrl="goto($event, row)"
 				v-bind="getRendererProperties(row)">
 			<div v-if="false && (edit || $services.page.wantEdit || row.wantVisibleName) && row.name && !row.collapsed" :style="getRowEditStyle(row)" class="row-edit-label"
 				:class="'direction-' + (row.direction ? row.direction : 'horizontal')"><span>{{row.name}}</span></div>
@@ -301,6 +312,7 @@
 					:key="cellId(cell)"
 					:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
 					@click="clickOnCell(cell)"
+					@click.ctrl="goto($event, row, cell)"
 					@mouseout="mouseOut($event, row, cell)"
 					@mouseover="mouseOver($event, row, cell)"
 					v-bind="getRendererProperties(cell)">
@@ -410,6 +422,7 @@
 						:local-state="getLocalState(row, cell)"
 						:page-instance-id="pageInstanceId"
 						:stop-rerender="stopRerender"
+						@select="function(item) { $emit('select', item) }"
 						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 				</div>
 				<template v-else-if="shouldRenderCell(row, cell)">
@@ -517,17 +530,15 @@
 	</div>
 </template>
 
-
-
 <template id="page-sidemenu">
 	<div class="page-sidemenu">
 		<div v-for="row in rows" class="row">
-			<div class="page-sideentry" @mouseout="mouseOut($event, row)"
+			<div class="page-sideentry" @mouseout="mouseOut($event, row)" :class="{'selected': selected && selected.id == row.id}"
 						@mouseover="mouseOver($event, row)">
-				<span class="fa opener" :class="{'fa-chevron-down': opened.indexOf(row.id) >= 0, 'fa-chevron-right': opened.indexOf(row.id) < 0}" @click="opened.indexOf(row.id) >= 0 ? opened.splice(opened.indexOf(row.id), 1) : opened.push(row.id)"></span>
-				<span class="name" @click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
+				<span class="fa opener" @click="toggleRow(row)" :class="{'fa-chevron-down': opened.indexOf(row.id) >= 0, 'fa-chevron-right': opened.indexOf(row.id) < 0}"></span>
+				<span class="name" @click="selectRow(row)" @click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
 				<span class="fa collapser" :class="{'fa-eye': !row.collapsed, 'fa-eye-slash': row.collapsed}" @click="row.collapsed = !row.collapsed"></span>
-				<div class="page-sideentry-menu">
+				<div class="page-sideentry-menu" v-if="false">
 					<button @click="configureRow(row)"><span class="fa fa-magic"></span></button
 					><button @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button
 					><button @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button
@@ -539,11 +550,12 @@
 			</div>
 			<div v-if="row.cells && opened.indexOf(row.id) >= 0" class="cells">
 				<div v-for="cell in row.cells" class="cell">
-					<div class="page-sideentry" @mouseout="mouseOut($event, row, cell)"
+					<div class="page-sideentry" @mouseout="mouseOut($event, row, cell)" :class="{'selected': selected && selected.id == cell.id}"
 							@mouseover="mouseOver($event, row, cell)">
-						<span class="cell-icon fa" :class="cell.alias"></span>
-						<span class="name"  @click.ctrl="scrollIntoView(row, cell)">{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
-						<div class="page-sideentry-menu" >
+						<span class="cell-icon fa" :class="['component-' + cell.alias, {'is-empty': !cell.alias }]"></span>
+						<span class="name" @click="selectCell(row, cell)" @click.ctrl="scrollIntoView(row, cell)">{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
+						<span class="fa configurer fa-cog" v-if="hasConfigure(cell)" @click="configure(cell)"></span>
+						<div class="page-sideentry-menu" v-if="false">
 							<button @click="configureCell(row, cell);"><span class="fa fa-magic" title="Set Cell Content"></span></button
 							><button @click="configure(cell)" v-if="cell.alias"><span class="fa fa-cog" title="Configure Cell Content"></span></button    
 							><button @click="left(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-left"></span></button
@@ -554,7 +566,7 @@
 							><button @click="pasteRow(cell)" v-if="$services.page.copiedRow"><span class="fa fa-paste" title="Paste Row"></span></button>   
 						</div>
 					</div>
-					<page-sidemenu v-if="cell.rows" :rows="cell.rows" :page="page"
+					<page-sidemenu v-if="cell.rows" :rows="cell.rows" :page="page" v-bubble:select :selected="selected"
 						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 				</div>
 			</div>

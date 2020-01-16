@@ -7,7 +7,7 @@
 			<n-form-combo v-model="eventField.stateValue" v-if="!eventField.isFixed" label="State Value"
 				:filter="function(value) { return $services.page.getSimpleKeysFor({properties:$services.page.getAllAvailableParameters(page, null, true)}).filter(function(x) { return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0 }) }"/>
 			<n-form-text v-model="eventField.fixedValue" v-else label="Fixed Value"/>
-			<button @click="container[name].eventFields.splice(container[name].eventFields.indexOf(eventField), 1) & $emit('resetEvents')"><span class="fa fa-trash"></span></button>
+			<span @click="container[name].eventFields.splice(container[name].eventFields.indexOf(eventField), 1) & $emit('resetEvents')" class="fa fa-times"></span>
 		</div>
 		<div class="list-actions">
 			<button @click="addEventField(container[name]) & $emit('resetEvents')">Add Event Field</button>

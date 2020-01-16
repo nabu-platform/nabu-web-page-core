@@ -14,7 +14,23 @@ $empty-cell-contrast: $success-color !default;
 .n-sidebar.content-sidebar {
 	width: auto;
 }
+body[has-sidebar-left="true"] {
+	margin-left: 300px;
+}
 .n-sidebar.settings {
+	.sidebar-actions {
+		background-color: #333;
+		width: 100%;
+		color: white;
+		text-align: center;
+		button {
+			background-color: inherit;
+			padding: 0.5rem 0.7rem;
+		}
+	}
+	&.sidemenu {
+		width: 300px;
+	}
 	h2 {
 		margin: 0.7rem 0rem;
 		margin-bottom: 1.7rem;
@@ -40,15 +56,20 @@ $empty-cell-contrast: $success-color !default;
 		text-transform: none;
 	}
 	label {
-		font-size: 0.8rem;
+		font-size: 0.8rem !important;
 		padding: 0.3rem;
 		color: #555;
+		font-weight: normal !important;
 	}
 	width: 400px;
 	.n-info-content {
 		min-width: 300px;
 		max-width: 300px;
 		left: -50px;
+		background-color: #333;
+	}
+	.n-info {
+		margin-right: 0.3rem;
 	}
 	.n-form-ace {
 		flex-direction: column;
@@ -538,6 +559,7 @@ body[has-sidebar="true"] {
 					font-size: 12px;
 				}
 			}
+			border: none;
 		}
 		border: solid 1px #666;
 		border-style: none none solid solid;
@@ -553,6 +575,7 @@ body[has-sidebar="true"] {
 					font-size: 12px;
 				}
 			}
+			border: none;
 		}
 		border: solid 1px #666;
 		border-style: none none solid solid;
@@ -565,21 +588,36 @@ body[has-sidebar="true"] {
 		position: relative;
 		.opener {
 			margin-right: 0.7rem;
-		}
-		.collapser {
-			color: #888;
-			position: absolute;
-			top: 0.3rem;
-			right: 0.3rem;
+			margin-top: 2px;
 		}
 	}
+	.collapser, .configurer {
+		color: #888;
+		position: absolute;
+		top: 0.3rem;
+		right: 0.3rem;
+	}
 	.row, .cell {
+		> .page-sideentry {
+			cursor: pointer;
+			display: flex;
+			&.selected {
+				background-color: #951111;
+				color: white;
+				.fa {
+					color: white;
+				}
+			}
+			> .name {
+				flex-grow: 1;
+			}
+		}
 		margin-left: 0.7rem;
 		margin-top: 0.2rem;
 		font-size: 0.8rem;
 		&:hover {
 			> .page-sideentry {
-				background-color: #efefef;
+				//background-color: #efefef;
 			}
 		}
 		> .page-sideentry {
@@ -619,18 +657,22 @@ body[has-sidebar="true"] {
 
 .page-sidemenu {
 	.cell-icon {
+		margin-top: 3px;
 		font-family: 'Font Awesome 5 Free';
 		color: #951111;
-		margin-right: 0.3rem;
+		margin-right: 0.5rem;
 		&:before {
 			content: "\f1b2";
 			font-size: 12px;
 		}
-		&.page-fields:before {
+		&.component-page-fields:before {
 			content: "\f036";
 		}
-		&.page-actions:before {
+		&.component-page-actions:before {
 			content: "\f04b";
+		}
+		&.is-empty:before {
+			content: "\f0c9";
 		}
 	}
 }
