@@ -53,7 +53,7 @@
 			:stop-rerender="stopRerender"
 			@select="selectItem"
 			@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
-		<n-sidebar v-if="configuring" @close="configuring = false" class="settings" inline="true">
+		<n-sidebar v-if="configuring" @close="configuring = false" class="settings" :inline="true">
 			<n-form class="layout2">
 				<n-collapsible title="General Settings">
 					<h2>Router<span class="subscript">These settings will determine how the page is routed throughout the application.</span></h2>
@@ -318,14 +318,22 @@
 					v-bind="getRendererProperties(cell)">
 				<div v-if="false && (edit || $services.page.wantEdit) && cell.name" :style="getCellEditStyle(cell)" class="cell-edit-label"><span>{{cell.name}}</span></div>
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-				<n-sidebar v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings">
+				<n-sidebar v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings" :inline="true" >
+					<div class="sidebar-actions">
+						<button @click="left(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-left"></span></button
+						><button @click="right(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-right"></span></button
+						><button @click="addRow(cell)"><span class="fa fa-plus" title="Add Row"></span></button
+						><button @click="copyCell(cell)"><span class="fa fa-copy" title="Copy Cell"></span></button
+						><button @click="pasteRow(cell)" v-if="$services.page.copiedRow"><span class="fa fa-paste" title="Paste Row"></span></button
+						><button @click="removeCell(row.cells, cell)"><span class="fa fa-times" title="Remove Cell"></span></button>
+					</div>
 					<n-form class="layout2" key="cell-form">
 						<n-form-section>
 							<n-collapsible title="Content" key="cell-content">
 								<n-form-combo label="Content Route" :filter="filterRoutes" v-model="cell.alias"
 									:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
 									:required="true"
-									description="The content we want to route in the cell"/>
+									info="The content we want to route in the cell"/>
 								<n-page-mapper v-if="cell.alias" 
 									:key="'page_' + pageInstanceId + '_' + cell.id + '_mapper'"
 									:to="getRouteParameters(cell)"
@@ -464,7 +472,15 @@
 					</template>
 				</template>
 			</component>
-			<n-sidebar v-if="configuring == row.id" @close="configuring = null" class="settings">
+			<n-sidebar v-if="configuring == row.id" @close="configuring = null" class="settings" :inline="true" >
+				<div class="sidebar-actions">
+					<button @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button
+					><button @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button
+					><button @click="addCell(row)"><span class="fa fa-plus" title="Add Cell"></span></button
+					><button @click="copyRow(row)"><span class="fa fa-copy" title="Copy Row"></span></button
+					><button v-if="$services.page.copiedCell" @click="pasteCell(row)"><span class="fa fa-paste" title="Paste Cell"></span></button
+					><button @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
+				</div>
 				<n-form class="layout2">
 					<n-collapsible title="Row Settings">
 						<n-form-text label="Row Id" v-model="row.customId"/>

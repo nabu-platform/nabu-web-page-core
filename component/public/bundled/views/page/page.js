@@ -1488,11 +1488,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 				Vue.set(target, parts[parts.length - 1], value);
 				if (updateUrl) {
 					var route = this.$services.router.get(this.$services.page.alias(this.page));
-					this.$services.router.router.updateUrl(
-						route.alias,
-						route.url,
-						this.parameters,
-						route.query)
+					if (route.url != null) {
+						this.$services.router.router.updateUrl(
+							route.alias,
+							route.url,
+							this.parameters,
+							route.query)
+					}
 				}
 			}
 			else {
