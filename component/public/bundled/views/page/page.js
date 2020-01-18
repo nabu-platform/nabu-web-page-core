@@ -518,7 +518,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 			event.dataTransfer.setData("page-menu", this.page.name);
 		},
 		dragOver: function(event) {
-			// do nothing?
+			if (event.dataTransfer.getData("page-menu") != null) {
+				event.preventDefault();
+			}
 		},
 		dropMenu: function(event) {
 			event.preventDefault();
@@ -2380,21 +2382,12 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				name: null
 			});
 		},
-		closeRight: function() {
-			var right = document.querySelector("#n-sidebar-right-instance");
-			if (right && right.__vue__ && right.__vue__.close) {
-				right.__vue__.close();
-			}
-			else if (right && right.$$close) {
-				right.$$close();
-			}
-		},
 		removeCell: function(cells, cell) {
 			var self = this;
 			this.$confirm({
 				message: "Are you sure you want to remove this cell?"
 			}).then(function() {
-				self.closeRight();
+				self.$services.page.closeRight();
 				cells.splice(cells.indexOf(cell), 1);
 			});
 		},
@@ -2734,7 +2727,7 @@ Vue.component("page-sidemenu", {
 			});
 		},
 		removeRow: function(cell, row) { 
-			self.closeRight();
+			self.$services.page.closeRight();
 			cell.rows.splice(cell.rows(indexOf(row), 1));
 		},
 		addCell: function(target) {
@@ -2789,6 +2782,153 @@ Vue.component("page-sidemenu", {
 		pasteRow: function(cell) {
 			cell.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
 			this.$services.page.copiedRow = null;
+		},
+		dragCell: function(event, row, cell) {
+			event.dataTransfer.setData("page-cell", cell.id);
+			if (event.ctrlKey) {
+				event.dataTransfer.setData("drag-action", "copy");	
+			}
+		},
+		dragRow: function(event, row) {
+			event.dataTransfer.setData("page-row", row.id);
+			if (event.ctrlKey) {
+				event.dataTransfer.setData("drag-action", "copy");	
+			}
+		},
+		acceptDragRow: function(event, row) {
+			if (event.dataTransfer.getData("page-cell")) {
+				event.preventDefault();
+			}
+			else if (event.dataTransfer.getData("page-row")) {
+				this.$services.page.pushDragItem(event.target);
+				var rect = event.target.getBoundingClientRect();
+				if (Math.abs(event.clientY - rect.top) >= rect.height / 2) {
+					event.target.classList.remove("hover-top");
+					event.target.classList.add("hover-bottom");
+				}
+				else {
+					event.target.classList.remove("hover-bottom");
+					event.target.classList.add("hover-top");
+				}
+				event.preventDefault();
+			}
+		},
+		acceptDragCell: function(event, row, cell) {
+			if (event.dataTransfer.getData("page-row")) {
+				event.preventDefault();
+			}
+			else if (event.dataTransfer.getData("page-cell")) {
+				this.$services.page.pushDragItem(event.target);
+				var rect = event.target.getBoundingClientRect();
+				if (Math.abs(event.clientY - rect.top) >= rect.height / 2) {
+					event.target.classList.remove("hover-top");
+					event.target.classList.add("hover-bottom");
+				}
+				else {
+					event.target.classList.remove("hover-bottom");
+					event.target.classList.add("hover-top");
+				}
+				event.preventDefault();
+			}
+		},
+		dropRow: function(event, row) {
+			var cellId = event.dataTransfer.getData("page-cell");
+			var rowId = event.dataTransfer.getData("page-row");
+			if (cellId) {
+				var content = this.$services.page.getTarget(this.page.content, cellId);
+				var action = event.dataTransfer.getData("drag-action");
+				if (!row.cells) {
+					Vue.set(row, "cells", []);
+				}
+				if (action == "copy") {
+					content = JSON.parse(JSON.stringify(content));
+					content.id = this.page.content.counter++;
+				}
+				else {
+					var parent = this.$services.page.getTarget(this.page.content, content.id, true);
+					var index = parent.cells.indexOf(content);
+					if (index >= 0) {
+						parent.cells.splice(index, 1);
+					}
+				}
+				row.cells.push(content);
+			}
+			if (rowId) {
+				var content = this.$services.page.getTarget(this.page.content, rowId);
+				var action = event.dataTransfer.getData("drag-action");
+				if (action == "copy") {
+					content = JSON.parse(JSON.stringify(content));
+					content.id = this.page.content.counter++;
+				}
+				else {
+					this.$services.page.closeRight();
+					var parent = this.$services.page.getTarget(this.page.content, content.id, true);
+					var index = parent.rows.indexOf(content);
+					if (index >= 0) {
+						parent.rows.splice(index, 1);
+					}
+				}
+				var rect = event.target.getBoundingClientRect();
+				var parent = this.$services.page.getTarget(this.page.content, row.id, true);
+				var index = parent.rows.indexOf(row);
+				// position below it
+				if (Math.abs(event.clientY - rect.top) >= rect.height / 2) {
+					parent.rows.splice(index + 1, 0, content);
+				}
+				else {
+					parent.rows.splice(index, 0, content);
+				}
+			}
+		},
+		dropCell: function(event, row, cell) {
+			var cellId = event.dataTransfer.getData("page-cell");
+			var rowId = event.dataTransfer.getData("page-row");
+			if (cellId) {
+				var content = this.$services.page.getTarget(this.page.content, cellId);
+				var action = event.dataTransfer.getData("drag-action");
+				if (action == "copy") {
+					content = JSON.parse(JSON.stringify(content));
+					content.id = this.page.content.counter++;
+				}
+				else {
+					this.$services.page.closeRight();
+					var parent = this.$services.page.getTarget(this.page.content, content.id, true);
+					var index = parent.cells.indexOf(content);
+					if (index >= 0) {
+						parent.cells.splice(index, 1);
+					}
+				}
+				var rect = event.target.getBoundingClientRect();
+				var parent = this.$services.page.getTarget(this.page.content, cell.id, true);
+				var index = parent.cells.indexOf(cell);
+				// position below it
+				if (Math.abs(event.clientY - rect.top) >= rect.height / 2) {
+					parent.cells.splice(index + 1, 0, content);
+				}
+				else {
+					parent.cells.splice(index, 0, content);
+				}
+			}
+			if (rowId) {
+				var content = this.$services.page.getTarget(this.page.content, rowId);
+				var action = event.dataTransfer.getData("drag-action");
+				if (action == "copy") {
+					content = JSON.parse(JSON.stringify(content));
+					content.id = this.page.content.counter++;
+				}
+				else {
+					var parent = this.$services.page.getTarget(this.page.content, content.id, true);
+					var index = parent.rows.indexOf(content);
+					if (index >= 0) {
+						parent.rows.splice(index, 1);
+					}
+				}
+				var rect = event.target.getBoundingClientRect();
+				if (!cell.rows) {
+					Vue.set(cell, "rows", []);
+				}
+				cell.rows.push(content);
+			}
 		}
 	},
 	watch: {
@@ -2817,5 +2957,6 @@ Vue.component("page-sidemenu", {
 		}
 	}
 });
+
 
 

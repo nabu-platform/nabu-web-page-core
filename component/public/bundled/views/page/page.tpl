@@ -1,5 +1,5 @@
 <template id="nabu-page">
-	<component :edit="edit" :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
+	<component :edit="edit" :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="dragOver($event)">
 		<div class="page-menu n-page-menu" v-if="edit && false">
 			<button @click="viewComponents = !viewComponents"><span class="fa fa-cubes" title="Add Components"></span></button>
 		</div>
@@ -561,9 +561,15 @@
 	<div class="page-sidemenu">
 		<div v-for="row in rows" class="row">
 			<div class="page-sideentry" @mouseout="mouseOut($event, row)" :class="{'selected': selected && selected.id == row.id}"
-						@mouseover="mouseOver($event, row)">
+					@dragover="acceptDragRow($event, row)"
+					@dragend="$services.page.clearDrag($event)"
+					@drop="dropRow($event, row)"
+					@mouseover="mouseOver($event, row)">
 				<span class="fa opener" @click="toggleRow(row)" :class="{'fa-chevron-down': opened.indexOf(row.id) >= 0, 'fa-chevron-right': opened.indexOf(row.id) < 0}"></span>
-				<span class="name" @click="selectRow(row)" @click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
+				<span class="name" @click="selectRow(row)" 
+					@dragstart="dragRow($event, row)"
+					:draggable="true" 
+					@click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
 				<div class="collapser">
 					<span class="fa" :class="{'fa-eye': !row.collapsed, 'fa-eye-slash': row.collapsed}" @click="row.collapsed = !row.collapsed"></span>
 					<span class="fa fa-times" @click="$emit('removeRow', row)"></span>
@@ -581,9 +587,15 @@
 			<div v-show="row.cells && opened.indexOf(row.id) >= 0" class="cells">
 				<div v-for="cell in row.cells" class="cell">
 					<div class="page-sideentry" @mouseout="mouseOut($event, row, cell)" :class="{'selected': selected && selected.id == cell.id}"
+							@dragend="$services.page.clearDrag($event)"
+							@dragover="acceptDragCell($event, row, cell)"
+							@drop="dropCell($event, row, cell)"
 							@mouseover="mouseOver($event, row, cell)">
 						<span class="cell-icon fa" :class="['component-' + cell.alias, {'is-empty': !cell.alias }]"></span>
-						<span class="name" @click="selectCell(row, cell)" @click.ctrl="scrollIntoView(row, cell)">{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
+						<span class="name" @click="selectCell(row, cell)" 
+							@dragstart="dragCell($event, row, cell)"
+							:draggable="true" 
+							@click.ctrl="scrollIntoView(row, cell)">{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
 						<div class="configurer">
 							<span class="fa fa-cog" v-if="hasConfigure(cell)" @click="configure(cell)"></span>
 							<span class="fa fa-times" @click="removeCell(row.cells, cell)"></span>

@@ -55,7 +55,8 @@ nabu.services.VueService(Vue.extend({
 			validations: [],
 			googleSiteVerification: null,
 			// the page we are editing?
-			editing: null
+			editing: null,
+			dragItems: []
 		}
 	},
 	activate: function(done) {
@@ -112,6 +113,24 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		closeRight: function() {
+			var right = document.querySelector("#n-sidebar-right-instance");
+			if (right && right.__vue__ && right.__vue__.close) {
+				right.__vue__.close();
+			}
+			else if (right && right.$$close) {
+				right.$$close();
+			}
+		},
+		clearDrag: function() {
+			this.dragItems.splice(0).forEach(function(x) {
+				x.classList.remove("hover-bottom", "hover-top");
+			})
+		},
+		pushDragItem: function(item) {
+			this.clearDrag();
+			this.dragItems.push(item);
+		},
 		parseValue: function(value) {
 			if (value == null || value == "null") {
 				 return null;
@@ -1662,6 +1681,27 @@ nabu.services.VueService(Vue.extend({
 			}
 
 			return result;	
+		},
+		getTarget: function(rowContainer, id, parent) {
+			if (rowContainer.rows) {
+				for (var i = 0; i < rowContainer.rows.length; i++) {
+					if (rowContainer.rows[i].id == id) {
+						return parent ? rowContainer : rowContainer.rows[i];
+					}
+					if (rowContainer.rows[i].cells) {
+						for (var j = 0; j < rowContainer.rows[i].cells.length; j++) {
+							if (rowContainer.rows[i].cells[j].id == id) {
+								return parent ? rowContainer.rows[i] : rowContainer.rows[i].cells[j];
+							}
+							var has = this.getTarget(rowContainer.rows[i].cells[j], id);
+							if (has) {
+								return has;
+							}
+						}
+					}
+				}
+			}
+			return null;
 		},
 		getAllArrays: function(page, targetId) {
 			var self = this;
