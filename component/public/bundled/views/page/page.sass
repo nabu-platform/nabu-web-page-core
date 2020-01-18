@@ -17,7 +17,14 @@ $empty-cell-contrast: $success-color !default;
 body[has-sidebar-left="true"] {
 	margin-left: 300px;
 }
-.n-sidebar.settings {
+.page-startup-wizard {
+	background-color: #eaeaea;
+	border: solid 1px #ccc;
+	padding: 2rem;
+	margin: 1rem;
+	width: auto !important;
+}
+.n-sidebar.settings, .page-startup-wizard {
 	.sidebar-actions {
 		background-color: #333;
 		width: 100%;
@@ -88,105 +95,105 @@ body[has-sidebar-left="true"] {
 			top: 0.2rem;
 			margin-left: 0.3rem;
 		}
-		.n-form-input-wrapper {
-			flex-grow: 1;
-		}
-		.n-form-switch.n-form-checkbox {
-			label.n-form-label {
-				line-height: 1.5rem !important;
-				padding-left: 2.5rem !important;
-				&:before {
-					height: 1.5rem !important;
-					width: 2.7rem !important;
-					border-radius: 8px;
-				}
-				&:after {
-					height: 1.0rem !important;
-					width: 1rem;
-					border-radius: 8px;
-				}
+	}
+	.n-form-input-wrapper {
+		flex-grow: 1;
+	}
+	.n-form-switch.n-form-checkbox {
+		label.n-form-label {
+			line-height: 1.5rem !important;
+			padding-left: 2.5rem !important;
+			&:before {
+				height: 1.5rem !important;
+				width: 2.7rem !important;
+				border-radius: 8px;
+			}
+			&:after {
+				height: 1.0rem !important;
+				width: 1rem;
+				border-radius: 8px;
 			}
 		}
-		.n-form-component {
-			display: flex;
-			&.vertical {
-				flex-direction: column;
-				> .n-form-label-wrapper {	
-					width: 100%;
-					max-width: 100%;
-					margin-top: 0.7rem;
-				}
+	}
+	.n-form-component {
+		display: flex;
+		&.vertical {
+			flex-direction: column;
+			> .n-form-label-wrapper {	
+				width: 100%;
+				max-width: 100%;
+				margin-top: 0.7rem;
 			}
-			&:not(.n-form-checkbox) {
-				> .n-form-label {
-					width: 135px;
-					min-width: 135px;
-					max-width: 135px;
-				}
-			}
-			> .n-form-label-wrapper {
-				display: flex;
+		}
+		&:not(.n-form-checkbox) {
+			> .n-form-label {
 				width: 135px;
 				min-width: 135px;
 				max-width: 135px;
 			}
-			input {
-				line-height: 1.7rem !important;
-				height: 1.7rem !important;
-				font-size: 0.8rem !important;
-				width: 100%;
-				min-width: 5rem;
+		}
+		> .n-form-label-wrapper {
+			display: flex;
+			width: 135px;
+			min-width: 135px;
+			max-width: 135px;
+		}
+		input {
+			line-height: 1.7rem !important;
+			height: 1.7rem !important;
+			font-size: 0.8rem !important;
+			width: 100%;
+			min-width: 5rem;
+		}
+		&.n-form-combo {
+			position: relative;
+		}
+		.n-input-combo-dropdown-values, .n-input-combo-dropdown-labels {
+			//top: unset;
+			//margin-top: 1.6rem;
+			max-width: 100%;
+			right: 0;
+		}
+		.n-input-combo-input-container, .n-input-combo-label-container {
+			position: static;
+			display: flex;
+		}
+		.n-form-combo-bottom {
+			width: 0.3rem;
+		}
+		.n-input-combo {
+			.fa-chevron-down {
+				top: unset !important;
+				margin-top: 0.3rem;
+				position: static;
+				margin-left: 0.3rem;
 			}
-			&.n-form-combo {
-				position: relative;
-			}
-			.n-input-combo-dropdown-values, .n-input-combo-dropdown-labels {
-				//top: unset;
-				//margin-top: 1.6rem;
-				max-width: 100%;
+			ul {
 				right: 0;
 			}
-			.n-input-combo-input-container, .n-input-combo-label-container {
-				position: static;
-				display: flex;
-			}
-			.n-form-combo-bottom {
-				width: 0.3rem;
-			}
-			.n-input-combo {
-				.fa-chevron-down {
-					top: unset !important;
-					margin-top: 0.3rem;
-					position: static;
-					margin-left: 0.3rem;
-				}
-				ul {
-					right: 0;
-				}
-				.n-input-combo-label-container {
-					background-color: #951111;
-					.n-input-combo-label {
-						> span {
-							color: white;
-						}
-					}
-				}
-				height: 1.7rem;
-				width: 100%;
-				.fa {
-					 top: 0.4rem;
-				}
-				.n-input-combo-dropdown-value, .n-input-combo-dropdown {
-					padding: 0.3rem 0.7rem;
-					font-size: 0.8rem;
-					li {
-						padding: 0.2rem 0.7rem;
-					}
-				}
+			.n-input-combo-label-container {
+				background-color: #951111;
 				.n-input-combo-label {
-					padding: 0rem 0.7rem;
-					font-size: 0.8rem;
+					> span {
+						color: white;
+					}
 				}
+			}
+			height: 1.7rem;
+			width: 100%;
+			.fa {
+				 top: 0.4rem;
+			}
+			.n-input-combo-dropdown-value, .n-input-combo-dropdown {
+				padding: 0.3rem 0.7rem;
+				font-size: 0.8rem;
+				li {
+					padding: 0.2rem 0.7rem;
+				}
+			}
+			.n-input-combo-label {
+				padding: 0rem 0.7rem;
+				font-size: 0.8rem;
 			}
 		}
 	}
@@ -573,6 +580,9 @@ body[has-sidebar="true"] {
 	}
 }
 .page-sidemenu {
+	.fa-times {
+		color: #555;
+	}
 	background-color: white;
 	//white-space: nowrap;
 	.row > .page-sideentry .page-sideentry-menu {

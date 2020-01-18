@@ -356,7 +356,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			savePageTimer: null,
 			// the selected item in the side menu
 			selectedItem: null,
-			viewComponents: false
+			viewComponents: false,
+			closing: false
 		}
 	},
 	methods: {
@@ -364,18 +365,39 @@ nabu.page.views.Page = Vue.component("n-page", {
 			Vue.set(this, 'selectedItem', item);	
 		},
 		stopEdit: function() {
-			if (this.$refs.sidemenu) {
-				this.$refs.sidemenu.close();
-			}
-			if (this.edit) {
-				this.$services.page.editing.edit = false;
-				this.$services.page.editing = null;
+			if (this.edit && !this.closing) {
+				this.closing = true;
+				var right = document.querySelector("#n-sidebar-right-instance");
+				if (right && right.__vue__ && right.__vue__.close) {
+					right.__vue__.close();
+				}
+				else if (right && right.$$close) {
+					right.$$close();
+				}
+				var left = document.querySelector("#n-sidebar-left-instance");
+				if (left && left.__vue__ && left.__vue__.close) {
+					left.__vue__.close();
+				}
+				else if (left && left.$$close) {
+					left.$$close();
+				}
+				/*if (this.$refs.sidemenu) {
+					this.$refs.sidemenu.close();
+				}*/
+				if (this.$services.page.editing) {
+					this.$services.page.editing.edit = false;
+					this.$services.page.editing = null;
+				}
+				this.closing = false;
+				this.edit = false;
 			}
 		},
 		goIntoEdit: function() {
 			if (!this.edit) {
 				if (this.$services.page.editing) {
-					this.$services.page.editing.stopEdit();
+					if (this.$services.page.editing.edit) {
+						this.$services.page.editing.stopEdit();
+					}
 					this.$services.page.editing = null;
 				}
 				this.edit = true;
@@ -504,7 +526,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			var rect = this.$el.getBoundingClientRect();
 			Vue.set(this.page.content, "menuX", event.clientX - rect.left);
 			Vue.set(this.page.content, "menuY", event.clientY - rect.top);
-			this.$services.page.update(this.page);
+			//this.$services.page.update(this.page);
 		},
 		getOperationParameters: function(operation, explode) {
 			// could be an invalid operation?
@@ -1621,7 +1643,8 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		drop: function($event, row) {
 			var data = $event.dataTransfer.getData("component-alias");
 			if (data != null) {
-				this.addCell(row).alias = data;
+				var cell = this.addCell(row);
+				cell.alias = data;
 			}
 		},
 		dragOver: function($event, row) {
@@ -2357,10 +2380,21 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				name: null
 			});
 		},
+		closeRight: function() {
+			var right = document.querySelector("#n-sidebar-right-instance");
+			if (right && right.__vue__ && right.__vue__.close) {
+				right.__vue__.close();
+			}
+			else if (right && right.$$close) {
+				right.$$close();
+			}
+		},
 		removeCell: function(cells, cell) {
+			var self = this;
 			this.$confirm({
 				message: "Are you sure you want to remove this cell?"
 			}).then(function() {
+				self.closeRight();
 				cells.splice(cells.indexOf(cell), 1);
 			});
 		},
@@ -2426,7 +2460,20 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		goto: function(event, row, cell) {
 			if (this.edit) {
 				this.$emit("select", cell ? cell : row);
-				this.configuring = cell ? cell.id : row.id;
+				var doDefault = true;
+				// if we have a cell target with a configuration, show that, otherwise, we do the generic configuration
+				if (cell != null) {
+					var self = this;
+					var pageInstance = self.$services.page.getPageInstance(self.page, self);
+					var cellInstance = pageInstance.components[cell.id];
+					if (cellInstance && cellInstance.configure) {
+						cellInstance.configure();
+						doDefault = false;
+					}
+				}
+				if (doDefault) {
+					this.configuring = cell ? cell.id : row.id;
+				}
 				event.stopPropagation();
 			}
 		},
@@ -2687,6 +2734,7 @@ Vue.component("page-sidemenu", {
 			});
 		},
 		removeRow: function(cell, row) { 
+			self.closeRight();
 			cell.rows.splice(cell.rows(indexOf(row), 1));
 		},
 		addCell: function(target) {

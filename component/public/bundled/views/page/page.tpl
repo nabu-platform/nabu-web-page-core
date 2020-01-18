@@ -1,12 +1,12 @@
 <template id="nabu-page">
 	<component :edit="edit" :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
-		<div class="page-menu n-page-menu" v-if="edit">
+		<div class="page-menu n-page-menu" v-if="edit && false">
 			<button @click="viewComponents = !viewComponents"><span class="fa fa-cubes" title="Add Components"></span></button>
 		</div>
-		<n-sidebar :inline="true" class="settings" v-if="viewComponents" @close="viewComponents = false">
+		<n-sidebar :inline="true" class="settings" v-if="viewComponents" @close="viewComponents = false" :autocloseable="false">
 			<page-components-overview/>
 		</n-sidebar>
-		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit && !embedded" :draggable="true" 
+		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit && !embedded && !this.$services.page.editing" :draggable="true" 
 				@dragstart="dragMenu($event)"
 				:class="{'page-component': !page.content.path}"
 				:style="{'top': page.content.menuY ? page.content.menuY + 'px' : '0px', 'left': page.content.menuX ? page.content.menuX + 'px' : '0px'}">
@@ -34,6 +34,7 @@
 		<n-sidebar v-if="edit && page.content.rows" position="left" class="settings sidemenu" :inline="true" :autocloseable="false" ref="sidemenu"
 				@close="stopEdit">
 			<div class="sidebar-actions">
+				<button @click="viewComponents = !viewComponents"><span class="fa fa-cubes" title="Add Components"></span></button>
 				<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
 				<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
 				<button v-if="!embedded" @click="$services.page.update(page)"><span class="fa fa-save" title="Save"></span></button>
@@ -55,8 +56,9 @@
 			:page-instance-id="pageInstanceId"
 			:stop-rerender="stopRerender"
 			@select="selectItem"
+			@viewComponents="viewComponents = edit"
 			@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
-		<n-sidebar v-if="configuring" @close="configuring = false" class="settings" :inline="true">
+		<n-sidebar :autocloseable="false" v-if="configuring" @close="configuring = false" class="settings" :inline="true">
 			<n-form class="layout2">
 				<n-collapsible title="General Settings">
 					<h2>Router<span class="subscript">These settings will determine how the page is routed throughout the application.</span></h2>
@@ -273,12 +275,8 @@
 					:edit="edit"/>
 			</n-form>
 		</n-sidebar>
-		<div class="page-menu n-page-menu" v-if="edit">
-			<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
-			<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
-			<button v-if="!embedded" @click="$services.page.update(page)"><span class="fa fa-save" title="Save"></span></button>
-			<button @click="pasteRow" v-if="$services.page.copiedRow"><span class="fa fa-paste"></span></button>
-			<button v-if="!embedded" @click="edit = false"><span class="fa fa-sign-out-alt" title="Stop Editing"></span></button>
+		<div class="page-menu n-page-menu" v-if="edit && false">
+			<button @click="viewComponents = !viewComponents"><span class="fa fa-cubes" title="Add Components"></span></button>
 		</div>
 	</component>
 </template>
@@ -297,6 +295,7 @@
 				@mouseout="mouseOut($event, row)"
 				@mouseover="mouseOver($event, row)"
 				@click.ctrl="goto($event, row)"
+				@click.alt="$emit('select', row) && $emit('viewComponents')"
 				v-bind="getRendererProperties(row)">
 			<div v-if="false && (edit || $services.page.wantEdit || row.wantVisibleName) && row.name && !row.collapsed" :style="getRowEditStyle(row)" class="row-edit-label"
 				:class="'direction-' + (row.direction ? row.direction : 'horizontal')"><span>{{row.name}}</span></div>
@@ -324,7 +323,7 @@
 					v-bind="getRendererProperties(cell)">
 				<div v-if="false && (edit || $services.page.wantEdit) && cell.name" :style="getCellEditStyle(cell)" class="cell-edit-label"><span>{{cell.name}}</span></div>
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-				<n-sidebar v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings" :inline="true" >
+				<n-sidebar :autocloseable="false" v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings" :inline="true">
 					<div class="sidebar-actions">
 						<button @click="configuring = null; configure(cell)" v-if="cell.alias && hasConfigure(cell)"><span class="fa fa-cog" title="Configure Cell Content"></span></button
 						><button @click="left(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-left"></span></button
@@ -435,6 +434,7 @@
 						:local-state="getLocalState(row, cell)"
 						:page-instance-id="pageInstanceId"
 						:stop-rerender="stopRerender"
+						v-bubble:viewComponents
 						@select="function(item) { $emit('select', item) }"
 						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 				</div>
@@ -477,7 +477,7 @@
 					</template>
 				</template>
 			</component>
-			<n-sidebar v-if="configuring == row.id" @close="configuring = null" class="settings" :inline="true" >
+			<n-sidebar :autocloseable="false" v-if="configuring == row.id" @close="configuring = null" class="settings" :inline="true" >
 				<div class="sidebar-actions">
 					<button @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button
 					><button @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button
@@ -564,7 +564,10 @@
 						@mouseover="mouseOver($event, row)">
 				<span class="fa opener" @click="toggleRow(row)" :class="{'fa-chevron-down': opened.indexOf(row.id) >= 0, 'fa-chevron-right': opened.indexOf(row.id) < 0}"></span>
 				<span class="name" @click="selectRow(row)" @click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
-				<span class="fa collapser" :class="{'fa-eye': !row.collapsed, 'fa-eye-slash': row.collapsed}" @click="row.collapsed = !row.collapsed"></span>
+				<div class="collapser">
+					<span class="fa" :class="{'fa-eye': !row.collapsed, 'fa-eye-slash': row.collapsed}" @click="row.collapsed = !row.collapsed"></span>
+					<span class="fa fa-times" @click="$emit('removeRow', row)"></span>
+				</div>
 				<div class="page-sideentry-menu" v-if="false">
 					<button @click="configureRow(row)"><span class="fa fa-magic"></span></button
 					><button @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button
@@ -581,7 +584,10 @@
 							@mouseover="mouseOver($event, row, cell)">
 						<span class="cell-icon fa" :class="['component-' + cell.alias, {'is-empty': !cell.alias }]"></span>
 						<span class="name" @click="selectCell(row, cell)" @click.ctrl="scrollIntoView(row, cell)">{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
-						<span class="fa configurer fa-cog" v-if="hasConfigure(cell)" @click="configure(cell)"></span>
+						<div class="configurer">
+							<span class="fa fa-cog" v-if="hasConfigure(cell)" @click="configure(cell)"></span>
+							<span class="fa fa-times" @click="removeCell(row.cells, cell)"></span>
+						</div>
 						<div class="page-sideentry-menu" v-if="false">
 							<button @click="configureCell(row, cell);"><span class="fa fa-magic" title="Set Cell Content"></span></button
 							><button @click="configure(cell)" v-if="cell.alias"><span class="fa fa-cog" title="Configure Cell Content"></span></button    
