@@ -1644,9 +1644,11 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 	methods: {
 		drop: function($event, row) {
 			var data = $event.dataTransfer.getData("component-alias");
-			if (data != null) {
+			if (data) {
 				var cell = this.addCell(row);
 				cell.alias = data;
+				$event.preventDefault();
+				$event.stopPropagation();
 			}
 		},
 		dragOver: function($event, row) {
