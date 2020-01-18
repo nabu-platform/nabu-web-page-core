@@ -1,6 +1,6 @@
 <template id="page-form">
 	<div class="page-form">
-		<n-sidebar @close="configuring = false" v-if="configuring" class="settings">
+		<n-sidebar @close="configuring = false" v-if="configuring" class="settings" :inline="true">
 			<n-form class="layout2">
 				<n-collapsible title="Form Settings">
 					<n-form-combo label="Operation" :value="operation" :filter="getOperations"

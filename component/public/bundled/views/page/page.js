@@ -355,7 +355,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			saveContents: [],
 			savePageTimer: null,
 			// the selected item in the side menu
-			selectedItem: null
+			selectedItem: null,
+			viewComponents: false
 		}
 	},
 	methods: {
@@ -492,7 +493,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			})	
 		},
 		dragMenu: function(event) {
-			event.dataTransfer.setData("page-menu", this.page.name);	
+			event.dataTransfer.setData("page-menu", this.page.name);
 		},
 		dragOver: function(event) {
 			// do nothing?
@@ -1617,6 +1618,36 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		});
 	},
 	methods: {
+		drop: function($event, row) {
+			var data = $event.dataTransfer.getData("component-alias");
+			if (data != null) {
+				this.addCell(row).alias = data;
+			}
+		},
+		dragOver: function($event, row) {
+			var self = this;
+			var rowTarget = document.getElementById(self.page.name + '_' + row.id);
+			if (rowTarget) {
+				rowTarget.classList.add("hovering");
+			}
+			$event.preventDefault();
+			$event.stopPropagation();
+		},
+		dragExit: function($event, row) {
+			var self = this;
+			var rowTarget = document.getElementById(self.page.name + '_' + row.id);
+			if (rowTarget) {
+				rowTarget.classList.remove("hovering");
+			}
+			$event.preventDefault();
+			$event.stopPropagation();
+		},
+		hasConfigure: function(cell) {
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			var cellInstance = pageInstance.components[cell.id];
+			return cellInstance && cellInstance.configure;
+		},
 		setRowConfiguring: function(id) {
 			this.configuring = id;	
 		},
@@ -2259,7 +2290,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			if (!target.cells) {
 				Vue.set(target, "cells", []);
 			}
-			target.cells.push({
+			var cell = {
 				id: this.page.content.counter++,
 				rows: [],
 				// the alias of the route we want to render here (if any)
@@ -2286,7 +2317,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				condition: null,
 				devices: [],
 				clickEvent: null
-			});
+			};
+			target.cells.push(cell);
+			return cell;
 		},
 		addInstance: function(target) {
 			if (!target.instances) {

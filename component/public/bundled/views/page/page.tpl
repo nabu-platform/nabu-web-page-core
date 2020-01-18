@@ -1,8 +1,11 @@
 <template id="nabu-page">
 	<component :edit="edit" :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="$event.preventDefault()">
 		<div class="page-menu n-page-menu" v-if="edit">
-			<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
+			<button @click="viewComponents = !viewComponents"><span class="fa fa-cubes" title="Add Components"></span></button>
 		</div>
+		<n-sidebar :inline="true" class="settings" v-if="viewComponents" @close="viewComponents = false">
+			<page-components-overview/>
+		</n-sidebar>
 		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit && !embedded" :draggable="true" 
 				@dragstart="dragMenu($event)"
 				:class="{'page-component': !page.content.path}"
@@ -288,6 +291,9 @@
 				:row-key="'page_' + pageInstanceId + '_row_' + row.id"
 				v-if="edit || shouldRenderRow(row)"
 				:style="rowStyles(row)"
+				@drop="drop($event, row)" 
+				@dragover="dragOver($event, row)"
+				@dragexit="dragExit($event, row)"
 				@mouseout="mouseOut($event, row)"
 				@mouseover="mouseOver($event, row)"
 				@click.ctrl="goto($event, row)"
@@ -320,7 +326,8 @@
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				<n-sidebar v-if="configuring == cell.id" @close="configuring = null" class="settings" key="cell-settings" :inline="true" >
 					<div class="sidebar-actions">
-						<button @click="left(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-left"></span></button
+						<button @click="configuring = null; configure(cell)" v-if="cell.alias && hasConfigure(cell)"><span class="fa fa-cog" title="Configure Cell Content"></span></button
+						><button @click="left(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-left"></span></button
 						><button @click="right(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-right"></span></button
 						><button @click="addRow(cell)"><span class="fa fa-plus" title="Add Row"></span></button
 						><button @click="copyCell(cell)"><span class="fa fa-copy" title="Copy Cell"></span></button
@@ -329,7 +336,8 @@
 					</div>
 					<n-form class="layout2" key="cell-form">
 						<n-form-section>
-							<n-collapsible title="Content" key="cell-content">
+							<n-collapsible title="Cell Settings" key="cell-settings">
+								<h2>Content<span class="subscript">Choose the content you want to show in this cell</span></h2>
 								<n-form-combo label="Content Route" :filter="filterRoutes" v-model="cell.alias"
 									:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
 									:required="true"
@@ -339,8 +347,35 @@
 									:to="getRouteParameters(cell)"
 									:from="getAvailableParameters(cell)" 
 									v-model="cell.bindings"/>
+								<n-form-text label="Condition" v-model="cell.condition" info="If you fill in a condition, the cell will only render the content if the condition evaluates to true"/>
+									
+								<h2>Additional<span class="subscript">Configure some additional settings for this cell</span></h2>
+								<n-form-text label="Cell Id" v-model="cell.customId" info="If you set a custom id for this cell, a container will be rendered in this cell with that id. This can be used for targeting with specific content."/>
+								<n-form-text label="Cell Name" v-model="cell.name" info="A descriptive name"/>
+								<n-form-text label="Cell Width" v-model="cell.width" info="By default flex is used to determine cell size, you can either configure a number for flex or choose to go for a fixed value"/>
+								<n-form-text label="Cell Height" v-model="cell.height" info="You can configure any height, for example 200px"/>
+								<n-form-text label="Cell Reference" v-model="cell.ref" info="A reference you can use to retrieve this cell programmatically"/>
+								<n-form-combo label="Cell Renderer" v-model="cell.renderer" :items="getRenderers('cell')" :formatter="function(x) { return x.name }" 
+									:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
+								<n-form-section v-if="cell.renderer">
+									<n-form-text v-for="property in getRendererPropertyKeys(cell)" :label="property" v-model="cell.rendererProperties[property]"/>
+								</n-form-section>
+								<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
+								<div v-if="$services.page.devices.length">
+									<div class="list-actions">
+										<button @click="addDevice(cell)">Add device rule</button>
+									</div>
+									<div v-if="cell.devices">
+										<div class="list-row" v-for="device in cell.devices">
+											<n-form-combo v-model="device.operator" :items="['>', '>=', '<', '<=', '==']"/>
+											<n-form-combo v-model="device.name" 
+												:filter="suggestDevices"/>
+											<span @click="cell.devices.splice(cell.devices.indexOf(device), 1)" class="fa fa-times"></span>
+										</div>
+									</div>
+								</div>
 							</n-collapsible>
-							<n-collapsible title="Repeat" class="list" v-if="cell.instances && $services.page.getAllArrays(page, cell.id).length">
+							<n-collapsible title="Repeat" class="list" v-if="false && cell.instances && $services.page.getAllArrays(page, cell.id).length">
 								<div class="list-actions" v-if="!Object.keys(cell.instances).length">
 									<button @click="addInstance(cell)">Add Repeat</button>
 								</div>
@@ -352,57 +387,27 @@
 									</div>
 								</n-collapsible>
 							</n-collapsible>
-							<n-collapsible title="Cell Settings" key="cell-settings">
-								<n-form-text label="Cell Id" v-model="cell.customId"/>
-								<n-form-text label="Cell Name" v-model="cell.name"/>
-								<n-form-text label="Cell Width (flex or other)" v-model="cell.width"/>
-								<n-form-text label="Cell Height (any)" v-model="cell.height"/>
-								<div v-if="false">
-									<n-form-text label="Click Event" v-model="cell.clickEvent" :timeout="600" @input="resetEvents"/>
-									<n-form-switch v-model="cell.hasFixedClickValue" v-if="cell.clickEvent" label="Does the click event have a fixed value?"/>
-									<n-form-combo v-model="cell.clickEventValue" v-if="cell.clickEvent && !cell.hasFixedClickValue" label="Click Event Value"
-										:filter="function(value) { return $services.page.getSimpleKeysFor({properties:$services.page.getAllAvailableParameters(page, null, true)}).filter(function(x) { return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0 }) }"/>           
-									<n-form-text v-model="cell.clickEventValue" v-if="cell.clickEvent && cell.hasFixedClickValue" label="Click Event Fixed Value"/>
-								</div>
-								<n-form-text label="Cell Reference" v-model="cell.ref"/>
-								<n-form-text label="Class" v-model="cell.class"/>
-								<n-form-combo label="Cell Renderer" v-model="cell.renderer" :items="getRenderers('cell')" :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
-								<n-form-section v-if="cell.renderer">
-									<n-form-text v-for="property in getRendererPropertyKeys(cell)" :label="property" v-model="cell.rendererProperties[property]"/>
-								</n-form-section>
-								<n-form-switch label="Stop Rerender" v-model="cell.stopRerender"/>
-								<n-form-text label="Condition" v-model="cell.condition"/>
-								<div class="list-actions">
-									<button @click="addDevice(cell)">Add device rule</button>
-								</div>
-								<div v-if="cell.devices">
-									<div class="list-row" v-for="device in cell.devices">
-										<n-form-combo v-model="device.operator" :items="['>', '>=', '<', '<=', '==']"/>
-										<n-form-combo v-model="device.name" 
-											:filter="suggestDevices"/>
-										<button @click="cell.devices.splice(cell.devices.indexOf(device), 1)"><span class="fa fa-trash"></span></button>
-									</div>
-								</div>
-							</n-collapsible>
-							<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" v-bubble:resetEvents/>
-							<n-collapsible title="Cell Styling">
-								<div class="list-actions">
-									<button @click="cell.styles == null ? $window.Vue.set(cell, 'styles', [{class:null,condition:null}]) : cell.styles.push({class:null,condition:null})">Add Style</button>
-								</div>
-								<div v-if="cell.styles">
-									<n-form-section class="list-row" v-for="style in cell.styles">
-										<n-form-text v-model="style.class" label="Class"/>
-										<n-form-text v-model="style.condition" label="Condition"/>
-										<button @click="cell.styles.splice(cell.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
-									</n-form-section>
-								</div>
-							</n-collapsible>
 							<n-collapsible title="Eventing" key="cell-events">
 								<n-form-switch label="Closeable" v-model="cell.closeable" v-if="!cell.on"/>
 								<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents" v-if="!cell.closeable"/>
 								<n-form-combo label="Target" :items="['page', 'sidebar', 'prompt']" v-model="cell.target"/>
 								<n-form-switch label="Prevent Auto Close" v-model="cell.preventAutoClose" v-if="cell.target == 'sidebar'"/>
 								<n-form-switch label="Optimize (may result in stale content)" v-model="cell.optimizeVueKey" v-if="cell.on"/>
+								
+								<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" v-bubble:resetEvents/>
+							</n-collapsible>
+							<n-collapsible title="Styling">
+								<n-form-text label="Class" v-model="cell.class"/>
+								<div class="list-actions">
+									<button @click="cell.styles == null ? $window.Vue.set(cell, 'styles', [{class:null,condition:null}]) : cell.styles.push({class:null,condition:null})"><span class="fa fa-plus"></span>Style</button>
+								</div>
+								<div v-if="cell.styles">
+									<n-form-section class="list-row" v-for="style in cell.styles">
+										<n-form-text v-model="style.class" label="Class"/>
+										<n-form-text v-model="style.condition" label="Condition"/>
+										<span @click="cell.styles.splice(cell.styles.indexOf(style), 1)" class="fa fa-times"></span>
+									</n-form-section>
+								</div>
 							</n-collapsible>
 						</n-form-section>
 					</n-form>
@@ -483,32 +488,34 @@
 				</div>
 				<n-form class="layout2">
 					<n-collapsible title="Row Settings">
-						<n-form-text label="Row Id" v-model="row.customId"/>
-						<n-form-text label="Row Name" v-model="row.name"/>
-						<n-form-combo label="Show On" v-model="row.on" :filter="getAvailableEvents"/>
-						<n-form-text label="Class" v-model="row.class"/>
-						<n-form-combo label="Row Renderer" v-model="row.renderer" :items="getRenderers('row')"  :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
-						<n-form-section v-if="row.renderer">
-							<n-form-text v-for="property in getRendererPropertyKeys(row)" :label="property" v-model="row.rendererProperties[property]"/>
-						</n-form-section>
+						<h2>Rendering<span class="subscript">Choose how this row will be rendered</span></h2>
 						<n-form-text label="Condition" v-model="row.condition"/>
 						<n-form-combo label="Direction" v-model="row.direction" :items="['horizontal', 'vertical']"/>
 						<n-form-combo label="Alignment" v-model="row.align" :items="['center', 'flex-start', 'flex-end', 'stretch', 'baseline']"/>
 						<n-form-combo label="Justification" v-model="row.justify" :items="['center', 'flex-start', 'flex-end', 'space-between', 'space-around', 'space-evenly']"/>
-						<n-form-switch v-if="false" label="Always show row name" v-model="row.wantVisibleName"/>
-						<div class="list-actions">
-							<button @click="addDevice(row)">Add device rule</button>
-						</div>
-						<div v-if="row.devices">
-							<div class="list-row" v-for="device in row.devices">
-								<n-form-combo v-model="device.operator" :items="['>', '>=', '<', '<=', '==']"/>
-								<n-form-combo v-model="device.name" 
-									:filter="suggestDevices"/>
-								<button @click="row.devices.splice(row.devices.indexOf(device), 1)"><span class="fa fa-trash"></span></button>
+						
+						<h2>Additional<span class="subscript">Configure some additional settings for this row</span></h2>
+						<n-form-text label="Row Id" v-model="row.customId" info="If you set a custom id for this row, a container will be rendered in this row with that id. This can be used for targeting with specific content."/>
+						<n-form-text label="Row Name" v-model="row.name" info="A descriptive name"/>
+						<n-form-combo label="Row Renderer" v-model="row.renderer" :items="getRenderers('row')"  :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
+						<n-form-section v-if="row.renderer">
+							<n-form-text v-for="property in getRendererPropertyKeys(row)" :label="property" v-model="row.rendererProperties[property]"/>
+						</n-form-section>
+						<div v-if="$services.page.devices.length">
+							<div class="list-actions">
+								<button @click="addDevice(row)">Add device rule</button>
+							</div>
+							<div v-if="row.devices">
+								<div class="list-row" v-for="device in row.devices">
+									<n-form-combo v-model="device.operator" :items="['>', '>=', '<', '<=', '==']"/>
+									<n-form-combo v-model="device.name" 
+										:filter="suggestDevices"/>
+									<span @click="row.devices.splice(row.devices.indexOf(device), 1)" class="fa fa-times"></span>
+								</div>
 							</div>
 						</div>
 					</n-collapsible>
-					<n-collapsible title="Repeat" class="list" v-if="row.instances && $services.page.getAllArrays(page, row.id).length">
+					<n-collapsible title="Repeat" class="list" v-if="false && row.instances && $services.page.getAllArrays(page, row.id).length">
 						<div class="list-actions" v-if="!Object.keys(row.instances).length">
 							<button @click="addInstance(row)">Add Repeat</button>
 						</div>
@@ -520,7 +527,11 @@
 							</div>
 						</n-collapsible>
 					</n-collapsible>
-					<n-collapsible title="Row Styling">
+					<n-collapsible title="Eventing">
+						<n-form-combo label="Show On" v-model="row.on" :filter="getAvailableEvents"/>
+					</n-collapsible>
+					<n-collapsible title="Styling">
+						<n-form-text label="Class" v-model="row.class"/>
 						<div class="list-actions">
 							<button @click="row.styles == null ? $window.Vue.set(row, 'styles', [{class:null,condition:null}]) : row.styles.push({class:null,condition:null})">Add Style</button>
 						</div>
@@ -528,7 +539,7 @@
 							<n-form-section class="list-row" v-for="style in row.styles">
 								<n-form-text v-model="style.class" label="Class"/>
 								<n-form-text v-model="style.condition" label="Condition"/>
-								<button @click="row.styles.splice(row.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
+								<span @click="row.styles.splice(row.styles.indexOf(style), 1)" class="fa fa-times"></span>
 							</n-form-section>
 						</div>
 					</n-collapsible>

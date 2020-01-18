@@ -28,6 +28,11 @@ body[has-sidebar-left="true"] {
 			padding: 0.5rem 0.7rem;
 		}
 	}
+	button {
+		.fa-plus {
+			margin-right: 0.3rem;
+		}
+	}
 	&.sidemenu {
 		width: 300px;
 	}
@@ -135,12 +140,28 @@ body[has-sidebar-left="true"] {
 			&.n-form-combo {
 				position: relative;
 			}
+			.n-input-combo-dropdown-values, .n-input-combo-dropdown-labels {
+				//top: unset;
+				//margin-top: 1.6rem;
+				max-width: 100%;
+				right: 0;
+			}
+			.n-input-combo-input-container, .n-input-combo-label-container {
+				position: static;
+				display: flex;
+			}
+			.n-form-combo-bottom {
+				width: 0.3rem;
+			}
 			.n-input-combo {
-				.n-input-combo-input-container {
+				.fa-chevron-down {
+					top: unset !important;
+					margin-top: 0.3rem;
 					position: static;
+					margin-left: 0.3rem;
 				}
 				ul {
-					left: 0;
+					right: 0;
 				}
 				.n-input-combo-label-container {
 					background-color: #951111;
@@ -163,7 +184,7 @@ body[has-sidebar-left="true"] {
 					}
 				}
 				.n-input-combo-label {
-					padding: 0.2rem 0.7rem;
+					padding: 0rem 0.7rem;
 					font-size: 0.8rem;
 				}
 			}

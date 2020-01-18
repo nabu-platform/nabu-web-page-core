@@ -168,7 +168,18 @@
 							"add.tpl": {
 								"url": "views/page/addCell/add.tpl"
 							}
-						}, 
+						},
+						"components": {
+							"components.js": {
+								"url": "views/page/components/components.js"
+							}, 
+							"components.tpl": {
+								"url": "views/page/components/components.tpl"
+							}, 
+							"components.scss": {
+								"url": "views/page/components/components.scss"
+							}
+						},
 						"page.js": {
 							"url": "views/page/page.js"
 						}, 

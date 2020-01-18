@@ -1,6 +1,6 @@
 <template id="page-youtube">
 	<div class="page-youtube">
-		<n-sidebar v-if="configuring" @close="configuring = false" class="settings">
+		<n-sidebar v-if="configuring" @close="configuring = false" class="settings" :inline="true">
 			<n-form class="layout2">
 				<n-form-section>
 					<n-collapsible title="Youtube settings">

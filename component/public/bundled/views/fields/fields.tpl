@@ -147,7 +147,7 @@
 
 <template id="page-fields">
 	<dl class="page-fields" :class="cell.state.class">
-		<n-sidebar @close="configuring = false" v-if="configuring" class="settings">
+		<n-sidebar @close="configuring = false" v-if="configuring" class="settings" :inline="true">
 			<n-form class="layout2">
 				<n-collapsible title="Field Settings">
 					<n-form-text v-model="cell.state.class" label="Class"/>

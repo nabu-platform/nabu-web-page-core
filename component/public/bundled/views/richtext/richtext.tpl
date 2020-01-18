@@ -1,6 +1,6 @@
 <template id="page-richtext">
 	<div class="page-richtext">
-		<n-sidebar v-if="configuring" @close="configuring = false" class="settings">
+		<n-sidebar v-if="configuring" @close="configuring = false" class="settings" :inline="true">
 			<n-form class="layout2">
 				<n-form-section>
 					<n-collapsible title="Rich text settings">

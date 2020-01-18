@@ -1,7 +1,7 @@
 <template id="page-actions">
 	<ul class="page-actions" :class="[cell.state.class, {'page-actions-root': actions == null }]" v-auto-close.actions="autoclose"
 			v-fixed-header="cell.state.isFixedHeader != null && cell.state.isFixedHeader == true">
-		<n-sidebar v-if="configuring" @close="configuring = false" class="settings">
+		<n-sidebar v-if="configuring" @close="configuring = false" class="settings" :inline="true">
 			<n-form class="layout2">
 				<n-form-section>
 					<n-collapsible title="Action Settings" v-if="!actions">
@@ -19,9 +19,9 @@
 					</n-collapsible>
 					<n-collapsible title="Actions" class="list">
 						<div class="list-actions">
-							<button @click="addAction(false)">Add Static Action</button>
-							<button @click="addAction(true)">Add Dynamic Action</button>
-							<button @click="addContent()">Add Content</button>
+							<button @click="addAction(false)"><span class="fa fa-plus"></span>Static</button>
+							<button @click="addAction(true)"><span class="fa fa-plus"></span>Dynamic</button>
+							<button @click="addContent()"><span class="fa fa-plus"></span>Content</button>
 						</div>
 						<n-collapsible class="list-item" :title="action.label ? action.label : action.name" v-for="action in getActions()">
 							
@@ -87,34 +87,42 @@
 									<n-form-combo v-model="action.validate" label="Only if valid" :filter="validatableItems"/>
 									<n-form-text info="The event to send out if we have a validation error" v-if="action.validate" v-model="action.validationErrorEvent" label="Validation Error Event" />
 									<n-form-switch info="Whether we want to scroll to the first exception" v-if="action.validate" v-model="action.validationErrorScroll" label="Scroll to Validation Error" />
-									<div v-if="action.triggers">
-										<div class="list-row" v-for="i in Object.keys(action.triggers)">
-											<n-form-combo v-model="action.triggers[i]" label="Trigger" :items="$window.Object.keys($services.page.getAllAvailableParameters(page))"/>
-											<button @click="action.triggers.splice(i, 1)"><span class="fa fa-trash"></span></button>
-										</div>
-										<n-form-switch v-model="action.triggerIfHidden" v-if="action.triggers.length && action.condition" label="Allow trigger if hidden"/>
-									</div>
-									<div class="list-row" v-for="i in Object.keys(action.activeRoutes)">
-										<n-form-combo v-model="action.activeRoutes[i]" label="Active Route" :filter="function(value) { return listRoutes(value, true) }"/>
-										<button @click="action.activeRoutes.splice(i, 1)"><span class="fa fa-trash"></span></button>
-									</div>
 								</n-form-section>
 							</n-form-section>
 							
 							<div class="list-item-actions">
-								<button @click="addStyle(action)">Add Style</button>
+								<button @click="action.triggers ? action.triggers.push('') : $window.Vue.set(action, 'triggers', [''])"><span class="fa fa-plus"></span>Trigger</button>
 							</div>
-							<div v-if="action.styles">
-								<n-form-section class="list-row" v-for="style in action.styles">
-									<n-form-text v-model="style.class" label="Class"/>
-									<n-form-text v-model="style.condition" label="Condition"/>
-									<button @click="action.styles.splice(action.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
-								</n-form-section>
+							<div v-if="action.triggers">
+								<div class="list-row" v-for="i in Object.keys(action.triggers)">
+									<n-form-combo v-model="action.triggers[i]" label="Trigger" :items="$window.Object.keys($services.page.getAllAvailableParameters(page))"/>
+									<button @click="action.triggers.splice(i, 1)"><span class="fa fa-trash"></span></button>
+								</div>
+								<n-form-switch v-model="action.triggerIfHidden" v-if="action.triggers.length && action.condition" label="Allow trigger if hidden"/>
 							</div>
 							
 							<div class="list-item-actions">
-								<button @click="action.triggers ? action.triggers.push('') : $window.Vue.set(action, 'triggers', [''])">Add Trigger</button>
-								<button @click="action.activeRoutes.push('')">Add Active Route</button>
+								<button @click="action.activeRoutes.push('')"><span class="fa fa-plus"></span>Active Route</button>
+							</div>
+							<div class="list-row" v-for="i in Object.keys(action.activeRoutes)">
+								<n-form-combo v-model="action.activeRoutes[i]" label="Active Route" :filter="function(value) { return listRoutes(value, true) }"/>
+								<button @click="action.activeRoutes.splice(i, 1)"><span class="fa fa-trash"></span></button>
+							</div>
+							
+							<n-collapsible title="Stye">
+								<div class="list-item-actions">
+									<button @click="addStyle(action)"><span class="fa fa-plus"></span>Style</button>
+								</div>
+								<div v-if="action.styles">
+									<n-form-section class="list-row" v-for="style in action.styles">
+										<n-form-text v-model="style.class" label="Class"/>
+										<n-form-text v-model="style.condition" label="Condition"/>
+										<span class="fa fa-times" @click="action.styles.splice(action.styles.indexOf(style), 1)"></span>
+									</n-form-section>
+								</div>
+							</n-collapsible>
+							
+							<div class="list-item-actions">
 								<button @click="up(action)"><span class="fa fa-chevron-circle-up"></span></button>
 								<button @click="down(action)"><span class="fa fa-chevron-circle-down"></span></button>
 								<button @click="getActions().splice(getActions().indexOf(action), 1)"><span class="fa fa-trash"></span></button>
