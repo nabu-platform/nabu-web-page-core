@@ -1,5 +1,5 @@
 .page-components-overview {
-	.page-component {
+	.page-component, .page-structure {
 		display: flex;
 		width: 100%;
 		padding: 1rem;
@@ -18,8 +18,23 @@
 			color: #aaa;
 			margin: 0;
 		}
-		+.page-component {
+		+.page-component, +.page-structure {
 			margin-top: 0.3rem;
+		}
+	}
+	.tab {
+		display: inline-block;
+		background-color: #eaeaea;
+		border: solid 1px #ccc;
+		border-style: solid solid none solid;
+		padding: 0.7rem;
+		cursor: pointer;
+		font-size: 0.8rem;
+		border-top-left-radius: 5px;
+		border-top-right-radius: 5px;
+		margin-left: 0.3rem;
+		&.selected {
+			background-color: #ccc;
 		}
 	}
 }

@@ -521,14 +521,46 @@ nabu.page.views.Page = Vue.component("n-page", {
 			if (event.dataTransfer.getData("page-menu")) {
 				event.preventDefault();
 			}
+			else if (event.dataTransfer.getData("component-alias")) {
+				event.preventDefault();
+			}
+			else if (event.dataTransfer.getData("structure-content")) {
+				event.preventDefault();
+			}
 		},
 		dropMenu: function(event) {
+			var self = this;
+			if (event.dataTransfer.getData("page-menu")) {
+				var rect = this.$el.getBoundingClientRect();
+				Vue.set(this.page.content, "menuX", event.clientX - rect.left);
+				Vue.set(this.page.content, "menuY", event.clientY - rect.top);
+				event.preventDefault();
+				event.stopPropagation();
+			}
+			if (event.dataTransfer.getData("component-alias")) {
+				console.log("dropping component-alias");
+				var row = this.addRow(this.page.content);
+				var cell = this.addCell(row);
+				cell.alias = event.dataTransfer.getData("component-alias");
+				event.preventDefault();
+				event.stopPropagation();
+			}
+			if (event.dataTransfer.getData("structure-content")) {
+				var content = JSON.parse(event.dataTransfer.getData("structure-content"));
+				if (content instanceof Array) {
+					content = content.map(function(x) {
+						return self.$services.page.renumber(self.page, x);	
+					});
+					nabu.utils.arrays.merge(this.page.content.rows, content);
+				}
+				else {
+					this.page.content.rows.push(content);
+				}
+			}
+		},
+		save: function(event) {
+			this.$services.page.update(this.page);
 			event.preventDefault();
-			event.stopPropagation();
-			var rect = this.$el.getBoundingClientRect();
-			Vue.set(this.page.content, "menuX", event.clientX - rect.left);
-			Vue.set(this.page.content, "menuY", event.clientY - rect.top);
-			//this.$services.page.update(this.page);
 		},
 		getOperationParameters: function(operation, explode) {
 			// could be an invalid operation?
@@ -714,12 +746,54 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			return false;
 		},
-		addRow: function() {
-			this.page.content.rows.push({
+		addCell: function(target) {
+			if (!target.cells) {
+				Vue.set(target, "cells", []);
+			}
+			var cell = {
+				id: this.page.content.counter++,
+				rows: [],
+				// the alias of the route we want to render here (if any)
+				alias: null,
+				// the route may have input parameters (path + query), these are the relevant bindings
+				// the binding variable contains keys for each path/query parameter in the route
+				bindings: {},
+				name: null,
+				// state that is maintained by the cell owner (the route alias)
+				// for example it might offer additional configuration
+				state: {},
+				// the rendering target (e.g. sidebar, prompt,...)
+				target: 'page',
+				// it can depend on an event of taking place
+				on: null,
+				// a class for this cell
+				class: null,
+				// a custom id for this cell
+				customId: null,
+				// flex width
+				width: 1,
+				height: null,
+				instances: {},
+				condition: null,
+				devices: [],
+				clickEvent: null
+			};
+			target.cells.push(cell);
+			return cell;
+		},
+		addRow: function(target, skipInject) {
+			if (!target.rows) {
+				Vue.set(target, "rows", []);
+			}
+			var row = {
 				id: this.page.content.counter++,
 				cells: [],
 				class: null,
+				// a custom id for this row
 				customId: null,
+				// you can map an instance of an array to a row
+				// for instance if you have an array of "contracts", you could map it to the variable "contract"
+				// the key is the local name, the value is the name of the object in the page
 				instances: {},
 				condition: null,
 				direction: null,
@@ -727,7 +801,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 				on: null,
 				collapsed: false,
 				name: null
-			});
+			};
+			if (!skipInject) {
+				target.rows.push(row);
+			}
+			return row;
 		},
 		addPageParameter: function() {
 			if (!this.page.content.parameters) {
@@ -1643,47 +1721,80 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 	},
 	methods: {
 		drop: function(event, row) {
-			console.log("dropping injection on", row.id);
+			var self = this;
 			var data = event.dataTransfer.getData("component-alias");
+			var rowTarget = document.getElementById(this.page.name + '_' + row.id);
+			var rect = rowTarget.getBoundingClientRect();
+			var below = Math.abs(event.clientY - rect.top) >= rect.height - (rect.height / 6);
+			var above = Math.abs(event.clientY - rect.top) <= rect.height / 6;
 			if (data) {
-				var rowTarget = document.getElementById(this.page.name + '_' + row.id);
-				var rect = rowTarget.getBoundingClientRect();
 				// if we inserted at bottom, get the parent, insert behind it
-				if (Math.abs(event.clientY - rect.top) >= rect.height - (rect.height / 15)) {
+				if (below) {
 					var parent = this.$services.page.getTarget(this.page.content, row.id, true);
 					var index = parent.rows.indexOf(row);
 					row = this.addRow(parent, true);
 					parent.rows.splice(index + 1, 0, row);
-					console.log("injected below");
 				}
 				// position above it
-				else if (Math.abs(event.clientY - rect.top) <= rect.height / 15) {
+				else if (above) {
 					var parent = this.$services.page.getTarget(this.page.content, row.id, true);
 					var index = parent.rows.indexOf(row);
 					row = this.addRow(parent, true);
 					parent.rows.splice(index, 0, row);
-					console.log("injected above");
 				}
 				var cell = this.addCell(row);
 				cell.alias = data;
 				event.preventDefault();
 				event.stopPropagation();
 			}
+			else {
+				data = event.dataTransfer.getData("structure-content");
+				if (data) {
+					var structure = JSON.parse(data);
+					if (!(structure instanceof Array)) {
+						structure = [structure];
+					}
+					structure = structure.map(function(x) { return self.$services.page.renumber(self.page, x) });
+					var parent = this.$services.page.getTarget(this.page.content, row.id, true);
+					var index = parent.rows.indexOf(row);
+					// we assume the structure has a row at the root
+					if (below) {
+						structure.unshift(0);
+						structure.unshift(index + 1);
+						parent.rows.splice.apply(null, structure);
+						//parent.rows.splice(index + 1, 0, structure);
+					}
+					else if (above) {
+						structure.unshift(0);
+						structure.unshift(index);
+						parent.rows.splice.apply(null, structure);
+						//parent.rows.splice(index, 0, structure);
+					}
+					else {
+						var cell = this.addCell(row);
+						nabu.utils.arrays.merge(cell.rows, structure);
+						//cell.rows.push(structure);
+					}
+					event.preventDefault();
+					event.stopPropagation();
+				}
+			}
 		},
 		dragOver: function($event, row) {
 			var data = $event.dataTransfer.getData("component-alias");
+			// TODO: in the future also drop page-cell and page-row from the side menu?
 			if (data) {
 				var self = this;
 				var rowTarget = document.getElementById(self.page.name + '_' + row.id);
 				this.$services.page.pushDragItem(rowTarget);
 				var rect = rowTarget.getBoundingClientRect();
 				// bottom 15%, highlight bottom
-				if (Math.abs(event.clientY - rect.top) >= rect.height - (rect.height / 15)) {
+				if (Math.abs(event.clientY - rect.top) >= rect.height - (rect.height / 6)) {
 					rowTarget.classList.remove("hovering");
 					rowTarget.classList.remove("hover-top");
 					rowTarget.classList.add("hover-bottom");
 				}
-				else if (Math.abs(event.clientY - rect.top) <= rect.height / 15) {
+				else if (Math.abs(event.clientY - rect.top) <= rect.height / 6) {
 					rowTarget.classList.remove("hovering");
 					rowTarget.classList.remove("hover-bottom");
 					rowTarget.classList.add("hover-top");
@@ -2731,13 +2842,15 @@ Vue.component("page-sidemenu", {
 		},
 		configureCell: function(row, cell) {
 			var target = document.getElementById(this.page.name + "_" + row.id + "_" + cell.id);
-			//target.parentNode.parentNode.__vue__.configuring = cell.id;
-			var parent = target.parentNode;
-			while (parent != null && (!parent.__vue__ || !parent.__vue__.setRowConfiguring)) {
-				parent = parent.parentNode;
-			}
-			if (parent) {
-				parent.__vue__.setRowConfiguring(cell.id);
+			if (target != null) {
+				//target.parentNode.parentNode.__vue__.configuring = cell.id;
+				var parent = target.parentNode;
+				while (parent != null && (!parent.__vue__ || !parent.__vue__.setRowConfiguring)) {
+					parent = parent.parentNode;
+				}
+				if (parent) {
+					parent.__vue__.setRowConfiguring(cell.id);
+				}
 			}
 		},
 		addRow: function(target) {
@@ -2777,7 +2890,7 @@ Vue.component("page-sidemenu", {
 			if (!target.cells) {
 				Vue.set(target, "cells", []);
 			}
-			target.cells.push({
+			var cell = {
 				id: this.page.content.counter++,
 				rows: [],
 				// the alias of the route we want to render here (if any)
@@ -2804,7 +2917,9 @@ Vue.component("page-sidemenu", {
 				condition: null,
 				devices: [],
 				clickEvent: null
-			});
+			};
+			target.cells.push(cell);
+			return cell;
 		},
 		copyCell: function(cell) {
 			nabu.utils.objects.copy({
@@ -2889,31 +3004,48 @@ Vue.component("page-sidemenu", {
 				}
 				else {
 					var parent = this.$services.page.getTarget(this.page.content, content.id, true);
+					// do nothing, we don't want to add it to ourselves again
+					if (parent == row) {
+						return null;
+					}
 					var index = parent.cells.indexOf(content);
 					if (index >= 0) {
 						parent.cells.splice(index, 1);
+						// if we emptied out the cells, remove it
+						if (parent.cells.length == 0) {
+							var grandParent = this.$services.page.getTarget(this.page.content, parent.id, true);
+							index = grandParent.rows.indexOf(parent);
+							grandParent.rows.splice(index, 1);
+						}
 					}
 				}
 				row.cells.push(content);
 			}
-			if (rowId) {
+			if (rowId && row.id != rowId) {
 				var content = this.$services.page.getTarget(this.page.content, rowId);
 				var action = event.dataTransfer.getData("drag-action");
+				var parent = this.$services.page.getTarget(this.page.content, row.id, true);
+				
 				if (action == "copy") {
 					content = JSON.parse(JSON.stringify(content));
 					content.id = this.page.content.counter++;
 				}
 				else {
 					this.$services.page.closeRight();
-					var parent = this.$services.page.getTarget(this.page.content, content.id, true);
-					console.log("parent is", parent, content.id);
-					var index = parent.rows.indexOf(content);
+					var og = this.$services.page.getTarget(this.page.content, content.id, true);
+					var index = og.rows.indexOf(content);
 					if (index >= 0) {
-						parent.rows.splice(index, 1);
+						og.rows.splice(index, 1);
+						// if the og is not the page and the rows are empty and it has no other content, remove it
+						if (og.rows.length == 0 && og.id && !og.alias) {
+							var grandParent = this.$services.page.getTarget(this.page.content, og.id, true);
+							index = grandParent.cells.indexOf(og);
+							grandParent.cells.splice(index, 1);
+						}
 					}
 				}
 				var rect = event.target.getBoundingClientRect();
-				var parent = this.$services.page.getTarget(this.page.content, row.id, true);
+				
 				var index = parent.rows.indexOf(row);
 				// position below it
 				if (Math.abs(event.clientY - rect.top) >= rect.height / 2) {
@@ -2927,23 +3059,31 @@ Vue.component("page-sidemenu", {
 		dropCell: function(event, row, cell) {
 			var cellId = event.dataTransfer.getData("page-cell");
 			var rowId = event.dataTransfer.getData("page-row");
-			if (cellId) {
+			// if you drop a cell on a cell, you want to position it before or after it
+			if (cellId && cell.id != cellId) {
 				var content = this.$services.page.getTarget(this.page.content, cellId);
 				var action = event.dataTransfer.getData("drag-action");
+				var parent = this.$services.page.getTarget(this.page.content, cell.id, true);
+				
 				if (action == "copy") {
 					content = JSON.parse(JSON.stringify(content));
 					content.id = this.page.content.counter++;
 				}
 				else {
 					this.$services.page.closeRight();
-					var parent = this.$services.page.getTarget(this.page.content, content.id, true);
-					var index = parent.cells.indexOf(content);
+					var og = this.$services.page.getTarget(this.page.content, content.id, true);
+					var index = og.cells.indexOf(content);
 					if (index >= 0) {
-						parent.cells.splice(index, 1);
+						og.cells.splice(index, 1);
+						if (og.cells.length == 0) {
+							var grandParent = this.$services.page.getTarget(this.page.content, og.id, true);
+							index = grandParent.rows.indexOf(og);
+							grandParent.rows.splice(index, 1);
+						}
 					}
 				}
+				
 				var rect = event.target.getBoundingClientRect();
-				var parent = this.$services.page.getTarget(this.page.content, cell.id, true);
 				var index = parent.cells.indexOf(cell);
 				// position below it
 				if (Math.abs(event.clientY - rect.top) >= rect.height / 2) {
@@ -2953,7 +3093,7 @@ Vue.component("page-sidemenu", {
 					parent.cells.splice(index, 0, content);
 				}
 			}
-			if (rowId) {
+			if (rowId && row.id != rowId) {
 				var content = this.$services.page.getTarget(this.page.content, rowId);
 				var action = event.dataTransfer.getData("drag-action");
 				if (action == "copy") {
@@ -2965,6 +3105,12 @@ Vue.component("page-sidemenu", {
 					var index = parent.rows.indexOf(content);
 					if (index >= 0) {
 						parent.rows.splice(index, 1);
+						// if the parent is not the page and the rows are empty and it has no other content, remove it
+						if (parent.rows.length == 0 && parent.id && !parent.alias) {
+							var grandParent = this.$services.page.getTarget(this.page.content, parent.id, true);
+							index = grandParent.cells.indexOf(parent);
+							grandParent.cells.splice(index, 1);
+						}
 					}
 				}
 				var rect = event.target.getBoundingClientRect();
@@ -2982,7 +3128,6 @@ Vue.component("page-sidemenu", {
 				if (index < 0) {
 					this.opened.push(newValue.id);
 				}
-				console.log("emitting an open row");
 				this.$emit("open");
 			}
 			else {
@@ -2993,7 +3138,6 @@ Vue.component("page-sidemenu", {
 						if (index < 0) {
 							self.opened.push(row.id);
 						}
-						console.log("emitting an open cell");
 						self.$emit("open");
 					}
 				});
