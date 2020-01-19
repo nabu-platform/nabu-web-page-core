@@ -539,6 +539,28 @@ body[has-sidebar="true"] {
 	.page-row {
 		min-height: 2.5rem;
 	}
+	.page-row.hover-top {
+		border: solid 2px green;
+		border-style: solid none none none;
+		&:after {
+			content: ' ';
+			background: linear-gradient(180deg, green 0%, transparent 100%);
+			height: 100%;
+			width: 100%;
+			position: absolute;
+		}
+	}
+	.page-row.hover-bottom {
+		border: solid 2px green;
+		border-style: none none solid none;
+		&:after {
+			content: ' ';
+			background: linear-gradient(0deg, green 0%, transparent 100%);
+			height: 100%;
+			width: 100%;
+			position: absolute;
+		}
+	}
 	.page-row.hovering {
 		border: solid 2px green;
 		&.collapsed {

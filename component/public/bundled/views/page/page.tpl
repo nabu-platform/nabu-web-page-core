@@ -34,8 +34,8 @@
 		<n-sidebar v-if="edit && page.content.rows" position="left" class="settings sidemenu" :inline="true" :autocloseable="false" ref="sidemenu"
 				@close="stopEdit">
 			<div class="sidebar-actions">
-				<button @click="viewComponents = !viewComponents"><span class="fa fa-cubes" title="Add Components"></span></button>
-				<button @click="configuring = !configuring"><span class="fa fa-cog" title="Configure"></span></button>
+				<button @click="viewComponents = true"><span class="fa fa-cubes" title="Add Components"></span></button>
+				<button @click="configuring = true"><span class="fa fa-cog" title="Configure"></span></button>
 				<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
 				<button v-if="!embedded" @click="$services.page.update(page)"><span class="fa fa-save" title="Save"></span></button>
 				<button @click="pasteRow" v-if="$services.page.copiedRow"><span class="fa fa-paste"></span></button>
@@ -290,6 +290,7 @@
 				v-if="edit || shouldRenderRow(row)"
 				:style="rowStyles(row)"
 				@drop="drop($event, row)" 
+				@dragend="$services.page.clearDrag($event)"
 				@dragover="dragOver($event, row)"
 				@dragexit="dragExit($event, row)"
 				@mouseout="mouseOut($event, row)"

@@ -124,7 +124,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		clearDrag: function() {
 			this.dragItems.splice(0).forEach(function(x) {
-				x.classList.remove("hover-bottom", "hover-top");
+				x.classList.remove("hover-bottom", "hover-top", "hovering");
 			})
 		},
 		pushDragItem: function(item) {
@@ -1693,7 +1693,7 @@ nabu.services.VueService(Vue.extend({
 							if (rowContainer.rows[i].cells[j].id == id) {
 								return parent ? rowContainer.rows[i] : rowContainer.rows[i].cells[j];
 							}
-							var has = this.getTarget(rowContainer.rows[i].cells[j], id);
+							var has = this.getTarget(rowContainer.rows[i].cells[j], id, parent);
 							if (has) {
 								return has;
 							}

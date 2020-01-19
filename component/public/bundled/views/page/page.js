@@ -518,7 +518,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			event.dataTransfer.setData("page-menu", this.page.name);
 		},
 		dragOver: function(event) {
-			if (event.dataTransfer.getData("page-menu") != null) {
+			if (event.dataTransfer.getData("page-menu")) {
 				event.preventDefault();
 			}
 		},
@@ -1642,23 +1642,60 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		});
 	},
 	methods: {
-		drop: function($event, row) {
-			var data = $event.dataTransfer.getData("component-alias");
+		drop: function(event, row) {
+			console.log("dropping injection on", row.id);
+			var data = event.dataTransfer.getData("component-alias");
 			if (data) {
+				var rowTarget = document.getElementById(this.page.name + '_' + row.id);
+				var rect = rowTarget.getBoundingClientRect();
+				// if we inserted at bottom, get the parent, insert behind it
+				if (Math.abs(event.clientY - rect.top) >= rect.height - (rect.height / 15)) {
+					var parent = this.$services.page.getTarget(this.page.content, row.id, true);
+					var index = parent.rows.indexOf(row);
+					row = this.addRow(parent, true);
+					parent.rows.splice(index + 1, 0, row);
+					console.log("injected below");
+				}
+				// position above it
+				else if (Math.abs(event.clientY - rect.top) <= rect.height / 15) {
+					var parent = this.$services.page.getTarget(this.page.content, row.id, true);
+					var index = parent.rows.indexOf(row);
+					row = this.addRow(parent, true);
+					parent.rows.splice(index, 0, row);
+					console.log("injected above");
+				}
 				var cell = this.addCell(row);
 				cell.alias = data;
-				$event.preventDefault();
-				$event.stopPropagation();
+				event.preventDefault();
+				event.stopPropagation();
 			}
 		},
 		dragOver: function($event, row) {
-			var self = this;
-			var rowTarget = document.getElementById(self.page.name + '_' + row.id);
-			if (rowTarget) {
-				rowTarget.classList.add("hovering");
+			var data = $event.dataTransfer.getData("component-alias");
+			if (data) {
+				var self = this;
+				var rowTarget = document.getElementById(self.page.name + '_' + row.id);
+				this.$services.page.pushDragItem(rowTarget);
+				var rect = rowTarget.getBoundingClientRect();
+				// bottom 15%, highlight bottom
+				if (Math.abs(event.clientY - rect.top) >= rect.height - (rect.height / 15)) {
+					rowTarget.classList.remove("hovering");
+					rowTarget.classList.remove("hover-top");
+					rowTarget.classList.add("hover-bottom");
+				}
+				else if (Math.abs(event.clientY - rect.top) <= rect.height / 15) {
+					rowTarget.classList.remove("hovering");
+					rowTarget.classList.remove("hover-bottom");
+					rowTarget.classList.add("hover-top");
+				}
+				else {
+					rowTarget.classList.add("hovering");
+					rowTarget.classList.remove("hover-bottom");
+					rowTarget.classList.remove("hover-top");
+				}
+				$event.preventDefault();
+				$event.stopPropagation();
 			}
-			$event.preventDefault();
-			$event.stopPropagation();
 		},
 		dragExit: function($event, row) {
 			var self = this;
@@ -2362,11 +2399,11 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			Vue.set(target.instances, newName, target.instances[oldName]);
 			Vue.delete(target.instances, oldName);
 		},
-		addRow: function(target) {
+		addRow: function(target, skipInject) {
 			if (!target.rows) {
 				Vue.set(target, "rows", []);
 			}
-			target.rows.push({
+			var row = {
 				id: this.page.content.counter++,
 				cells: [],
 				class: null,
@@ -2382,7 +2419,11 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				on: null,
 				collapsed: false,
 				name: null
-			});
+			};
+			if (!skipInject) {
+				target.rows.push(row);
+			}
+			return row;
 		},
 		removeCell: function(cells, cell) {
 			var self = this;
@@ -2865,6 +2906,7 @@ Vue.component("page-sidemenu", {
 				else {
 					this.$services.page.closeRight();
 					var parent = this.$services.page.getTarget(this.page.content, content.id, true);
+					console.log("parent is", parent, content.id);
 					var index = parent.rows.indexOf(content);
 					if (index >= 0) {
 						parent.rows.splice(index, 1);
@@ -2960,5 +3002,8 @@ Vue.component("page-sidemenu", {
 	}
 });
 
+document.addEventListener("dragend", function() {
+	application.services.page.clearDrag();	
+});
 
 
