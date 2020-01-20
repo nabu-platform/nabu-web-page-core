@@ -59,6 +59,10 @@ window.addEventListener("load", function() {
 			enter: function(parameters) {
 				return new nabu.page.views.PageActions({propsData: parameters});
 			},
+			icon: "page/core/images/buttons.svg",
+			description: "The buttons component can be used to create anything from tabs to actual buttons",
+			name: "Buttons",
+			category: "Basic",
 			query: ["active"]
 		});
 		

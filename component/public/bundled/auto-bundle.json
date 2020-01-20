@@ -20,6 +20,11 @@
 		},
 		"page": {
 			"core": {
+				"images": {
+					"buttons.svg": {
+						"url": "images/buttons.svg"
+					}
+				},
 				"components": {
 					"ace": {
 						"ace.js": {
@@ -66,6 +71,9 @@
 					}, 
 					"Page.js": {
 						"url": "services/Page.js"
+					}, 
+					"Data.js": {
+						"url": "services/Data.js"
 					}
 				}, 
 				"views": {

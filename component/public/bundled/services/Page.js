@@ -113,6 +113,16 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		getNameColor: function(name) {
+			var saturation = 80;
+			var lightness = 40;
+			var hash = 0;
+			for (var i = 0; i < name.length; i++) {
+				hash = name.charCodeAt(i) + ((hash << 5) - hash);
+			}
+			var hue = hash % 360;
+			return 'hsl('+ hue +', '+ saturation +'%, '+ lightness +'%)';
+		},
 		closeRight: function() {
 			var right = document.querySelector("#n-sidebar-right-instance");
 			if (right && right.__vue__ && right.__vue__.close) {
