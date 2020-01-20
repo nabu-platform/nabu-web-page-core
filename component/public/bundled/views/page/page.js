@@ -547,14 +547,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			if (event.dataTransfer.getData("structure-content")) {
 				var content = JSON.parse(event.dataTransfer.getData("structure-content"));
-				if (content instanceof Array) {
-					content = content.map(function(x) {
+				if (content.rows instanceof Array) {
+					var rows = content.rows.map(function(x) {
 						return self.$services.page.renumber(self.page, x);	
 					});
-					nabu.utils.arrays.merge(this.page.content.rows, content);
+					nabu.utils.arrays.merge(this.page.content.rows, rows);
 				}
-				else {
-					this.page.content.rows.push(content);
+				if (content.actions instanceof Array) {
+					nabu.utils.arrays.merge(this.page.content.actions, content.actions);
 				}
 			}
 		},
@@ -1751,29 +1751,30 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				data = event.dataTransfer.getData("structure-content");
 				if (data) {
 					var structure = JSON.parse(data);
-					if (!(structure instanceof Array)) {
-						structure = [structure];
+					if (structure.rows) {
+						var rows = structure.rows.map(function(x) { return self.$services.page.renumber(self.page, x) });
+						var parent = this.$services.page.getTarget(this.page.content, row.id, true);
+						var index = parent.rows.indexOf(row);
+						if (below) {
+							rows.unshift(0);
+							rows.unshift(index + 1);
+							parent.rows.splice.apply(null, rows);
+							//parent.rows.splice(index + 1, 0, structure);
+						}
+						else if (above) {
+							rows.unshift(0);
+							rows.unshift(index);
+							parent.rows.splice.apply(null, rows);
+							//parent.rows.splice(index, 0, structure);
+						}
+						else {
+							var cell = this.addCell(row);
+							nabu.utils.arrays.merge(cell.rows, rows);
+							//cell.rows.push(structure);
+						}
 					}
-					structure = structure.map(function(x) { return self.$services.page.renumber(self.page, x) });
-					var parent = this.$services.page.getTarget(this.page.content, row.id, true);
-					var index = parent.rows.indexOf(row);
-					// we assume the structure has a row at the root
-					if (below) {
-						structure.unshift(0);
-						structure.unshift(index + 1);
-						parent.rows.splice.apply(null, structure);
-						//parent.rows.splice(index + 1, 0, structure);
-					}
-					else if (above) {
-						structure.unshift(0);
-						structure.unshift(index);
-						parent.rows.splice.apply(null, structure);
-						//parent.rows.splice(index, 0, structure);
-					}
-					else {
-						var cell = this.addCell(row);
-						nabu.utils.arrays.merge(cell.rows, structure);
-						//cell.rows.push(structure);
+					if (structure.actions) {
+						nabu.utils.arrays.merge(this.page.content.actions, structure.actions);
 					}
 					event.preventDefault();
 					event.stopPropagation();
