@@ -255,6 +255,16 @@ window.addEventListener("load", function() {
 			cellTag: "e-columns"
 		});
 		
+		nabu.page.provide("page-icon", {
+			name: "Font Awesome",
+			html: function(icon) {
+				return "<span class='fa " + icon + "'></span>";
+			},
+			priority: -1,
+			allowOther: true,
+			icons: []
+		});
+		
 		// formatters
 		nabu.page.provide("page-format", {
 			format: function(id, fragment, page, cell) {

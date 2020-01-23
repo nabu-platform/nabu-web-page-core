@@ -113,7 +113,7 @@
 							</div>
 						</n-collapsible>
 					</n-collapsible>
-					<n-collapsible title="Output" class="page-cell layout2 list-item io">
+					<n-collapsible title="Output" class="page-cell layout2 list-item io" v-if="!transformer.async">
 						<div class="list-actions">
 							<button @click="addFunctionParameter(transformer, 'outputs')">Add Output Parameter</button>
 						</div>

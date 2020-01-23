@@ -113,6 +113,14 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		getIconHtml: function(icon) {
+			var providers = nabu.page.providers("page-icon");
+			providers.sort(function(a, b) {
+				return a.priority - b.priority;	
+			});
+			var provider = providers[0];
+			return provider.html(icon);
+		},
 		getNameColor: function(name) {
 			var saturation = 80;
 			var lightness = 40;
@@ -693,7 +701,7 @@ nabu.services.VueService(Vue.extend({
 						break;
 					}
 					var available = value.substring(start + 2, end);
-					var parts = available.split(":");
+					var parts = available.split("::");
 					var translation = this.translations.filter(function(x) {
 						return ((parts.length == 1 && x.context == null)
 								|| (parts.length == 2 && x.context == parts[0]))

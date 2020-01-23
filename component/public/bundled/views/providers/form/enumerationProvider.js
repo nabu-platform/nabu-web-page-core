@@ -68,6 +68,7 @@ Vue.component("page-form-input-enumeration-provider", {
 			+ "		:formatter='enumerationFormatter'"
 			+ "		:label='label'"
 			+ "		:value='value'"
+			+ "		v-bubble:label"
 			+ "		:schema='schema'"
 			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
 			+ "		:descriptionType='field.descriptionType'"

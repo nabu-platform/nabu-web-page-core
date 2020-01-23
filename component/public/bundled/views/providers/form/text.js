@@ -4,11 +4,13 @@ Vue.component("page-form-input-text-configure", {
 		+ "	<n-form-text v-model='field.maxLength' label='Max Length'/>"
 		+ "	<n-form-switch v-model='field.showLength' label='Show Length' v-if='field.maxLength'/>"
 		+ "	<n-form-combo v-model='field.required' label='Required' :items=\"[true,false]\" />"
-		+ "	<n-form-text v-model='field.description' label='Description'/>"
-		+ "	<n-form-combo v-model='field.descriptionType' label='Description type' :items=\"['before','after','info']\" />"
-		+ "	<n-form-text v-model='field.descriptionIcon' label='Description icon'/>"					
-		+ "	<n-form-text v-model='field.suffix' label='Suffix'/>"
-		+ "	<n-form-text v-model='field.suffixIcon' label='Suffix icon'/>"		
+		+ "	<n-form-text v-model='field.info' label='Info Content'/>"
+		+ "	<n-form-text v-model='field.before' label='Before Content'/>"
+		+ "	<n-form-text v-model='field.beforeIcon' label='Before Icon' v-if='field.before'/>"
+		+ "	<n-form-text v-model='field.after' label='After Content'/>"
+		+ "	<n-form-text v-model='field.afterIcon' label='After Icon' v-if='field.after'/>"
+		+ "	<n-form-text v-model='field.suffix' label='Suffix' v-if='!field.suffixIcon'/>"
+		+ "	<n-form-text v-model='field.suffixIcon' label='Suffix Icon' v-if='!field.suffix'/>"
 		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"
 		+ "</n-form-section>",
 	props: {
@@ -43,6 +45,7 @@ Vue.component("page-form-input-text-configure", {
 
 Vue.component("page-form-input-text", {
 	template: "<n-form-text :type='textType' ref='form'"
+			+ "		:class=\"{'has-suffix-icon': !!field.suffixIcon, 'has-suffix': !!field.suffix }\""
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
 			+ "		:max-length='field.maxLength ? field.maxLength : null'"
@@ -53,11 +56,10 @@ Vue.component("page-form-input-text", {
 			+ "		:value='value'"
 			+ "		:required='field.required'"
 			+ "		:validator='getValidator()'"
-			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
-			+ "		:description-type='field.descriptionType'"
-			+ "		:description-icon='field.descriptionIcon'"
-			+ "		:suffix='field.suffix'"
-			+ "		:suffix-icon='field.suffixIcon'"
+			+ "		:info='field.info ? $services.page.translate(field.info) : null'"
+			+ "		:before='field.before ? $services.page.translate(field.before) : null'"
+			+ "		:after='field.after ? $services.page.translate(field.after) : null'"
+			+ "		:suffix='field.suffixIcon ? $services.page.getIconHtml(field.suffixIcon) : field.suffix'"
 			+ "		:name='field.name'"
 			+ "		:timeout='timeout'"
 			+ "		:disabled='disabled'/>",

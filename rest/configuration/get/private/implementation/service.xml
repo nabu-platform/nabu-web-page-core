@@ -2,8 +2,8 @@
 		disabled="false"
 		id="aaa4d5fa-f5ce-4c25-a293-7d7486b5dff5">
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			disabled="false"
 			comment="Get configuration"
+			disabled="false"
 			id="ad49500f-79d6-49f2-a0d8-7ded8220b150">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
@@ -45,8 +45,8 @@
 		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			disabled="false"
 			comment="Map to output"
+			disabled="false"
 			id="2c4d5eba-cbca-4c0c-aab9-c358f4d8477b">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 				disabled="false"
@@ -59,8 +59,8 @@
 		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			disabled="false"
 			comment="Get the pages"
+			disabled="false"
 			id="5ce53c8f-069b-4792-875a-da3d71a5e81d">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
@@ -106,8 +106,8 @@
 			id="ff305e20-a6f2-4261-87a2-b8203537f722"
 			variable="page">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-				disabled="false"
 				comment="Map the page"
+				disabled="false"
 				id="cb304410-5511-4079-885d-4be8c04ad20e">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 					disabled="false"
@@ -244,8 +244,8 @@
 		<query>pages[name ~ ".*\.json"]</query>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			disabled="false"
 			comment="Check if has role &quot;editor&quot;"
+			disabled="false"
 			id="1ed4b2d1-a142-4c35-a259-b34177ad491d">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
@@ -307,10 +307,10 @@
 		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			disabled="false"
-			label="output/content/editable"
 			comment="If hasRole is true, you either have the role or a role handler is not configured. Check permission as well."
-			id="282cea4e-b635-4294-86c6-a5e275fdac16">
+			disabled="false"
+			id="282cea4e-b635-4294-86c6-a5e275fdac16"
+			label="output/content/editable">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="b763c208-3acf-4cc0-979e-16ae2e04c9d1"
@@ -380,8 +380,8 @@
 		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			disabled="false"
 			comment="Set cache output"
+			disabled="false"
 			id="7a133d96-4d45-4c83-ac76-95c6ed130af0">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 				disabled="false"
@@ -482,8 +482,8 @@
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"
-			label="configuration/providers/getAllContent != null"
-			id="bad817fa-e15c-4052-bdea-803d45a39f9e">
+			id="bad817fa-e15c-4052-bdea-803d45a39f9e"
+			label="configuration/providers/getAllContent != null">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="1e5cf038-8662-425e-bfa2-b9d06f3c671d"
@@ -543,8 +543,8 @@
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Sequence"
 			disabled="false"
-			label="configuration/providers/translationProvider != null"
-			id="0667e066-c3da-46db-98d6-9108ec7b7737">
+			id="0667e066-c3da-46db-98d6-9108ec7b7737"
+			label="configuration/providers/translationProvider != null">
 		<steps xsi:type="be.nabu.libs.services.vm.step.For"
 				disabled="false"
 				id="5cc39788-9999-46d6-afb1-a1c29449534c"
@@ -751,7 +751,7 @@
 							mask="false"
 							optional="false"
 							fixedValue="true">
-						<from>:</from>
+						<from>::</from>
 						<to>separator</to>
 					</steps>
 				</steps>
@@ -800,8 +800,8 @@
 					query="amountOfParts">
 				<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 						disabled="false"
-						label="1"
-						id="bd2d5ca6-832e-4a13-9f88-5ab5cffe3df4">
+						id="bd2d5ca6-832e-4a13-9f88-5ab5cffe3df4"
+						label="1">
 					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 							disabled="false"
 							id="e6f4075c-62c6-4e6f-83fa-77a98aee2175"
@@ -814,8 +814,8 @@
 				</steps>
 				<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 						disabled="false"
-						label="2"
-						id="b15cd0c2-6d65-4785-a7e2-3eecc68142f0">
+						id="b15cd0c2-6d65-4785-a7e2-3eecc68142f0"
+						label="2">
 					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 							disabled="false"
 							id="515b005a-e040-4b08-bca5-6acccfaffb92"
@@ -945,10 +945,10 @@
 			</steps>
 			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 					disabled="false"
-					id="0868ec3c-3620-4dab-bcb8-4626f4e388f9">
+					id="dd3da69813a14a7d937694cfc486fcc5">
 				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 						disabled="false"
-						id="ee9f9868-f700-498c-8cc5-0e15998cea9f"
+						id="80dc6dd9cfa541cc99772c87b3c2d69d"
 						serviceId="nabu.utils.List.add"
 						resultName="result9feda58d97a94236b171151b46fdbf6d"
 						temporaryMapping="true"
@@ -958,7 +958,7 @@
 						asynchronous="false">
 					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 							disabled="false"
-							id="0850cf3b-c91f-4c78-9647-7b9785427a45"
+							id="f30ebbbcd2644689acb2b8601663c7c3"
 							mask="false"
 							optional="false"
 							fixedValue="false">
@@ -967,7 +967,7 @@
 					</steps>
 					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 							disabled="false"
-							id="b1250d35-b9ad-466d-939c-1cd7c20dcd69"
+							id="3857454687ad4c6993d05b3ef3859516"
 							mask="false"
 							optional="false"
 							fixedValue="false">
@@ -977,7 +977,7 @@
 				</steps>
 				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 						disabled="false"
-						id="6debdefc-8fc4-45c0-9fe5-31e36fbe3a92"
+						id="a57fc6a91aef46efb05f703ca3df7bc5"
 						mask="false"
 						optional="false"
 						fixedValue="false">
@@ -986,15 +986,15 @@
 				</steps>
 				<steps xsi:type="be.nabu.libs.services.vm.step.Drop"
 						disabled="false"
-						id="da108160-0526-4d81-8f0e-f33e5bb3c61f"
+						id="586053247c0a415490d9cbaf87fe6d25"
 						path="translation" xsi:nil="true"/>
 			</steps>
 			<query>errorCodes</query>
 		</steps>
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				disabled="false"
-				label="output/content/translations"
-				id="dd88974f-3d87-4b8c-a9cf-856233058151">
+				id="dd88974f-3d87-4b8c-a9cf-856233058151"
+				label="output/content/translations">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 					disabled="false"
 					id="7b14d29c-fe02-4826-9aad-a66a7a8d0c28"

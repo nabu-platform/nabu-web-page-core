@@ -2,8 +2,8 @@
 		disabled="false"
 		id="8aff79b4-b848-4e4f-a083-b0d34969ad52">
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			disabled="false"
 			comment="Calculate etag &amp; last modified"
+			disabled="false"
 			id="aa101239-34b7-4726-8056-9e4a9a02487c">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
@@ -97,10 +97,10 @@
 			disabled="false"
 			id="2ab6ea1f-42d4-4245-a7e5-ee3552a18712">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-				disabled="false"
-				label="etag != input/clientCache/etag"
 				comment="If we have another language, we need to retrieve the content again"
-				id="12f1d1b1-7ab3-4992-805d-5717ff176451">
+				disabled="false"
+				id="12f1d1b1-7ab3-4992-805d-5717ff176451"
+				label="etag != input/clientCache/etag">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="6d1d9325-b85e-4b39-b7ec-ac8e6b3d5e6d"
@@ -112,10 +112,10 @@
 			</steps>
 		</steps>
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-				disabled="false"
-				label="input/clientCache/lastModified = null"
 				comment="If the client does not have a timestamp, set changed"
-				id="b1f7a443-46d5-44da-880b-1723e7227687">
+				disabled="false"
+				id="b1f7a443-46d5-44da-880b-1723e7227687"
+				label="input/clientCache/lastModified = null">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="d3ed79c4-40c2-4573-b6ce-4a4eda24aaf9"
@@ -127,10 +127,10 @@
 			</steps>
 		</steps>
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-				disabled="false"
-				label="input/clientCache/lastModified &lt; lastModified"
 				comment="We have more recent changes"
-				id="adc8e90f-6a2b-4180-a413-e71558487122">
+				disabled="false"
+				id="adc8e90f-6a2b-4180-a413-e71558487122"
+				label="input/clientCache/lastModified &lt; lastModified">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="0e8d618e-2f37-42e5-98b6-53507ea1c6a9"
