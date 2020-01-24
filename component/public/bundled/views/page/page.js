@@ -2697,6 +2697,10 @@ Vue.component("n-absolute", {
 		},
 		right: {
 			required: false
+		},
+		autoclose: {
+			type: Boolean,
+			required: false
 		}
 	},
 	data: function() {
@@ -2708,7 +2712,6 @@ Vue.component("n-absolute", {
 	ready: function() {
 		// we need the bounding box of the first relative parent
 		var relative = this.$el.offsetParent;
-		console.log("relative parent is", relative);
 		if (relative) {
 			var rect = relative.getBoundingClientRect();
 			this.relativeX = rect.left;

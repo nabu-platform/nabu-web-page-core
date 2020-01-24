@@ -404,6 +404,7 @@
 									<n-form-text label="Bottom" v-model="cell.bottom" v-if="cell.target == 'absolute'"/>
 									<n-form-text label="Left" v-model="cell.left" v-if="cell.target == 'absolute'"/>
 									<n-form-text label="Right" v-model="cell.right" v-if="cell.target == 'absolute'"/>
+									<n-form-switch label="Autoclose" v-model="cell.autoclose" v-if="cell.target == 'absolute'"/>
 								</div>								
 								<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" v-bubble:resetEvents/>
 							</n-collapsible>
@@ -477,7 +478,7 @@
 							:stop-rerender="stopRerender"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-prompt>
-					<n-absolute v-else-if="cell.target == 'absolute'" @close="close(cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right">          
+					<n-absolute :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right">          
 						<div @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:depth="depth + 1"
@@ -590,7 +591,7 @@
 </template>
 
 <template id="n-absolute">
-	<div class="n-absolute" :style="getStyles()" v-auto-close="function() { $emit('close') }">
+	<div class="n-absolute" :style="getStyles()" v-auto-close="function() { if (autoclose) $emit('close') }">
 		<div class="n-absolute-content">
 			<slot></slot>
 		</div>
