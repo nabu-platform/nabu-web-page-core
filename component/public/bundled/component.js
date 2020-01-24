@@ -30,7 +30,11 @@ window.addEventListener("load", function() {
 			alias: "page-richtext",
 			enter: function(parameters) {
 				return new nabu.page.views.Richtext({propsData: parameters});
-			}
+			},
+			icon: "page/core/images/richtext.svg",
+			description: "The rich text component can be used to write static texts with markup",
+			name: "Rich Text",
+			category: "Content",
 		});
 		
 		$services.router.register({
@@ -258,7 +262,7 @@ window.addEventListener("load", function() {
 		nabu.page.provide("page-icon", {
 			name: "Font Awesome",
 			html: function(icon) {
-				return "<span class='fa " + icon + "'></span>";
+				return "<span class='icon fa " + icon + "'></span>";
 			},
 			priority: -1,
 			allowOther: true,

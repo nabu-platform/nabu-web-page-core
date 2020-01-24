@@ -20,6 +20,7 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			+ "			:from='$services.page.getAvailableParameters(page, cell)'"
 			+ "			:to='getMappableEnumerationParameters(field)'/>"
 			+ "		<n-form-combo v-if='field.enumerationOperation' :filter='function() { return getEnumerationFields(field.enumerationOperation) }' v-model='field.enumerationCachingKey' label='Enumeration Caching Key'/>"    
+			+ "		<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"
 			+ "</n-form-section>",
 	props: {
 		cell: {
@@ -41,6 +42,11 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			Vue.set(this.field, "enumerationProvider", null);
 		}
 		this.normalize(this.field);
+	},
+	computed: {
+		availableParameters: function() {
+			return this.$services.page.getAvailableParameters(this.page, this.cell, true);
+		}
 	},
 	methods: {
 		enumerationFilter: function(value) {
@@ -147,6 +153,7 @@ Vue.component("page-form-input-enumeration-operation", {
 			+ "		:timeout='600'"
 			+ "		:label='label'"
 			+ "		:value='value'"
+			+ "		:validator='getValidator()'"
 			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
 			+ "		:description-type='field.descriptionType'"
 			+ "		:description-icon='field.descriptionIcon'"
@@ -198,7 +205,7 @@ Vue.component("page-form-input-enumeration-operation", {
 		}
 	},
 	created: function() {
-		console.log("created", this.field.enumerationOperation);	
+		console.log("***created enumerationOperation.js with validator", this.getValidator());
 	},
 	methods: {
 		// enumerationOperation: null,
@@ -321,6 +328,12 @@ Vue.component("page-form-input-enumeration-operation", {
 		},
 		validate: function(soft) {
 			return this.$refs.form.validate(soft);
+		},
+		getValidator: function() {
+			if (this.field.bindings && this.field.bindings.validator) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				return this.$services.page.getBindingValue(pageInstance, this.field.bindings.validator, this);
+			}
 		}
 	}
 });

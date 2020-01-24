@@ -120,6 +120,13 @@ nabu.page.views.Pages = Vue.extend({
 					soft: false
 				});
 			}
+			if (!newValue.match(/^[a-z0-9-]+$/)) {
+				messages.push({
+					severity: "error",
+					title: "Can only use lower case letters, numbers and dashes in the page name",
+					soft: false
+				});
+			}
 			console.log("validating custom", newValue, messages);
 			return messages;
 		},
@@ -159,7 +166,17 @@ nabu.page.views.Pages = Vue.extend({
 			});
 		},
 		create: function() {
-			this.$services.page.create("new");
+			var self = this;
+			this.$prompt(function() {
+				return new nabu.page.views.PageCreate({
+					propsData: {
+						validator: self.customNameValidator,
+						categories: self.categories
+					}
+				});
+			}).then(function(resolved) {
+				self.$services.page.create(resolved.name, resolved.category);
+			});
 		},
 		save: function(page) {
 			this.$services.page.update(page);
@@ -182,6 +199,42 @@ nabu.page.views.Pages = Vue.extend({
 		},
 		doRoute: function() {
 			this.$services.router.route(this.$services.page.alias(this.pageToRoute), this.parameters);
+		}
+	}
+});
+
+nabu.page.views.PageCreate = Vue.extend({
+	template: "#nabu-create-page",
+	props: {
+		validator: {
+			type: Function,
+			required: false
+		},
+		categories: {
+			type: Array,
+			required: false
+		}
+	},
+	data: function() {
+		return {
+			category: null,
+			name: null
+		}
+	},
+	methods: {
+		checkCategory: function(value) {
+			var categories = [];
+			nabu.utils.arrays.merge(categories, this.categories.filter(function(x) { return !!x }));
+			if (value) {
+				categories = categories.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				});
+				if (categories.indexOf(value) < 0) {
+					categories.unshift(value);
+				}
+			}
+			console.log("categories are", categories, value);
+			return categories;
 		}
 	}
 });

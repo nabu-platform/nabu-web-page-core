@@ -4,13 +4,6 @@ $empty-row-contrast: $warning-color !default;
 $empty-cell-color: lighten($success-color, 30%) !default;
 $empty-cell-contrast: $success-color !default;
 
-.nabu-pages-paste {
-	background-color: #fff;
-	padding: 2rem;
-	footer {
-		text-align: right;
-	}
-}
 .n-sidebar.content-sidebar {
 	width: auto;
 }
@@ -24,7 +17,11 @@ body[has-sidebar-left="true"] {
 	margin: 1rem;
 	width: auto !important;
 }
+
 .n-sidebar.settings, .page-startup-wizard {
+	width: 400px;
+}
+.n-sidebar.settings, .page-startup-wizard, .pages {
 	.sidebar-actions {
 		background-color: #333;
 		width: 100%;
@@ -76,7 +73,6 @@ body[has-sidebar-left="true"] {
 		color: #555;
 		font-weight: normal !important;
 	}
-	width: 400px;
 	.n-info-content {
 		min-width: 300px;
 		max-width: 300px;
@@ -97,6 +93,11 @@ body[has-sidebar-left="true"] {
 		.n-info {
 			top: 0.2rem;
 			margin-left: 0.3rem;
+		}
+	}
+	.n-form-text {
+		input {
+			width: 100% !important;
 		}
 	}
 	.n-form-input-wrapper {
@@ -120,6 +121,9 @@ body[has-sidebar-left="true"] {
 		}
 	}
 	.n-form-component {
+		.n-form-input-after {
+			display: none;
+		}
 		display: flex;
 		&.vertical {
 			flex-direction: column;
@@ -155,12 +159,16 @@ body[has-sidebar-left="true"] {
 		.n-input-combo-dropdown-values, .n-input-combo-dropdown-labels {
 			//top: unset;
 			//margin-top: 1.6rem;
-			max-width: 100%;
-			right: 0;
+			//max-width: 100%;
+			//right: 0;
 		}
 		.n-input-combo-input-container, .n-input-combo-label-container {
-			position: static;
+			//position: static;
 			display: flex;
+			input {
+				flex-grow: 1;
+				//width: auto;
+			}
 		}
 		.n-form-combo-bottom {
 			width: 0.3rem;

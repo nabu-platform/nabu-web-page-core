@@ -1,3 +1,25 @@
+Vue.component("n-form-ace", {
+	template: "<div class='n-form-component'><div class='n-form-label-wrapper' v-if='label'><label>{{label}}</label></div><n-ace :mode='mode' :timeout='timeout' v-model='value'/></div>",
+	props: {
+		value: {
+			required: true
+		},
+		label: {
+			type: String,
+			required: false
+		},
+		mode: {
+			type: String,
+			required: false,
+			default: "scss"
+		},
+		timeout: {
+			type: Number,
+			required: false,
+			default: 300
+		}
+	}
+});
 Vue.component("n-ace", {
 	template: "<div class='n-ace'></div>",
 	props: {

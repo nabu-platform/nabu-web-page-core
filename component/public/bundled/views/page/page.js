@@ -2683,6 +2683,68 @@ Vue.component("n-prompt", {
 	template: "#n-prompt"
 });
 
+Vue.component("n-absolute", {
+	template: "#n-absolute",
+	props: {
+		top: {
+			required: false
+		},
+		bottom: {
+			required: false
+		},
+		left: {
+			required: false
+		},
+		right: {
+			required: false
+		}
+	},
+	data: function() {
+		return {
+			relativeX: 0,
+			relativeY: 0
+		}	
+	},
+	ready: function() {
+		// we need the bounding box of the first relative parent
+		var relative = this.$el.offsetParent;
+		console.log("relative parent is", relative);
+		if (relative) {
+			var rect = relative.getBoundingClientRect();
+			this.relativeX = rect.left;
+			this.relativeY = rect.top;
+		}
+	},
+	methods: {
+		// if we do this as a computed, it will update everytime we move the mouse
+		getStyles: function() {
+			var styles = [];
+			if (this.top != null) {
+				styles.push({"top": this.top });
+			}
+			if (this.bottom != null) {
+				styles.push({"bottom": this.top });
+			}
+			if (this.left != null) {
+				styles.push({"left": this.left });
+			}
+			if (this.right != null) {
+				styles.push({"right": this.right });
+			}
+			// if no specific styling, position it at mouse
+			if (!styles.length) {
+				// these are not reactive, use mouseX and mouseY if you want reactive coordinates
+				var x = this.$services.page.mouseXPassive - this.relativeX;
+				var y = this.$services.page.mouseYPassive - this.relativeY;
+				styles.push({"left": + x + "px" });
+				styles.push({"top": + y + "px"});
+				//styles.push({"left": + JSON.parse(JSON.stringify(this.$services.page.mouseX)) + "px" });
+				//styles.push({"top": + JSON.parse(JSON.stringify(this.$services.page.mouseY)) + "px"});
+			}
+			return styles;
+		}
+	}
+});
 
 Vue.component("page-sidemenu", {
 	template: "#page-sidemenu",

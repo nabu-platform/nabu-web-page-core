@@ -23,6 +23,10 @@
 	flex-wrap: wrap;
 }
 
+.n-absolute {
+	position: absolute;
+}
+
 .n-prompt-container {
 	//min-height: 80vh !important;
 	&[template~="-page"] {
@@ -40,7 +44,7 @@
 	min-height: 10rem;
 }
 
-.settings {
+.settings, .pages {
 	background-color: #f3f3f3;
 	i {
 		&.n-icon {
@@ -53,7 +57,7 @@
 	.root-configuration {
 		padding: 1rem 2rem;
 	}
-	.list-item {
+	.list-item, .n-collapsible .n-collapsible {
 		.n-collapsible-title {
 			background-color: #eaeaea;
 			color: #000;
@@ -97,8 +101,11 @@
 		border-style: solid none none none;
 	}
 	.n-collapsible-content {
-		padding: 1rem 1.7rem;
+		//padding: 1rem 1.7rem;
 		background-color: #f3f3f3;
+	}
+	.padded-content {
+		padding: 1rem 1.7rem;
 	}
 	.list-actions {
 		text-align: right;

@@ -61,36 +61,38 @@
 		<n-sidebar :autocloseable="false" v-if="configuring" @close="configuring = false" class="settings" :inline="true">
 			<n-form class="layout2">
 				<n-collapsible title="General Settings">
-					<h2>Router<span class="subscript">These settings will determine how the page is routed throughout the application.</span></h2>
-					<n-form-text v-model="page.content.category" label="Category" info="The category this page belongs to"/>
-					<n-form-text v-model="page.content.path" label="Path" info="The path this page can be found on, if you don't want to expose it via a dedicated path, leave this empty.<br/><br/> You can use the following syntax to define path variables:<br/>/path/to/{myVariable}/is"/>
-					<n-form-text v-model="page.content.title" label="Title"/>
-					<n-form-combo label="Page Parent" :filter="filterRoutes" v-model="page.content.pageParent"/>
-					<n-form-text v-model="page.content.defaultAnchor" label="Content Anchor"/>
-					<n-form-text v-model="page.content.autoRefresh" label="Auto-refresh"/>
-					<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow" info="Is a slow route"/>
-					<n-form-switch label="Route Error in Self" v-model="page.content.errorInSelf"/>
-					
-					<h2>Rendering<span class="subscript">These settings will influence how the page is rendered.</span></h2>
-					<n-form-combo label="Page Type" :filter="getPageTypes" v-model="page.content.pageType"/>
-					<n-form-text v-model="page.content.class" label="CSS Class"/>
-					
-					<h2>Security<span class="subscript">You can configure additional security on a page to limit access.</span></h2>
-					
-					<div class="n-form-component n-form-actions">
-						<div class="n-form-label-wrapper">
-							<label>Roles</label>
-							<n-info>Add roles that are allowed to access this page. If no roles are configured, everyone is allowed.<br/><br/>
-								You can use pseudo roles like $user to indicate anyone who is logged in or $guest anyone who is not.</n-info>
+					<div class="padded-content">
+						<h2>Router<span class="subscript">These settings will determine how the page is routed throughout the application.</span></h2>
+						<n-form-text v-model="page.content.category" label="Category" info="The category this page belongs to"/>
+						<n-form-text v-model="page.content.path" label="Path" info="The path this page can be found on, if you don't want to expose it via a dedicated path, leave this empty.<br/><br/> You can use the following syntax to define path variables:<br/>/path/to/{myVariable}/is"/>
+						<n-form-text v-model="page.content.title" label="Title"/>
+						<n-form-combo label="Page Parent" :filter="filterRoutes" v-model="page.content.pageParent"/>
+						<n-form-text v-model="page.content.defaultAnchor" label="Content Anchor"/>
+						<n-form-text v-model="page.content.autoRefresh" label="Auto-refresh"/>
+						<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow" info="Is a slow route"/>
+						<n-form-switch label="Route Error in Self" v-model="page.content.errorInSelf"/>
+						
+						<h2>Rendering<span class="subscript">These settings will influence how the page is rendered.</span></h2>
+						<n-form-combo label="Page Type" :filter="getPageTypes" v-model="page.content.pageType"/>
+						<n-form-text v-model="page.content.class" label="CSS Class"/>
+						
+						<h2>Security<span class="subscript">You can configure additional security on a page to limit access.</span></h2>
+						
+						<div class="n-form-component n-form-actions">
+							<div class="n-form-label-wrapper">
+								<label>Roles</label>
+								<n-info>Add roles that are allowed to access this page. If no roles are configured, everyone is allowed.<br/><br/>
+									You can use pseudo roles like $user to indicate anyone who is logged in or $guest anyone who is not.</n-info>
+							</div>
+							<div class="actions">
+								<button @click="page.content.roles ? page.content.roles.push('') : $window.Vue.set(page.content, 'roles', [''])">Add Role</button>
+							</div>
 						</div>
-						<div class="actions">
-							<button @click="page.content.roles ? page.content.roles.push('') : $window.Vue.set(page.content, 'roles', [''])">Add Role</button>
-						</div>
-					</div>
-					<div class="list" v-if="page.content.roles">
-						<div v-for="i in Object.keys(page.content.roles)" class="list-row">
-							<n-form-text v-model="page.content.roles[i]" placeholder="Role e.g. $user, $guest, ..."/>
-							<button @click="page.content.roles.splice(i)"><span class="fa fa-trash"></span></button>
+						<div class="list" v-if="page.content.roles">
+							<div v-for="i in Object.keys(page.content.roles)" class="list-row">
+								<n-form-text v-model="page.content.roles[i]" placeholder="Role e.g. $user, $guest, ..."/>
+								<button @click="page.content.roles.splice(i)"><span class="fa fa-trash"></span></button>
+							</div>
 						</div>
 					</div>
 				</n-collapsible>
@@ -146,10 +148,12 @@
 					<div class="list-actions">
 						<button @click="page.content.query.push('unnamed')">Add Query Parameter</button>
 					</div>
-					<n-form-section class="list-row" v-for="i in Object.keys(page.content.query)">
-						<n-form-text v-model="page.content.query[i]"/>
-						<button @click="removeQuery(i)"><span class="fa fa-trash"></span></button>
-					</n-form-section>
+					<div class="padded-content">
+						<div class="list-row" v-for="i in Object.keys(page.content.query)">
+							<n-form-text v-model="page.content.query[i]"/>
+							<span @click="removeQuery(i)" class="fa fa-times"></span>
+						</div>
+					</div>
 				</n-collapsible>
 				<n-collapsible title="Page Parameters" class="list">
 					<div class="list-actions">
@@ -242,7 +246,7 @@
 					<div class="list-actions">
 						<button @click="addGlobalEvent">Add Global Event</button>
 					</div>
-					<n-form-section v-if="page.content.globalEvents">
+					<div class="padded-content" v-if="page.content.globalEvents">
 						<n-form-section class="list-row" v-for="i in Object.keys(page.content.globalEvents)">
 							<n-form-combo v-model="page.content.globalEvents[i].localName"
 								label="Local Name"
@@ -250,15 +254,15 @@
 							<n-form-text v-model="page.content.globalEvents[i].globalName" 
 								label="Global Name"
 								:placeholder="page.content.globalEvents[i].localName"/>
-							<button @click="page.content.globalEvents.splice(i, 1)"><span class="fa fa-trash"></span></button>
+							<span @click="page.content.globalEvents.splice(i, 1)" class="fa fa-times"></span>
 						</n-form-section>
-					</n-form-section>
+					</div>
 				</n-collapsible>
 				<n-collapsible title="Subscribe Global Events" class="list">
 					<div class="list-actions">
 						<button @click="addGlobalEventSubscription">Add Global Event</button>
 					</div>
-					<n-form-section v-if="page.content.globalEventSubscriptions">
+					<div class="padded-content" v-if="page.content.globalEventSubscriptions">
 						<n-form-section class="list-row" v-for="i in Object.keys(page.content.globalEventSubscriptions)">
 							<n-form-combo v-model="page.content.globalEventSubscriptions[i].globalName"
 								label="Global Name"
@@ -266,9 +270,9 @@
 							<n-form-text v-model="page.content.globalEventSubscriptions[i].localName" 
 								label="Local Name"
 								:placeholder="page.content.globalEventSubscriptions[i].globalName"/>
-							<button @click="page.content.globalEventSubscriptions.splice(i, 1)"><span class="fa fa-trash"></span></button>
+							<span @click="page.content.globalEventSubscriptions.splice(i, 1)" class="fa fa-times"></span>
 						</n-form-section>
-					</n-form-section>
+					</div>
 				</n-collapsible>
 				<component v-for="plugin in plugins" :is="plugin.configure" 
 					:page="page" 
@@ -314,7 +318,7 @@
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 			<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" v-show="!edit || !row.collapsed"
 					:id="page.name + '_' + row.id + '_' + cell.id" 
-					:class="$window.nabu.utils.arrays.merge([{'clickable': !!cell.clickEvent}, {'page-cell': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar'}, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))"                         
+					:class="$window.nabu.utils.arrays.merge([{'clickable': !!cell.clickEvent}, {'page-cell': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))"                         
 					:key="cellId(cell)"
 					:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
 					@click="clickOnCell(cell)"
@@ -337,45 +341,47 @@
 					<n-form class="layout2" key="cell-form">
 						<n-form-section>
 							<n-collapsible title="Cell Settings" key="cell-settings">
-								<h2>Content<span class="subscript">Choose the content you want to show in this cell</span></h2>
-								<n-form-combo label="Content Route" :filter="filterRoutes" v-model="cell.alias"
-									:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
-									:required="true"
-									info="The content we want to route in the cell"/>
-								<n-page-mapper v-if="cell.alias" 
-									:key="'page_' + pageInstanceId + '_' + cell.id + '_mapper'"
-									:to="getRouteParameters(cell)"
-									:from="getAvailableParameters(cell)" 
-									v-model="cell.bindings"/>
-								<n-form-text label="Condition" v-model="cell.condition" info="If you fill in a condition, the cell will only render the content if the condition evaluates to true"/>
-									
-								<h2>Additional<span class="subscript">Configure some additional settings for this cell</span></h2>
-								<n-form-text label="Cell Id" v-model="cell.customId" info="If you set a custom id for this cell, a container will be rendered in this cell with that id. This can be used for targeting with specific content."/>
-								<n-form-text label="Cell Name" v-model="cell.name" info="A descriptive name"/>
-								<n-form-text label="Cell Width" v-model="cell.width" info="By default flex is used to determine cell size, you can either configure a number for flex or choose to go for a fixed value"/>
-								<n-form-text label="Cell Height" v-model="cell.height" info="You can configure any height, for example 200px"/>
-								<n-form-text label="Cell Reference" v-model="cell.ref" info="A reference you can use to retrieve this cell programmatically"/>
-								<n-form-combo label="Cell Renderer" v-model="cell.renderer" :items="getRenderers('cell')" :formatter="function(x) { return x.name }" 
-									:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
-								<n-form-section v-if="cell.renderer">
-									<n-form-text v-for="property in getRendererPropertyKeys(cell)" :label="property" v-model="cell.rendererProperties[property]"/>
-								</n-form-section>
-								<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
-								<div v-if="$services.page.devices.length">
-									<div class="list-actions">
-										<button @click="addDevice(cell)">Add device rule</button>
-									</div>
-									<div v-if="cell.devices">
-										<div class="list-row" v-for="device in cell.devices">
-											<n-form-combo v-model="device.operator" :items="['>', '>=', '<', '<=', '==']"/>
-											<n-form-combo v-model="device.name" 
-												:filter="suggestDevices"/>
-											<span @click="cell.devices.splice(cell.devices.indexOf(device), 1)" class="fa fa-times"></span>
+								<div class="padded-content">
+									<h2>Content<span class="subscript">Choose the content you want to show in this cell</span></h2>
+									<n-form-combo label="Content Route" :filter="filterRoutes" v-model="cell.alias"
+										:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
+										:required="true"
+										info="The content we want to route in the cell"/>
+									<n-page-mapper v-if="cell.alias" 
+										:key="'page_' + pageInstanceId + '_' + cell.id + '_mapper'"
+										:to="getRouteParameters(cell)"
+										:from="getAvailableParameters(cell)" 
+										v-model="cell.bindings"/>
+									<n-form-text label="Condition" v-model="cell.condition" info="If you fill in a condition, the cell will only render the content if the condition evaluates to true"/>
+										
+									<h2>Additional<span class="subscript">Configure some additional settings for this cell</span></h2>
+									<n-form-text label="Cell Id" v-model="cell.customId" info="If you set a custom id for this cell, a container will be rendered in this cell with that id. This can be used for targeting with specific content."/>
+									<n-form-text label="Cell Name" v-model="cell.name" info="A descriptive name"/>
+									<n-form-text label="Cell Width" v-model="cell.width" info="By default flex is used to determine cell size, you can either configure a number for flex or choose to go for a fixed value"/>
+									<n-form-text label="Cell Height" v-model="cell.height" info="You can configure any height, for example 200px"/>
+									<n-form-text label="Cell Reference" v-model="cell.ref" info="A reference you can use to retrieve this cell programmatically"/>
+									<n-form-combo label="Cell Renderer" v-model="cell.renderer" :items="getRenderers('cell')" :formatter="function(x) { return x.name }" 
+										:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
+									<n-form-section v-if="cell.renderer">
+										<n-form-text v-for="property in getRendererPropertyKeys(cell)" :label="property" v-model="cell.rendererProperties[property]"/>
+									</n-form-section>
+									<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
+									<div v-if="$services.page.devices.length">
+										<div class="list-actions">
+											<button @click="addDevice(cell)">Add device rule</button>
+										</div>
+										<div v-if="cell.devices">
+											<div class="list-row" v-for="device in cell.devices">
+												<n-form-combo v-model="device.operator" :items="['>', '>=', '<', '<=', '==']"/>
+												<n-form-combo v-model="device.name" 
+													:filter="suggestDevices"/>
+												<span @click="cell.devices.splice(cell.devices.indexOf(device), 1)" class="fa fa-times"></span>
+											</div>
 										</div>
 									</div>
 								</div>
 							</n-collapsible>
-							<n-collapsible title="Repeat" class="list" v-if="false && cell.instances && $services.page.getAllArrays(page, cell.id).length">
+							<n-collapsible title="Repeat" class="list" v-if="cell.instances && $services.page.getAllArrays(page, cell.id).length">
 								<div class="list-actions" v-if="!Object.keys(cell.instances).length">
 									<button @click="addInstance(cell)">Add Repeat</button>
 								</div>
@@ -388,23 +394,30 @@
 								</n-collapsible>
 							</n-collapsible>
 							<n-collapsible title="Eventing" key="cell-events">
-								<n-form-switch label="Closeable" v-model="cell.closeable" v-if="!cell.on"/>
-								<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents" v-if="!cell.closeable"/>
-								<n-form-combo label="Target" :items="['page', 'sidebar', 'prompt']" v-model="cell.target"/>
-								<n-form-switch label="Prevent Auto Close" v-model="cell.preventAutoClose" v-if="cell.target == 'sidebar'"/>
-								<n-form-switch label="Optimize (may result in stale content)" v-model="cell.optimizeVueKey" v-if="cell.on"/>
-								
+								<div class="padded-content">
+									<n-form-switch label="Closeable" v-model="cell.closeable" v-if="!cell.on"/>
+									<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents" v-if="!cell.closeable"/>
+									<n-form-combo label="Target" :items="['page', 'sidebar', 'prompt', 'absolute']" v-model="cell.target"/>
+									<n-form-switch label="Prevent Auto Close" v-model="cell.preventAutoClose" v-if="cell.target == 'sidebar'"/>
+									<n-form-switch label="Optimize (may result in stale content)" v-model="cell.optimizeVueKey" v-if="cell.on"/>
+									<n-form-text label="Top" v-model="cell.top" v-if="cell.target == 'absolute'"/>
+									<n-form-text label="Bottom" v-model="cell.bottom" v-if="cell.target == 'absolute'"/>
+									<n-form-text label="Left" v-model="cell.left" v-if="cell.target == 'absolute'"/>
+									<n-form-text label="Right" v-model="cell.right" v-if="cell.target == 'absolute'"/>
+								</div>								
 								<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" v-bubble:resetEvents/>
 							</n-collapsible>
 							<n-collapsible title="Styling">
-								<n-form-text label="Class" v-model="cell.class"/>
+								<div class="padded-content">
+									<n-form-text label="Class" v-model="cell.class"/>
+								</div>
 								<div class="list-actions">
 									<button @click="cell.styles == null ? $window.Vue.set(cell, 'styles', [{class:null,condition:null}]) : cell.styles.push({class:null,condition:null})"><span class="fa fa-plus"></span>Style</button>
 								</div>
-								<div v-if="cell.styles">
+								<div class="padded-content" v-if="cell.styles">
 									<n-form-section class="list-row" v-for="style in cell.styles">
 										<n-form-text v-model="style.class" label="Class"/>
-										<n-form-text v-model="style.condition" label="Condition"/>
+										<n-form-text v-model="style.condition" label="Condition" class="vertical"/>
 										<span @click="cell.styles.splice(cell.styles.indexOf(style), 1)" class="fa fa-times"></span>
 									</n-form-section>
 								</div>
@@ -464,6 +477,18 @@
 							:stop-rerender="stopRerender"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-prompt>
+					<n-absolute v-else-if="cell.target == 'absolute'" @close="close(cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right">          
+						<div @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender } }"></div>
+						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
+							:depth="depth + 1"
+							:parameters="parameters"
+							:events="events"
+							:ref="page.name + '_' + cell.id + '_rows'"
+							:local-state="getLocalState(row, cell)"
+							:page-instance-id="pageInstanceId"
+							:stop-rerender="stopRerender"
+							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>						
+					</n-absolute>
 					<template v-else>
 						<div :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
@@ -489,29 +514,31 @@
 				</div>
 				<n-form class="layout2">
 					<n-collapsible title="Row Settings">
-						<h2>Rendering<span class="subscript">Choose how this row will be rendered</span></h2>
-						<n-form-text label="Condition" v-model="row.condition"/>
-						<n-form-combo label="Direction" v-model="row.direction" :items="['horizontal', 'vertical']"/>
-						<n-form-combo label="Alignment" v-model="row.align" :items="['center', 'flex-start', 'flex-end', 'stretch', 'baseline']"/>
-						<n-form-combo label="Justification" v-model="row.justify" :items="['center', 'flex-start', 'flex-end', 'space-between', 'space-around', 'space-evenly']"/>
-						
-						<h2>Additional<span class="subscript">Configure some additional settings for this row</span></h2>
-						<n-form-text label="Row Id" v-model="row.customId" info="If you set a custom id for this row, a container will be rendered in this row with that id. This can be used for targeting with specific content."/>
-						<n-form-text label="Row Name" v-model="row.name" info="A descriptive name"/>
-						<n-form-combo label="Row Renderer" v-model="row.renderer" :items="getRenderers('row')"  :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
-						<n-form-section v-if="row.renderer">
-							<n-form-text v-for="property in getRendererPropertyKeys(row)" :label="property" v-model="row.rendererProperties[property]"/>
-						</n-form-section>
-						<div v-if="$services.page.devices.length">
-							<div class="list-actions">
-								<button @click="addDevice(row)">Add device rule</button>
-							</div>
-							<div v-if="row.devices">
-								<div class="list-row" v-for="device in row.devices">
-									<n-form-combo v-model="device.operator" :items="['>', '>=', '<', '<=', '==']"/>
-									<n-form-combo v-model="device.name" 
-										:filter="suggestDevices"/>
-									<span @click="row.devices.splice(row.devices.indexOf(device), 1)" class="fa fa-times"></span>
+						<div class="padded-content">
+							<h2>Rendering<span class="subscript">Choose how this row will be rendered</span></h2>
+							<n-form-combo label="Direction" v-model="row.direction" :items="['horizontal', 'vertical']"/>
+							<n-form-combo label="Alignment" v-model="row.align" :items="['center', 'flex-start', 'flex-end', 'stretch', 'baseline']"/>
+							<n-form-combo label="Justification" v-model="row.justify" :items="['center', 'flex-start', 'flex-end', 'space-between', 'space-around', 'space-evenly']"/>
+							<n-form-ace label="Condition" v-model="row.condition" class="vertical"/>
+							
+							<h2>Additional<span class="subscript">Configure some additional settings for this row</span></h2>
+							<n-form-text label="Row Id" v-model="row.customId" info="If you set a custom id for this row, a container will be rendered in this row with that id. This can be used for targeting with specific content."/>
+							<n-form-text label="Row Name" v-model="row.name" info="A descriptive name"/>
+							<n-form-combo label="Row Renderer" v-model="row.renderer" :items="getRenderers('row')"  :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
+							<n-form-section v-if="row.renderer">
+								<n-form-text v-for="property in getRendererPropertyKeys(row)" :label="property" v-model="row.rendererProperties[property]"/>
+							</n-form-section>
+							<div v-if="$services.page.devices.length">
+								<div class="list-actions">
+									<button @click="addDevice(row)">Add device rule</button>
+								</div>
+								<div v-if="row.devices">
+									<div class="list-row" v-for="device in row.devices">
+										<n-form-combo v-model="device.operator" :items="['>', '>=', '<', '<=', '==']"/>
+										<n-form-combo v-model="device.name" 
+											:filter="suggestDevices"/>
+										<span @click="row.devices.splice(row.devices.indexOf(device), 1)" class="fa fa-times"></span>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -529,14 +556,18 @@
 						</n-collapsible>
 					</n-collapsible>
 					<n-collapsible title="Eventing">
-						<n-form-combo label="Show On" v-model="row.on" :filter="getAvailableEvents"/>
+						<div class="padded-content">
+							<n-form-combo label="Show On" v-model="row.on" :filter="getAvailableEvents"/>
+						</div>
 					</n-collapsible>
 					<n-collapsible title="Styling">
-						<n-form-text label="Class" v-model="row.class"/>
+						<div class="padded-content">
+							<n-form-text label="Class" v-model="row.class"/>
+						</div>
 						<div class="list-actions">
 							<button @click="row.styles == null ? $window.Vue.set(row, 'styles', [{class:null,condition:null}]) : row.styles.push({class:null,condition:null})">Add Style</button>
 						</div>
-						<div v-if="row.styles">
+						<div class="padded-content" v-if="row.styles">
 							<n-form-section class="list-row" v-for="style in row.styles">
 								<n-form-text v-model="style.class" label="Class"/>
 								<n-form-text v-model="style.condition" label="Condition"/>
@@ -553,6 +584,14 @@
 <template id="n-prompt">
 	<div class="n-prompt">
 		<div class="n-prompt-content">
+			<slot></slot>
+		</div>
+	</div>
+</template>
+
+<template id="n-absolute">
+	<div class="n-absolute" :style="getStyles()" v-auto-close="function() { $emit('close') }">
+		<div class="n-absolute-content">
 			<slot></slot>
 		</div>
 	</div>

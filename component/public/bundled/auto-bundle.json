@@ -23,6 +23,9 @@
 				"images": {
 					"buttons.svg": {
 						"url": "images/buttons.svg"
+					},
+					"richtext.svg": {
+						"url": "images/richtext.svg"
 					}
 				},
 				"components": {

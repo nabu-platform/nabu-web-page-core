@@ -21,6 +21,8 @@ nabu.services.VueService(Vue.extend({
 	services: ["swagger", "user"],
 	data: function() {
 		return {
+			mouseX: 0,
+			mouseY: 0,
 			counter: 1,
 			title: null,
 			home: null,
@@ -1318,9 +1320,14 @@ nabu.services.VueService(Vue.extend({
 		removeByName: function(name) {
 			return this.$services.swagger.execute("nabu.web.page.core.rest.page.delete", {name: name});
 		},
-		create: function(name) {
+		create: function(name, category) {
+			var content = this.normalize({});
+			if (category) {
+				content.category = category;
+			}
 			return this.update({
-				name: name
+				name: name,
+				content: content
 			});
 		},
 		update: function(page) {
@@ -2033,3 +2040,15 @@ nabu.services.VueService(Vue.extend({
 		}
 	}
 }), { name: "nabu.page.services.Page" });
+
+
+document.addEventListener("mousemove", function(event) {
+	if (application && application.services && application.services.page) {
+		application.services.page.mouseX = event.pageX;
+		application.services.page.mouseY = event.pageY;
+		application.services.page.mouseXPassive = event.pageX;
+		application.services.page.mouseYPassive = event.pageY;
+	}
+});
+
+
