@@ -22,6 +22,14 @@ body[has-sidebar-left="true"] {
 	width: 400px;
 }
 .n-sidebar.settings, .page-startup-wizard, .pages {
+	.no-more-padding {
+		.n-collapsible-content {
+			padding: 0 !important;
+		}
+		.padded-content {
+			padding: 1rem;
+		}
+	}
 	.sidebar-actions {
 		background-color: #333;
 		width: 100%;
@@ -159,11 +167,12 @@ body[has-sidebar-left="true"] {
 		.n-input-combo-dropdown-values, .n-input-combo-dropdown-labels {
 			//top: unset;
 			//margin-top: 1.6rem;
-			//max-width: 100%;
-			//right: 0;
+			// we also have the label
+			max-width: 100%;
+			right: 0;
 		}
 		.n-input-combo-input-container, .n-input-combo-label-container {
-			//position: static;
+			position: static;
 			display: flex;
 			input {
 				flex-grow: 1;

@@ -875,6 +875,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 						events[nabu.page.event.getName(action, "chainEvent")] = type;
 					});
+					this.page.content.actions.filter(function(action) {
+						return nabu.page.event.getName(action, "timeoutEvent") != null;
+					}).forEach(function(action) {
+						var type = nabu.page.event.getType(action, "timeoutEvent");
+						if (type.properties && Object.keys(type.properties).length == 0 && action.on) {
+							type = action.on;
+						}
+						events[nabu.page.event.getName(action, "timeoutEvent")] = type;
+					});
 				}
 				
 				// add the cell events
@@ -1112,8 +1121,22 @@ nabu.page.views.Page = Vue.component("n-page", {
 					}
 					promise.then(function() { stop() }, function(error) { stop(error) });
 					
+					var wait = !action.timeout && nabu.page.event.getName(action, "timeoutEvent") ? null : function() {
+						var content = nabu.page.event.getInstance(action, "timeoutEvent", self.page, self);
+						if (Object.keys(content).length == 0) {
+							content = value;
+						}
+						self.emit(
+							nabu.page.event.getName(action, "timeoutEvent"),
+							content
+						);
+					}
+					
 					if (action.confirmation) {
 						self.$confirm({message:self.$services.page.translate(action.confirmation)}).then(function() {
+							if (wait) {
+								self.$services.q.wait(promise, parseInt(action.timeout), wait);
+							}
 							var element = null;
 							var async = false;
 							// already get the element, it can be triggered with or without a route
@@ -1211,6 +1234,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 						})
 					}
 					else {
+						if (wait) {
+							self.$services.q.wait(promise, parseInt(action.timeout), wait);
+						}
 						var async = false;
 						if (action.url) {
 							var url = self.$services.page.interpret(action.url, self);

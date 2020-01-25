@@ -361,7 +361,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			this.getActions().push({
 				dynamic: dynamic,
 				operation: null,
-				label: null,
+				label: "Action" + (this.getActions().length + 1),
 				route: null,
 				event: null,
 				eventState: null,

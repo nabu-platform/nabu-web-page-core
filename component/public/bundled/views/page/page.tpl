@@ -201,16 +201,18 @@
 						<n-form-text v-model="action.scroll" label="Scroll to" v-if="!action.operation && !action.function"/>
 						<n-form-combo v-model="action.route" v-if="!action.operation && !action.url && !action.function" label="Redirect" :filter="filterRoutes"/>
 						<n-form-combo v-model="action.anchor" v-if="action.route || (action.operation && isGet(action.operation))" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
-						<n-form-combo v-model="action.operation" v-if="!action.route && !action.scroll && !action.url && !action.function" label="Operation" :filter="getOperations" />
+						<n-form-combo :key="'operation' + page.content.actions.indexOf(action)" v-model="action.operation" v-if="!action.route && !action.scroll && !action.url && !action.function" label="Operation" :filter="getOperations" />
+						<n-form-text v-model="action.timeout" v-if="action.operation" label="Action Timeout" info="You can emit an event if the action takes too long"/>
+						<page-event-value class="no-more-padding"  v-if="action.operation && action.timeout" :page="page" :container="action" title="Timeout Event" name="timeoutEvent" v-bubble:resetEvents/>
 						<n-form-combo v-model="action.function" v-if="!action.route && !action.scroll && !action.url && !action.operation" label="Function" :filter="$services.page.listFunctions" />
 						<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function"/>
-						<page-event-value :page="page" :container="action" title="Chain Event" name="chainEvent" v-bubble:resetEvents/>
+						<page-event-value class="no-more-padding" :page="page" :container="action" title="Chain Event" name="chainEvent" v-bubble:resetEvents/>
 						<n-form-switch v-if="action.operation || action.function" v-model="action.isSlow" label="Is slow operation?"/>
 						<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" :timeout="600" @input="resetEvents()"/>
 						<n-form-text v-if="action.operation" v-model="action.errorEvent" label="Error Event" :timeout="600" @input="resetEvents()"/>
 						<n-form-switch v-if="action.operation" v-model="action.expandBindings" label="Field level bindings"/>
-						<div class="list-row">
-							<n-form-combo v-if="action.operation && !action.route && action.expandBindings" 
+						<div class="simple-row" v-if="action.operation && !action.route && action.expandBindings">
+							<n-form-combo 
 								:items="Object.keys(availableParameters)" v-model="autoMapFrom"/>
 							<button @click="automap(action)" :disabled="!autoMapFrom">Automap</button>
 						</div>
@@ -238,7 +240,7 @@
 							</div>
 						</div>
 						<div class="list-item-actions">
-							<button @click="addEventReset(action)">Add Event Reset</button>
+							<button @click="addEventReset(action)"><span class="fa fa-plus"></span>Event Reset</button>
 						</div>
 					</n-collapsible>
 				</n-collapsible>

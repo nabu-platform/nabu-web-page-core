@@ -25,15 +25,15 @@
 						</div>
 						<n-collapsible class="list-item" :title="action.label ? action.label : action.name" v-for="action in getActions()">
 							
-							<n-form-section v-if="action.arbitrary">
+							<div v-if="action.arbitrary">
 								<page-configure-arbitrary v-if="action.arbitrary" 
 									:page="page"
 									:cell="cell"
 									:target="action"
 									:keys="$services.page.getAvailableParameters(page, cell)"/>
-							</n-form-section>
+							</div>
 							
-							<n-form-section v-else>
+							<div v-else>
 								<n-form-text v-model="action.name" label="Name"/>
 								<n-form-section v-if="action.dynamic">
 									<n-form-combo v-model="action.operation" label="Operation" :filter="getActionOperations"/>
@@ -60,12 +60,6 @@
 								<n-form-switch v-model="action.close" label="Close"/>
 								
 								<n-form-section v-if="!action.dynamic">
-									<div v-if="false">
-										<n-form-switch v-model="action.hasFixedState" v-if="action.event" label="Does the event have a fixed value?"/>
-										<n-form-combo v-model="action.eventState" v-if="action.event && !action.hasFixedState" label="Event Value"
-											:filter="function() { return $services.page.getAvailableKeys(page, cell) }"/>
-										<n-form-text v-model="action.eventFixedState" v-if="action.event && action.hasFixedState" label="Event Fixed Value"/>
-									</div>
 									<n-form-combo v-model="action.route" v-if="(!action.event || !action.event.name) && !action.url" :filter="listRoutes" label="Route"/>
 									<n-form-combo v-model="action.anchor" v-if="action.route" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 									<n-form-switch v-model="action.absolute" v-if="action.route && !cell.state.useButtons" label="Absolute"/>
@@ -75,7 +69,7 @@
 									<n-page-mapper v-if="action.route && $services.router.get(action.route)" :to="$services.page.getRouteParameters($services.router.get(action.route))"
 										:from="$services.page.getAvailableParameters(page, cell)" 
 										v-model="action.bindings"/>
-									<page-event-value :page="page" :container="action" title="Action Event" v-if="!action.dynamic && !action.route && !action.url" name="event" v-bubble.resetEvents/>
+									<page-event-value class="no-more-padding" :page="page" :container="action" title="Action Event" v-if="!action.dynamic && !action.route && !action.url" name="event" v-bubble.resetEvents/>
 									<div class="n-form-component n-form-ace">
 										<label class="n-form-label">Disabled if</label>
 										<n-ace mode="javascript" v-model="action.disabled"/>
@@ -88,7 +82,7 @@
 									<n-form-text info="The event to send out if we have a validation error" v-if="action.validate" v-model="action.validationErrorEvent" label="Validation Error Event" />
 									<n-form-switch info="Whether we want to scroll to the first exception" v-if="action.validate" v-model="action.validationErrorScroll" label="Scroll to Validation Error" />
 								</n-form-section>
-							</n-form-section>
+							</div>
 							
 							<div class="list-item-actions">
 								<button @click="action.triggers ? action.triggers.push('') : $window.Vue.set(action, 'triggers', [''])"><span class="fa fa-plus"></span>Trigger</button>
@@ -109,7 +103,7 @@
 								<button @click="action.activeRoutes.splice(i, 1)"><span class="fa fa-trash"></span></button>
 							</div>
 							
-							<n-collapsible title="Stye">
+							<n-collapsible title="Style">
 								<div class="list-item-actions">
 									<button @click="addStyle(action)"><span class="fa fa-plus"></span>Style</button>
 								</div>
@@ -186,5 +180,6 @@
 					v-show="(edit && false) || showing.indexOf(action) >= 0"/>
 			</template>
 		</li>
+		<li v-if="edit && !getActions().length" class="page-placeholder"><button class="page-placeholder" @click="addAction(false);configure()"><span class="fa fa-plus"></span>Static</button><button class="page-placeholder" @click="addAction(true);configure()"><span class="fa fa-plus"></span>Dynamic</button></li>
 	</ul>
 </template>

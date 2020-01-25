@@ -10,7 +10,7 @@
 				</n-form-section>
 			</n-form>
 		</n-sidebar>
-		<n-form-richtext v-if="edit" v-model="cell.state.content" :clean-style='cell.state.cleanStyle'/>
+		<n-form-richtext v-if="edit" v-model="cell.state.content" :clean-style='cell.state.cleanStyle' :class="{'richtext-empty': !cell.state.content || !cell.state.content.replace(/<[^>]+>/, '') }"/>
 		<div v-else-if="!cell.state.highlight" v-content.compile.sanitize="$services.page.translate(cell.state.content)"></div>
 		<div v-else v-content="highlight($services.page.translate(cell.state.content))"></div>
 	</div>
