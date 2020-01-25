@@ -25,6 +25,7 @@
 
 .n-absolute {
 	position: absolute;
+	z-index: 100;
 }
 
 .n-prompt-container {
@@ -106,6 +107,11 @@
 	}
 	.padded-content {
 		padding: 1rem 1.7rem;
+	}
+	.n-collapsible.padded {
+		> .n-collapsible-content {
+			padding: 1rem 1.7rem;
+		}
 	}
 	.list-actions {
 		text-align: right;

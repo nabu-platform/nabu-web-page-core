@@ -66,7 +66,7 @@ window.addEventListener("load", function() {
 			icon: "page/core/images/buttons.svg",
 			description: "The buttons component can be used to create anything from tabs to actual buttons",
 			name: "Buttons",
-			category: "Basic",
+			category: "Interactive",
 			query: ["active"]
 		});
 		
