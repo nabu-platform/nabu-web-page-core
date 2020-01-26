@@ -494,7 +494,7 @@ Vue.component("page-formatted", {
 				return this.fragment.tag;	
 			}
 			else {
-				return "div";
+				return "span";
 			}
 		},
 		isHtml: function() {

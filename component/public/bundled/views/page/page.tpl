@@ -1,5 +1,6 @@
 <template id="nabu-page">
-	<component :edit="edit" :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="dragOver($event)">
+	<component :edit="edit" :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" 
+			@drop="dropMenu($event)" @dragover="dragOver($event)">
 		<div class="page-menu n-page-menu" v-if="edit && false">
 			<button @click="viewComponents = !viewComponents"><span class="fa fa-cubes" title="Add Components"></span></button>
 		</div>

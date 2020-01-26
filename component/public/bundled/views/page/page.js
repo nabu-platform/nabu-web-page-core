@@ -3293,6 +3293,16 @@ document.addEventListener("keydown", function(event) {
 	if (event.key == "s" && event.ctrlKey && application.services.page.editing) {
 		application.services.page.editing.save(event);
 	}
+	else if (event.key == "d" && event.ctrlKey && application.services.page.editing) {
+		application.services.page.editing.viewComponents = true;
+		event.preventDefault();
+		event.stopPropagation();
+	}
+	else if (event.key == "e" && event.ctrlKey && application.services.page.editing) {
+		application.services.page.editing.stopEdit();
+		event.preventDefault();
+		event.stopPropagation();
+	}
 }, true);
 
 document.addEventListener("dragend", function() {
