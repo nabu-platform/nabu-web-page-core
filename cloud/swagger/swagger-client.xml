@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<swaggerClient>
+    <allowDomain>false</allowDomain>
+    <exposeAllServices>false</exposeAllServices>
+    <host>cloud.nabu.be</host>
+    <lenient>true</lenient>
+    <operationIds>platform.portal.rest.bundle.list</operationIds>
+    <scheme>https</scheme>
+    <showInterfaces>false</showInterfaces>
+    <throwException>false</throwException>
+</swaggerClient>

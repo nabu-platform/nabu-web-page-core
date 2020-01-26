@@ -1,0 +1,64 @@
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		disabled="false"
+		id="50910db6-4901-46fc-bf4e-53515db9a7dd">
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			disabled="false"
+			id="5ed41e0a-2826-46bd-9bfc-c9d10a6f70b3">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="809021de-6275-4c17-90bd-52b9b33d31fe"
+				serviceId="nabu.web.page.core.cloud.swagger.services.platform.portal.rest.bundle.list"
+				resultName="result156df95a9a5e4c9a9d0faef01fa66614"
+				temporaryMapping="true"
+				x="30"
+				y="30"
+				invocationOrder="0"
+				asynchronous="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="e816a936-f6de-463e-9100-e57fe0d28fef"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/query/limit</from>
+				<to>parameters/limit</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="5392af80-17b1-4884-b997-ee16a43d36c8"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/query/offset</from>
+				<to>parameters/offset</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="60bc28df-66d4-4694-80c7-8b020ca82ae3"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/query/orderBy</from>
+				<to>parameters/orderBy</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="3a78c947-097f-4ebf-87dc-df59a43d0ae4"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/query/q</from>
+				<to>parameters/q</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="6381ea8b-1fc5-49fc-a626-8a221c904373"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>result156df95a9a5e4c9a9d0faef01fa66614/ok/body</from>
+			<to>output/content</to>
+		</steps>
+	</steps>
+</sequence>

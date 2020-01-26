@@ -26,6 +26,9 @@
 					},
 					"richtext.svg": {
 						"url": "images/richtext.svg"
+					},
+					"form-text.svg": {
+						"url": "images/form-text.svg"
 					}
 				},
 				"components": {
@@ -117,6 +120,14 @@
 						},
 						"form.scss": {
 							"url": "views/form/form.scss"
+						},
+						"components": {
+							"components.js": {
+								"url": "views/form/components/components.js"
+							},
+							"components.tpl": {
+								"url": "views/form/components/components.tpl"
+							}
 						}
 					}, 
 					"markdown": {

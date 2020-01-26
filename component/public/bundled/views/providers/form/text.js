@@ -22,7 +22,6 @@ Vue.component("page-form-input-text-configure", {
 			type: Object,
 			required: true
 		},
-		// the fragment this image is in
 		field: {
 			type: Object,
 			required: true
