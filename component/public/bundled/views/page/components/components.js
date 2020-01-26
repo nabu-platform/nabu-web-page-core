@@ -21,7 +21,9 @@ Vue.component("page-components-overview", {
 					groups.push("Miscellaneous");
 				}
 			});
-			groups.sort();
+			groups.sort(function(a, b) {
+				return a.toLowerCase().localeCompare(b.toLowerCase());
+			});
 			return groups;
 		},
 		structureCategories: function() {
@@ -34,7 +36,9 @@ Vue.component("page-components-overview", {
 					groups.push("Miscellaneous");
 				}
 			});
-			groups.sort();
+			groups.sort(function(a, b) {
+				return a.toLowerCase().localeCompare(b.toLowerCase());
+			});
 			return groups;
 		}
 	},
@@ -56,6 +60,9 @@ Vue.component("page-components-overview", {
 		},
 		dragComponent: function(event, component) {
 			event.dataTransfer.setData("component-alias", component.alias);
+			if (component.form) {
+				event.dataTransfer.setData("form-name", component.form);
+			}
 		},
 		dragStructure: function(event, structure) {
 			event.dataTransfer.setData("structure-content", JSON.stringify(structure.content));

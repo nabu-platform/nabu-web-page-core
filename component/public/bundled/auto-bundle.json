@@ -27,8 +27,26 @@
 					"richtext.svg": {
 						"url": "images/richtext.svg"
 					},
+					"image.svg": {
+						"url": "images/image.svg"
+					},
 					"form-text.svg": {
 						"url": "images/form-text.svg"
+					},
+					"form-checkbox.svg": {
+						"url": "images/form-checkbox.svg"
+					},
+					"form-date.svg": {
+						"url": "images/form-date.svg"
+					},
+					"form-switch.svg": {
+						"url": "images/form-switch.svg"
+					},
+					"form-password.svg": {
+						"url": "images/form-password.svg"
+					},
+					"form.svg": {
+						"url": "images/form.svg"
 					}
 				},
 				"components": {
@@ -81,7 +99,15 @@
 					"Data.js": {
 						"url": "services/Data.js"
 					}
-				}, 
+				},
+				"layouts": {
+					"basic.js": {
+						"url": "layouts/basic.js"
+					},
+					"three-columns.png": {
+						"url": "layouts/three-columns.png"
+					}
+				},
 				"views": {
 					"image": {
 						"image.gcss": {

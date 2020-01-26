@@ -23,7 +23,11 @@ window.addEventListener("load", function() {
 			query: ["href"],
 			enter: function(parameters) {
 				return new nabu.page.views.Image({propsData: parameters});
-			}
+			},
+			category: "Content",
+			name: "Static Image",
+			description: "Position a static image with this component",
+			icon: "page/core/images/image.svg"
 		});
 		
 		$services.router.register({
@@ -74,7 +78,11 @@ window.addEventListener("load", function() {
 			alias: "page-form",
 			enter: function(parameters) {
 				return new nabu.page.views.PageForm({propsData: parameters});
-			}
+			},
+			name: "Form",
+			category: "Form",
+			description: "This is a form container that encapsulates simple forms",
+			icon: "page/core/images/form.svg"
 		});
 		
 		$services.router.register({
@@ -89,6 +97,86 @@ window.addEventListener("load", function() {
 			enter: function(parameters) {
 				return new nabu.page.skeletons.Email({propsData: parameters});
 			}
+		});
+		
+		// form routes
+		$services.router.register({
+			alias: "page-form-text",
+			enter: function(parameters) {
+				parameters.formComponent = "page-form-input-text";
+				parameters.configurationComponent = "page-form-input-text-configure";
+				return new nabu.page.views.FormComponent({propsData: parameters});
+			},
+			form: "text",
+			category: "Form",
+			name: "Text",
+			description: "An input field for plain text",
+			icon: "page/core/images/form-text.svg"
+		});
+		$services.router.register({
+			alias: "page-form-checkbox",
+			enter: function(parameters) {
+				parameters.formComponent = "page-form-input-checkbox";
+				parameters.configurationComponent = "page-form-input-checkbox-configure";
+				return new nabu.page.views.FormComponent({propsData: parameters});
+			},
+			form: "checkbox",
+			category: "Form",
+			name: "Checkbox",
+			description: "A checkbox that allows you to toggle boolean values",
+			icon: "page/core/images/form-checkbox.svg"
+		});
+		$services.router.register({
+			alias: "page-form-date",
+			enter: function(parameters) {
+				parameters.formComponent = "page-form-input-date";
+				parameters.configurationComponent = "page-form-input-date-configure";
+				return new nabu.page.views.FormComponent({propsData: parameters});
+			},
+			form: "date",
+			category: "Form",
+			name: "Date",
+			description: "A date component with a calendar dropdown",
+			icon: "page/core/images/form-date.svg"
+		});
+		$services.router.register({
+			alias: "page-form-switch",
+			enter: function(parameters) {
+				parameters.formComponent = "page-form-input-switch";
+				parameters.configurationComponent = "page-form-input-switch-configure";
+				return new nabu.page.views.FormComponent({propsData: parameters});
+			},
+			form: "switch",
+			category: "Form",
+			name: "Switch",
+			description: "The switch component is a variant on the checkbox to toggle booleans",
+			icon: "page/core/images/form-switch.svg"
+		});
+		$services.router.register({
+			alias: "page-form-password",
+			enter: function(parameters) {
+				parameters.formComponent = "page-form-input-password";
+				parameters.configurationComponent = "page-form-input-password-configure";
+				return new nabu.page.views.FormComponent({propsData: parameters});
+			},
+			form: "password",
+			category: "Form",
+			name: "Password",
+			description: "The password component allows for entering the same password twice to verify it",
+			icon: "page/core/images/form-password.svg"
+		});
+		$services.router.register({
+			alias: "page-form-richtext",
+			enter: function(parameters) {
+				parameters.formComponent = "page-form-input-richtext";
+				parameters.configurationComponent = "page-form-input-richtext-configure";
+				return new nabu.page.views.FormComponent({propsData: parameters});
+			},
+			form: "richtext",
+			category: "Form",
+			name: "Rich Text",
+			description: "This input component allows you to capture rich text from the user",
+			icon: "page/core/images/richtext.svg"
 		});
 		
 		// fragment providers

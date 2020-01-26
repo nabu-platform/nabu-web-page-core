@@ -1,8 +1,9 @@
-Vue.view("form-text", {
-	category: "Form",
-	name: "Text",
-	description: "An input field for plain text",
-	icon: "page/core/images/form-text.svg",
+if (!nabu) { var nabu = {} };
+if (!nabu.page) { nabu.page = {} };
+if (!nabu.page.views) { nabu.page.views = {} };
+
+nabu.page.views.FormComponent = Vue.component("nabu-form-component", {
+	template: "#nabu-form-component",
 	props: {
 		page: {
 			type: Object,
@@ -11,6 +12,16 @@ Vue.view("form-text", {
 		cell: {
 			type: Object,
 			required: true
+		},
+		formComponent: {
+			type: String,
+			required: false,
+			default: "page-form-input-text"
+		},
+		configurationComponent: {
+			type: String,
+			required: false,
+			default: "page-form-input-text-configure"
 		}
 	},
 	data: function() {

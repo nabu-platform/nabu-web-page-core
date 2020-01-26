@@ -357,7 +357,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			// the selected item in the side menu
 			selectedItem: null,
 			viewComponents: false,
-			closing: false
+			closing: false,
+			saved: null
 		}
 	},
 	methods: {
@@ -402,6 +403,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 				this.edit = true;
 				this.$services.page.editing = this;
+				// automatically pop up the new components window
+				this.viewComponents = true;
 			}	
 		},
 		addInitialEvent: function() {
@@ -559,8 +562,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 		},
 		save: function(event) {
-			this.$services.page.update(this.page);
-			event.preventDefault();
+			if (this.edit) {
+				this.$services.page.update(this.page);
+				this.saved = new Date();
+				event.preventDefault();
+				event.stopPropagation();
+			}
 		},
 		getOperationParameters: function(operation, explode) {
 			// could be an invalid operation?
@@ -1753,6 +1760,8 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			var rect = rowTarget.getBoundingClientRect();
 			var below = Math.abs(event.clientY - rect.top) >= rect.height - (rect.height / 6);
 			var above = Math.abs(event.clientY - rect.top) <= rect.height / 6;
+			var left = Math.abs(event.clientX - rect.left) <= rect.width / 6;
+			var right = Math.abs(event.clientX - rect.left) >= rect.width - (rect.width / 6);
 			if (data) {
 				// if we inserted at bottom, get the parent, insert behind it
 				if (below) {
@@ -1777,6 +1786,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				data = event.dataTransfer.getData("structure-content");
 				if (data) {
 					var structure = JSON.parse(data);
+					if (structure.type == "page-row") {
+						structure = structure.content;
+					}
 					if (structure.rows) {
 						var rows = structure.rows.map(function(x) { return self.$services.page.renumber(self.page, x) });
 						var parent = this.$services.page.getTarget(this.page.content, row.id, true);
@@ -1799,6 +1811,35 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 							//cell.rows.push(structure);
 						}
 					}
+					else if (structure.cells) {
+						var cells = structure.cells.map(function(x) { return self.$services.page.renumber(self.page, x) });
+						var parent = this.$services.page.getTarget(this.page.content, row.id, true);
+						var index = parent.rows.indexOf(row);
+						if (below) {
+							// there is nothing underneath, let's add a row
+							if (index >= parent.rows.length - 1) {
+								row = self.addRow(parent);
+							}
+							else {
+								row = self.addRow(parent, true);
+								parent.rows.splice(index + 1, 0, row);
+							}
+						}
+						else if (above) {
+							if (index == 0) {
+								row = self.addRow(parent, true);
+								parent.rows.unshift(row);
+							}
+							else {
+								row = self.addRow(parent, true);
+								parent.rows.splice(index, 0, row);
+							}
+						}
+						nabu.utils.arrays.merge(row.cells, cells);
+						if (!row.name) {
+							row.name = structure.name;
+						}
+					}
 					if (structure.actions) {
 						nabu.utils.arrays.merge(this.page.content.actions, structure.actions);
 					}
@@ -1809,27 +1850,37 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		},
 		dragOver: function($event, row) {
 			var data = $event.dataTransfer.getData("component-alias");
+			if (!data) {
+				data = $event.dataTransfer.getData("structure-content");	
+			}
 			// TODO: in the future also drop page-cell and page-row from the side menu?
 			if (data) {
 				var self = this;
 				var rowTarget = document.getElementById(self.page.name + '_' + row.id);
 				this.$services.page.pushDragItem(rowTarget);
 				var rect = rowTarget.getBoundingClientRect();
+				rowTarget.classList.remove("hovering", "hover-top", "hover-bottom", "hover-left", "hover-right");
 				// bottom 15%, highlight bottom
 				if (Math.abs(event.clientY - rect.top) >= rect.height - (rect.height / 6)) {
-					rowTarget.classList.remove("hovering");
-					rowTarget.classList.remove("hover-top");
 					rowTarget.classList.add("hover-bottom");
 				}
+				// top 15%, highlight top
 				else if (Math.abs(event.clientY - rect.top) <= rect.height / 6) {
-					rowTarget.classList.remove("hovering");
-					rowTarget.classList.remove("hover-bottom");
 					rowTarget.classList.add("hover-top");
 				}
+				// not yet sure what this would entail
+				/*
+				// left 15%
+				else if (Math.abs(event.clientX - rect.left) <= rect.width / 6) {
+					rowTarget.classList.add("hover-left");
+				}
+				// right 15%
+				else if (Math.abs(event.clientX - rect.left) >= rect.width - (rect.width / 6)) {
+					rowTarget.classList.add("hover-right");
+				}
+				*/
 				else {
 					rowTarget.classList.add("hovering");
-					rowTarget.classList.remove("hover-bottom");
-					rowTarget.classList.remove("hover-top");
 				}
 				$event.preventDefault();
 				$event.stopPropagation();
@@ -3092,7 +3143,7 @@ Vue.component("page-sidemenu", {
 				}
 				if (action == "copy") {
 					content = JSON.parse(JSON.stringify(content));
-					content.id = this.page.content.counter++;
+					this.$services.page.renumber(this.page, content);
 				}
 				else {
 					var parent = this.$services.page.getTarget(this.page.content, content.id, true);
@@ -3120,7 +3171,7 @@ Vue.component("page-sidemenu", {
 				
 				if (action == "copy") {
 					content = JSON.parse(JSON.stringify(content));
-					content.id = this.page.content.counter++;
+					this.$services.page.renumber(this.page, content);
 				}
 				else {
 					this.$services.page.closeRight();
@@ -3159,7 +3210,7 @@ Vue.component("page-sidemenu", {
 				
 				if (action == "copy") {
 					content = JSON.parse(JSON.stringify(content));
-					content.id = this.page.content.counter++;
+					this.$services.page.renumber(this.page, content);
 				}
 				else {
 					this.$services.page.closeRight();
@@ -3190,7 +3241,7 @@ Vue.component("page-sidemenu", {
 				var action = event.dataTransfer.getData("drag-action");
 				if (action == "copy") {
 					content = JSON.parse(JSON.stringify(content));
-					content.id = this.page.content.counter++;
+					this.$services.page.renumber(this.page, content);
 				}
 				else {
 					var parent = this.$services.page.getTarget(this.page.content, content.id, true);
@@ -3237,6 +3288,12 @@ Vue.component("page-sidemenu", {
 		}
 	}
 });
+
+document.addEventListener("keydown", function(event) {
+	if (event.key == "s" && event.ctrlKey && application.services.page.editing) {
+		application.services.page.editing.save(event);
+	}
+}, true);
 
 document.addEventListener("dragend", function() {
 	application.services.page.clearDrag();	

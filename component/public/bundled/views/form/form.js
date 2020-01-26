@@ -143,6 +143,37 @@ nabu.page.views.PageForm = Vue.extend({
 		});
 	},
 	methods: {
+		dragOver: function($event) {
+			var data = $event.dataTransfer.getData("form-name");
+			console.log("dragged", data);
+			if (data) {
+				this.$services.page.pushDragItem(this.$el);
+				this.$el.classList.add("hovering");
+				$event.stopPropagation();
+				$event.preventDefault();
+			}
+		},
+		dragExit: function($event) {
+			this.$el.classList.remove("hovering");
+		},
+		drop: function($event) {
+			var data = $event.dataTransfer.getData("form-name");
+			if (data) {
+				this.currentPage.fields.push({
+					arbitrary: false,
+					name: null,
+					label: null,
+					description: null,
+					type: data,
+					enumerations: [],
+					value: null,
+					group: null,
+					joinGroup: false
+				});
+				$event.stopPropagation();
+				$event.preventDefault();
+			}
+		},
 		getCurrentValue: function(field) {
 			var currentValue = this.result[field.name];
 			if (!this.result.hasOwnProperty(field.name)) {
@@ -1278,7 +1309,7 @@ Vue.component("page-form-configure", {
 					value: null,
 					group: null,
 					joinGroup: false
-				})
+				});
 			}
 		}
 	}

@@ -1,5 +1,5 @@
 <template id="nabu-page">
-	<component :edit="edit" :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="dragOver($event)">          
+	<component :edit="edit" :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" @drop="dropMenu($event)" @dragover="dragOver($event)">
 		<div class="page-menu n-page-menu" v-if="edit && false">
 			<button @click="viewComponents = !viewComponents"><span class="fa fa-cubes" title="Add Components"></span></button>
 		</div>
@@ -37,9 +37,12 @@
 				<button @click="viewComponents = true"><span class="fa fa-cubes" title="Add Components"></span></button>
 				<button @click="configuring = true"><span class="fa fa-cog" title="Configure"></span></button>
 				<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
-				<button v-if="!embedded" @click="$services.page.update(page)"><span class="fa fa-save" title="Save"></span></button>
+				<button v-if="!embedded" @click="save"><span class="fa fa-save" title="Save"></span></button>
 				<button @click="pasteRow" v-if="$services.page.copiedRow"><span class="fa fa-paste"></span></button>
 				<button v-if="!embedded && false" @click="stopEdit"><span class="fa fa-sign-out-alt" title="Stop Editing"></span></button>
+			</div>
+			<div class="last-saved padded-content">
+				<label>Last saved:</label><span>{{saved ? $services.formatter.date(saved, 'HH:mm:ss') : 'never' }}</span>
 			</div>
 			<page-sidemenu v-if="edit && page.content.rows" :rows="page.content.rows" :page="page"
 				:selected="selectedItem"
@@ -341,10 +344,13 @@
 						><button @click="removeCell(row.cells, cell)"><span class="fa fa-times" title="Remove Cell"></span></button>
 					</div>
 					<n-form class="layout2" key="cell-form">
+						<div class="padded-content">
+							<n-form-text label="Cell Name" v-model="cell.name" info="A descriptive name"/>
+						</div>
 						<n-form-section>
 							<n-collapsible title="Cell Settings" key="cell-settings">
 								<div class="padded-content">
-									<h2>Content<span class="subscript">Choose the content you want to show in this cell</span></h2>
+									<h2>Content<span class="subscript">Choose the content you want to add to your cell</span></h2>
 									<n-form-combo label="Content Route" :filter="filterRoutes" v-model="cell.alias"
 										:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
 										:required="true"
@@ -358,7 +364,6 @@
 										
 									<h2>Additional<span class="subscript">Configure some additional settings for this cell</span></h2>
 									<n-form-text label="Cell Id" v-model="cell.customId" info="If you set a custom id for this cell, a container will be rendered in this cell with that id. This can be used for targeting with specific content."/>
-									<n-form-text label="Cell Name" v-model="cell.name" info="A descriptive name"/>
 									<n-form-text label="Cell Width" v-model="cell.width" info="By default flex is used to determine cell size, you can either configure a number for flex or choose to go for a fixed value"/>
 									<n-form-text label="Cell Height" v-model="cell.height" info="You can configure any height, for example 200px"/>
 									<n-form-text label="Cell Reference" v-model="cell.ref" info="A reference you can use to retrieve this cell programmatically"/>
@@ -517,6 +522,9 @@
 					><button @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
 				</div>
 				<n-form class="layout2">
+					<div class="padded-content">
+						<n-form-text label="Row Name" v-model="row.name" info="A descriptive name"/>
+					</div>
 					<n-collapsible title="Row Settings">
 						<div class="padded-content">
 							<h2>Rendering<span class="subscript">Choose how this row will be rendered</span></h2>
@@ -527,7 +535,6 @@
 							
 							<h2>Additional<span class="subscript">Configure some additional settings for this row</span></h2>
 							<n-form-text label="Row Id" v-model="row.customId" info="If you set a custom id for this row, a container will be rendered in this row with that id. This can be used for targeting with specific content."/>
-							<n-form-text label="Row Name" v-model="row.name" info="A descriptive name"/>
 							<n-form-combo label="Row Renderer" v-model="row.renderer" :items="getRenderers('row')"  :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
 							<n-form-section v-if="row.renderer">
 								<n-form-text v-for="property in getRendererPropertyKeys(row)" :label="property" v-model="row.rendererProperties[property]"/>

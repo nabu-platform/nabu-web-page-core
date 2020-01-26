@@ -144,7 +144,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		clearDrag: function() {
 			this.dragItems.splice(0).forEach(function(x) {
-				x.classList.remove("hover-bottom", "hover-top", "hovering");
+				x.classList.remove("hover-bottom", "hover-top", "hovering", "hover-left", "hover-right");
 			})
 		},
 		pushDragItem: function(item) {

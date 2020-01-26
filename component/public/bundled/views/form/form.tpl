@@ -1,8 +1,11 @@
 <template id="page-form">
-	<div class="page-form">
+	<div class="page-form"
+			@drop="drop($event)" 
+			@dragover="dragOver($event)"
+			@dragexit="dragExit($event)">
 		<n-sidebar @close="configuring = false" v-if="configuring" class="settings" :inline="true">
 			<n-form class="layout2">
-				<n-collapsible title="Form Settings">
+				<n-collapsible title="Form Settings" class="padded">
 					<n-form-combo label="Operation" :value="operation" :filter="getOperations"
 						@input="updateOperation"
 						:formatter="function(x) { return x.id }"
@@ -46,8 +49,10 @@
 						<n-form-combo :items="Object.keys(availableParameters)" v-model="autoMapFrom"/>
 						<button @click="automap" :disabled="!autoMapFrom">Automap</button>
 					</div>
-					<n-page-mapper :to="fieldsToAdd" :from="availableParameters" 
-						v-model="cell.bindings"/>
+					<div class="padded-content">
+						<n-page-mapper :to="fieldsToAdd" :from="availableParameters" 
+							v-model="cell.bindings"/>
+					</div>
 				</n-collapsible>
 				<n-collapsible title="Error Codes">
 					<div v-if="cell.state.codes">
@@ -93,7 +98,8 @@
 				:class="{'is-active': currentPage == page}">{{$services.page.interpret(page.name, self)}}</button>
 		</div>
 		<h2 v-if="cell.state.title">{{$services.page.translate($services.page.interpret(cell.state.title, $self))}}</h2>
-		<n-form :codes="codes" :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}, {'form-error': !!error }]" ref="form" :id="cell.state.formId" :component-group="cell.state.componentGroup" :mode="cell.state.mode">
+		<n-form :codes="codes" :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}, {'form-error': !!error }]" ref="form" :id="cell.state.formId" :component-group="cell.state.componentGroup" 
+				:mode="cell.state.mode">
 			<header slot="header" v-if="cell.state.dynamicHeader"><component :is="cell.state.dynamicHeader" :form="$self" :page="page" :cell="cell"/></header>
 			<n-form-section :key="'form_page_' + cell.state.pages.indexOf(currentPage)">
 				<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">

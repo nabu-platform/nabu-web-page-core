@@ -22,6 +22,14 @@ body[has-sidebar-left="true"] {
 	width: 400px;
 }
 .n-sidebar.settings, .page-startup-wizard, .pages {
+	.last-saved {
+		label {
+			color: #aaa;
+		}
+		span {
+			font-size: 0.8rem;
+		}
+	}
 	.no-more-padding {
 		.n-collapsible-content {
 			padding: 0 !important;
@@ -584,7 +592,7 @@ body[has-sidebar="true"] {
 		border-style: solid none none none;
 		&:after {
 			content: ' ';
-			background: linear-gradient(180deg, green 0%, transparent 100%);
+			background: linear-gradient(180deg, green 0%, transparent 50%);
 			height: 100%;
 			width: 100%;
 			position: absolute;
@@ -595,7 +603,29 @@ body[has-sidebar="true"] {
 		border-style: none none solid none;
 		&:after {
 			content: ' ';
-			background: linear-gradient(0deg, green 0%, transparent 100%);
+			background: linear-gradient(0deg, green 0%, transparent 50%);
+			height: 100%;
+			width: 100%;
+			position: absolute;
+		}
+	}
+	.page-row.hover-left {
+		border: solid 2px green;
+		border-style: solid none none none;
+		&:after {
+			content: ' ';
+			background: linear-gradient(90deg, green 0%, transparent 50%);
+			height: 100%;
+			width: 100%;
+			position: absolute;
+		}
+	}
+	.page-row.hover-right {
+		border: solid 2px green;
+		border-style: solid none none none;
+		&:after {
+			content: ' ';
+			background: linear-gradient(270deg, green 0%, transparent 50%);
 			height: 100%;
 			width: 100%;
 			position: absolute;
