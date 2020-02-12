@@ -853,7 +853,8 @@ nabu.services.VueService(Vue.extend({
 			var result = pageInstance.variables ? nabu.utils.objects.clone(pageInstance.variables) : {};
 			// copy internal parameters as well
 			if (pageInstance.parameters) {
-				Object.keys(pageInstance.parameters).forEach(function(key) {
+				var parameters = this.getPageParameters(page).properties;
+				Object.keys(parameters).forEach(function(key) {
 					if (pageInstance.parameters[key] != null) {
 						result[key] = pageInstance.parameters[key];
 					}
@@ -1782,7 +1783,9 @@ nabu.services.VueService(Vue.extend({
 					if (value != null) {
 						var childPath = path ? path + "." + key : key;
 						if (self.isObject(value)) {
-							self.explode(into, value, childPath);
+							if (!value._isVue) {
+								self.explode(into, value, childPath);
+							}
 						}
 						// only set root values if we have a path?
 						else if (path != null) {
@@ -1825,6 +1828,24 @@ nabu.services.VueService(Vue.extend({
 				page.content.query.map(function(x) {
 					parameters.properties[x] = {
 						type: "string"
+					}
+				});
+			}
+			
+			var self = this;
+			if (page.content.states) {
+				page.content.states.forEach(function(x) {
+					if (x.name && x.operation) {
+						var operation = self.$services.swagger.operation(x.operation);
+						if (operation && operation.responses && operation.responses["200"]) {
+							var schema = operation.responses["200"].schema;
+							if (schema.$ref) {
+								var definition = self.getResolvedPageParameterType(schema.$ref);
+								if (definition) {
+									parameters.properties[x.name] = definition;
+								}
+							}
+						}
 					}
 				});
 			}

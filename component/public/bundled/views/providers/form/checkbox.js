@@ -1,5 +1,7 @@
 Vue.component("page-form-input-checkbox-configure", {
-	template: "<n-form-switch v-model='field.mustCheck' label='Must Check'/>",
+	template: "<div><n-form-switch v-model='field.mustCheck' label='Must Check'/>"
+			+ "<n-form-text v-model='field.info' label='Info Content'/>" 
+			+ "<n-form-text v-model='field.infoIcon' label='Info Icon'/></div>",
 	props: {
 		cell: {
 			type: Object,
@@ -20,13 +22,12 @@ Vue.component("page-form-input-checkbox", {
 	template: "<n-form-checkbox ref='form'"
 			+ "		:edit='!readOnly'"
 			+ "		:schema='schema'"
+			+ "		:info-icon='field.infoIcon'"
+			+ "		:info='field.info'"
 			+ "		:must-check='field.mustCheck'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
-			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
-			+ "		:description-type='field.descriptionType'"
-			+ "		:description-icon='field.descriptionIcon'"
 			+ "		:timeout='timeout'"
 			+ "		:disabled='disabled'/>",
 	props: {

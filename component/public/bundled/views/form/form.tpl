@@ -31,7 +31,7 @@
 					<n-form-text v-if="cell.state.event" v-model="cell.state.submitEvent" label="Submit Event" :timeout="600" @input="$emit('updatedEvents')"/>
 					<n-form-text v-if="cell.state.operation || cell.state.functionForm" v-model="cell.state.errorEvent" label="Error Event" :timeout="600" @input="$emit('updatedEvents')"/>
 					<n-form-text v-model="cell.state.errorEventCodes" label="Error Event Codes" v-if="cell.state.errorEvent"/>
-					<n-form-switch v-model="cell.state.synchronize" label="Synchronize Changes"/>
+					<n-form-switch v-if="!cell.state.pageForm && !cell.state.functionForm" v-model="cell.state.synchronize" label="Synchronize Changes"/>
 					<n-form-switch v-model="cell.state.autofocus" label="Autofocus"/>
 					<n-form-switch v-model="cell.state.autoclose" label="Autoclose"/>
 					<n-form-switch v-if="cell.state.pages.length >= 2" v-model="cell.state.pageTabs" label="Pages as tabs"/>
@@ -54,12 +54,12 @@
 							v-model="cell.bindings"/>
 					</div>
 				</n-collapsible>
-				<n-collapsible title="Error Codes">
+				<n-collapsible title="Validation Codes">
 					<div v-if="cell.state.codes">
 						<div class="list-row" v-for="code in cell.state.codes">
 							<n-form-text v-model="code.code" label="Code"/>
 							<n-form-text v-model="code.title" label="Title"/>
-							<button @click="cell.state.codes.splice(cell.state.codes.indexOf(code), 1)"><span class="fa fa-trash"></span></button>
+							<span @click="cell.state.codes.splice(cell.state.codes.indexOf(code), 1)" class="fa fa-times"></span>
 						</div>
 					</div>
 					<div class="list-actions">
@@ -98,7 +98,7 @@
 				:class="{'is-active': currentPage == page}">{{$services.page.interpret(page.name, self)}}</button>
 		</div>
 		<h2 v-if="cell.state.title">{{$services.page.translate($services.page.interpret(cell.state.title, $self))}}</h2>
-		<n-form :codes="codes" :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}, {'form-error': !!error }]" ref="form" :id="cell.state.formId" :component-group="cell.state.componentGroup" 
+		<n-form :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}, {'form-error': !!error }]" ref="form" :id="cell.state.formId" :component-group="cell.state.componentGroup" 
 				:mode="cell.state.mode">
 			<header slot="header" v-if="cell.state.dynamicHeader"><component :is="cell.state.dynamicHeader" :form="$self" :page="page" :cell="cell"/></header>
 			<n-form-section :key="'form_page_' + cell.state.pages.indexOf(currentPage)">
@@ -124,6 +124,7 @@
 							:page="page"
 							:read-only="readOnly"
 							:cell="cell"
+							:codes="cell.state.codes"
 							:is-disabled="isDisabled(field)"
 							@label="function(value) { $window.Vue.set(labels, field.name, value) }"
 							v-focus="cell.state.autofocus == true && currentPage.fields.indexOf(field) == 0"
@@ -175,6 +176,7 @@
 		:is="getProvidedComponent(field.type)"
 		:value="usesMultipleFields(field.type) ? parentValue : value"
 		:page="page"
+		:codes="codes"
 		:cell="cell"
 		:field="field"
 		@input="function(newValue, otherField) { $emit('input', newValue, otherField); slowValidate(); }"

@@ -149,7 +149,7 @@
 					:disabled="isDisabled(action)"
 					:id="$services.page.interpret(action.id, $self)"
 					@click="handle(action)"
-					v-if="!cell.state.useButtons && (action.route || action.event || action.url)"
+					v-if="!cell.state.useButtons && (action.route || hasEvent(action) || action.url)"
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
 						><span>{{ $services.page.translate($services.page.interpret(action.label, $self)) }}</span></a>
 				<button auto-close-actions class="page-action-button page-action-entry"
@@ -158,7 +158,7 @@
 					:disabled="isDisabled(action)"
 					:id="$services.page.interpret(action.id, $self)"
 					@click="handle(action)" 
-					v-else-if="cell.state.useButtons && (action.route || action.event || action.url)"
+					v-else-if="cell.state.useButtons && (action.route || hasEvent(action) || action.url)"
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
 						><span>{{ $services.page.translate($services.page.interpret(action.label, $self)) }}</span></button>
 				<span class="page-action-label page-action-entry" 

@@ -196,17 +196,27 @@ nabu.page.views.PageForm = Vue.extend({
 			Vue.set(this, "result", {});
 			var page = this.$services.page.getPageParameterValues(self.page, pageInstance);
 			Object.keys(page).map(function(key) {
-				reference[key] = page[key];
+				// we currently only use the reference to check if fields have changed
+				// we currently only check this with the dot-based notation, never the object notation
+				// as such we can explode into a separate object
+				// the problem is: the explode takes into account vue components etc that can not be iterated upon, but if you still have the original result
+				// then the JSON.stringify might fail with recursive references
+				// we just explode it after
+				//reference[key] = page[key];
 				Vue.set(self.result, key, page[key]);
 			});
 			// must recreate the "." separated values, necessary for "complex" multifield form components like address
 			// other components get a correct initial value because we get the field from the result (getCurrentValue)
+			this.$services.page.explode(reference, this.result);
+			// explode to get correct values
 			this.$services.page.explode(this.result, this.result);
-			Vue.set(this, "reference", JSON.parse(JSON.stringify(reference)));
+			//Vue.set(this, "reference", JSON.parse(JSON.stringify(reference)));
+			Vue.set(this, "reference", reference);
 		},
 		hasChanged: function(path, value) {
 			if (this.cell.state.pageForm) {
-				var originalValue = this.$services.page.getValue(this.reference, path);
+				var originalValue = this.reference[path];
+				//var originalValue = this.$services.page.getValue(this.reference, path);
 				return value !== originalValue;
 			}
 			// for now...
@@ -1115,6 +1125,9 @@ Vue.component("page-form-field", {
 		},
 		validateTimeout: {
 			type: Number,
+			required: false
+		},
+		codes: {
 			required: false
 		}
 	},

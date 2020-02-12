@@ -201,8 +201,23 @@ nabu.page.views.Page = Vue.component("n-page", {
 					});
 				}
 				else {
+					console.log("error is", error);
+					var route = "error";
+					
+					error.forEach(function(x) {
+						if (self.page.content.stateErrors) {
+							self.page.content.stateErrors.forEach(function(y) {
+								if (y.code == x.code) {
+									route = y.route;
+								}
+							});
+						}
+					});
+					
+					console.log("error route is", route);
+					
 					// masked route so we can reload
-					self.$services.router.route("error", {
+					self.$services.router.route(route, {
 						code: "page-load-failed",
 						message: "%{error:The page you requested could not be loaded, please <a href='javascript:void(0)' @click='$window.location.reload()'>try again</a>}"
 					}, inSelf && self.$el ? nabu.utils.router.self(self.$el) : null, true);
@@ -1128,7 +1143,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					}
 					promise.then(function() { stop() }, function(error) { stop(error) });
 					
-					var wait = !action.timeout && nabu.page.event.getName(action, "timeoutEvent") ? null : function() {
+					var wait = !action.timeout || !nabu.page.event.getName(action, "timeoutEvent") ? null : function() {
 						var content = nabu.page.event.getInstance(action, "timeoutEvent", self.page, self);
 						if (Object.keys(content).length == 0) {
 							content = value;
@@ -2335,6 +2350,17 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 			return [];
 		},
+		hasCellClickEvent: function(cell) {
+			if (!cell.clickEvent) {
+				return false;
+			}
+			else if (typeof(cell.clickEvent) == "string") {
+				return true;
+			}
+			else {
+				return nabu.page.event.getName(cell, "clickEvent");
+			}
+		},
 		shouldRenderCell: function(row, cell) {
 			if (this.edit) {
 				/*if (row.collapsed) {
@@ -2775,6 +2801,9 @@ Vue.component("n-absolute", {
 		right: {
 			required: false
 		},
+		fixed: {
+			required: false
+		},
 		autoclose: {
 			type: Boolean,
 			required: false
@@ -2803,7 +2832,7 @@ Vue.component("n-absolute", {
 				styles.push({"top": this.top });
 			}
 			if (this.bottom != null) {
-				styles.push({"bottom": this.top });
+				styles.push({"bottom": this.bottom });
 			}
 			if (this.left != null) {
 				styles.push({"left": this.left });
@@ -2820,6 +2849,13 @@ Vue.component("n-absolute", {
 				styles.push({"top": + y + "px"});
 				//styles.push({"left": + JSON.parse(JSON.stringify(this.$services.page.mouseX)) + "px" });
 				//styles.push({"top": + JSON.parse(JSON.stringify(this.$services.page.mouseY)) + "px"});
+			}
+			// can also use fixed positioning
+			if (this.fixed) {
+				styles.push({"position": "fixed"});
+			}
+			else {
+				styles.push({"position": "absolute"});
 			}
 			return styles;
 		}

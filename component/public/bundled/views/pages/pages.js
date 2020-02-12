@@ -120,7 +120,7 @@ nabu.page.views.Pages = Vue.extend({
 					soft: false
 				});
 			}
-			if (!newValue.match(/^[a-z0-9-]+$/)) {
+			if (!newValue.match(/^[a-zA-Z0-9-/]+$/)) {
 				messages.push({
 					severity: "error",
 					title: "Can only use lower case letters, numbers and dashes in the page name",

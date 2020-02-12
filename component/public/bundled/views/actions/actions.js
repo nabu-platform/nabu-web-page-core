@@ -467,10 +467,13 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			return promise;
 		},
 		getValidationResults: function(promiseResult) {
-			console.log("validation results are", promiseResult);
 			var messages = [];
 			promiseResult.forEach(function(x) {
-				nabu.utils.arrays.merge(messages, x);
+				x.forEach(function(y) {
+					if (messages.indexOf(y) < 0) {
+						messages.push(y);
+					}
+				})
 			});
 			return messages;
 		},
@@ -500,6 +503,14 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			}
 			return null;
 		},
+		hasEvent: function(action) {
+			if (action.event && typeof(action.event) == "string") {
+				return true;
+			}
+			else {
+				return !!nabu.page.event.getName(action, "event");
+			}
+		},
 		handle: function(action, force) {
 			if (action.name && this.$services.analysis && this.$services.analysis.emit) {
 				this.$services.analysis.emit("trigger-" + (this.cell.state.analysisId ? this.cell.state.analysisId : "action"), action.name, {url: window.location}, true);
@@ -522,6 +533,13 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 					}
 					if (action.validationErrorEvent) {
 						var pageInstance = self.$services.page.getPageInstance(self.page, self);
+						// we need to strip the component references within the messages
+						// otherwise they have circular references which will break later on (e.g. in form state)
+						messages = messages.map(function(x) {
+							var clone = nabu.utils.objects.clone(x);
+							delete clone.component;
+							return clone;
+						});
 						pageInstance.emit(action.validationErrorEvent, { messages: messages });
 					}
 				});
@@ -633,7 +651,9 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 						content.length = this.resolvedActions.length;
 						content.actor = this.cell.id;
 					}
-					pageInstance.emit(eventName, content ? content : {});
+					if (eventName != null) {
+						pageInstance.emit(eventName, content ? content : {});
+					}
 					this.lastAction = action;
 				}
 				if (action.close) {

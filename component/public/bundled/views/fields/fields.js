@@ -178,6 +178,8 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 		addField: function(arbitrary) {
 			this.cell.state[this.fieldsName].push({
 				label: null,
+				info: null,
+				infoIcon: null,
 				fragments: [],
 				hidden: null,
 				styles: [],
@@ -352,11 +354,25 @@ Vue.component("page-field", {
 				}
 			}
 		},
+		hasClickEvent: function(fragment) {
+			if (!fragment.clickEvent) {
+				return false;
+			}
+			else if (typeof(fragment.clickEvent) == "string") {
+				return true;
+			}
+			else {
+				return nabu.page.event.getName(fragment, "clickEvent");
+			}	
+		},
 		handleClick: function(fragment) {
-			if (fragment.clickEvent) {
+			if (this.hasClickEvent(fragment)) {
 				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
-				pageInstance.emit(fragment.clickEvent, {});
+				pageInstance.emit(
+					nabu.page.event.getName(fragment, "clickEvent"),
+					nabu.page.event.getInstance(fragment, "clickEvent", self.page, self)
+				);
 			}	
 		},
 		getDynamicClasses: function(field) {

@@ -103,6 +103,7 @@
 				<n-collapsible title="Initial State" class="list">
 					<div class="list-actions">
 						<button @click="addState">Add Initial State</button>
+						<button @click="function() { if (page.content.stateErrors) page.content.stateErrors.push({}); else $window.Vue.set(page.content, 'stateErrors', [{}]) }">Add Error Route</button>
 					</div>
 					<n-collapsible class="list-item" :title="state.name" v-for="state in page.content.states">
 						<n-form-text :value="state.name" @input="function(newValue) { if (!validateStateName(newValue).length) state.name = newValue; }" label="Name" :required="true" :validator="validateStateName"/>
@@ -121,6 +122,12 @@
 						</div>
 						<button @click="state.refreshOn ? state.refreshOn.push('') : $window.Vue.set(state, 'refreshOn', [''])">Add Refresh Event</button>
 					</n-collapsible>
+					<div v-if="page.content.stateErrors" class="list">
+						<div v-for="stateError in page.content.stateErrors">
+							<n-form-text v-model="stateError.code" label="Error Code"/>
+							<n-form-combo label="Error Page" :filter="filterRoutes" v-model="stateError.route"/>
+						</div>
+					</div>
 				</n-collapsible>
 				<n-collapsible title="Initial Events" class="list">
 					<div class="list-actions">
@@ -240,11 +247,11 @@
 						<div v-if="action.eventResets">
 							<div class="list-row" v-for="i in Object.keys(action.eventResets)">
 								<n-form-combo v-model="action.eventResets[i]" :filter="getAvailableEvents"/>
-								<button @click="action.eventResets.splice(i, 1)"><span class="fa fa-trash"></span></button>
+								<span @click="action.eventResets.splice(i, 1)" class="fa fa-times"></span>
 							</div>
 						</div>
 						<div class="list-item-actions">
-							<button @click="addEventReset(action)"><span class="fa fa-plus"></span>Event Reset</button>
+							<button @click="addEventReset(action)"><span class="fa fa-plus"></span>Event To Reset</button>
 						</div>
 					</n-collapsible>
 				</n-collapsible>
@@ -324,7 +331,7 @@
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 			<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" v-show="!edit || !row.collapsed"
 					:id="page.name + '_' + row.id + '_' + cell.id" 
-					:class="$window.nabu.utils.arrays.merge([{'clickable': !!cell.clickEvent}, {'page-cell': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))"                         
+					:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'page-cell': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? cell.class : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))"                         
 					:key="cellId(cell)"
 					:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
 					@click="clickOnCell(cell)"
@@ -397,7 +404,7 @@
 									<n-form-text :value="key" label="Name" :required="true" :timeout="600" @input="function(value) { renameInstance(cell, key, value) }"/>
 									<n-form-combo v-model="cell.instances[key]" label="Array" :filter="function() { return $services.page.getAllArrays(page, cell.id) }" />
 									<div class="list-item-actions">
-										<button @click="removeInstance(cell, key)"><span class="fa fa-trash"></span></button>
+										<span @click="removeInstance(cell, key)" class="fa fa-times"></span>
 									</div>
 								</n-collapsible>
 							</n-collapsible>
@@ -413,6 +420,7 @@
 									<n-form-text label="Left" v-model="cell.left" v-if="cell.target == 'absolute'"/>
 									<n-form-text label="Right" v-model="cell.right" v-if="cell.target == 'absolute'"/>
 									<n-form-text label="Minimum Width" v-model="cell.minWidth" v-if="cell.target == 'absolute'"/>
+									<n-form-switch label="Position fixed?" v-model="cell.fixed" v-if="cell.target == 'absolute'"/>
 									<n-form-switch label="Autoclose" v-model="cell.autoclose" v-if="cell.target == 'absolute'"/>
 								</div>								
 								<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" v-bubble:resetEvents/>
@@ -487,7 +495,7 @@
 							:stop-rerender="stopRerender"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-prompt>
-					<n-absolute :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right">          
+					<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right">          
 						<div @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:depth="depth + 1"
@@ -563,7 +571,7 @@
 							<n-form-text :value="key" label="Name" :required="true" :timeout="600" @input="function(value) { renameInstance(row, key, value) }"/>
 							<n-form-combo v-model="row.instances[key]" label="Array" :filter="function() { return $services.page.getAllArrays(page, row.id) }" />
 							<div class="list-item-actions">
-								<button @click="removeInstance(row, key)"><span class="fa fa-trash"></span></button>
+								<span @click="removeInstance(row, key)" class="fa fa-trash"></span>
 							</div>
 						</n-collapsible>
 					</n-collapsible>

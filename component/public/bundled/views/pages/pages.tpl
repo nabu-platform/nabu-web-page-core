@@ -62,7 +62,7 @@
 						<footer class="list-actions">
 							<button @click="create">Create New Page</button>
 						</footer>
-						<div v-for="category in categories" :key="category" :ref="'category_' + category">
+						<n-form-section v-for="category in categories" :key="category" :ref="'category_' + category">
 							<h2>{{category ? category : 'Uncategorized'}} <span class="fa fa-copy" @click="copyCategory(category)"></span></h2>
 							<n-collapsible :title="page.name" v-for="page in getPagesFor(category)" class="layout2 list-item" :key="page.id">
 								<n-form-section>
@@ -82,7 +82,7 @@
 									<button @click="remove(page)">Delete</button>
 								</div>
 							</n-collapsible>
-						</div>
+						</n-form-section>
 					</n-collapsible>
 					<n-collapsible title="Styling" class="list">
 						<footer class="list-actions">

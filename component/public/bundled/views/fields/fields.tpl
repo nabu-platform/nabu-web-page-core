@@ -7,6 +7,8 @@
 		<n-collapsible class="list-item" :title="field.label ? field.label : 'Unlabeled'" v-for="field in cell.state[fieldsName]">
 			<n-form-text v-model="field.label" label="Field Label"/>
 			<n-form-text v-if="!basic" v-model="field.hidden" label="Hide field if"/>
+			<n-form-text v-model="field.info" label="Info Content"/>
+			<n-form-text v-model="field.infoIcon" label="Info Icon" v-if="field.info"/>
 			<div v-if="!field.arbitrary">
 				<div class="list-item-actions">
 					<button @click="addFragment(field)">Add Fragment</button>
@@ -21,7 +23,7 @@
 					<n-form-text v-if="!basic" v-model="fragment.hidden" label="Hide fragment if"/>
 					<n-form-combo v-if="fragment.type == 'data'" v-model="fragment.key" label="Data Key" :filter="getKeys"/>
 					<n-form-text v-if="!basic" v-model="fragment.class" label="Fragment Class"/>
-					<n-form-text v-if="allowEvents" v-model="fragment.clickEvent" label="Click Event" @input="$emit('updatedEvents')" :timeout="600"/>
+					<page-event-value v-if="allowEvents" :page="page" :container="fragment" title="Click Event" name="clickEvent" v-bubble:resetEvents/>
 					
 					<component v-if="fragment.type" :cell="cell" :page="page" :keys="getKeys()"
 						:fragment="fragment"
@@ -85,7 +87,7 @@
 			<dt v-if="label && field.label">{{$services.page.translate($services.page.interpret(field.label,$self))}}</dt>
 			<dd class="page-field-fragment" v-if="!field.arbitrary">
 				<component v-if="fragment.type && !isHidden(fragment)" 
-					:class="$services.page.interpret(fragment.class, $self)" v-for="fragment in field.fragments"
+					:class="[$services.page.interpret(fragment.class, $self), {'clickable': hasClickEvent(fragment)}]" v-for="fragment in field.fragments"
 					:is="getProvidedComponent(fragment.type)"
 					:page="page" 
 					:cell="cell"
@@ -112,7 +114,7 @@
 		</template>
 		<template v-else-if="!field.arbitrary">
 			<component v-if="!isHidden(fragment)"
-				class="page-field-fragment" :class="fragment.class" v-for="fragment in field.fragments"
+				class="page-field-fragment" :class="[$services.page.interpret(fragment.class, $self), {'clickable': hasClickEvent(fragment)}]" v-for="fragment in field.fragments"
 				:is="getProvidedComponent(fragment.type)"
 				:page="page" 
 				:cell="cell"

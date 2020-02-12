@@ -12,6 +12,17 @@ Vue.component("page-form-input-text-configure", {
 		+ "	<n-form-text v-model='field.suffix' label='Suffix' v-if='!field.suffixIcon'/>"
 		+ "	<n-form-text v-model='field.suffixIcon' label='Suffix Icon' v-if='!field.suffix'/>"
 		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"
+		+ "	<h2>Validation Codes<span class='subscript'>You can remap validation codes with different messages here</span></h2>"
+		+ "		<div v-if='field.codes'>"
+		+ "			<div class='list-row' v-for='code in field.codes'>"
+		+ "				<n-form-text v-model='code.code' label='Code'/>"
+		+ "				<n-form-text v-model='code.title' label='Title'/>"
+		+ "				<span @click='field.codes.splice(field.codes.indexOf(code), 1)' class='fa fa-times'></span>"
+		+ "			</div>"
+		+ "		</div>"
+		+ "		<div class='list-actions'>"
+		+ "			<button @click=\"field.codes ? field.codes.push({code:null,title:null}) : $window.Vue.set(field, 'codes', [{code:null,title:null}])\">Add code</button>"           
+		+ "		</div>"
 		+ "</n-form-section>",
 	props: {
 		cell: {
@@ -44,6 +55,7 @@ Vue.component("page-form-input-text-configure", {
 
 Vue.component("page-form-input-text", {
 	template: "<n-form-text :type='textType' ref='form'"
+			+ "		:codes='allCodes'"
 			+ "		:class=\"{'has-suffix-icon': !!field.suffixIcon, 'has-suffix': !!field.suffix }\""
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
@@ -100,9 +112,28 @@ Vue.component("page-form-input-text", {
 		placeholder: {
 			type: String,
 			required: false
+		},
+		codes: {
+			required: false
 		}
 	},
 	computed: {
+		allCodes: function() {
+			var codes = [];
+			if (this.field.codes) {
+				nabu.utils.arrays.merge(codes, this.field.codes);
+			}
+			if (this.codes) {
+				nabu.utils.arrays.merge(codes, this.codes);
+			}
+			var result = {};
+			var self = this;
+			codes.forEach(function(code) {
+				result[code.code] = self.$services.page.translate(code.title);
+			});
+			console.log("all codes are", result);
+			return result;
+		},
 		textType: function() {
 			return this.field.textType ? this.field.textType : 'text';
 		}
@@ -118,7 +149,7 @@ Vue.component("page-form-input-text", {
 			}
 		}
 	}
-}); 
+});
 
 
 
