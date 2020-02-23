@@ -278,6 +278,6 @@
 		<div v-if="instance && instance.configure && edit" class="page-arbitrary-menu">
 			<button @click="function($event) { instance.configure(); $event.stopPropagation(); return false }"><span class="fa fa-cog"></span></button>
 		</div>
-		<div :class="target.class" v-route-render="{ alias: target.route, parameters: getParameters(), mounted: mounted }"></div>
+		<div @click.native="handle" :class="target.class" v-route-render="{ alias: target.route, parameters: getParameters(), mounted: mounted }"></div>
 	</div>
 </template> 

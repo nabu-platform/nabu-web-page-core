@@ -205,22 +205,22 @@
 						<button @click="addAction">Add Action</button>
 					</div>
 					<n-collapsible class="list-item" :title="(action.on ? '[' + action.on + '] ' : '') + action.name" v-for="action in page.content.actions">
-						<n-form-text v-model="action.name" label="Name" :required="true"/>
-						<n-form-text v-model="action.confirmation" label="Confirmation Message"/>
+						<n-form-text v-model="action.name" label="Name" :required="true" :timeout="600"/>
+						<n-form-text v-model="action.confirmation" label="Confirmation Message" :timeout="600"/>
 						<n-form-combo v-model="action.on" label="Trigger On" :filter="getAvailableEvents"/>
-						<n-form-text v-model="action.condition" label="Condition" v-if="action.on"/>
-						<n-form-text v-model="action.scroll" label="Scroll to" v-if="!action.operation && !action.function"/>
+						<n-form-text v-model="action.condition" label="Condition" v-if="action.on" :timeout="600"/>
+						<n-form-text v-model="action.scroll" label="Scroll to" v-if="!action.operation && !action.function" :timeout="600"/>
 						<n-form-combo v-model="action.route" v-if="!action.operation && !action.url && !action.function" label="Redirect" :filter="filterRoutes"/>
 						<n-form-combo v-model="action.anchor" v-if="action.route || (action.operation && isGet(action.operation))" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 						<n-form-combo :key="'operation' + page.content.actions.indexOf(action)" v-model="action.operation" v-if="!action.route && !action.scroll && !action.url && !action.function" label="Operation" :filter="getOperations" />
-						<n-form-text v-model="action.timeout" v-if="action.operation" label="Action Timeout" info="You can emit an event if the action takes too long"/>
+						<n-form-text v-model="action.timeout" v-if="action.operation" label="Action Timeout" info="You can emit an event if the action takes too long" :timeout="600"/>
 						<page-event-value class="no-more-padding"  v-if="action.operation && action.timeout" :page="page" :container="action" title="Timeout Event" name="timeoutEvent" v-bubble:resetEvents/>
 						<n-form-combo v-model="action.function" v-if="!action.route && !action.scroll && !action.url && !action.operation" label="Function" :filter="$services.page.listFunctions" />
-						<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function"/>
+						<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function" :timeout="600"/>
 						<page-event-value class="no-more-padding" :page="page" :container="action" title="Chain Event" name="chainEvent" v-bubble:resetEvents/>
 						<n-form-switch v-if="action.operation || action.function" v-model="action.isSlow" label="Is slow operation?"/>
-						<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" :timeout="600" @input="resetEvents()"/>
-						<n-form-text v-if="action.operation" v-model="action.errorEvent" label="Error Event" :timeout="600" @input="resetEvents()"/>
+						<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" @input="resetEvents()" :timeout="600"/>
+						<n-form-text v-if="action.operation" v-model="action.errorEvent" label="Error Event" @input="resetEvents()" :timeout="600"/>
 						<n-form-switch v-if="action.operation" v-model="action.expandBindings" label="Field level bindings"/>
 						<div class="simple-row" v-if="action.operation && !action.route && action.expandBindings">
 							<n-form-combo 

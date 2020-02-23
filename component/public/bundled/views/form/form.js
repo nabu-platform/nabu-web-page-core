@@ -8,6 +8,8 @@ if (!nabu.page.views) { nabu.page.views = {} }
 // the form tries to copy state (for pages) before allowing you to edit it, to then merge the result back into the source
 // however because the form copies all page data, if a value differs, it is not entirely sure whether that is because YOU updated it or something else did
 // that's why we keep the reference
+
+// the synchronize generally triggers a rerender of the form which in turn means we lose focus
 nabu.page.views.PageForm = Vue.extend({
 	template: "#page-form",
 	props: {
@@ -1544,6 +1546,9 @@ Vue.component("page-arbitrary", {
 		}
 	},
 	methods: {
+		handle: function() {
+				
+		},
 		getParameters: function() {
 			var cellClone = nabu.utils.objects.clone(this.cell);
 			cellClone.state = this.target;

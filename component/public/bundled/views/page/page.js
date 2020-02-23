@@ -1040,7 +1040,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				bindings: {}
 			});
 		},
-		emit: function(name, value) {
+		emit: function(name, value, reset) {
 			var self = this;
 
 			// used to be a regular assign and that seemed to work as well?
@@ -1048,7 +1048,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			this.updatedVariable(name);
 			
 			// check parameters that may listen to the given value
-			if (this.page.content.parameters) {
+			// we don't want to trigger listeners if we are resetting an event, you must _explicitly_ choose to set a value to null if necessary
+			if (this.page.content.parameters && !reset) {
 				this.page.content.parameters.map(function(parameter) {
 					parameter.listeners.map(function(listener) {
 						// backwards compatibility
@@ -1074,100 +1075,194 @@ nabu.page.views.Page = Vue.component("n-page", {
 			
 			var promises = [];
 			
-			// check all the actions to see if we need to run something
-			this.page.content.actions.map(function(action) {
-				
-				if (action.on == name) {
-					// if we have a condition, run it
-					if (action.condition && !self.$services.page.isCondition(action.condition, value, self)) {
-						return;
-					}
+			if (!reset) {
+				// check all the actions to see if we need to run something
+				this.page.content.actions.map(function(action) {
 					
-					var promise = self.$services.q.defer();
-					
-					var runFunction = function() {
-						if (action.isSlow) {
-							self.$wait({promise: promise});
+					if (action.on == name) {
+						// if we have a condition, run it
+						if (action.condition && !self.$services.page.isCondition(action.condition, value, self)) {
+							return;
 						}
-						var func = self.$services.page.getRunnableFunction(action.function);
-						if (!func) {
-							throw "Could not find function: " + action.function; 
+						
+						var promise = self.$services.q.defer();
+						
+						var runFunction = function() {
+							if (action.isSlow) {
+								self.$wait({promise: promise});
+							}
+							var func = self.$services.page.getRunnableFunction(action.function);
+							if (!func) {
+								throw "Could not find function: " + action.function; 
+							}
+							var input = {};
+							if (action.bindings) {
+								var pageInstance = self;
+								Object.keys(action.bindings).forEach(function(key) {
+									if (action.bindings[key]) {
+										var value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], self);
+										self.$services.page.setValue(input, key, value);
+									}
+								});
+							}
+							return self.$services.page.runFunction(func, input, self, promise);
 						}
-						var input = {};
-						if (action.bindings) {
-							var pageInstance = self;
-							Object.keys(action.bindings).forEach(function(key) {
-								if (action.bindings[key]) {
-									var value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], self);
-									self.$services.page.setValue(input, key, value);
+						
+						promises.push(promise);
+						var parameters = {};
+						Object.keys(action.bindings).map(function(key) {
+							self.$services.page.setValue(parameters, key, self.$services.page.getBindingValue(self, action.bindings[key]));
+						});
+						
+						var eventReset = function() {
+							// if we are emitting a "null" value for the current event, we don't want to trigger the reset listeners!
+							if (action.eventResets != null && value != null) {
+								action.eventResets.forEach(function(event) {
+									self.emit(event, null, true);
+								});
+							}
+						};
+						
+						var date = new Date();
+						var stop = function(error) {
+							if (self.$services.analysis && self.$services.analysis.emit && action.name) {
+								self.$services.analysis.emit("trigger-" + self.page.name, action.name, 
+									{time: new Date().getTime() - date.getTime(), error: error}, true);
+							}
+						};
+						
+						if (nabu.page.event.getName(action, "chainEvent")) {
+							promise.then(function() {
+								var pageInstance = self.$services.page.getPageInstance(self.page, self);
+								var content = nabu.page.event.getInstance(action, "chainEvent", self.page, self);
+								if (Object.keys(content).length == 0) {
+									content = value;
 								}
+								pageInstance.emit(
+									nabu.page.event.getName(action, "chainEvent"),
+									content
+								);
 							});
 						}
-						return self.$services.page.runFunction(func, input, self, promise);
-					}
-					
-					promises.push(promise);
-					var parameters = {};
-					Object.keys(action.bindings).map(function(key) {
-						self.$services.page.setValue(parameters, key, self.$services.page.getBindingValue(self, action.bindings[key]));
-					});
-					
-					var eventReset = function() {
-						if (action.eventResets != null) {
-							action.eventResets.forEach(function(event) {
-								self.emit(event, null);
-							});
-						}
-					};
-					
-					var date = new Date();
-					var stop = function(error) {
-						if (self.$services.analysis && self.$services.analysis.emit && action.name) {
-							self.$services.analysis.emit("trigger-" + self.page.name, action.name, 
-								{time: new Date().getTime() - date.getTime(), error: error}, true);
-						}
-					};
-					
-					if (nabu.page.event.getName(action, "chainEvent")) {
-						promise.then(function() {
-							var pageInstance = self.$services.page.getPageInstance(self.page, self);
-							var content = nabu.page.event.getInstance(action, "chainEvent", self.page, self);
+						promise.then(function() { stop() }, function(error) { stop(error) });
+						
+						var wait = !action.timeout || !nabu.page.event.getName(action, "timeoutEvent") ? null : function() {
+							var content = nabu.page.event.getInstance(action, "timeoutEvent", self.page, self);
 							if (Object.keys(content).length == 0) {
 								content = value;
 							}
-							pageInstance.emit(
-								nabu.page.event.getName(action, "chainEvent"),
+							self.emit(
+								nabu.page.event.getName(action, "timeoutEvent"),
 								content
 							);
-						});
-					}
-					promise.then(function() { stop() }, function(error) { stop(error) });
-					
-					var wait = !action.timeout || !nabu.page.event.getName(action, "timeoutEvent") ? null : function() {
-						var content = nabu.page.event.getInstance(action, "timeoutEvent", self.page, self);
-						if (Object.keys(content).length == 0) {
-							content = value;
 						}
-						self.emit(
-							nabu.page.event.getName(action, "timeoutEvent"),
-							content
-						);
-					}
-					
-					if (action.confirmation) {
-						self.$confirm({message:self.$services.page.translate(action.confirmation)}).then(function() {
+						
+						if (action.confirmation) {
+							self.$confirm({message:self.$services.page.translate(action.confirmation)}).then(function() {
+								if (wait) {
+									self.$services.q.wait(promise, parseInt(action.timeout), wait);
+								}
+								var element = null;
+								var async = false;
+								// already get the element, it can be triggered with or without a route
+								if (action.scroll) {
+									var element = document.querySelector(action.scroll);
+									if (!element) {
+										element = document.getElementById(action.scroll);
+									}
+								}
+								if (action.url) {
+									var url = self.$services.page.interpret(action.url, self);
+									if (action.anchor) {
+										window.open(url);
+									}
+									else {
+										window.location = url;
+									}
+								}
+								else if (action.route) {
+									var routePromise = null;
+									eventReset();
+									if (action.anchor == "$blank") {
+										window.open(self.$services.router.template(action.route, parameters));
+									}
+									else if (action.anchor == "$window") {
+										window.location = self.$services.router.template(action.route, parameters);
+									}
+									else {
+										routePromise = self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
+									}
+									if (element) {
+										if (routePromise && routePromise.then) {
+											routePromise.then(function() {
+												element.scrollIntoView();
+											});
+										}
+										else {
+											element.scrollIntoView();
+										}
+									}
+								}
+								else if (action.scroll) {
+									eventReset();
+									if (element) {
+										element.scrollIntoView();
+									}
+								}
+								else if (action.operation && self.isGet(action.operation) && action.anchor == "$blank") {
+									window.open(self.$services.swagger.parameters(action.operation, parameters).url, "_blank");
+								}
+								else if (action.operation) {
+									if (action.isSlow) {
+										self.$wait({promise: promise});
+									}
+									var operation = self.$services.swagger.operations[action.operation];
+									// currently we hardcode an exception for this service
+									// in the future we should use swagger extensions to mark the id & secret fields for downloads with temporary authentication
+									// that way we can support it for more services
+									if (operation.operationId == "nabu.cms.attachment.rest.internal.get") {
+										this.$services.attachment.download(parameters.nodeId, parameters.attachmentId);
+										eventReset();
+									}
+									else if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {             
+										window.location = self.$services.swagger.parameters(action.operation, parameters).url;
+										eventReset();
+									}
+									else {
+										async = true;
+										self.$services.swagger.execute(action.operation, parameters).then(function(result) {
+											if (action.event) {
+												// we get null from a 204
+												self.emit(action.event, result == null ? {} : result);
+											}
+											eventReset();
+											promise.resolve(result);
+										}, function(error) {
+											if (action.errorEvent) {
+												self.emit(action.errorEvent, error);
+											}
+											promise.reject(error);
+										});
+									}
+								}
+								else if (action.function) {
+									runFunction();
+								}
+								else {
+									eventReset();
+								}
+								if (!async) {
+									promise.resolve();
+								}
+							}, function() {
+								promise.reject();
+							})
+						}
+						else {
 							if (wait) {
 								self.$services.q.wait(promise, parseInt(action.timeout), wait);
 							}
-							var element = null;
 							var async = false;
-							// already get the element, it can be triggered with or without a route
-							if (action.scroll) {
-								var element = document.querySelector(action.scroll);
-								if (!element) {
-									element = document.getElementById(action.scroll);
-								}
-							}
 							if (action.url) {
 								var url = self.$services.page.interpret(action.url, self);
 								if (action.anchor) {
@@ -1177,8 +1272,17 @@ nabu.page.views.Page = Vue.component("n-page", {
 									window.location = url;
 								}
 							}
+							else if (action.scroll) {
+								eventReset();
+								var element = document.querySelector(action.scroll);
+								if (!element) {
+									element = document.getElementById(action.scroll);
+								}
+								if (element) {
+									element.scrollIntoView();
+								}
+							}
 							else if (action.route) {
-								var routePromise = null;
 								eventReset();
 								if (action.anchor == "$blank") {
 									window.open(self.$services.router.template(action.route, parameters));
@@ -1187,23 +1291,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 									window.location = self.$services.router.template(action.route, parameters);
 								}
 								else {
-									routePromise = self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
-								}
-								if (element) {
-									if (routePromise && routePromise.then) {
-										routePromise.then(function() {
-											element.scrollIntoView();
-										});
-									}
-									else {
-										element.scrollIntoView();
-									}
-								}
-							}
-							else if (action.scroll) {
-								eventReset();
-								if (element) {
-									element.scrollIntoView();
+									self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
 								}
 							}
 							else if (action.operation && self.isGet(action.operation) && action.anchor == "$blank") {
@@ -1214,14 +1302,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 									self.$wait({promise: promise});
 								}
 								var operation = self.$services.swagger.operations[action.operation];
-								// currently we hardcode an exception for this service
-								// in the future we should use swagger extensions to mark the id & secret fields for downloads with temporary authentication
-								// that way we can support it for more services
 								if (operation.operationId == "nabu.cms.attachment.rest.internal.get") {
 									this.$services.attachment.download(parameters.nodeId, parameters.attachmentId);
 									eventReset();
 								}
-								else if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {             
+								else if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
 									window.location = self.$services.swagger.parameters(action.operation, parameters).url;
 									eventReset();
 								}
@@ -1251,91 +1336,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 							if (!async) {
 								promise.resolve();
 							}
-						}, function() {
-							promise.reject();
-						})
-					}
-					else {
-						if (wait) {
-							self.$services.q.wait(promise, parseInt(action.timeout), wait);
-						}
-						var async = false;
-						if (action.url) {
-							var url = self.$services.page.interpret(action.url, self);
-							if (action.anchor) {
-								window.open(url);
-							}
-							else {
-								window.location = url;
-							}
-						}
-						else if (action.scroll) {
-							eventReset();
-							var element = document.querySelector(action.scroll);
-							if (!element) {
-								element = document.getElementById(action.scroll);
-							}
-							if (element) {
-								element.scrollIntoView();
-							}
-						}
-						else if (action.route) {
-							eventReset();
-							if (action.anchor == "$blank") {
-								window.open(self.$services.router.template(action.route, parameters));
-							}
-							else if (action.anchor == "$window") {
-								window.location = self.$services.router.template(action.route, parameters);
-							}
-							else {
-								self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
-							}
-						}
-						else if (action.operation && self.isGet(action.operation) && action.anchor == "$blank") {
-							window.open(self.$services.swagger.parameters(action.operation, parameters).url, "_blank");
-						}
-						else if (action.operation) {
-							if (action.isSlow) {
-								self.$wait({promise: promise});
-							}
-							var operation = self.$services.swagger.operations[action.operation];
-							if (operation.operationId == "nabu.cms.attachment.rest.internal.get") {
-								this.$services.attachment.download(parameters.nodeId, parameters.attachmentId);
-								eventReset();
-							}
-							else if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
-								window.location = self.$services.swagger.parameters(action.operation, parameters).url;
-								eventReset();
-							}
-							else {
-								async = true;
-								self.$services.swagger.execute(action.operation, parameters).then(function(result) {
-									if (action.event) {
-										// we get null from a 204
-										self.emit(action.event, result == null ? {} : result);
-									}
-									eventReset();
-									promise.resolve(result);
-								}, function(error) {
-									if (action.errorEvent) {
-										self.emit(action.errorEvent, error);
-									}
-									promise.reject(error);
-								});
-							}
-						}
-						else if (action.function) {
-							runFunction();
-						}
-						else {
-							eventReset();
-						}
-						if (!async) {
-							promise.resolve();
 						}
 					}
-				}
-			});
+				});
+			}
 			
 			if (this.subscriptions[name]) {
 				this.subscriptions[name].map(function(handler) {
@@ -1347,7 +1351,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			
 			// check states that have to be refreshed
-			if (this.page.content.states.length) {
+			if (this.page.content.states.length && !reset) {
 				nabu.utils.arrays.merge(promises, this.page.content.states.filter(function(x) { return x.refreshOn != null && x.refreshOn.indexOf(name) >= 0 }).map(function(state) {
 					var parameters = {};
 					Object.keys(state.bindings).map(function(key) {
@@ -1403,12 +1407,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 			});
 			return this.$services.q.all(promises).then(function() {
-				if (self.page.content.globalEvents) {
+				if (self.page.content.globalEvents && !reset) {
 					var globalEvent = self.page.content.globalEvents.filter(function(x) {
 						return x.localName == name;
 					})[0];
 					if (globalEvent) {
-						self.$services.page.emit(globalEvent.globalName ? globalEvent.globalName : name, value, self);
+						self.$services.page.emit(globalEvent.globalName ? globalEvent.globalName : name, value, reset);
 					}
 				}
 			});
@@ -1454,6 +1458,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				var pageParameter = this.page.content.parameters ? this.page.content.parameters.filter(function(parameter) {
 					return parameter.name == localName;
 				})[0] : null;
+				var stateParameter = this.page.content.states ? this.page.content.states.filter(function(state) { return state.name == localName })[0] : null;
 				
 				var result = null;
 				if (applicationProperty) {
@@ -1461,6 +1466,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 				else if (pageParameter != null) {
 					result = this.variables[pageParameter.name];
+				}
+				else if (stateParameter != null) {
+					result = this.variables[stateParameter.name];
 				}
 				else {
 					result = this.parameters[name];

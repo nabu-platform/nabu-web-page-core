@@ -95,6 +95,15 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 					}
 				}
 			}
+			var elements = document.querySelectorAll("[component-group]");
+			if (elements) {
+				for (var i = 0; i < elements.length; i++) {
+					var id = elements[i].getAttribute("component-group");
+					if (id && values.indexOf(id) < 0) {
+						values.push(id);
+					}
+				}
+			}
 			if (value) {
 				values = values.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
 			}
@@ -254,6 +263,10 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				}	
 			});
 		},
+		hasActiveChild: function(action) {
+			var activeClass = this.cell.state.activeClass ? this.cell.state.activeClass : "is-active";
+			return this.getDynamicClasses(action).indexOf(activeClass) >= 0;
+		},
 		getDynamicClasses: function(action) {
 			var classes = [];
 			if (action.styles) {
@@ -264,7 +277,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			}
 			// set the active class if applicable
 			var activeClass = this.cell.state.activeClass ? this.cell.state.activeClass : "is-active";
-			if (this.lastAction == action && (action.route || action.url || typeof(action.event) == "string")) {
+			if (this.lastAction == action) {
 				classes.push(activeClass);
 			}
 			else if (this.$services.vue.route) {
@@ -633,7 +646,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 							addDefaults = true;
 						}
 					}
-					else if (action.event) {
+					else if (action.event && nabu.page.event.getName(action, "event")) {
 						eventName = nabu.page.event.getName(action, "event");
 						// you have a custom event
 						if (action.event.eventFields && action.event.eventFields.length) {

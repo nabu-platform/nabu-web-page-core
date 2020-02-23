@@ -129,7 +129,7 @@
 		</n-sidebar>
 		<li v-for="action in (edit ? getActions() : resolvedActions.filter(function(x) { return !x.dynamic}))" v-if="isVisible(action)"
 				class="page-action"
-				:class="[{ 'has-children': action.actions != null && action.actions.length }, action.class, {'click-based': cell.state.clickBased}]"
+				:class="[{ 'has-children': action.actions != null && action.actions.length }, action.class, {'click-based': cell.state.clickBased}, {'is-open': showing.indexOf(action) >= 0}]"
 				@mouseover="show(action)" @mouseout="hide(action)"
 				:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1">
 			
@@ -149,7 +149,7 @@
 					:disabled="isDisabled(action)"
 					:id="$services.page.interpret(action.id, $self)"
 					@click="handle(action)"
-					v-if="!cell.state.useButtons && (action.route || hasEvent(action) || action.url)"
+					v-if="!cell.state.useButtons && (action.route || hasEvent(action) || action.url || action.close)"
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
 						><span>{{ $services.page.translate($services.page.interpret(action.label, $self)) }}</span></a>
 				<button auto-close-actions class="page-action-button page-action-entry"
@@ -158,7 +158,7 @@
 					:disabled="isDisabled(action)"
 					:id="$services.page.interpret(action.id, $self)"
 					@click="handle(action)" 
-					v-else-if="cell.state.useButtons && (action.route || hasEvent(action) || action.url)"
+					v-else-if="cell.state.useButtons && (action.route || hasEvent(action) || action.url || action.close)"
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
 						><span>{{ $services.page.translate($services.page.interpret(action.label, $self)) }}</span></button>
 				<span class="page-action-label page-action-entry" 

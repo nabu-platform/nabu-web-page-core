@@ -1,5 +1,6 @@
 Vue.component("n-form-ace", {
-	template: "<div class='n-form-component'><div class='n-form-label-wrapper' v-if='label'><label>{{label}}</label></div><n-ace :mode='mode' :timeout='timeout' v-model='value'/></div>",
+	template: "<div class='n-form-component'><div class='n-form-label-wrapper' v-if='label'><label>{{label}}</label></div><n-ace :mode='mode'"
+		+ " :timeout='timeout' :value='value' v-bubble:input/></div>",
 	props: {
 		value: {
 			required: true

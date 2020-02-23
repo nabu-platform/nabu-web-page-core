@@ -17,7 +17,7 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			+ "		<page-fields-edit :allow-multiple='false' fields-name='enumerationFields' v-if='field.enumerationOperation && field.enumerationOperationLabelComplex' :cell='{state:field}' :page='page' :keys='getEnumerationFields(field.enumerationOperation)' :allow-editable='false'/>"
 			+ "		<n-page-mapper v-if='field.enumerationOperation && hasMappableEnumerationParameters(field)'"
 			+ "			v-model='field.enumerationOperationBinding'"
-			+ "			:from='$services.page.getAvailableParameters(page, cell)'"
+			+ "			:from='$services.page.getAvailableParameters(page, cell, true)'"
 			+ "			:to='getMappableEnumerationParameters(field)'/>"
 			+ "		<n-form-combo v-if='field.enumerationOperation' :filter='function() { return getEnumerationFields(field.enumerationOperation) }' v-model='field.enumerationCachingKey' label='Enumeration Caching Key'/>"    
 			+ "		<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"

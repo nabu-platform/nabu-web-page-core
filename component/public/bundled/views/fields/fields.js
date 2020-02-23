@@ -209,7 +209,7 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 				return this.keys;
 			}
 			// otherwise we just try to get the default ones available to you
-			var parameters = this.$services.page.getAvailableParameters(this.page, this.cell);
+			var parameters = this.$services.page.getAvailableParameters(this.page, this.cell, true);
 			var keys = this.$services.page.getSimpleKeysFor({properties:parameters});
 			return value ? keys.filter(function(x) { x.toLowerCase().indexOf(value.toLowerCase()) >= 0 }) : keys;
 		}
@@ -277,12 +277,22 @@ nabu.page.views.PageFields = Vue.component("page-fields", {
 		},
 		getEvents: function() {
 			var result = {};
+			var self = this;
 			if (this.cell.state[this.fieldsName]) {
 				this.cell.state[this.fieldsName].forEach(function(field) {
 					if (field.fragments) {
 						field.fragments.forEach(function(fragment) {
 							if (fragment.clickEvent) {
-								result[fragment.clickEvent] = {};
+								if (typeof(fragment.clickEvent) == "string") {
+									result[fragment.clickEvent] = {};
+								}
+								else if (nabu.page.event.getName(fragment, "clickEvent") && nabu.page.event.getName(fragment, "clickEvent") != "$close") {
+									var type = nabu.page.event.getType(fragment, "clickEvent");
+									if (type.properties && Object.keys(type.properties).length == 0 && self.cell.on) {
+										type = self.cell.on;
+									}
+									result[nabu.page.event.getName(fragment, "clickEvent")] = type;
+								}
 							}	
 						});
 					}	

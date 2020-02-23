@@ -6,10 +6,12 @@
 				<n-form-text v-model="cell.state.label" label="Label"/>
 				<n-form-text v-model="cell.state.placeholder" label="Placeholder"/>
 				<n-form-text v-model="cell.state.timeout" label="Timeout"/>
+				<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
 				<component :is="configurationComponent" :page="page" :cell="cell" :field="cell.state"/>
 			</n-collapsible>
 		</n-sidebar>
 		<component :is="formComponent" :page="page" :cell="cell"
+			:component-group="cell.state.componentGroup"
 			:field="cell.state"
 			:value="cell.state.name ? getPageInstance().get(cell.state.name) : null"
 			:label="$services.page.translate(cell.state.label)"
