@@ -2,8 +2,8 @@
 		disabled="false"
 		id="8934bb80-9e09-4874-9880-3a0bb5ea720b">
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			disabled="false"
 			comment="Get configuration"
+			disabled="false"
 			id="ad49500f-79d6-49f2-a0d8-7ded8220b150">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
@@ -109,6 +109,15 @@
 				fixedValue="false">
 			<from>input/content/googleSiteVerification</from>
 			<to>configuration/googleSiteVerification</to>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="d1305323-0b17-4186-b451-b584d4959370"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>input/content/state</from>
+			<to>configuration/state</to>
 		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"

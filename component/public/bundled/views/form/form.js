@@ -195,7 +195,7 @@ nabu.page.views.PageForm = Vue.extend({
 			// but at that point we persist them as "." separated values which means updated values don't end up in the resulting object
 			// this means if we have a . separated field, it is already synced "correctly" as a diff, it is only for root fields that we have an issue
 			var reference = {};
-			Vue.set(this, "result", {});
+			/*Vue.set(this, "result", {});
 			var page = this.$services.page.getPageParameterValues(self.page, pageInstance);
 			Object.keys(page).map(function(key) {
 				// we currently only use the reference to check if fields have changed
@@ -206,7 +206,11 @@ nabu.page.views.PageForm = Vue.extend({
 				// we just explode it after
 				//reference[key] = page[key];
 				Vue.set(self.result, key, page[key]);
-			});
+			});*/
+			// we _need_ to take a serialized copy of the state, otherwise the createResult will always update the state when trying to create a result object
+			var page = this.$services.page.getPageParameterValues(self.page, pageInstance);
+			// take a cloned copy
+			Vue.set(this, "result", JSON.parse(JSON.stringify(page)));
 			// must recreate the "." separated values, necessary for "complex" multifield form components like address
 			// other components get a correct initial value because we get the field from the result (getCurrentValue)
 			this.$services.page.explode(reference, this.result);

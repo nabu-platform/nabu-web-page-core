@@ -13,4 +13,8 @@
         <field name="type" type="java.lang.String"/>
         <field name="async" type="java.lang.Boolean"/>
     </structure>
+    <structure maxOccurs="unbounded" minOccurs="0" name="state">
+        <field name="name" type="java.lang.String"/>
+        <field name="operation" type="java.lang.String"/>
+    </structure>
 </structure>

@@ -1,7 +1,7 @@
 <structure interface="$self:api" name="pipeline">
     <structure name="input">
-        <structure definition="nabu.web.page.core.types.configuration" name="unnamed"/>
+        <structure comment="Nabu Page Builder configuration options" definition="nabu.web.page.core.types.configuration" name="unnamed"/>
     </structure>
     <structure name="output"/>
-    <structure definition="nabu.web.page.core.types.configuration" name="configuration"/>
+    <structure comment="Nabu Page Builder configuration options" definition="nabu.web.page.core.types.configuration" name="configuration"/>
 </structure>

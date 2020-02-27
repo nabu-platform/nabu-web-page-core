@@ -41,6 +41,7 @@ nabu.services.VueService(Vue.extend({
 			contents: [],
 			// any imports
 			imports: [],
+			applicationState: [],
 			translations: [],
 			lastCompiled: null,
 			customStyle: null,
@@ -58,7 +59,8 @@ nabu.services.VueService(Vue.extend({
 			googleSiteVerification: null,
 			// the page we are editing?
 			editing: null,
-			dragItems: []
+			dragItems: [],
+			variables: {}
 		}
 	},
 	activate: function(done) {
@@ -286,6 +288,9 @@ nabu.services.VueService(Vue.extend({
 				if (configuration.imports) {
 					nabu.utils.arrays.merge(self.imports, configuration.imports);
 				}
+				if (configuration.state) {
+					nabu.utils.arrays.merge(self.applicationState, configuration.state);
+				}
 				if (configuration.googleSiteVerification) {
 					self.googleSiteVerification = configuration.googleSiteVerification;
 				}
@@ -306,8 +311,8 @@ nabu.services.VueService(Vue.extend({
 						}
 					});
 				}
+				var promises = [];
 				if (self.canEdit()) {
-					var promises = [];
 					promises.push(injectJavascript());
 					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.style.list").then(function(list) {
 						if (list && list.styles) {
@@ -319,22 +324,52 @@ nabu.services.VueService(Vue.extend({
 							nabu.utils.arrays.merge(self.functions, list.styles.map(function(x) { return JSON.parse(x.content) }));
 						}
 					}));
-					self.$services.q.all(promises).then(function() {
-						Vue.nextTick(function() {
-							self.loading = false;
-						});
-						// start reloading the css at fixed intervals to pull in any relevant changes
-						self.reloadCss();
-						done();
+				}
+				if (self.applicationState) {
+					self.applicationState.forEach(function(state) {
+						if (state.name) {
+							promises.push(self.$services.swagger.execute(state.operation).then(function(result) {
+								Vue.set(self.variables, state.name, result);
+							}));
+						}
 					});
 				}
-				else {
+				self.$services.q.all(promises).then(function() {
 					Vue.nextTick(function() {
 						self.loading = false;
 					});
+					if (self.canEdit()) {
+						// start reloading the css at fixed intervals to pull in any relevant changes
+						self.reloadCss();
+					}
 					done();
-				}
+				});
 			});
+		},
+		getApplicationStateNames: function(value) {
+			var values = this.applicationState.filter(function(x) { return !!x.name }).map(function(x) {
+				return x.name;
+			});
+			if (value) {
+				values = values.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				})
+			}
+			return values;
+		},
+		reloadState: function(name) {
+			var state = this.applicationState.filter(function(x) {
+				return x.name == name;
+			})[0];
+			if (state && state.operation) {
+				var self = this;
+				return this.$services.swagger.execute(state.operation).then(function(result) {
+					Vue.set(self.variables, state.name, result);
+				});
+			}
+			else {
+				return this.$services.q.reject();
+			}
 		},
 		renumber: function(page, entity) {
 			var self = this;
@@ -697,7 +732,20 @@ nabu.services.VueService(Vue.extend({
 			if (value && value.indexOf) {
 				while (value.indexOf("%" + "{") >= 0) {
 					var start = value.indexOf("%" + "{");
-					var end = value.indexOf("}", start);
+					var depth = 1;
+					var end = -1;
+					for (var j = start + 2; j < value.length; j++) {
+						if (value.charAt(j) == "{") {
+							depth++;
+						}
+						else if (value.charAt(j) == "}") {
+							depth--;
+							if (depth == 0) {
+								end = j;
+								break;
+							}
+						}
+					}
 					// no end tag
 					if (end < 0) {
 						break;
@@ -711,18 +759,8 @@ nabu.services.VueService(Vue.extend({
 					})[0];
 					value = value.substring(0, start) + (translation && translation.translation ? translation.translation : (parts.length == 1 ? parts[0] : parts[1])) + value.substring(end + 1);
 				}
-				return value;
 			}
-			/*if (value && value.indexOf && value.indexOf("%") == 0 && value.indexOf("{") == 1) {
-				available = value.replace(/^%\{([^}]+)\}$/, "$1");
-				var parts = available.split(":");
-				translation = this.translations.filter(function(x) {
-					return ((parts.length == 1 && x.context == null)
-							|| (parts.length == 2 && x.context == parts[0]))
-						&& (x.name == parts.length == 1 ? parts[0] : parts[1]);
-				})[0];
-			}*/
-			return translation == null || translation.translation == null ? available : translation.translation;
+			return value;
 		},
 		interpret: function(value, component) {
 			if (typeof(value) == "string" && value.length > 0 && value.substring(0, 1) == "=") {
@@ -823,6 +861,21 @@ nabu.services.VueService(Vue.extend({
 				return a.id.localeCompare(b.id);
 			});
 			return result;
+		},
+		getStateOperations: function(value) {
+			var self = this;
+			return Object.keys(this.$services.swagger.operations).filter(function(operationId) {
+				if (value && operationId.toLowerCase().indexOf(value.toLowerCase()) < 0) {
+					return false;
+				}
+				var operation = self.$services.swagger.operations[operationId];
+				// must be a get
+				return operation.method.toLowerCase() == "get"
+					// and contain the name fragment (if any)
+					&& (!name || operation.id.toLowerCase().indexOf(name.toLowerCase()) >= 0)
+					// must have _a_ response
+					&& operation.responses["200"];
+			});
 		},
 		getSimpleClasses: function(value) {
 			var classes = ["primary", "secondary", "info", "success", "warning", "danger", "inline"];
@@ -975,7 +1028,7 @@ nabu.services.VueService(Vue.extend({
 				Object.keys(definition.properties).map(function(key) {
 					// arrays can not be chosen, you need to bind them first
 					// simple arrays are always allowed currently
-					if (definition.properties[key].type != "array" || includeArrays || (definition.properties[key].items && !definition.properties[key].items.properties)) {
+					if (definition.properties[key] && (definition.properties[key].type != "array" || includeArrays || (definition.properties[key].items && !definition.properties[key].items.properties))) {
 						var childPath = (path ? path + "." : "") + key;
 						var isArray = definition.properties[key].type == "array";
 						var isComplex = !!definition.properties[key].properties;
@@ -1015,6 +1068,7 @@ nabu.services.VueService(Vue.extend({
 					properties: self.properties,
 					devices: self.devices,
 					imports: self.imports,
+					state: self.applicationState,
 					googleSiteVerification: self.googleSiteVerification
 				}
 			});
@@ -1564,8 +1618,15 @@ nabu.services.VueService(Vue.extend({
 			
 			// the available state
 			page.content.states.map(function(state) {
-				if (self.$services.swagger.operation(state.operation).responses && self.$services.swagger.operation(state.operation).responses["200"]) {
-					result[state.name] = self.$services.swagger.resolve(self.$services.swagger.operation(state.operation).responses["200"]).schema;
+				var operation = null;
+				if (state.inherited) {
+					operation = self.applicationState.filter(function(x) { return x.name == state.applicationName }).map(function(x) { return x.operation })[0];
+				}
+				else {
+					operation = state.operation;
+				}
+				if (operation && self.$services.swagger.operation(operation).responses && self.$services.swagger.operation(operation).responses["200"]) {
+					result[state.name] = self.$services.swagger.resolve(self.$services.swagger.operation(operation).responses["200"]).schema;
 				}
 			});
 			
@@ -1656,8 +1717,15 @@ nabu.services.VueService(Vue.extend({
 
 			// the available state, page state overrides page parameters & application parameters if relevant
 			page.content.states.map(function(state) {
-				if (state.operation) {
-					var operation = self.$services.swagger.operation(state.operation);
+				var operation = null;
+				if (state.inherited) {
+					operation = self.applicationState.filter(function(x) { return x.name == state.applicationName }).map(function(x) { return x.operation })[0];
+				}
+				else {
+					operation = state.operation;
+				}
+				if (operation) {
+					operation = self.$services.swagger.operation(operation);
 					if (operation && operation.responses && operation.responses["200"]) {
 						result[state.name] = self.$services.swagger.resolve(operation.responses["200"]).schema;
 					}
@@ -1835,8 +1903,15 @@ nabu.services.VueService(Vue.extend({
 			var self = this;
 			if (page.content.states) {
 				page.content.states.forEach(function(x) {
-					if (x.name && x.operation) {
-						var operation = self.$services.swagger.operation(x.operation);
+					var operation = null;
+					if (x.inherited) {
+						operation = self.applicationState.filter(function(x) { return x.name == x.applicationName }).map(function(x) { return x.operation })[0];
+					}
+					else {
+						operation = x.operation;
+					}
+					if (x.name && operation) {
+						operation = self.$services.swagger.operation(operation);
 						if (operation && operation.responses && operation.responses["200"]) {
 							var schema = operation.responses["200"].schema;
 							if (schema.$ref) {

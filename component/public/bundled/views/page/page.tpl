@@ -25,6 +25,8 @@
 			</span>
 			<span v-if="false && page.content.path" class="fa fa-sign-out-alt" v-route:logout></span>
 			<span class="fa fa-terminal" @click="$window.console.log('Page: ' + page.name, $self)"></span>
+			<span class="fa fa-sync" v-if="$services.page.disableReload" @click="$services.page.disableReload = false" title="Start css reload"></span>
+			<span class="fa fa-ban" v-else title="Stop css reload" @click="$services.page.disableReload = true"></span>
 		</div>
 		<div class="page-edit" v-else-if="false && !$services.page.canEdit() && !embedded && $services.page.wantEdit && $services.user && !$services.user.loggedIn"
 				:style="{'top': '0px', 'left': '0px'}">
@@ -103,14 +105,20 @@
 				<n-collapsible title="Initial State" class="list">
 					<div class="list-actions">
 						<button @click="addState">Add Initial State</button>
+						<button @click="addApplicationState">Add Application State</button>
 						<button @click="function() { if (page.content.stateErrors) page.content.stateErrors.push({}); else $window.Vue.set(page.content, 'stateErrors', [{}]) }">Add Error Route</button>
 					</div>
 					<n-collapsible class="list-item" :title="state.name" v-for="state in page.content.states">
 						<n-form-text :value="state.name" @input="function(newValue) { if (!validateStateName(newValue).length) state.name = newValue; }" label="Name" :required="true" :validator="validateStateName"/>
-						<n-form-combo :value="state.operation" :filter="getStateOperations" label="Operation" @input="function(newValue) { setStateOperation(state, newValue) }"/>
-						<n-page-mapper v-if="state.operation && Object.keys($services.page.getPageParameters(page)).length" :to="getOperationParameters(state.operation)"
-							:from="{page:$services.page.getPageParameters(page)}" 
-							v-model="state.bindings"/>
+						<div v-if="state.inherited">
+							<n-form-combo v-model="state.applicationName" :filter="$services.page.getApplicationStateNames" label="Application State" />
+						</div>
+						<div v-else>
+							<n-form-combo :value="state.operation" :filter="getStateOperations" label="Operation" @input="function(newValue) { setStateOperation(state, newValue) }"/>
+							<n-page-mapper v-if="state.operation && Object.keys($services.page.getPageParameters(page)).length" :to="getOperationParameters(state.operation)"
+								:from="{page:$services.page.getPageParameters(page)}" 
+								v-model="state.bindings"/>
+						</div>
 						<div class="list-item-actions">
 							<button @click="page.content.states.splice(page.content.states.indexOf(state), 1)"><span class="fa fa-trash"></span></button>
 						</div>

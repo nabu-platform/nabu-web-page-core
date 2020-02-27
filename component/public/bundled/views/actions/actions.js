@@ -367,7 +367,9 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				arbitrary: true,
 				name: null,
 				class: null,
-				content: {}
+				content: {},
+				label: "Content" + (this.getActions().length + 1),
+				activeRoutes: []
 			});
 		},
 		addAction: function(dynamic) {

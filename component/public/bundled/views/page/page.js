@@ -149,7 +149,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 			if (self.page.content.parameters) {
 				self.page.content.parameters.forEach(function(parameter) {
 					if (parameter.name != null && parameter.defaults && parameter.defaults.length) {
-							console.log("setting defaults", parameter.name, parameter.defaults);
 						parameter.defaults.forEach(function(defaultValue) {
 							if (defaultValue.query && defaultValue.value) {
 								var currentValue = self.$services.page.getValue(self.variables[parameter.name], defaultValue.query);
@@ -168,7 +167,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			done();
 		};
 		if (this.page.content.states.length) {
-			var promises = this.page.content.states.map(function(state) {
+			var promises = this.page.content.states.filter(function(state) { return !!state.name && !state.inherited }).map(function(state) {
 				var parameters = {};
 				Object.keys(state.bindings).map(function(key) {
 					//parameters[key] = self.get(state.bindings[key]);
@@ -189,6 +188,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 					promise.reject(exception);
 					return promise;
 				}
+			});
+			// inherit the state from the application
+			this.page.content.states.filter(function(state) { return !!state.name && state.inherited }).forEach(function(state) {
+				Vue.set(self.variables, state.name, self.$services.page.variables[state.applicationName]);
 			});
 			var inSelf = this.page.content.errorInSelf;
 			var routeError = function(error, counter) {
@@ -501,19 +504,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			return routes.map(function(x) { return x.alias });
 		},
 		getStateOperations: function(value) {
-			var self = this;
-			return Object.keys(this.$services.swagger.operations).filter(function(operationId) {
-				if (value && operationId.toLowerCase().indexOf(value.toLowerCase()) < 0) {
-					return false;
-				}
-				var operation = self.$services.swagger.operations[operationId];
-				// must be a get
-				return operation.method.toLowerCase() == "get"
-					// and contain the name fragment (if any)
-					&& (!name || operation.id.toLowerCase().indexOf(name.toLowerCase()) >= 0)
-					// must have _a_ response
-					&& operation.responses["200"];
-			});
+			return this.$services.page.getStateOperations(value);
 		},
 		setStateOperation: function(state, operation) {
 			state.operation = operation;
@@ -531,6 +522,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 				operation: null,
 				bindings: {}
 			})	
+		},
+		addApplicationState: function() {
+			this.page.content.states.push({
+				inherited: true,
+				name: null,
+				// the name of the state at the application level
+				applicationName: null
+			});
 		},
 		dragMenu: function(event) {
 			event.dataTransfer.setData("page-menu", this.page.name);
@@ -1353,49 +1352,56 @@ nabu.page.views.Page = Vue.component("n-page", {
 			// check states that have to be refreshed
 			if (this.page.content.states.length && !reset) {
 				nabu.utils.arrays.merge(promises, this.page.content.states.filter(function(x) { return x.refreshOn != null && x.refreshOn.indexOf(name) >= 0 }).map(function(state) {
-					var parameters = {};
-					Object.keys(state.bindings).map(function(key) {
-						parameters[key] = self.get(state.bindings[key]);
-					});
-					try {
-						// can throw hard errors
-						return self.$services.swagger.execute(state.operation, parameters).then(function(result) {
-							if (self.variables[state.name] != null) {
-								if (self.variables[state.name] instanceof Array) {
-									self.variables[state.name].splice(0);
-									if (result instanceof Array) {
-										nabu.utils.arrays.merge(self.variables[state.name], result);
+					if (state.inherited) {
+						return this.$services.page.reloadState(state.applicationName).then(function(result) {
+							Vue.set(self.variables, state.name, result ? result : null);
+						});
+					}
+					else {
+						var parameters = {};
+						Object.keys(state.bindings).map(function(key) {
+							parameters[key] = self.get(state.bindings[key]);
+						});
+						try {
+							// can throw hard errors
+							return self.$services.swagger.execute(state.operation, parameters).then(function(result) {
+								if (self.variables[state.name] != null) {
+									if (self.variables[state.name] instanceof Array) {
+										self.variables[state.name].splice(0);
+										if (result instanceof Array) {
+											nabu.utils.arrays.merge(self.variables[state.name], result);
+										}
+										else {
+											self.variables[state.name].push(result);
+										}
 									}
 									else {
-										self.variables[state.name].push(result);
+										var resultKeys = Object.keys(result);
+										Object.keys(self.variables[state.name]).forEach(function(key) {
+											if (resultKeys.indexOf(key) < 0) {
+												self.variables[state.name] = null;
+											}
+										});
+										// make sure we use vue.set to trigger other reactivity
+										resultKeys.forEach(function(key) {
+											Vue.set(self.variables[state.name], key, result[key]);
+										});
+										// TODO: do a proper recursive merge to maintain reactivity with deeply nested
+										
+										//nabu.utils.objects.merge(self.variables[state.name], result);
 									}
 								}
 								else {
-									var resultKeys = Object.keys(result);
-									Object.keys(self.variables[state.name]).forEach(function(key) {
-										if (resultKeys.indexOf(key) < 0) {
-											self.variables[state.name] = null;
-										}
-									});
-									// make sure we use vue.set to trigger other reactivity
-									resultKeys.forEach(function(key) {
-										Vue.set(self.variables[state.name], key, result[key]);
-									});
-									// TODO: do a proper recursive merge to maintain reactivity with deeply nested
-									
-									//nabu.utils.objects.merge(self.variables[state.name], result);
+									Vue.set(self.variables, state.name, result ? result : null);
 								}
-							}
-							else {
-								Vue.set(self.variables, state.name, result ? result : null);
-							}
-						});
-					}
-					catch (exception) {
-						console.error("Could not execute", state.operation, exception);
-						var promise = self.$services.q.defer();
-						promise.reject(exception);
-						return promise;
+							});
+						}
+						catch (exception) {
+							console.error("Could not execute", state.operation, exception);
+							var promise = self.$services.q.defer();
+							promise.reject(exception);
+							return promise;
+						}
 					}
 				}));
 			}

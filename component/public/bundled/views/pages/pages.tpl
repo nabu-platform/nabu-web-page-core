@@ -58,6 +58,18 @@
 							</div>
 						</div>
 					</n-collapsible>
+					<n-collapsible title="State" class="main">
+						<div class="list-actions">
+							<button @click="$services.page.applicationState.push({name:null,operation:null})">Add State</button>
+						</div>
+						<div class="padded-content">
+							<div class="list-row" v-for="state in $services.page.applicationState">
+								<n-form-text v-model="state.name" :required="true" label="State Name" :timeout="600" @input="$services.page.saveConfiguration"/>
+								<n-form-combo v-model="state.operation" :filter="$services.page.getStateOperations" label="Operation" @input="$services.page.saveConfiguration"/>
+								<span @click="$services.page.applicationState.splice($services.page.applicationState.indexOf(state), 1); $services.page.saveConfiguration()" class="fa fa-times"></span>
+							</div>
+						</div>
+					</n-collapsible>
 					<n-collapsible title="Pages" class="list">
 						<footer class="list-actions">
 							<button @click="create">Create New Page</button>
