@@ -144,15 +144,6 @@
 			</steps>
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
-					id="c12edf95-9e94-4163-91d8-0cd0acc718a3"
-					mask="false"
-					optional="false"
-					fixedValue="true">
-				<from>true</from>
-				<to>environmentSpecific</to>
-			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-					disabled="false"
 					id="d45cbbd9-cbc1-4f1e-9265-debc40c60633"
 					mask="false"
 					optional="false"

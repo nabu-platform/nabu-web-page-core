@@ -213,11 +213,12 @@ nabu.page.views.PageForm = Vue.extend({
 			Vue.set(this, "result", JSON.parse(JSON.stringify(page)));
 			// must recreate the "." separated values, necessary for "complex" multifield form components like address
 			// other components get a correct initial value because we get the field from the result (getCurrentValue)
-			this.$services.page.explode(reference, this.result);
+			//this.$services.page.explode(reference, this.result);
 			// explode to get correct values
 			this.$services.page.explode(this.result, this.result);
 			//Vue.set(this, "reference", JSON.parse(JSON.stringify(reference)));
-			Vue.set(this, "reference", reference);
+			//Vue.set(this, "reference", reference);
+			Vue.set(this, "reference", JSON.parse(JSON.stringify(this.result)));
 		},
 		hasChanged: function(path, value) {
 			if (this.cell.state.pageForm) {

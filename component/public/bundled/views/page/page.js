@@ -133,19 +133,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			if (self.page.content.initialEvents) {
 				self.page.content.initialEvents.forEach(function(x) {
-					if (nabu.page.event.getName(x, "definition") && (!x.condition || self.$services.page.isCondition(x.condition, self.$services.page.getPageState(self), self))) {           
-						try {
-							self.emit(
-								nabu.page.event.getName(x, "definition"),
-								nabu.page.event.getInstance(x, "definition", self.page, self)
-							);
-						}
-						catch (exception) {
-							console.error("Could not fire initial event", exception);
-						}
-					}
+					self.fireInitialEvent(x);
 				});
 			}
+			self.initializeDefaultParameters();
 			if (self.page.content.parameters) {
 				self.page.content.parameters.forEach(function(parameter) {
 					if (parameter.name != null && parameter.defaults && parameter.defaults.length) {
@@ -167,6 +158,24 @@ nabu.page.views.Page = Vue.component("n-page", {
 			done();
 		};
 		if (this.page.content.states.length) {
+			var sendStateEvent = function(state) {
+				if (nabu.page.event.getName(state, "updateEvent")) {
+					self.emit(
+						nabu.page.event.getName(state, "updateEvent"),
+						nabu.page.event.getInstance(state, "updateEvent", self.page, self)
+					);
+				}
+			}
+			// inherit the state from the application
+			this.page.content.states.filter(function(state) { return !!state.name && state.inherited }).forEach(function(state) {
+				Vue.set(self.variables, state.name, self.$services.page.variables[state.applicationName]);
+				// you want to send out the event if _anyone_ updates it, not just you
+				self.$watch("$services.page.variables." + state.applicationName, function() {
+					// update local variable as well, otherwise changes won't be seen
+					Vue.set(self.variables, state.name, self.$services.page.variables[state.applicationName]);
+					sendStateEvent(state);
+				}, {deep:false});
+			});
 			var promises = this.page.content.states.filter(function(state) { return !!state.name && !state.inherited }).map(function(state) {
 				var parameters = {};
 				Object.keys(state.bindings).map(function(key) {
@@ -188,10 +197,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 					promise.reject(exception);
 					return promise;
 				}
-			});
-			// inherit the state from the application
-			this.page.content.states.filter(function(state) { return !!state.name && state.inherited }).forEach(function(state) {
-				Vue.set(self.variables, state.name, self.$services.page.variables[state.applicationName]);
 			});
 			var inSelf = this.page.content.errorInSelf;
 			var routeError = function(error, counter) {
@@ -258,32 +263,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 		console.log("creating page", this.page.name, this.stopRerender);
 		this.$services.page.setPageInstance(this.page, this);
 		var self = this;
-		if (this.page.content.parameters) {
-			this.page.content.parameters.map(function(x) {
-				if (x.name != null) {
-					// if it is not passed in as input, we set the default value
-					if (self.parameters[x.name] == null) {
-						// check if we have a content setting
-						var value = self.$services.page.getContent(x.global ? null : self.page.name, x.name);
-						if (value == null) {
-							value = self.$services.page.interpret(x.default, self);
-						}
-						else {
-							value = value.content;
-						}
-						// inherit from global state (especially interesting for mails/pdfs...)
-						if (value == null && application.state && application.state[x.name] != null) {
-							value = application.state[x.name];
-						}
-						Vue.set(self.variables, x.name, value == null ? null : value);
-					}
-					// but you can override the default with an input parameter
-					else {
-						Vue.set(self.variables, x.name, self.parameters[x.name]);
-					}
-				}
-			});
-		}
+		// backwards compatibility
+		this.initializeDefaultParameters(true);
 		if (this.editable) {
 			this.edit = true;
 		}
@@ -380,6 +361,56 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		fireInitialEvent: function(x) {
+			var self = this;
+			if (nabu.page.event.getName(x, "definition") && (!x.condition || self.$services.page.isCondition(x.condition, self.$services.page.getPageState(self), self))) {           
+				try {
+					self.emit(
+						nabu.page.event.getName(x, "definition"),
+						nabu.page.event.getInstance(x, "definition", self.page, self)
+					);
+					if (x.timeout) {
+						setTimeout(function() {
+							self.fireInitialEvent(x);
+						}, parseInt(x.timeout));
+					}
+				}
+				catch (exception) {
+					console.error("Could not fire initial event", exception);
+				}
+			}
+		},
+		initializeDefaultParameters: function(isInitial) {
+			var self = this;
+			if (this.page.content.parameters) {
+				this.page.content.parameters.map(function(x) {
+					if (x.name != null) {
+						// if it is not passed in as input, we set the default value
+						if (self.parameters[x.name] == null) {
+							// check if we have a content setting
+							var value = self.$services.page.getContent(x.global ? null : self.page.name, x.name);
+							if (value == null) {
+								value = self.$services.page.interpret(x.default, self);
+							}
+							else {
+								value = value.content;
+							}
+							// inherit from global state (especially interesting for mails/pdfs...)
+							if (value == null && application.state && application.state[x.name] != null) {
+								value = application.state[x.name];
+							}
+							if (value != null || isInitial) {
+								Vue.set(self.variables, x.name, value == null ? null : value);
+							}
+						}
+						// but you can override the default with an input parameter (only during created, not activate)
+						else if (isInitial) {
+							Vue.set(self.variables, x.name, self.parameters[x.name]);
+						}
+					}
+				});
+			}
+		},
 		selectItem: function(item) {
 			Vue.set(this, 'selectedItem', item);	
 		},
@@ -577,8 +608,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 		},
 		save: function(event) {
 			if (this.edit) {
-				this.$services.page.update(this.page);
-				this.saved = new Date();
+				var self = this;
+				this.$services.page.update(this.page).then(function() {
+					self.saved = new Date();
+				});
 				event.preventDefault();
 				event.stopPropagation();
 			}
@@ -942,6 +975,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 						var name = nabu.page.event.getName(event, "definition");
 						if (name) {
 							events[name] = nabu.page.event.getType(event, "definition");
+						}
+					});
+				}
+				
+				if (this.page.content.states) {
+					this.page.content.states.forEach(function(state) {
+						var name = nabu.page.event.getName(state, "updateEvent");
+						if (name) {
+							events[name] = nabu.page.event.getType(state, "updateEvent");
 						}
 					});
 				}
@@ -1351,10 +1393,19 @@ nabu.page.views.Page = Vue.component("n-page", {
 			
 			// check states that have to be refreshed
 			if (this.page.content.states.length && !reset) {
+				var sendStateEvent = function(state) {
+					if (nabu.page.event.getName(state, "updateEvent")) {
+						self.emit(
+							nabu.page.event.getName(state, "updateEvent"),
+							nabu.page.event.getInstance(state, "updateEvent", self.page, self)
+						);
+					}
+				}
 				nabu.utils.arrays.merge(promises, this.page.content.states.filter(function(x) { return x.refreshOn != null && x.refreshOn.indexOf(name) >= 0 }).map(function(state) {
 					if (state.inherited) {
-						return this.$services.page.reloadState(state.applicationName).then(function(result) {
+						return self.$services.page.reloadState(state.applicationName).then(function(result) {
 							Vue.set(self.variables, state.name, result ? result : null);
+							sendStateEvent(state);
 						});
 					}
 					else {
@@ -1394,6 +1445,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 								else {
 									Vue.set(self.variables, state.name, result ? result : null);
 								}
+								sendStateEvent(state);
 							});
 						}
 						catch (exception) {

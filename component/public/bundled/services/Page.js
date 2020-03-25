@@ -1202,7 +1202,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		updateCss: function(style, rebuild) {
 			var self = this;
-			this.$services.swagger.execute("nabu.web.page.core.rest.style.update", {
+			return this.$services.swagger.execute("nabu.web.page.core.rest.style.update", {
 				applicationId: configuration.applicationId,
 				body: style
 			}).then(function() {
@@ -1362,7 +1362,7 @@ nabu.services.VueService(Vue.extend({
 			var oldName = page.name;
 			page.name = name;
 			var self = this;
-			this.update(page).then(function() {
+			return this.update(page).then(function() {
 				self.removeByName(oldName);
 			})	
 		},
@@ -1458,9 +1458,13 @@ nabu.services.VueService(Vue.extend({
 					})
 				}
 				
+				var pagePath = page.content.path;
+				if (pagePath && pagePath.indexOf("/") != 0) {
+					pagePath = "/" + pagePath;
+				}
 				var route = {
 					alias: self.alias(page),
-					url: page.content.initial ? "/.*" : page.content.path,
+					url: page.content.initial ? "/.*" : pagePath,
 					query: page.content.query ? page.content.query : [],
 					//parameters: page.content.parameters ? page.content.parameters.map(function(x) { return x.name }) : [],
 					parameters: parameters,
@@ -1905,7 +1909,7 @@ nabu.services.VueService(Vue.extend({
 				page.content.states.forEach(function(x) {
 					var operation = null;
 					if (x.inherited) {
-						operation = self.applicationState.filter(function(x) { return x.name == x.applicationName }).map(function(x) { return x.operation })[0];
+						operation = self.applicationState.filter(function(y) { return y.name == x.applicationName }).map(function(y) { return y.operation })[0];
 					}
 					else {
 						operation = x.operation;

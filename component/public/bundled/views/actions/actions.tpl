@@ -69,7 +69,8 @@
 									<n-page-mapper v-if="action.route && $services.router.get(action.route)" :to="$services.page.getRouteParameters($services.router.get(action.route))"
 										:from="$services.page.getAvailableParameters(page, cell)" 
 										v-model="action.bindings"/>
-									<page-event-value class="no-more-padding" :page="page" :container="action" title="Action Event" v-if="!action.dynamic && !action.route && !action.url" name="event" v-bubble.resetEvents/>
+									<page-event-value class="no-more-padding" :page="page" :container="action" title="Action Event" v-if="!action.dynamic && !action.route && !action.url" name="event" 
+									 	@updatedEvents="$emit('updatedEvents')"/>
 									<div class="n-form-component n-form-ace">
 										<label class="n-form-label">Disabled if</label>
 										<n-ace mode="javascript" v-model="action.disabled"/>

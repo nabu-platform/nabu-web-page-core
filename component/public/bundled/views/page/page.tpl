@@ -119,6 +119,7 @@
 								:from="{page:$services.page.getPageParameters(page)}" 
 								v-model="state.bindings"/>
 						</div>
+						<page-event-value :page="page" :container="state" title="Successful Update Event" name="updateEvent" @resetEvents="resetEvents"/>
 						<div class="list-item-actions">
 							<button @click="page.content.states.splice(page.content.states.indexOf(state), 1)"><span class="fa fa-trash"></span></button>
 						</div>
@@ -143,9 +144,10 @@
 					</div>
 					<n-collapsible class="list-item" :title="event ? $window.nabu.page.event.getName(event, 'definition') : 'unnamed'" v-for="event in page.content.initialEvents">
 						<n-form-text v-model="event.condition" label="Condition"/>
-						<page-event-value :page="page" :container="event" title="Initial Event" name="definition" v-bubble:resetEvents/>
+						<n-form-text v-model="event.timeout" label="Repeat Interval (ms)"/>
+						<page-event-value :page="page" :container="event" title="Initial Event" name="definition" @resetEvents="resetEvents"/>
 						<div class="list-item-actions">
-							<button @click="page.content.initialEvents.splice(page.content.initialEvents.indexOf(state), 1)"><span class="fa fa-trash"></span></button>
+							<button @click="page.content.initialEvents.splice(page.content.initialEvents.indexOf(event), 1)"><span class="fa fa-trash"></span></button>
 						</div>
 					</n-collapsible>
 				</n-collapsible>
@@ -182,7 +184,7 @@
 						<n-form-text v-model="parameter.name" :required="true" label="Name"/>
 						<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :filter="getParameterTypes"/>
 						<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
-						<n-form-text v-model="parameter.default" label="Default Value" v-if="!parameter.type || parameter.type.indexOf('.') < 0"/>
+						<n-form-text v-model="parameter.default" label="Default Value" />
 						<n-form-switch v-if="false" v-model="parameter.global" label="Is translation global?"/>
 						<div class="list-row" v-for="i in Object.keys(parameter.listeners)">
 							<n-form-combo v-model="parameter.listeners[i].to" :filter="function() { return $services.page.getAllAvailableKeys(page) }" />
@@ -222,10 +224,10 @@
 						<n-form-combo v-model="action.anchor" v-if="action.route || (action.operation && isGet(action.operation))" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 						<n-form-combo :key="'operation' + page.content.actions.indexOf(action)" v-model="action.operation" v-if="!action.route && !action.scroll && !action.url && !action.function" label="Operation" :filter="getOperations" />
 						<n-form-text v-model="action.timeout" v-if="action.operation" label="Action Timeout" info="You can emit an event if the action takes too long" :timeout="600"/>
-						<page-event-value class="no-more-padding"  v-if="action.operation && action.timeout" :page="page" :container="action" title="Timeout Event" name="timeoutEvent" v-bubble:resetEvents/>
+						<page-event-value class="no-more-padding"  v-if="action.operation && action.timeout" :page="page" :container="action" title="Timeout Event" name="timeoutEvent" @resetEvents="resetEvents"/>
 						<n-form-combo v-model="action.function" v-if="!action.route && !action.scroll && !action.url && !action.operation" label="Function" :filter="$services.page.listFunctions" />
 						<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function" :timeout="600"/>
-						<page-event-value class="no-more-padding" :page="page" :container="action" title="Chain Event" name="chainEvent" v-bubble:resetEvents/>
+						<page-event-value class="no-more-padding" :page="page" :container="action" title="Chain Event" name="chainEvent" @resetEvents="resetEvents"/>
 						<n-form-switch v-if="action.operation || action.function" v-model="action.isSlow" label="Is slow operation?"/>
 						<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" @input="resetEvents()" :timeout="600"/>
 						<n-form-text v-if="action.operation" v-model="action.errorEvent" label="Error Event" @input="resetEvents()" :timeout="600"/>
@@ -262,6 +264,12 @@
 							<button @click="addEventReset(action)"><span class="fa fa-plus"></span>Event To Reset</button>
 						</div>
 					</n-collapsible>
+				</n-collapsible>	
+				<n-collapsible title="Analysis" class="list">
+					<div class="list-actions">
+						<button @click="addAnalysis">Add Analysis</button>
+					</div>
+					
 				</n-collapsible>
 				<n-collapsible title="Publish Global Events" class="list">
 					<div class="list-actions">
@@ -431,7 +439,7 @@
 									<n-form-switch label="Position fixed?" v-model="cell.fixed" v-if="cell.target == 'absolute'"/>
 									<n-form-switch label="Autoclose" v-model="cell.autoclose" v-if="cell.target == 'absolute'"/>
 								</div>								
-								<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" v-bubble:resetEvents/>
+								<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" @resetEvents="resetEvents"/>
 							</n-collapsible>
 							<n-collapsible title="Styling">
 								<div class="padded-content">

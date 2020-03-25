@@ -7,6 +7,7 @@
 				<n-form-text v-model="cell.state.placeholder" label="Placeholder"/>
 				<n-form-text v-model="cell.state.timeout" label="Timeout"/>
 				<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
+				<n-form-text v-model="cell.state.disabled" label="Disable if" />
 				<component :is="configurationComponent" :page="page" :cell="cell" :field="cell.state"/>
 			</n-collapsible>
 		</n-sidebar>
@@ -16,7 +17,7 @@
 			:value="cell.state.name ? getPageInstance().get(cell.state.name) : null"
 			:label="$services.page.translate(cell.state.label)"
 			:timeout="cell.state.timeout"
-			:disabled="false"
+			:disabled="isDisabled()"
 			:schema="getSchema()"
 			:readOnly="false"
 			:placeholder="$services.page.translate(cell.state.placeholder)"
