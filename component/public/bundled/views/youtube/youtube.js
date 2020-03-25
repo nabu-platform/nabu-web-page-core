@@ -73,6 +73,15 @@ nabu.page.views.Youtube = Vue.extend({
 			this.configuring = true;	
 		},
 		analyze: function() {
+			this.$services.analysis.push({
+				pageName: this.page.content.name,
+				pageCategory: this.page.content.category,
+				category: "media",
+				type: "media-view",
+				event: "youtube",
+				url: this.url
+			});
+			// DEPRECATED
 			if (this.$services.analysis && this.$services.analysis.emit) {
 				this.$services.analysis.emit("watch-youtube", this.url, null, true);
 			}

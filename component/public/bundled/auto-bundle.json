@@ -95,7 +95,10 @@
 					}, 
 					"Page.js": {
 						"url": "services/Page.js"
-					}, 
+					},
+					"Analysis.js": {
+						"url": "services/Analysis.js"
+					},
 					"Data.js": {
 						"url": "services/Data.js"
 					}
@@ -187,6 +190,17 @@
 						}, 
 						"code.scss": {
 							"url": "views/code/code.scss"
+						}
+					},
+					"console": {
+						"console.tpl": {
+							"url": "views/console/console.tpl"
+						}, 
+						"console.js": {
+							"url": "views/console/console.js"
+						}, 
+						"console.scss": {
+							"url": "views/console/console.scss"
 						}
 					},
 					"youtube": {

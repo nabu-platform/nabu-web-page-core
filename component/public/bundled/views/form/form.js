@@ -272,6 +272,17 @@ nabu.page.views.PageForm = Vue.extend({
 			// get the first page
 			this.currentPage = this.cell.state.pages[0];
 			
+			this.$services.analysis.push({
+				pageName: this.page.content.name,
+				pageCategory: this.page.content.category,
+				category: "form",
+				type: "form-page",
+				counter: 0,
+				method: "start",
+				group: this.analysisId,
+				event: this.analysisId + "-page-0"
+			});
+			// DEPRECATED
 			if (this.$services.analysis && this.$services.analysis.emit) {
 				this.$services.analysis.emit("form-page-0", this.analysisId, null, true);
 			}
@@ -315,6 +326,17 @@ nabu.page.views.PageForm = Vue.extend({
 			var messages = this.$refs.form.validate();
 			if (!messages.length) {
 				this.currentPage = this.cell.state.pages[this.cell.state.pages.indexOf(this.currentPage) + 1];
+				this.$services.analysis.push({
+					pageName: this.page.content.name,
+					pageCategory: this.page.content.category,
+					category: "form",
+					type: "form-page",
+					counter: this.cell.state.pages.indexOf(this.currentPage),
+					method: "next",
+					group: this.analysisId,
+					event: this.analysisId + "-page-" + this.cell.state.pages.indexOf(this.currentPage)
+				});
+				// DEPRECATED
 				if (this.$services.analysis && this.$services.analysis.emit) {
 					this.$services.analysis.emit("form-page-" + this.cell.state.pages.indexOf(this.currentPage), this.analysisId, {method: "next"}, true);
 				}
@@ -334,6 +356,17 @@ nabu.page.views.PageForm = Vue.extend({
 		previousPage: function() {
 			if (this.cell.state.pages.indexOf(this.currentPage) >= 1) {
 				this.currentPage = this.cell.state.pages[this.cell.state.pages.indexOf(this.currentPage) - 1];
+				this.$services.analysis.push({
+					pageName: this.page.content.name,
+					pageCategory: this.page.content.category,
+					category: "form",
+					type: "form-page",
+					counter: this.cell.state.pages.indexOf(this.currentPage),
+					method: "previous",
+					group: this.analysisId,
+					event: this.analysisId + "-page-" + this.cell.state.pages.indexOf(this.currentPage)
+				});
+				// DEPRECATED
 				if (this.$services.analysis && this.$services.analysis.emit) {
 					this.$services.analysis.emit("form-page-" + this.cell.state.pages.indexOf(this.currentPage), this.analysisId, {method: "previous"}, true);
 				}
@@ -343,6 +376,17 @@ nabu.page.views.PageForm = Vue.extend({
 			var messages = this.$refs.form.validate();
 			if (!messages.length || this.edit) {
 				this.currentPage = page;
+				this.$services.analysis.push({
+					pageName: this.page.content.name,
+					pageCategory: this.page.content.category,
+					category: "form",
+					type: "form-page",
+					counter: this.cell.state.pages.indexOf(this.currentPage),
+					method: "choose",
+					group: this.analysisId,
+					event: this.analysisId + "-page-" + this.cell.state.pages.indexOf(this.currentPage)
+				});
+				// DEPRECATED
 				if (this.$services.analysis && this.$services.analysis.emit) {
 					this.$services.analysis.emit("form-page-" + this.cell.state.pages.indexOf(this.currentPage), this.analysisId, {method: "choose"}, true);
 				}
@@ -544,6 +588,15 @@ nabu.page.views.PageForm = Vue.extend({
 					this.initialize();
 					this.resetValidation();
 				}
+				this.$services.analysis.push({
+					pageName: this.page.content.name,
+					pageCategory: this.page.content.category,
+					category: "form",
+					type: "form-cancel",
+					group: this.analysisId,
+					event: this.analysisId + "-cancel"
+				});
+				// DEPRECATED
 				if (this.$services.analysis && this.$services.analysis.emit) {
 					this.$services.analysis.emit("form-cancel", this.analysisId, null, true);
 				}
@@ -822,6 +875,15 @@ nabu.page.views.PageForm = Vue.extend({
 			if (!this.doingIt) {
 				var date = new Date();
 				var stop = function(error) {
+					self.$services.analysis.push({
+						pageName: self.page.content.name,
+						pageCategory: self.page.content.category,
+						category: "form",
+						type: "form-finalize",
+						group: self.analysisId,
+						event: self.analysisId + (error ? "-fail" : "-submit")
+					});
+					// DEPRECATED
 					if (self.$services.analysis && self.$services.analysis.emit) {
 						self.$services.analysis.emit(error ? "form-fail" : "form-finalize", self.analysisId, 
 							{submitTime: new Date().getTime() - date.getTime(), totalTime: new Date().getTime() - self.started.getTime(), error: error}, true);

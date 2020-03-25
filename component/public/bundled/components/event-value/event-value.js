@@ -18,6 +18,10 @@ Vue.component("page-event-value", {
 			type: String,
 			required: false,
 			default: "genericEvent"
+		},
+		inline: {
+			type: Boolean,
+			required: false
 		}
 	},
 	created: function() {

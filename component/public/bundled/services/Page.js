@@ -18,7 +18,7 @@ nabu.page.providers = function(spec) {
 nabu.page.instances = {};
 
 nabu.services.VueService(Vue.extend({
-	services: ["swagger", "user"],
+	services: ["swagger", "user", "cookies"],
 	data: function() {
 		return {
 			mouseX: 0,
@@ -60,7 +60,12 @@ nabu.services.VueService(Vue.extend({
 			// the page we are editing?
 			editing: null,
 			dragItems: [],
-			variables: {}
+			variables: {},
+			geoRefusalTimeout: null,
+			location: null,
+			showConsole: false,
+			// pages can report stuff to show in the console (mostly events)
+			reports: []
 		}
 	},
 	activate: function(done) {
@@ -69,20 +74,28 @@ nabu.services.VueService(Vue.extend({
 		this.pageCounter = 0;
 		document.title = "%{Loading...}";
 		window.addEventListener("paste", function(event) {
-			var data = event.clipboardData.getData("text/plain");
-			if (data) {
-				try {
-					var parsed = JSON.parse(data);
-					if (parsed && parsed.type == "page-row") {
-						self.copiedRow = parsed.content;
+			if (self.canEdit()) {
+				var data = event.clipboardData.getData("text/plain");
+				if (data) {
+					try {
+						var parsed = JSON.parse(data);
+						if (parsed && parsed.type == "page-row") {
+							self.copiedRow = parsed.content;
+						}
+						else if (parsed && parsed.type == "page-cell") {
+							self.copiedCell = parsed.content;
+						}
 					}
-					else if (parsed && parsed.type == "page-cell") {
-						self.copiedCell = parsed.content;
+					catch (exception) {
+						// ignore
 					}
 				}
-				catch (exception) {
-					// ignore
-				}
+			}
+		});
+		window.addEventListener("keydown", function(event) {
+			//192 in firefox and 222 in chrome?
+			if (self.canEdit() && event.code == "Backquote") {
+				self.showConsole = !self.showConsole;
 			}
 		});
 		this.isServerRendering = navigator.userAgent.match(/Nabu-Renderer/);
@@ -117,6 +130,30 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		// category is a general category of reports, for example we can have "analysis" reports or "event" reports or...
+		// the source is where it comes from, this is usually a page, but it could also be a service like the router, swagger,...
+		// the type is the general type of the report, for example a click event
+		// the name is the specific name of this report, for example a specific event
+		// properties can be anything
+		report: function(category, source, type, name, properties) {
+			if (this.canEdit()) {
+				this.reports.unshift({
+					category: category,
+					source: source,
+					type: type,
+					name: name,
+					timestamp: new Date(),
+					properties: properties
+				});
+				this.limitReports();
+			}
+		},
+		limitReports: function() {
+			// if the console is hidden, we want to keep some recent entries but not everything
+			if (this.reports.length >= 20 && !this.showConsole) {
+				this.reports.splice(20);
+			}
+		},
 		getIconHtml: function(icon) {
 			var providers = nabu.page.providers("page-icon");
 			providers.sort(function(a, b) {
@@ -294,8 +331,34 @@ nabu.services.VueService(Vue.extend({
 				if (configuration.googleSiteVerification) {
 					self.googleSiteVerification = configuration.googleSiteVerification;
 				}
+				if (configuration.geoRefusalTimeout != null) {
+					self.geoRefusalTimeout = configuration.geoRefusalTimeout;
+				}
 				if (self.home || self.homeUser) {
 					self.registerHome(self.home, self.homeUser);
+				}
+				console.log("doing the geo!", self.geoRefusalTimeout);
+				if (self.geoRefusalTimeout != null && navigator.geolocation) {
+					var refused = self.$services.cookies.get("geolocation-refused");
+					if (!refused) {
+						navigator.geolocation.getCurrentPosition(
+							function (position) {
+								Vue.set(self, "location", position.coords);
+								// update if necessary
+								var watchId = navigator.geolocation.watchPosition(function(position) {
+									Vue.set(self, "location", position.coords);
+								});
+								// could cancel the watchid at a later point?
+								// navigator.geolocation.clearWatch(watchId);
+							},
+						// the user may not have given permission?
+						function(error) {
+							// if the user denied it, set a cookie to remember this for a while
+							if (error.code == error.PERMISSION_DENIED && self.geoRefusalTimeout) {
+								self.$services.cookies.set("geolocation-refused", "true", self.geoRefusalTimeout);
+							}
+						});
+					}
 				}
 				if (self.googleSiteVerification) {
 					var meta = document.createElement("meta");
@@ -1069,7 +1132,8 @@ nabu.services.VueService(Vue.extend({
 					devices: self.devices,
 					imports: self.imports,
 					state: self.applicationState,
-					googleSiteVerification: self.googleSiteVerification
+					googleSiteVerification: self.googleSiteVerification,
+					geoRefusalTimeout: self.geoRefusalTimeout
 				}
 			});
 		},
@@ -1487,6 +1551,19 @@ nabu.services.VueService(Vue.extend({
 								});
 							}
 						}
+						else if (page.content.path) {
+							// break out
+							setTimeout(function() {
+								self.$services.analysis.push({
+									source: "router",
+									category: "action",
+									type: "browse",
+									group: page.content.category,
+									event: page.content.name,
+									path: page.content.path
+								});
+							}, 1);
+						}
 						return new nabu.page.views.Page({propsData: {page: page, parameters: parameters, stopRerender: parameters ? parameters.stopRerender : false, pageInstanceId: self.pageCounter++, masked: mask }});
 					},
 					// ability to recognize page routes
@@ -1593,6 +1670,10 @@ nabu.services.VueService(Vue.extend({
 						this.getArrays(property, childPath, arrays);
 					}
 				}
+			}
+			// the definition itself could be an array, the path is likely null at that point though...
+			else if (definition && definition.type == "array") {
+				arrays.push(path);
 			}
 			return arrays;
 		},
@@ -1808,7 +1889,7 @@ nabu.services.VueService(Vue.extend({
 			// TODO: filter events that you are not registered on?
 			var parameters = this.getAvailableParameters(page);
 			Object.keys(parameters).map(function(key) {
-				nabu.utils.arrays.merge(arrays, self.getArrays(parameters[key]).map(function(x) { return key + "." + x }));
+				nabu.utils.arrays.merge(arrays, self.getArrays(parameters[key]).map(function(x) { return x == null ? key : key + "." + x }));
 			});
 			// get all arrays available in parent rows/cells
 			var path = this.getTargetPath(page.content, targetId);
@@ -2136,6 +2217,25 @@ nabu.services.VueService(Vue.extend({
 		homeUser: function(newValue) {
 			if (newValue && !this.loading) {
 				this.registerHome(this.home, newValue);
+			}
+		},
+		showConsole: function(newValue) {
+			if (this.canEdit()) {
+				// remove from DOM
+				var element = document.querySelector("#nabu-console-instance");
+				if (element) {
+					element.parentNode.removeChild(element);
+				}
+				// render a console in the DOM
+				if (newValue) {
+					var div = document.createElement("div");
+					div.setAttribute("id", "nabu-console-instance");
+					document.body.appendChild(div);
+					this.$services.router.route("nabu-console", {}, div);
+				}
+				else {
+					this.limitReports();
+				}
 			}
 		}
 	}

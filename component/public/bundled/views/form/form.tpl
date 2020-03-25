@@ -19,7 +19,7 @@
 					<n-form-text v-model="cell.state.title" label="Title"/>
 					<n-form-text v-model="cell.state.formId" label="Form Id"/>
 					<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
-					<n-form-text v-model="cell.state.analysisId" label="Analysis Id"/>
+					<n-form-text v-model="cell.state.analysisId" label="Analysis Id" info="You can set an explicit name for this form for analysis purposes"/>
 					<n-form-text v-model="cell.state.class" label="Form Class"/>
 					<n-form-switch v-model="cell.state.immediate" label="Save On Change"/>
 					<n-form-text v-model="cell.state.cancel" v-if="!cell.state.immediate" label="Cancel Label"/>

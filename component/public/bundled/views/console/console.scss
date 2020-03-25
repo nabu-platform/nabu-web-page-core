@@ -1,0 +1,117 @@
+#nabu-console-instance {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	z-index: 10000;
+	background-color: #272822;
+	color: white;
+	padding: 1rem;
+	font-family: Monospace;
+	font-size: 0.8rem;
+	width: 100%;
+	border-top: solid 3px #ccc;
+	.nabu-console {
+		display: flex;
+		> .content {
+			height: 40vh;
+			overflow: auto;
+			flex-grow: 1;
+		}
+		> .menu {
+			height: 40vh;
+			padding: 0 1rem;
+		}
+	}
+	.nabu-console-report-title {
+		font-weight: bold;
+		padding: 0.4rem;
+		.content {
+			color: white !important;
+		}
+	}
+	input {
+		background-color: #1e1f1c;
+		border: solid 1px #666;
+		height: 2rem;
+		line-height: 1rem;
+		&::placeholder {
+			color: #ccc;
+		}
+	}
+	.nabu-console-report {
+		.source {
+			.category {
+				font-size: 0.5rem;
+				margin-left: 0.3rem;
+				background-color: #044013;
+				color: #b8eea9;
+				padding: 0.2rem;
+				border-radius: 5px;
+			}
+		}
+		.type {
+			span:not(.name) {
+				background-color: #e69a09;
+				color: #553a06;	
+				padding: 0.1rem 0.3rem;
+				border-radius: 5px;
+				font-weight: bold;
+				+.name {
+					margin-left: 0.3rem;
+				}
+			}
+			.name {
+				background-color: #444;
+				padding: 0.1rem 0.3rem;
+				border-radius: 5px;
+				font-weight: bold;
+			}
+		}
+		&.hidden {
+			display: none;
+		}
+		&:not(.nabu-console-report-title) {
+			padding: 0.7rem;
+			background-color: #1e1f1c;
+			border: solid 1px #666;
+			margin-top: 0.3rem;
+		}
+		display: flex;
+		.icon {
+			padding: 0 0.3rem;
+			border-radius: 10px;
+			margin-right: 1rem;
+			line-height: 1rem;
+			cursor: pointer;
+			background-color: #951111;
+			color: white;
+		}
+		> * {
+			flex-basis: 0;
+		}
+		.timestamp {
+			flex-grow: 0.3;
+		}
+		.source,  {
+			flex-grow: 0.3;
+		}
+		.type {
+			flex-grow: 0.5;
+		}
+		.content {
+			flex-grow: 1;
+		}
+		.content {
+			color: #666;
+			max-height: 1rem;
+			overflow: hidden;
+		}
+		&.selected {
+			.content {
+				white-space:pre;
+				max-height: inherit;
+				color: #ccc;
+			}
+		}
+	}
+}

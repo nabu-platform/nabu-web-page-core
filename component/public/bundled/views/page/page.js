@@ -658,6 +658,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 			result.sort();
 			return result;
 		},
+		addAnalysis: function() {
+			if (!this.page.content.analysis) {
+				Vue.set(this.page.content, "analysis", []);
+			}	
+			this.page.content.analysis.push({
+				name: null,
+				on: null,
+				condition: null
+			});
+		},
 		addAction: function() {
 			this.page.content.actions.push({
 				name: null,
@@ -1082,6 +1092,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			});
 		},
 		emit: function(name, value, reset) {
+			this.$services.page.report("emit", this.page.content.name, null, name, value);
 			var self = this;
 
 			// used to be a regular assign and that seemed to work as well?
@@ -1117,6 +1128,23 @@ nabu.page.views.Page = Vue.component("n-page", {
 			var promises = [];
 			
 			if (!reset) {
+				if (this.page.content.analysis) {
+					this.page.content.analysis.map(function(analysis) {
+						if (analysis.condition && !self.$services.page.isCondition(analysis.condition, value, self)) {
+							return;
+						}
+						var pageInstance = self.$services.page.getPageInstance(self.page, self);
+						var content = nabu.page.event.getInstance(analysis, "chainEvent", self.page, self);
+						self.$services.analysis.push({
+							pageName: self.page.content.name,
+							pageCategory: self.page.content.category,
+							category: "trigger",
+							type: "page-analysis",
+							event: nabu.page.event.getName(analysis, "chainEvent"),
+							data: content
+						});
+					})
+				}
 				// check all the actions to see if we need to run something
 				this.page.content.actions.map(function(action) {
 					
@@ -1166,6 +1194,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 						
 						var date = new Date();
 						var stop = function(error) {
+							if (action.name) {
+								self.$services.analysis.push({
+									pageName: self.page.content.name,
+									pageCategory: self.page.content.category,
+									category: "trigger",
+									type: "page-trigger",
+									event: action.name
+								});
+							}
+							// DEPRECATED
 							if (self.$services.analysis && self.$services.analysis.emit && action.name) {
 								self.$services.analysis.emit("trigger-" + self.page.name, action.name, 
 									{time: new Date().getTime() - date.getTime(), error: error}, true);

@@ -3,6 +3,7 @@
     <field minOccurs="0" name="home" type="java.lang.String"/>
     <field minOccurs="0" name="homeUser" type="java.lang.String"/>
     <field minOccurs="0" name="googleSiteVerification" type="java.lang.String"/>
+    <field comment="Amount of hours to wait before asking again after the user explicitly refused." minOccurs="0" name="geoRefusalTimeout" type="java.lang.Integer"/>
     <structure definition="nabu.utils.types.Property" maxOccurs="unbounded" minOccurs="0" name="properties"/>
     <structure maxOccurs="unbounded" minOccurs="0" name="devices">
         <field name="name" type="java.lang.String"/>

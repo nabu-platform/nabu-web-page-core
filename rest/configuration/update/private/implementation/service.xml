@@ -119,6 +119,15 @@
 			<from>input/content/state</from>
 			<to>configuration/state</to>
 		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="bed6bc3b-5ccb-47a0-8339-6a482267b96f"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>input/content/geoRefusalTimeout</from>
+			<to>configuration/geoRefusalTimeout</to>
+		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"

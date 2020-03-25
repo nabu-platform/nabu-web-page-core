@@ -527,6 +527,17 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			}
 		},
 		handle: function(action, force) {
+			if (action.name) {
+				this.$services.analysis.push({
+					pageName: this.page.content.name,
+					pageCategory: this.page.content.category,
+					category: "action",
+					type: "action-trigger",
+					group: this.cell.state.analysisId ? this.cell.state.analysisId : null,
+					event: action.name
+				});
+			}
+			// DEPRECATED
 			if (action.name && this.$services.analysis && this.$services.analysis.emit) {
 				this.$services.analysis.emit("trigger-" + (this.cell.state.analysisId ? this.cell.state.analysisId : "action"), action.name, {url: window.location}, true);
 			}

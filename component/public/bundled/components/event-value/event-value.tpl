@@ -1,5 +1,5 @@
 <template id="page-event-value">
-	<n-collapsible :title="title" class="page-event-value">
+	<component :is="inline ? 'div' : 'n-collapsible'" :title="title" class="page-event-value">
 		<div class="padded-content">
 			<n-form-text v-model="container[name].name" label="Event Name" :timeout="600" @input="$emit('updatedEvents')"/>
 			<div v-for="eventField in container[name].eventFields" class="list-row">
@@ -14,5 +14,5 @@
 		<div class="list-actions">
 			<button @click="addEventField(container[name]) & $emit('updatedEvents')">Add Field</button>
 		</div>
-	</n-collapsible>
+	</component>
 </template>

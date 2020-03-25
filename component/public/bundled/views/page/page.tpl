@@ -210,9 +210,9 @@
 					</n-collapsible>
 				</n-collapsible>
 				
-				<n-collapsible title="Actions" class="list">
+				<n-collapsible title="Triggers" class="list">
 					<div class="list-actions">
-						<button @click="addAction">Add Action</button>
+						<button @click="addAction">Add Trigger</button>
 					</div>
 					<n-collapsible class="list-item" :title="(action.on ? '[' + action.on + '] ' : '') + action.name" v-for="action in page.content.actions">
 						<n-form-text v-model="action.name" label="Name" :required="true" :timeout="600"/>
@@ -269,7 +269,11 @@
 					<div class="list-actions">
 						<button @click="addAnalysis">Add Analysis</button>
 					</div>
-					
+					<n-collapsible class="list-item" :title="(analysis.on ? '[' + analysis.on + '] ' : '') + (analysis.chainEvent && analysis.chainEvent.name ? analysis.chainEvent.name : 'unnamed')" v-for="analysis in page.content.analysis">
+						<n-form-combo v-model="analysis.on" label="Trigger On" :filter="getAvailableEvents"/>
+						<n-form-text v-model="analysis.condition" label="Condition" v-if="analysis.on" :timeout="600"/>
+						<page-event-value :inline="true" class="no-more-padding" :page="page" :container="analysis" title="Analysis Event" name="chainEvent" @resetEvents="resetEvents"/>
+					</n-collapsible>
 				</n-collapsible>
 				<n-collapsible title="Publish Global Events" class="list">
 					<div class="list-actions">

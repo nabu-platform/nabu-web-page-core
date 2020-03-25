@@ -22,6 +22,14 @@ Vue.view("page-share-social", {
 			this.configuring = true;	
 		},
 		analyze: function(provider) {
+			this.$services.analysis.push({
+				pageName: this.page.content.name,
+				pageCategory: this.page.content.category,
+				category: "social",
+				type: "social-share",
+				event: provider
+			});
+			// DEPRECATED
 			if (this.$services.analysis && this.$services.analysis.emit) {
 				this.$services.analysis.emit("share-" + provider, {url:window.location}, null, true);
 			}

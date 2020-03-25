@@ -8,7 +8,7 @@
 						<n-form-combo v-model="cell.state.class" label="Class" 
 							:filter="function(value) { return $services.page.classes('page-actions', value) }"/>
 						<n-form-text v-model="cell.state.activeClass" label="Active Class"/>
-						<n-form-text v-model="cell.state.analysisId" label="Analysis Id"/>
+						<n-form-text v-model="cell.state.analysisId" label="Analysis Group" info="For analysis purposes we can group all the actions together" />
 						<n-form-switch v-model="cell.state.useButtons" label="Use Buttons"/>
 						<n-form-switch v-model="cell.state.isFixedHeader" label="Fix as header"/>
 						<n-form-combo v-model="cell.state.defaultAction" label="Default Action"
@@ -144,6 +144,7 @@
 			<template v-else>
 				<span v-if="edit && !action.dynamic" class="fa fa-cog" @click="configureAction(action)"></span>
 				<a auto-close-actions class="page-action-link page-action-entry" :href="getActionHref(action)"
+					:data-event="action.name"
 					:target="action.anchor == '$blank' ? '_blank' : null"
 					:class="getDynamicClasses(action)"
 					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
@@ -154,6 +155,7 @@
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
 						><span>{{ $services.page.translate($services.page.interpret(action.label, $self)) }}</span></a>
 				<button auto-close-actions class="page-action-button page-action-entry"
+					:data-event="action.name"
 					:class="getDynamicClasses(action)"
 					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
 					:disabled="isDisabled(action)"
