@@ -155,6 +155,29 @@ nabu.page.views.Page = Vue.component("n-page", {
 					}	
 				});
 			}
+			
+			// set up watchers for reset events
+			if (self.page.content.parameters) {
+				self.page.content.parameters.map(function(parameter) {
+					if (parameter.resetListeners) {
+						parameter.resetListeners.forEach(function(listener) {
+							var to = listener.to;
+							if (to.indexOf("page.") == 0) {
+								to = to.substring("page.".length);
+							}
+							self.$watch("variables." + to, function() {
+								if (listener.field) {
+									console.error("Field level resets not supported yet");
+								}
+								else {
+									self.initializeDefaultParameters(true, [parameter.name]);
+								}
+							});
+						})
+					}
+				});
+			}
+			
 			done();
 		};
 		if (this.page.content.states.length) {
@@ -254,7 +277,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 		if (this.oldTitle) {
 			document.title = this.oldTitle;
-		}	
+		}
+		this.timers.forEach(function(x) {
+			clearTimeout(x);
+		});
 	},
 	mounted: function() {
 		console.log("mounted page", this.page.name, this.embedded);
@@ -357,7 +383,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 			selectedItem: null,
 			viewComponents: false,
 			closing: false,
-			saved: null
+			saved: null,
+			// any timers that might exist and need to be destroyed
+			timers: []
 		}
 	},
 	methods: {
@@ -370,9 +398,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 						nabu.page.event.getInstance(x, "definition", self.page, self)
 					);
 					if (x.timeout) {
-						setTimeout(function() {
+						var timer = setTimeout(function() {
+							// remove this timer
+							var index = self.timers.indexOf(timer);
+							if (index >= 0) {
+								self.timers.splice(index, 1);
+							}
 							self.fireInitialEvent(x);
 						}, parseInt(x.timeout));
+						self.timers.push(timer);
 					}
 				}
 				catch (exception) {
@@ -380,11 +414,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 			}
 		},
-		initializeDefaultParameters: function(isInitial) {
+		initializeDefaultParameters: function(isInitial, names) {
 			var self = this;
 			if (this.page.content.parameters) {
 				this.page.content.parameters.map(function(x) {
-					if (x.name != null) {
+					if (x.name != null && (!names || names.indexOf(x.name) >= 0)) {
 						// if it is not passed in as input, we set the default value
 						if (self.parameters[x.name] == null) {
 							// check if we have a content setting
@@ -1129,7 +1163,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			
 			if (!reset) {
 				if (this.page.content.analysis) {
-					this.page.content.analysis.map(function(analysis) {
+					this.page.content.analysis.filter(function(x) { return x.on == name }).map(function(analysis) {
 						if (analysis.condition && !self.$services.page.isCondition(analysis.condition, value, self)) {
 							return;
 						}
@@ -1460,7 +1494,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 										if (result instanceof Array) {
 											nabu.utils.arrays.merge(self.variables[state.name], result);
 										}
-										else {
+										else if (result) {
 											self.variables[state.name].push(result);
 										}
 									}

@@ -15,4 +15,5 @@
     <webFragments>nabu.web.page.core.rest.function.list</webFragments>
     <webFragments>nabu.web.page.core.rest.function.write</webFragments>
     <webFragments>nabu.web.page.core.rest.function.compiled</webFragments>
+    <webFragments>nabu.web.page.core.rest.feature.get</webFragments>
 </webModule>

@@ -44,6 +44,14 @@
 	min-height: 10rem;
 }
 
+// red
+$major-background-color: #951111;
+// blue
+$major-background-color: #6c6a93;
+// lightblue
+$major-background-color: #dad9f0;
+$major-frontend-color: #595e71;
+
 .settings, .pages {
 	background-color: #f3f3f3;
 	i {
@@ -69,15 +77,35 @@
 			color: #000;
 		}
 	}
+	.list-item-actions {
+		position: relative;
+	}
 	button {
-		background-color: #951111;
-		color: #fff;
+		background-color: $major-background-color;
+		color: $major-frontend-color;
 		font-size: 0.7rem;
 		font-weight: normal;
 		text-transform: uppercase;
 		border: none;
 		box-shadow: none;
-		padding: 0.3rem 1rem;
+		padding: 0.3rem 0.5rem;
+		.n-info {
+			top: 0 !important;
+			margin-left: 0.7rem;
+			position: static;
+			.n-info-content {
+				left: 0;
+				top: unset;
+				text-transform: none;
+				text-align: left;
+				font-size: 0.8rem;
+			}
+		}
+		.fa {
+			&:before {
+				font-size: 10px;
+			}
+		}
 	}
 	.list-item-actions {
 		text-align: right;
@@ -134,7 +162,7 @@
 		border-left: solid 5px #ccc;
 		padding: 0.7rem 1.3rem;
 		background-color: #eee;
-		align-items: center;
+		//align-items: center;
 		> * {
 			+ * {
 				margin-left: 0.3rem;

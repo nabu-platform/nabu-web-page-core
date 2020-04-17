@@ -47,6 +47,7 @@ nabu.services.VueService(Vue.extend({
 			customStyle: null,
 			cssStep: null,
 			editable: false,
+			testable: false,
 			wantEdit: false,
 			copiedRow: null,
 			copiedCell: null,
@@ -65,7 +66,12 @@ nabu.services.VueService(Vue.extend({
 			location: null,
 			showConsole: false,
 			// pages can report stuff to show in the console (mostly events)
-			reports: []
+			reports: [],
+			// features that are enabled (necessary for runtime stuff)
+			enabledFeatures: [],
+			// when testing, you can check the available features and toggle them (either on or off)
+			availableFeatures: [],
+			toggledFeatures: []
 		}
 	},
 	activate: function(done) {
@@ -292,11 +298,15 @@ nabu.services.VueService(Vue.extend({
 	
 			self.$services.swagger.execute("nabu.web.page.core.rest.configuration.get").then(function(configuration) {
 				self.editable = configuration.editable;
+				self.testable = configuration.testable;
 				self.pages.splice(0, self.pages.length);
 				self.properties.splice(0, self.properties.length);
 				self.devices.splice(0, self.devices.length);
 				self.contents.splice(0);
 				self.translations.splice(0);
+				self.enabledFeatures.splice(0);
+				self.availableFeatures.splice(0);
+				self.toggledFeatures.splice(0);
 				if (configuration.pages) {
 					nabu.utils.arrays.merge(self.pages, configuration.pages);
 					self.loadPages(self.pages);
@@ -337,7 +347,9 @@ nabu.services.VueService(Vue.extend({
 				if (self.home || self.homeUser) {
 					self.registerHome(self.home, self.homeUser);
 				}
-				console.log("doing the geo!", self.geoRefusalTimeout);
+				if (configuration.enabledFeatures) {
+					nabu.utils.arrays.merge(self.enabledFeatures, configuration.enabledFeatures);
+				}
 				if (self.geoRefusalTimeout != null && navigator.geolocation) {
 					var refused = self.$services.cookies.get("geolocation-refused");
 					if (!refused) {
@@ -385,6 +397,21 @@ nabu.services.VueService(Vue.extend({
 					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.function.list").then(function(list) {
 						if (list && list.styles) {
 							nabu.utils.arrays.merge(self.functions, list.styles.map(function(x) { return JSON.parse(x.content) }));
+						}
+					}));
+				}
+				if (self.canTest()) {
+					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.feature.get").then(function(features) {
+						console.log("available features is", self.availableFeatures, features);
+						if (features) {
+							if (features.enabled) {
+								nabu.utils.arrays.merge(self.availableFeatures,
+									features.enabled.map(function(x) { x.enabled = true; return x }));
+							}
+							if (features.disabled) {
+								nabu.utils.arrays.merge(self.availableFeatures,
+									features.disabled.map(function(x) { x.enabled = false; return x }));
+							}
 						}
 					}));
 				}
@@ -1012,6 +1039,14 @@ nabu.services.VueService(Vue.extend({
 			if (!condition) {
 				return null;
 			}
+			// replace all the enabled features with true
+			this.enabledFeatures.forEach(function(x) {
+				// avoid the regex matcher!
+				condition = condition.replace("@" + "{" + x + "}", "true");
+			});
+			// replace all the disabled features with false
+			condition = condition.replace(/@\\{[^}]+\\}/m, "false");
+			
 			if (this.useEval) {
 				try {
 					var result = eval(condition);
@@ -1409,6 +1444,9 @@ nabu.services.VueService(Vue.extend({
 		},
 		canEdit: function() {
 			return !this.isServerRendering && this.editable;	
+		},
+		canTest: function() {
+			return this.canEdit() || (!this.isServerRendering && this.testable);
 		},
 		pathParameters: function(url) {
 			if (!url) {
@@ -2220,7 +2258,7 @@ nabu.services.VueService(Vue.extend({
 			}
 		},
 		showConsole: function(newValue) {
-			if (this.canEdit()) {
+			if (this.canTest()) {
 				// remove from DOM
 				var element = document.querySelector("#nabu-console-instance");
 				if (element) {

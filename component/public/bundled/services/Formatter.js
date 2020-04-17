@@ -40,7 +40,7 @@ nabu.services.VueService(Vue.extend({
 				return this.masterdata(value);
 			}
 			else if (properties.format == "javascript") {
-				return this.javascript(value, properties.javascript);
+				return this.javascript(value, properties.javascript, properties.state, properties.$value);
 			}
 			// otherwise we are using a provider
 			else {
@@ -49,7 +49,8 @@ nabu.services.VueService(Vue.extend({
 				return result;
 			}
 		},
-		javascript: function(value, code) {
+		javascript: function(value, code, state, $value) {
+			var $services = this.$services;
 			if (code instanceof Function) {
 				return code(value);
 			}

@@ -93,9 +93,57 @@
 			<to>lastModified</to>
 		</steps>
 	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			comment="Get last feature change"
+			disabled="false"
+			id="198d37d2-f18d-4ed1-b2c9-faa5e14e6563">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="92f026db-4789-4133-b737-9de2644c9d54"
+				serviceId="nabu.utils.Runtime.getFeatures"
+				resultName="result182dff2af33e459fa6fcfef414f5e908"
+				temporaryMapping="true"
+				x="64"
+				y="154"
+				invocationOrder="0"
+				asynchronous="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="0eb1fcb4-de4d-487a-a792-a3c9c3b5c522"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/webApplicationId</from>
+				<to>id</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="255aca24-076f-4d4a-bec1-07e6180d428e"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>result182dff2af33e459fa6fcfef414f5e908/features/lastModified</from>
+			<to>featuresLastModified</to>
+		</steps>
+	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Switch"
 			disabled="false"
 			id="2ab6ea1f-42d4-4245-a7e5-ee3552a18712">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+				disabled="false"
+				id="ae4fa129-db5f-48d6-89e6-4ad9c14ea040"
+				label="featuresLastModified != null &amp;&amp; input/clientCache/lastModified != null &amp;&amp; featuresLastModified &gt; input/clientCache/lastModified">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="9bb8c7cf-b013-46c4-a2bf-a692301c7cbc"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>true</from>
+				<to>output/hasChanged</to>
+			</steps>
+		</steps>
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				comment="If we have another language, we need to retrieve the content again"
 				disabled="false"

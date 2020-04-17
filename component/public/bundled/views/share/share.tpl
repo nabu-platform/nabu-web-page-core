@@ -4,6 +4,7 @@
 			<n-form class="layout2">
 				<n-form-section>
 					<n-collapsible title="Share settings">
+						<n-form-text v-model="cell.state.link" label="Link to share" info="Defaults to the current page"/>
 						<n-form-combo v-model="cell.state.class" label="Class" 
 							:filter="function(value) { return $services.page.classes('page-share-social', value) }"/>
 						<div class="list">

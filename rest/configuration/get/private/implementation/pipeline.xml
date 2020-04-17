@@ -10,4 +10,5 @@
     <structure definition="nabu.web.page.core.types.translation" minOccurs="0" name="translation"/>
     <field maxOccurs="unbounded" minOccurs="0" name="pageGroups" type="java.lang.String"/>
     <field maxOccurs="unbounded" minOccurs="0" name="errorCodes" type="java.lang.String"/>
+    <field minOccurs="0" name="featuresLastModified" type="java.util.Date"/>
 </structure>

@@ -1270,7 +1270,23 @@ Vue.component("page-form-field", {
 					}
 				}
 			}
+			if (messages.then) {
+				messages.then(this.emitSuccess);
+			}
+			else {
+				this.emitSuccess(messages);
+			}
 			return messages;
+		},
+		emitSuccess: function(messages) {
+			if (messages && !messages.length) {
+				var event = nabu.page.event.getName(this.field, "validationSuccessEvent");
+				if (event) {
+					var pageInstance = this.$services.page.getPageInstance(this.page, this);
+					var content = nabu.page.event.getInstance(this.field, "validationSuccessEvent", this.page, this);
+					pageInstance.emit(event, content == null ? {} : content);
+				}
+			}
 		}
 	},
 	events: {

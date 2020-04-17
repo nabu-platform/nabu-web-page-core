@@ -38,7 +38,7 @@ window.addEventListener("load", function() {
 			icon: "page/core/images/richtext.svg",
 			description: "The rich text component can be used to write static texts with markup",
 			name: "Rich Text",
-			category: "Content",
+			category: "Content"
 		});
 		
 		$services.router.register({
@@ -438,6 +438,16 @@ window.addEventListener("load", function() {
 			skipCompile: true,
 			name: "page",
 			namespace: "nabu.cms"
+		});
+		
+		nabu.page.provide("page-format", {
+			format: function(value) {
+				return "<n-form-text :disabled='true' type='range' :value='" + (value * 100) + "' :minimum='0' :step='1' :maximum='100'/>";
+			},
+			html: true,
+			skipCompile: false,
+			name: "percentage-slider",
+			namespace: "nabu.page"
 		});
 		
 		var blocksToHighlight = [];

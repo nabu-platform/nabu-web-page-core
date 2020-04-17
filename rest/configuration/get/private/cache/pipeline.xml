@@ -3,4 +3,5 @@
     <structure name="output"/>
     <field name="etag" type="java.lang.String"/>
     <field minOccurs="0" name="lastModified" type="java.util.Date"/>
+    <field minOccurs="0" name="featuresLastModified" type="java.util.Date"/>
 </structure>

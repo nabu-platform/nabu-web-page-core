@@ -175,6 +175,7 @@
 		:class="fieldClasses(field)"
 		:is="getProvidedComponent(field.type)"
 		:value="usesMultipleFields(field.type) ? parentValue : value"
+		:parent-value="parentValue"
 		:page="page"
 		:codes="codes"
 		:cell="cell"
@@ -240,7 +241,6 @@
 		<n-form-combo v-model="field.type" :filter="filterTypes" label="Type"/>
 		<n-form-text v-model="field.value" v-if="field.type == 'fixed'" label="Fixed Value"/>
 		<n-form-switch v-model="field.hideLabel" label="Hide label"/>
-		
 		<component v-if="field.type && ['fixed'].indexOf(field.type) < 0"
 			:possible-fields="possibleFields"
 			:is="getProvidedConfiguration(field.type)"
@@ -248,6 +248,8 @@
 			:cell="cell"
 			:schema="schema"
 			:field="field"/>
+			
+		<page-event-value class="no-more-padding" :page="page" :container="field" title="Validation Success Event" name="validationSuccessEvent" @resetEvents="resetEvents"/>
 		
 		<div class="list-actions">
 			<button @click="field.styles == null ? $window.Vue.set(field, 'styles', [{class:null,condition:null}]) : field.styles.push({class:null,condition:null})">Add Style</button>

@@ -104,9 +104,9 @@
 				</n-collapsible>
 				<n-collapsible title="Initial State" class="list">
 					<div class="list-actions">
-						<button @click="addState">Add Initial State</button>
-						<button @click="addApplicationState">Add Application State</button>
-						<button @click="function() { if (page.content.stateErrors) page.content.stateErrors.push({}); else $window.Vue.set(page.content, 'stateErrors', [{}]) }">Add Error Route</button>
+						<button @click="addState"><span class="fa fa-plus"></span>Initial State</button>
+						<button @click="addApplicationState"><span class="fa fa-plus"></span>Application State</button>
+						<button @click="function() { if (page.content.stateErrors) page.content.stateErrors.push({}); else $window.Vue.set(page.content, 'stateErrors', [{}]) }"><span class="fa fa-plus"></span>Error Route</button>
 					</div>
 					<n-collapsible class="list-item" :title="state.name" v-for="state in page.content.states">
 						<n-form-text :value="state.name" @input="function(newValue) { if (!validateStateName(newValue).length) state.name = newValue; }" label="Name" :required="true" :validator="validateStateName"/>
@@ -126,10 +126,12 @@
 						<div class="list" v-if="state.refreshOn">
 							<div v-for="i in Object.keys(state.refreshOn)" class="list-row">
 								<n-form-combo v-model="state.refreshOn[i]" :filter="getAvailableEvents" placeholder="event"/>
-								<button @click="state.refreshOn.splice(i)"><span class="fa fa-trash"></span></button>
+								<span @click="state.refreshOn.splice(i)" class="fa fa-times"></span>
 							</div>
 						</div>
-						<button @click="state.refreshOn ? state.refreshOn.push('') : $window.Vue.set(state, 'refreshOn', [''])">Add Refresh Event</button>
+						<div class="list-actions">
+							<button @click="state.refreshOn ? state.refreshOn.push('') : $window.Vue.set(state, 'refreshOn', [''])"><span class="fa fa-plus"></span>Refresh Event</button>
+						</div>
 					</n-collapsible>
 					<div v-if="page.content.stateErrors" class="list">
 						<div v-for="stateError in page.content.stateErrors">
@@ -189,10 +191,18 @@
 						<div class="list-row" v-for="i in Object.keys(parameter.listeners)">
 							<n-form-combo v-model="parameter.listeners[i].to" :filter="function() { return $services.page.getAllAvailableKeys(page) }" />
 							<n-form-combo v-model="parameter.listeners[i].field" v-if="parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($this, parameter.type)" />
-							<button @click="parameter.listeners.splice(i, 1)"><span class="fa fa-trash"></span></button>
+							<button @click="parameter.listeners.splice(i, 1)"><span class="fa fa-times"></span></button>
+						</div>
+						<div v-if="parameter.resetListeners">
+							<div class="list-row" v-for="i in Object.keys(parameter.resetListeners)">
+								<n-form-combo v-model="parameter.resetListeners[i].to" :filter="function() { return $services.page.getAllAvailableKeys(page) }" />
+								<n-form-combo v-model="parameter.resetListeners[i].field" v-if="false && parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($this, parameter.type)" description="Not yet"  />
+								<button @click="parameter.resetListeners.splice(i, 1)"><span class="fa fa-times"></span></button>
+							</div>
 						</div>
 						<div class="list-item-actions">
-							<button @click="parameter.listeners.push({to:null, field: null})">Add Listener</button>
+							<button @click="parameter.listeners.push({to:null, field: null})"><span class="fa fa-plus"></span>Update Listener</button>
+							<button @click="parameter.resetListeners ? parameter.resetListeners.push({to:null, field: null}) : $window.Vue.set(parameter, 'resetListeners', [{to:null,field:null}])" v-if="parameter.default"><span class="fa fa-plus"></span>Reset Listener</button>
 							<button @click="page.content.parameters.splice(page.content.parameters.indexOf(parameter), 1)"><span class="fa fa-trash"></span></button>	
 						</div>
 						<div v-if="parameter.type && parameter.type.indexOf('.') > 0">
@@ -221,7 +231,7 @@
 						<n-form-text v-model="action.condition" label="Condition" v-if="action.on" :timeout="600"/>
 						<n-form-text v-model="action.scroll" label="Scroll to" v-if="!action.operation && !action.function" :timeout="600"/>
 						<n-form-combo v-model="action.route" v-if="!action.operation && !action.url && !action.function" label="Redirect" :filter="filterRoutes"/>
-						<n-form-combo v-model="action.anchor" v-if="action.route || (action.operation && isGet(action.operation))" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
+						<n-form-combo v-model="action.anchor" v-if="action.url || action.route || (action.operation && isGet(action.operation))" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 						<n-form-combo :key="'operation' + page.content.actions.indexOf(action)" v-model="action.operation" v-if="!action.route && !action.scroll && !action.url && !action.function" label="Operation" :filter="getOperations" />
 						<n-form-text v-model="action.timeout" v-if="action.operation" label="Action Timeout" info="You can emit an event if the action takes too long" :timeout="600"/>
 						<page-event-value class="no-more-padding"  v-if="action.operation && action.timeout" :page="page" :container="action" title="Timeout Event" name="timeoutEvent" @resetEvents="resetEvents"/>
@@ -373,16 +383,16 @@
 					</div>
 					<n-form class="layout2" key="cell-form">
 						<div class="padded-content">
-							<n-form-text label="Cell Name" v-model="cell.name" info="A descriptive name"/>
+							<n-form-combo label="Content Route" :filter="filterRoutes" v-model="cell.alias"
+								:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
+								:required="true"
+								info="The content we want to route in the cell"/>
 						</div>
 						<n-form-section>
 							<n-collapsible title="Cell Settings" key="cell-settings">
 								<div class="padded-content">
 									<h2>Content<span class="subscript">Choose the content you want to add to your cell</span></h2>
-									<n-form-combo label="Content Route" :filter="filterRoutes" v-model="cell.alias"
-										:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
-										:required="true"
-										info="The content we want to route in the cell"/>
+									<n-form-text label="Cell Name" v-model="cell.name" info="A descriptive name"/>
 									<n-page-mapper v-if="cell.alias" 
 										:key="'page_' + pageInstanceId + '_' + cell.id + '_mapper'"
 										:to="getRouteParameters(cell)"

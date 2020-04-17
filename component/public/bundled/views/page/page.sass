@@ -21,6 +21,34 @@ body[has-sidebar-left="true"] {
 .n-sidebar.settings, .page-startup-wizard {
 	width: 400px;
 }
+
+// red
+$major-background-color: #951111;
+// blue
+$major-background-color: #6c6a93;
+// lightblue
+$major-background-color: #dad9f0;
+$major-frontend-color: #595e71;
+
+.n-sidebar.settings, .page-startup-wizard, .pages, .nabu-console {
+	.n-form-switch.n-form-checkbox {
+		width: auto;
+		label.n-form-label {
+			line-height: 1.5rem !important;
+			padding-left: 2.5rem !important;
+			&:before {
+				height: 1.5rem !important;
+				width: 2.7rem !important;
+				border-radius: 8px;
+			}
+			&:after {
+				height: 1.0rem !important;
+				width: 1rem;
+				border-radius: 8px;
+			}
+		}
+	}
+}
 .n-sidebar.settings, .page-startup-wizard, .pages {
 	.last-saved {
 		label {
@@ -119,34 +147,19 @@ body[has-sidebar-left="true"] {
 	.n-form-input-wrapper {
 		flex-grow: 1;
 	}
-	.n-form-switch.n-form-checkbox {
-		width: auto;
-		label.n-form-label {
-			line-height: 1.5rem !important;
-			padding-left: 2.5rem !important;
-			&:before {
-				height: 1.5rem !important;
-				width: 2.7rem !important;
-				border-radius: 8px;
-			}
-			&:after {
-				height: 1.0rem !important;
-				width: 1rem;
-				border-radius: 8px;
-			}
-		}
-	}
 	.n-form-component {
 		.n-form-input-after {
 			display: none;
 		}
 		display: flex;
+		flex-direction: column;
+		position: relative;
 		&.vertical {
 			flex-direction: column;
 			> .n-form-label-wrapper {	
-				width: 100%;
-				max-width: 100%;
-				margin-top: 0.7rem;
+				//width: 100%;
+				//max-width: 100%;
+				//margin-top: 0.7rem;
 			}
 		}
 		&:not(.n-form-checkbox) {
@@ -156,11 +169,42 @@ body[has-sidebar-left="true"] {
 				max-width: 135px;
 			}
 		}
+		&:not(.n-form-checkbox) {
+			margin-top: 1.2rem !important;
+		}
+		&.n-form-checkbox label span {
+			font-size: 0.7rem;
+		}
 		> .n-form-label-wrapper {
 			display: flex;
-			width: 135px;
-			min-width: 135px;
-			max-width: 135px;
+			
+			position: relative;
+			position: absolute;
+			top: -0.7rem;
+			left: 0.4rem;
+			border: solid 1px #ccc;
+			background-color: #eee;
+			> label {
+				font-size: 0.7rem !important;
+				margin: 0;
+				padding: 0 0.3rem;
+				color: #666;
+				
+			}
+			.n-info {
+				top: 0.3rem;
+				line-height: 0rem;
+				.fa {
+					line-height: unset;
+					&:before {
+						font-size: 10px;
+					}
+				}
+				.n-info-content {
+					line-height: 0.9rem;
+					font-size: 0.8rem;
+				}
+			}
 		}
 		input {
 			line-height: 1.7rem !important;
@@ -201,10 +245,10 @@ body[has-sidebar-left="true"] {
 				right: 0;
 			}
 			.n-input-combo-label-container {
-				background-color: #951111;
+				background-color: $major-background-color;
 				.n-input-combo-label {
 					> span {
-						color: white;
+						color: $major-frontend-color;
 					}
 				}
 			}
@@ -739,10 +783,10 @@ body[has-sidebar="true"] {
 			cursor: pointer;
 			display: flex;
 			&.selected {
-				background-color: #951111;
-				color: white;
+				background-color: $major-background-color;
+				color: $major-frontend-color;
 				.fa {
-					color: white;
+					color: $major-frontend-color;
 				}
 			}
 			> .name {
@@ -796,7 +840,7 @@ body[has-sidebar="true"] {
 	.cell-icon {
 		margin-top: 3px;
 		font-family: 'Font Awesome 5 Free';
-		color: #951111;
+		color: $major-background-color;
 		margin-right: 0.5rem;
 		&:before {
 			content: "\f1b2";

@@ -35,7 +35,24 @@ Vue.view("page-share-social", {
 			}
 		},
 		generateLink: function(provider) {
-			var url = encodeURIComponent(window.location);
+			var url = null;
+			if (this.cell.state.link) {
+				// if we have an absolute link, just use that
+				if (this.cell.state.link.indexOf("http:") == 0 || this.cell.state.link.indexOf("https:") == 0) {
+					url = encodeURIComponent(this.cell.state.link);
+				}
+				// if we have an absolute path, add the host etc
+				else if (this.cell.state.link.indexOf("/") == 0) {
+					url = encodeURIComponent(window.location.protocol + "//" + window.location.host + this.cell.state.link);
+				}
+				// relative path? we assume relative to the web root...
+				else {
+					url = encodeURIComponent(window.location.protocol + "//" + window.location.host + "${server.root()}" + this.cell.state.link);
+				}
+			}
+			else {
+				url = encodeURIComponent(window.location);
+			}
 			var title = null;
 			var summary = null;
 			var source = null;

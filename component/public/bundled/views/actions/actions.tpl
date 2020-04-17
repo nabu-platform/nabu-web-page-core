@@ -4,15 +4,15 @@
 		<n-sidebar v-if="configuring" @close="configuring = false" class="settings" :inline="true">
 			<n-form class="layout2">
 				<n-form-section>
-					<n-collapsible title="Action Settings" v-if="!actions">
+					<n-collapsible title="Action Settings" v-if="!actions" class="padded">
 						<n-form-combo v-model="cell.state.class" label="Class" 
 							:filter="function(value) { return $services.page.classes('page-actions', value) }"/>
-						<n-form-text v-model="cell.state.activeClass" label="Active Class"/>
+						<n-form-text v-model="cell.state.activeClass" label="Active Class" info="The class that is set on the active action, this defaults to 'is-active'"/>
 						<n-form-text v-model="cell.state.analysisId" label="Analysis Group" info="For analysis purposes we can group all the actions together" />
+						<n-form-combo v-model="cell.state.defaultAction" label="Default Action" info="The default action will be activated upon first creation"
+							:filter="function() { return cell.state.actions.map(function(x) { return x.name }) }"/>
 						<n-form-switch v-model="cell.state.useButtons" label="Use Buttons"/>
 						<n-form-switch v-model="cell.state.isFixedHeader" label="Fix as header"/>
-						<n-form-combo v-model="cell.state.defaultAction" label="Default Action"
-							:filter="function() { return cell.state.actions.map(function(x) { return x.name }) }"/>
 						<n-form-switch v-model="cell.state.clickBased" label="Use Clicks Instead of Hover"/>
 						<n-form-switch v-model="cell.state.showOnlyOne" label="Only allow one open" v-if="cell.state.clickBased"/>
 						<n-form-switch v-model="cell.state.leaveOpen" label="Leave Open" v-if="cell.state.clickBased"/>
@@ -34,7 +34,7 @@
 							</div>
 							
 							<div v-else>
-								<n-form-text v-model="action.name" label="Name"/>
+								<n-form-text v-model="action.name" label="Name" info="The name is used for analytics purposes, check the console to see how this works"/>
 								<n-form-section v-if="action.dynamic">
 									<n-form-combo v-model="action.operation" label="Operation" :filter="getActionOperations"/>
 									<n-page-mapper :to="getInputParameters(action)" 
@@ -64,13 +64,14 @@
 									<n-form-combo v-model="action.anchor" v-if="action.route" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 									<n-form-switch v-model="action.absolute" v-if="action.route && !cell.state.useButtons" label="Absolute"/>
 									<n-form-switch v-model="action.mask" label="Mask" v-if="action.route"/>
-									<n-form-text v-model="action.url" label="URL" v-if="!action.route && (!action.event || !action.event.name)"/>
+									<n-form-text v-model="action.url" label="URL" v-if="!action.route && (!action.event || !action.event.name)" :timeout="600"/>
 									<n-form-combo v-model="action.anchor" v-if="action.url" label="Anchor" :items="['$blank', '$window']"/>
 									<n-page-mapper v-if="action.route && $services.router.get(action.route)" :to="$services.page.getRouteParameters($services.router.get(action.route))"
 										:from="$services.page.getAvailableParameters(page, cell)" 
 										v-model="action.bindings"/>
-									<page-event-value class="no-more-padding" :page="page" :container="action" title="Action Event" v-if="!action.dynamic && !action.route && !action.url" name="event" 
+									<page-event-value :inline="true" class="no-more-padding" :page="page" :container="action" title="Action Event" v-if="!action.dynamic && !action.route && !action.url" name="event" 
 									 	@updatedEvents="$emit('updatedEvents')"/>
+									 	
 									<div class="n-form-component n-form-ace">
 										<label class="n-form-label">Disabled if</label>
 										<n-ace mode="javascript" v-model="action.disabled"/>
@@ -79,29 +80,29 @@
 										<label class="n-form-label">Show if</label>
 										<n-ace mode="javascript" v-model="action.condition"/>
 									</div>
-									<n-form-combo v-model="action.validate" label="Only if valid" :filter="validatableItems"/>
+									<n-form-combo v-model="action.validate" label="Only if valid" :filter="validatableItems" info="This action is only triggerable if the indicated item or group of items is valid"/>
 									<n-form-text info="The event to send out if we have a validation error" v-if="action.validate" v-model="action.validationErrorEvent" label="Validation Error Event" />
 									<n-form-switch info="Whether we want to scroll to the first exception" v-if="action.validate" v-model="action.validationErrorScroll" label="Scroll to Validation Error" />
 								</n-form-section>
 							</div>
 							
 							<div class="list-item-actions">
-								<button @click="action.triggers ? action.triggers.push('') : $window.Vue.set(action, 'triggers', [''])"><span class="fa fa-plus"></span>Trigger</button>
+								<button @click="action.triggers ? action.triggers.push('') : $window.Vue.set(action, 'triggers', [''])"><span class="fa fa-plus"></span>Trigger<n-info>You can have this action trigger when another event occurs.</n-info></button>
 							</div>
 							<div v-if="action.triggers">
 								<div class="list-row" v-for="i in Object.keys(action.triggers)">
 									<n-form-combo v-model="action.triggers[i]" label="Trigger" :items="$window.Object.keys($services.page.getAllAvailableParameters(page))"/>
-									<button @click="action.triggers.splice(i, 1)"><span class="fa fa-trash"></span></button>
+									<span @click="action.triggers.splice(i, 1)" class="fa fa-times"></span>
 								</div>
 								<n-form-switch v-model="action.triggerIfHidden" v-if="action.triggers.length && action.condition" label="Allow trigger if hidden"/>
 							</div>
 							
 							<div class="list-item-actions">
-								<button @click="action.activeRoutes.push('')"><span class="fa fa-plus"></span>Active Route</button>
+								<button @click="action.activeRoutes.push('')"><span class="fa fa-plus"></span>Active Route<n-info>When is this action considered active (apart from the route you can already assign)?</n-info></button>
 							</div>
 							<div class="list-row" v-for="i in Object.keys(action.activeRoutes)">
 								<n-form-combo v-model="action.activeRoutes[i]" label="Active Route" :filter="function(value) { return listRoutes(value, true) }"/>
-								<button @click="action.activeRoutes.splice(i, 1)"><span class="fa fa-trash"></span></button>
+								<span @click="action.activeRoutes.splice(i, 1)" class="fa fa-times"></span>
 							</div>
 							
 							<n-collapsible title="Style">

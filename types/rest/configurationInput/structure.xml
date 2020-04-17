@@ -1,4 +1,4 @@
-<structure name="root">
+<structure name="pageBuilder">
     <field minOccurs="0" name="title" type="java.lang.String"/>
     <field minOccurs="0" name="home" type="java.lang.String"/>
     <field minOccurs="0" name="homeUser" type="java.lang.String"/>
