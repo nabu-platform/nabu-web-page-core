@@ -579,8 +579,8 @@ nabu.page.views.PageForm = Vue.extend({
 					}
 					pageInstance.emit(this.cell.state.cancelEvent, content);
 				}
-				else {
 					this.$emit('close');
+				if (!this.cell.state.cancelEvent || this.cell.state.autoclose) {
 				}
 				if (this.cell.state.allowReadOnly) {
 					this.readOnly = true;

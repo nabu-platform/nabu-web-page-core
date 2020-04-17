@@ -10,11 +10,17 @@
 	width: 100%;
 	border-top: solid 3px #ccc;
 	.nabu-console {
+		h3 {
+			font-size: 1.2rem;
+			font-weight: normal;
+			color: #666;
+		}
 		.tabs {
 			text-align: center;
 			border-bottom: solid 1px #666;
 			background-color: darken(#272822, 10%);
 			button {
+				border: none;
 				padding: 0.3rem 1rem;
 				color: #aaa;
 				border-bottom: solid 1px darken(#272822, 10%);
