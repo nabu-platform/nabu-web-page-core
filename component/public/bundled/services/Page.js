@@ -402,11 +402,16 @@ nabu.services.VueService(Vue.extend({
 				}
 				if (self.canTest()) {
 					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.feature.get").then(function(features) {
-						console.log("available features is", self.availableFeatures, features);
 						if (features) {
 							if (features.enabled) {
 								nabu.utils.arrays.merge(self.availableFeatures,
 									features.enabled.map(function(x) { x.enabled = true; return x }));
+								// not all enabled features might be in enabledFeatures, as that only looks at web application features, not broader ones
+								features.enabled.forEach(function(x) {
+									if (self.enabledFeatures.indexOf(x.name) < 0) {
+										self.enabledFeatures.push(x.name);
+									}
+								});
 							}
 							if (features.disabled) {
 								nabu.utils.arrays.merge(self.availableFeatures,
