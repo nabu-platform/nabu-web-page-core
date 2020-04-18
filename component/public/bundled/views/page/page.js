@@ -599,14 +599,17 @@ nabu.page.views.Page = Vue.component("n-page", {
 		dragMenu: function(event) {
 			event.dataTransfer.setData("page-menu", this.page.name);
 		},
+		// apparently you can't (in chrome at least) access the data during drag
+		// this is to prevent inspecting data that is accidently dragged over your website
+		// we _can_ however access the list of data types that is available
 		dragOver: function(event) {
-			if (event.dataTransfer.getData("page-menu")) {
+			if (event.dataTransfer.types.indexOf("page-menu") >= 0) {
 				event.preventDefault();
 			}
-			else if (event.dataTransfer.getData("component-alias")) {
+			else if (event.dataTransfer.types.indexOf("component-alias") >= 0) {
 				event.preventDefault();
 			}
-			else if (event.dataTransfer.getData("structure-content")) {
+			else if (event.dataTransfer.types.indexOf("structure-content") >= 0) {
 				event.preventDefault();
 			}
 		},
@@ -2002,9 +2005,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 		},
 		dragOver: function($event, row) {
-			var data = $event.dataTransfer.getData("component-alias");
+			var data = $event.dataTransfer.types.indexOf("component-alias") >= 0;
 			if (!data) {
-				data = $event.dataTransfer.getData("structure-content");	
+				data = $event.dataTransfer.types.indexOf("structure-content") >= 0;
 			}
 			// TODO: in the future also drop page-cell and page-row from the side menu?
 			if (data) {
@@ -3271,10 +3274,10 @@ Vue.component("page-sidemenu", {
 			}
 		},
 		acceptDragRow: function(event, row) {
-			if (event.dataTransfer.getData("page-cell")) {
+			if (event.dataTransfer.types.indexOf("page-cell") >= 0) {
 				event.preventDefault();
 			}
-			else if (event.dataTransfer.getData("page-row")) {
+			else if (event.dataTransfer.types.indexOf("page-row") >= 0) {
 				this.$services.page.pushDragItem(event.target);
 				var rect = event.target.getBoundingClientRect();
 				if (Math.abs(event.clientY - rect.top) >= rect.height / 2) {
@@ -3289,10 +3292,10 @@ Vue.component("page-sidemenu", {
 			}
 		},
 		acceptDragCell: function(event, row, cell) {
-			if (event.dataTransfer.getData("page-row")) {
+			if (event.dataTransfer.types.indexOf("page-row") >= 0) {
 				event.preventDefault();
 			}
-			else if (event.dataTransfer.getData("page-cell")) {
+			else if (event.dataTransfer.types.indexOf("page-cell") >= 0) {
 				this.$services.page.pushDragItem(event.target);
 				var rect = event.target.getBoundingClientRect();
 				if (Math.abs(event.clientY - rect.top) >= rect.height / 2) {
