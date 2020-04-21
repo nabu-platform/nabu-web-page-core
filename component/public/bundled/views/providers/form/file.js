@@ -5,8 +5,9 @@ Vue.component("page-form-input-file-configure", {
 		+ "		<span @click='field.fileTypes.splice(i)' class='fa fa-times'></span>"
 		+ "</n-form-section>"
 		+ "<button @click=\"field.fileTypes ? field.fileTypes.push(null) : $window.Vue.set(field, 'fileTypes', [null])\"><span class='fa fa-plus'></span>Filetype</button>"
-		+ "<n-form-combo v-model='field.contentType' label='Field to store content type' :items='possibleFields'/>"
-		+ "<n-form-combo v-model='field.fileName' label='Field to store file name' :items='possibleFields'/>"
+		// ignore body as this presumes a pure binary upload, we use headers then
+		+ "<n-form-combo v-if=\"field.name && field.name != 'body'\" v-model='field.contentType' label='Field to store content type' :items='possibleFields'/>"
+		+ "<n-form-combo v-if=\"field.name && field.name != 'body'\" v-model='field.fileName' label='Field to store file name' :items='possibleFields'/>"
 		+ "</n-form-section>",
 	props: {
 		cell: {
