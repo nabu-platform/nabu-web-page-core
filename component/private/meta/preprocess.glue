@@ -1,0 +1,2 @@
+for (file : file.list("web/provided/preprocess", fileRegex: "\.glue"))
+	console("checking file", file)

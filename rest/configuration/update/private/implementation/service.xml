@@ -43,6 +43,44 @@
 			<from>resultd1f5790a1de046a780abcce1e9bf2cff/configuration</from>
 			<to>configuration</to>
 		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="5f6406f8-6c59-45be-a494-305ac195b391"
+				serviceId="nabu.web.application.Services.configuration"
+				resultName="result88e9c886bcd54b4986e2d400071f05c8"
+				temporaryMapping="true"
+				x="85"
+				y="173"
+				invocationOrder="0"
+				asynchronous="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="24991e07-a79d-4fd8-b46b-a42f8d9991d6"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>nabu.web.page.core.types.environmentConfiguration</from>
+				<to>typeId</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="2bbec3d7-30d7-4f1d-ad8a-3a681a10d51d"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/webApplicationId</from>
+				<to>webApplicationId</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="05e02c38-a035-4098-bee8-424be593b562"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>result88e9c886bcd54b4986e2d400071f05c8/configuration</from>
+			<to>environmentSpecificConfiguration</to>
+		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"
@@ -128,6 +166,15 @@
 			<from>input/content/geoRefusalTimeout</from>
 			<to>configuration/geoRefusalTimeout</to>
 		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="5a6e14ce-717a-479b-9aa2-855de214338b"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>input/content/environmentProperties</from>
+			<to>environmentSpecificConfiguration/properties</to>
+		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"
@@ -159,6 +206,44 @@
 					fixedValue="false">
 				<from>configuration</from>
 				<to>configuration</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="8448a931-4b77-4447-bc10-fed78cfd3157"
+				serviceId="nabu.web.application.Services.configure"
+				resultName="result70944627fc284aa38799cabf14ff9e50"
+				temporaryMapping="true"
+				x="30"
+				y="316"
+				invocationOrder="0"
+				asynchronous="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="eaf674de-998a-401d-aa45-87604d3eb5c9"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/webApplicationId</from>
+				<to>webApplicationId</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="ddd132a3-2ea5-4641-a3a3-387944a62f1f"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>environmentSpecificConfiguration</from>
+				<to>configuration</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="99d0f922-ffe4-438f-a9d3-7ce13c82c5c0"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>true</from>
+				<to>environmentSpecific</to>
 			</steps>
 		</steps>
 	</steps>

@@ -145,6 +145,62 @@ nabu.page.views.PageForm = Vue.extend({
 		});
 	},
 	methods: {
+		generateForm: function() {
+			var self = this;
+			var page = this.cell.state.pages[0];
+			this.fieldsToAdd.forEach(function(field) {
+				if (field != "body") {
+					var parts = field.split(".");
+					var schema = self.getSchemaFor(field);
+					var type = "text";
+					var textType = null;
+					
+					var add = {
+						arbitrary: false,
+						name: field,
+						label: "%" + "{" + self.$services.formatter.conventionize(parts[parts.length - 1]) + "}",
+						description: null,
+						type: "text",
+						enumerations: [],
+						value: null,
+						group: null,
+						joinGroup: false
+					};
+					
+					if (schema.format && schema.format.indexOf("date") >= 0) {
+						add.type = "date";
+					}
+					else if (schema.type == "boolean") {
+						add.type = "switch";
+					}
+					else if (schema.type == "integer") {
+						add.textType = "number";
+					}
+					// if we have a uuid as target, it is definitely not a regular input field
+					// you probably want a resolver method or masterdata
+					// for masterdata, the category is usually named the same as the value (minus Id)
+					// it is pretty hard to deduce what enumeration service you want at this point...
+					else if (schema.format == "uuid") {
+						add.type = "enumeration-operation";
+						var fieldName = parts[parts.length - 1];
+						if (fieldName.substring(fieldName.length - 2, fieldName.length) == "Id") {
+							fieldName = fieldName.substring(0, fieldName.length - 2);
+							if (self.$services.masterdata.categories.filter(function(x) { return x.name == fieldName })) {
+								add.enumerationOperation = "nabu.cms.core.rest.masterdata.category.suggest";
+								add.enumerationOperationLabel = "label";
+								add.enumerationOperationValue = "id";
+								add.enumerationOperationQuery = "q";
+							}
+						}
+					}
+					// if we see a "password" field, use that type
+					else if (field.indexOf("password") >= 0) {
+						add.type = "password";
+					}
+					page.fields.push(add);
+				}
+			});
+		},
 		dragOver: function($event) {
 			var data = $event.dataTransfer.getData("form-name");
 			console.log("dragged", data);

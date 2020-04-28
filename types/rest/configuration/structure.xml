@@ -5,4 +5,5 @@
     <structure definition="nabu.web.page.core.rest.configuration.content" maxOccurs="unbounded" minOccurs="0" name="contents"/>
     <structure definition="nabu.web.page.core.types.translation" maxOccurs="unbounded" minOccurs="0" name="translations"/>
     <field maxOccurs="unbounded" minOccurs="0" name="enabledFeatures" type="java.lang.String"/>
+    <structure definition="nabu.utils.types.Property" maxOccurs="unbounded" minOccurs="0" name="environmentProperties"/>
 </structure>

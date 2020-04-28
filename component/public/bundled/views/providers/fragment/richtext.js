@@ -1,5 +1,7 @@
 Vue.component("page-field-fragment-richtext-configure", {
-	template: "<n-form-section><n-form-richtext v-model='fragment.content'/></n-form-section>",
+	template: "<n-form-section><n-form-richtext v-model='fragment.content'/>"
+		+ "		<n-form-switch label='Compile' v-model='fragment.compile'/>"
+		+ "	</n-form-section>",
 	props: {
 		cell: {
 			type: Object,
@@ -23,7 +25,7 @@ Vue.component("page-field-fragment-richtext-configure", {
 });
 
 Vue.component("page-field-fragment-richtext", {
-	template: "<div v-content.compile.sanitize='$services.page.translate(fragment.content)'></div>",
+	template: "<div v-content.parameterized='{value:$services.page.translate(fragment.content), sanitize:true, compile: fragment.compile }'></div>",
 	props: {
 		cell: {
 			type: Object,

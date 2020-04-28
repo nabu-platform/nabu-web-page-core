@@ -5,7 +5,7 @@
     <role>editor</role>
     <permissionContext>="webApplication:" + input/webApplicationId</permissionContext>
     <permissionAction>page.edit</permissionAction>
-    <input>nabu.web.page.core.types.rest.configurationInput</input>
+    <input>nabu.web.page.core.rest.configuration.updateInput</input>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
     <language>false</language>

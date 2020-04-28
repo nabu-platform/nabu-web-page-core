@@ -82,7 +82,18 @@ window.addEventListener("load", function() {
 			name: "Form",
 			category: "Form",
 			description: "This is a form container that encapsulates simple forms",
-			icon: "page/core/images/form.svg"
+			icon: "page/core/images/form.svg",
+			accept: function(type, value) {
+				if (type == "operation") {
+					var operation = $services.swagger.operations[value];
+					return (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "post" || operation.method.toLowerCase() == "delete" || operation.method.toLowerCase() == "patch");         
+				}
+			},
+			initialize: function(type, value, component, cell, row, page) {
+				console.log("initializeing", component);
+				cell.state.operation = value;
+				component.generateForm();
+			}
 		});
 		
 		$services.router.register({

@@ -1,3 +1,13 @@
+Vue.view("page-components-selector", {
+	props: {
+		// the list of routes that we want to choose from
+		components: {
+			type: Array,
+			required: true
+		}
+	}
+});
+
 Vue.component("page-components-overview", {
 	template: "#page-components-overview",
 	computed: {
@@ -48,6 +58,54 @@ Vue.component("page-components-overview", {
 		}
 	},
 	methods: {
+		getOperationIds: function() {
+			return Object.keys(this.$services.swagger.operations)
+				.filter(function(x) {
+					return x.indexOf("nabu.cms.dynamic.") < 0
+						&& x.indexOf("nabu.web.page.") < 0
+						&& x.indexOf("nabu.page.") < 0
+						&& x != "nabu.passwordProtect";
+				})
+		},
+		getOperationCategories: function() {
+			var self = this;
+			var tags = [];
+			this.getOperationIds().forEach(function(operationId) {
+				var operation = self.$services.swagger.operations[operationId];
+				if (operation && operation.tags) {
+					operation.tags.forEach(function(tag) {
+						if (tags.indexOf(tag) < 0) {
+							tags.push(tag);
+						}	
+					});
+				}
+			});
+			tags.sort();
+			return tags;
+		},
+		getOperationCategory: function(category) {
+			var self = this;
+			var operations = [];
+			this.getOperationIds().forEach(function(operationId) {
+				var operation = self.$services.swagger.operations[operationId];
+				if (operation && operation.tags && operation.tags.indexOf(category) >= 0) {
+					operations.push(operation);
+				}
+			});
+			return operations;
+		},
+		dragOperation: function(event, operation) {
+			this.$services.page.setDragData(event, "operation", operation.id);
+		},
+		prettyPrintOperation: function(id) {
+			return id.replace(/.*\.([^.]+)\.([^.]+)$/, "$1.$2");
+		},
+		operationFolder: function(id) {
+			var pretty = this.prettyPrintOperation(id);
+			if (id.length > pretty.length) {
+				return id.substring(0, id.length - pretty.length - 1);
+			}
+		},
 		getStructureCategory: function(category) {
 			return this.structures.filter(function(x) {
 				return x.category == category || (category == "Miscellaneous" && x.category == null);
@@ -59,13 +117,13 @@ Vue.component("page-components-overview", {
 			});
 		},
 		dragComponent: function(event, component) {
-			event.dataTransfer.setData("component-alias", component.alias);
+			this.$services.page.setDragData(event, "component-alias", component.alias);
 			if (component.form) {
-				event.dataTransfer.setData("form-name", component.form);
+				this.$services.page.setDragData(event, "form-name", component.form);
 			}
 		},
 		dragStructure: function(event, structure) {
-			event.dataTransfer.setData("structure-content", JSON.stringify(structure.content));
+			this.$services.page.setDragData(event, "structure-content", JSON.stringify(structure.content));
 		},
 		prettyPrint: function(name) {
 			name = name.replace(/([A-Z]+)/, " $1");

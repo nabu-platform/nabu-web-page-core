@@ -23,29 +23,30 @@
 							<n-form-text v-model="$services.page.googleSiteVerification" label="Google site verification code" :timeout="600" @input="$services.page.saveConfiguration"/>
 							<n-form-text v-model="$services.page.geoRefusalTimeout" label="Timeout (in hours) that a geo refusal is stored" info="No timeout means we have no geo enabled" type="number" :timeout="600" @input="$services.page.saveConfiguration"/>
 						</div>
-						<div class="list-actions">
-							<button @click="$services.page.properties.push({key:null,value:null})">Add property</button>
-						</div>
-						<div class="padded-content">
-							<div class="list-row" v-for="property in $services.page.properties">
-								<n-form-text v-model="property.key" label="Key" :timeout="600" @input="$services.page.saveConfiguration"/>
-								<n-form-text v-model="property.value" label="Value" :timeout="600" @input="$services.page.saveConfiguration"/>
-								<span @click="$services.page.properties.splice($services.page.properties.indexOf(property), 1); $services.page.saveConfiguration()" class="fa fa-times"></span>
+						<n-collapsible class="layout2 list-item" title="Application Properties">
+							<div class="padded-content">
+								<div class="list-row" v-for="property in $services.page.properties">
+									<n-form-text v-model="property.key" label="Key" :timeout="600" @input="$services.page.saveConfiguration"/>
+									<n-form-text v-model="property.value" label="Value" :timeout="600" @input="$services.page.saveConfiguration"/>
+									<span @click="$services.page.properties.splice($services.page.properties.indexOf(property), 1); $services.page.saveConfiguration()" class="fa fa-times"></span>
+								</div>
 							</div>
-						</div>
-					</n-collapsible>
-					<n-collapsible title="Imports" class="main">
-						<div class="list-actions">
-							<button @click="$services.page.imports.push({link:null, type: 'javascript', async: true})">Add Link</button>
-						</div>
-						<div class="padded-content">
-							<div class="list-row" v-for="single in $services.page.imports">
-								<n-form-text v-model="single.link" :required="true" label="Link" :timeout="600" @input="$services.page.saveConfiguration"/>
-								<n-form-combo v-if="false" v-model="single.type" :items="['javascript', 'css']" label="Type" :timeout="600" @input="$services.page.saveConfiguration"/>
-								<n-form-switch v-model="single.async" label="Asynchronous" :timeout="600" @input="$services.page.saveConfiguration"/>
-								<span @click="$services.page.imports.splice($services.page.imports.indexOf(single), 1); $services.page.saveConfiguration()" class="fa fa-times"></span>
+							<div class="list-actions">
+								<button @click="$services.page.properties.push({key:null,value:null})"><span class="fa fa-plus"></span>property</button>
 							</div>
-						</div>
+						</n-collapsible>
+						<n-collapsible class="layout2 list-item" title="Application Environment Specific Properties">
+							<div class="padded-content">
+								<div class="list-row" v-for="property in $services.page.environmentProperties">
+									<n-form-text v-model="property.key" label="Key" :timeout="600" @input="$services.page.saveConfiguration"/>
+									<n-form-text v-model="property.value" label="Value" :timeout="600" @input="$services.page.saveConfiguration"/>
+									<span @click="$services.page.environmentProperties.splice($services.page.environmentProperties.indexOf(property), 1); $services.page.saveConfiguration()" class="fa fa-times"></span>
+								</div>
+							</div>
+							<div class="list-actions">
+								<button @click="$services.page.environmentProperties.push({key:null,value:null})"><span class="fa fa-plus"></span> environment specific property</button>
+							</div>
+						</n-collapsible>
 					</n-collapsible>
 					<n-collapsible title="Devices" class="main">
 						<div class="list-actions">
@@ -148,6 +149,19 @@
 					</n-collapsible>
 				</div>
 				<div class="pane">
+					<n-collapsible title="Imports" class="main">
+						<div class="list-actions">
+							<button @click="$services.page.imports.push({link:null, type: 'javascript', async: true})"><span class="fa fa-plus"></span>Import</button>
+						</div>
+						<div class="padded-content">
+							<div class="list-row" v-for="single in $services.page.imports">
+								<n-form-text v-model="single.link" :required="true" label="Link" :timeout="600" @input="$services.page.saveConfiguration"/>
+								<n-form-combo v-if="false" v-model="single.type" :items="['javascript', 'css']" label="Type" :timeout="600" @input="$services.page.saveConfiguration"/>
+								<n-form-switch v-model="single.async" label="Asynchronous" :timeout="600" @input="$services.page.saveConfiguration"/>
+								<span @click="$services.page.imports.splice($services.page.imports.indexOf(single), 1); $services.page.saveConfiguration()" class="fa fa-times"></span>
+							</div>
+						</div>
+					</n-collapsible>
 					
 					<n-collapsible title="Installed Bundles" class="main">
 						

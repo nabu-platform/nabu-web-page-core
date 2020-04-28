@@ -2,4 +2,5 @@
     <structure name="input"/>
     <structure name="output"/>
     <structure comment="Nabu Page Builder configuration options" definition="nabu.web.page.core.types.configuration" name="configuration"/>
+    <structure comment="Nabu Page Builder environment specific configuration options" definition="nabu.web.page.core.types.environmentConfiguration" name="environmentSpecificConfiguration"/>
 </structure>

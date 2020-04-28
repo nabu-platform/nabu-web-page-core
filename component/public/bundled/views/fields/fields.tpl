@@ -66,6 +66,7 @@
 <template id="page-formatted-configure">
 	<div class="page-formatted-configure">
 		<n-form-combo v-model="fragment.format" label="Format as" :items="types"/>
+		<n-form-switch v-model="fragment.compile" label="Compile content" v-if="!skipCompile"/>
 		<n-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
 		<n-ace v-if="fragment.format == 'html'" mode="html" v-model="fragment.html"/>
 		<n-form-text v-if="fragment.format == 'number'" v-model="fragment.amountOfDecimals" label="Amount of decimals"/>

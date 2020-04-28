@@ -456,7 +456,16 @@ Vue.component("page-formatted-configure", {
 			nabu.utils.arrays.merge(types, nabu.page.providers("page-format").map(function(x) { return x.name }));
 			types.sort();
 			return types;
-		}	
+		},
+		skipCompile: function() {
+			var self = this;
+			// don't compile literals
+			if (this.fragment.format == "literal") {
+				return true;
+			}
+			var formatter = nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0];
+			return formatter && formatter.skipCompile;
+		}
 	},
 	methods: {
 		isProvided: function(type) {
@@ -487,7 +496,7 @@ Vue.component("page-formatted-configure", {
 });
 
 Vue.component("page-formatted", {
-	template: "<component :is='tag' v-content.parameterized=\"{value:formatted,plain:fragment.format == 'text', sanitize: !isHtml, compile: !skipCompile }\"/>",
+	template: "<component :is='tag' v-content.parameterized=\"{value:formatted,plain:fragment.format == 'text', sanitize: !isHtml, compile: fragment.compile && !skipCompile }\"/>",
 	props: {
 		page: {
 			type: Object,
@@ -555,7 +564,7 @@ Vue.component("page-formatted", {
 				return this.value;
 			}
 			else if (this.fragment.format == "literal") {
-				return this.value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+				return this.value.replace ? this.value.replace(/</g, "&lt;").replace(/>/g, "&gt;") : null;
 			}
 			else if (this.fragment.format == "html") {
 				return this.fragment.html ? this.fragment.html : this.value;

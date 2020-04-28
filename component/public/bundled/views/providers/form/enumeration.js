@@ -158,7 +158,7 @@ Vue.component("page-form-input-enumeration", {
 			}
 			else if (value) {
 				if (value.value) {
-					return this.$services.page.translate(value.value, this);
+					return this.$services.page.interpret(this.$services.page.translate(value.value, this), this);
 				}
 				else {
 					return value.key;

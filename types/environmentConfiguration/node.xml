@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?><node artifactManager="be.nabu.eai.module.types.structure.StructureManager" created="2020-04-21T15:09:08.070+02:00" lastModified="2020-04-21T15:09:53.198+02:00" leaf="true" version="3"><environmentId>apollo</environmentId><hidden>false</hidden><properties/><references>nabu.utils.types.Property</references></node>

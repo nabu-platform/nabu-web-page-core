@@ -59,6 +59,49 @@
 		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			comment="Get environment specific properties"
+			disabled="false"
+			id="7ca7721d-0968-4aeb-b341-2bb29be64251">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="b71e6d47-daee-4412-b6b0-3a016cddeb68"
+				serviceId="nabu.web.application.Services.configuration"
+				resultName="result69f0a87c25af48b3b71a7c4e495eb47d"
+				temporaryMapping="true"
+				x="114"
+				y="47"
+				invocationOrder="0"
+				asynchronous="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="81b569bf-d8ad-4d8e-88d7-975c1e8a6deb"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>nabu.web.page.core.types.environmentConfiguration</from>
+				<to>typeId</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="024e1c2f-b44c-4e64-a10f-c61dd0a1829b"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/webApplicationId</from>
+				<to>webApplicationId</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="debb41a8-eb9a-46e9-a45d-13d47155ad36"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>result69f0a87c25af48b3b71a7c4e495eb47d/configuration</from>
+			<to>environmentSpecific</to>
+		</steps>
+	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			comment="Get the pages"
 			disabled="false"
 			id="5ce53c8f-069b-4792-875a-da3d71a5e81d">
@@ -513,6 +556,69 @@
 				fixedValue="false">
 			<from>result97e0f8c59db644f5bfd7d3a3c0b189f3/response</from>
 			<to>output/content/testable</to>
+		</steps>
+	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Switch"
+			disabled="false"
+			id="1f608c72-cfe9-492b-8216-12459b372726"
+			query="output/content/editable">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+				comment="If you can edit, we need to be able to differentiate between environment specific and not"
+				disabled="false"
+				id="45404ca2-1660-444d-a148-c638ff8aa854"
+				label="true">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="07e44f73-d5a2-4406-9bc8-e82e8cfd314f"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>environmentSpecific/properties</from>
+				<to>output/content/environmentProperties</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+				comment="If you can't edit, we add the properties to the generic properties. No need to leak this tiny bit of implementation detail"
+				disabled="false"
+				id="3aaae422-3f76-4adf-ae58-f6654887c7b5">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+					disabled="false"
+					id="8969083a-715a-4dc0-94c2-73800c0d2a85"
+					serviceId="nabu.utils.List.addAll"
+					resultName="resulte829d1f014a9492f8e0c452be780191d"
+					temporaryMapping="true"
+					x="228"
+					y="112"
+					invocationOrder="0"
+					asynchronous="false">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="e5f4bced-c2be-466e-b0d6-a70c2fbee886"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>environmentSpecific/properties</from>
+					<to>objects</to>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="37c65b7a-1a40-47cd-895f-2c28e7bd1192"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>output/content/properties</from>
+					<to>list</to>
+				</steps>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="c247815f-3c97-418a-a3ac-73a8ba8ee81c"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>resulte829d1f014a9492f8e0c452be780191d/list</from>
+				<to>output/content/properties</to>
+			</steps>
 		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"

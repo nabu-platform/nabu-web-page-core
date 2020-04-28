@@ -597,41 +597,44 @@ nabu.page.views.Page = Vue.component("n-page", {
 			});
 		},
 		dragMenu: function(event) {
-			event.dataTransfer.setData("page-menu", this.page.name);
+			this.$services.page.setDragData(event, "page-menu", this.page.name);
 		},
 		// apparently you can't (in chrome at least) access the data during drag
 		// this is to prevent inspecting data that is accidently dragged over your website
 		// we _can_ however access the list of data types that is available
 		dragOver: function(event) {
-			if (event.dataTransfer.types.indexOf("page-menu") >= 0) {
+			if (this.$services.page.hasDragData(event, "page-menu")) {
 				event.preventDefault();
 			}
-			else if (event.dataTransfer.types.indexOf("component-alias") >= 0) {
+			else if (this.$services.page.hasDragData(event, "component-alias")) {
 				event.preventDefault();
 			}
-			else if (event.dataTransfer.types.indexOf("structure-content") >= 0) {
+			else if (this.$services.page.hasDragData(event, "structure-content")) {
+				event.preventDefault();
+			}
+			else if (this.$services.page.hasDragData(event, "operation")) {
 				event.preventDefault();
 			}
 		},
 		dropMenu: function(event) {
 			var self = this;
-			if (event.dataTransfer.getData("page-menu")) {
+			if (this.$services.page.getDragData(event, "page-menu")) {
 				var rect = this.$el.getBoundingClientRect();
 				Vue.set(this.page.content, "menuX", event.clientX - rect.left);
 				Vue.set(this.page.content, "menuY", event.clientY - rect.top);
 				event.preventDefault();
 				event.stopPropagation();
 			}
-			if (event.dataTransfer.getData("component-alias")) {
+			if (this.$services.page.getDragData(event, "component-alias")) {
 				console.log("dropping component-alias");
 				var row = this.addRow(this.page.content);
 				var cell = this.addCell(row);
-				cell.alias = event.dataTransfer.getData("component-alias");
+				cell.alias = this.$services.page.getDragData(event, "component-alias");
 				event.preventDefault();
 				event.stopPropagation();
 			}
-			if (event.dataTransfer.getData("structure-content")) {
-				var content = JSON.parse(event.dataTransfer.getData("structure-content"));
+			if (this.$services.page.getDragData(event, "structure-content")) {
+				var content = JSON.parse(this.$services.page.getDragData(event, "structure-content"));
 				if (content.rows instanceof Array) {
 					var rows = content.rows.map(function(x) {
 						return self.$services.page.renumber(self.page, x);	
@@ -641,6 +644,76 @@ nabu.page.views.Page = Vue.component("n-page", {
 				if (content.actions instanceof Array) {
 					nabu.utils.arrays.merge(this.page.content.actions, content.actions);
 				}
+				event.preventDefault();
+				event.stopPropagation();
+			}
+			if (this.$services.page.getDragData(event, "operation")) {
+				this.initializeOperation(function() {
+					return self.addRow(self.page.content);
+				}, function(row) {
+					return self.addCell(row);
+				});
+				event.preventDefault();
+				event.stopPropagation();
+			}
+		},
+		initializeOperation: function(rowGenerator, cellGenerator) {
+			var self = this;
+			var content = this.$services.page.getDragData(event, "operation");
+			if (content) {
+				if (this.$services.swagger.operations[content]) {
+					this.initializeOperationInternal(rowGenerator, cellGenerator, content);
+				}
+				// if we can't find the operation, reload the swagger and try again
+				// if it's still not there, we fail
+				else {
+					this.$services.page.reloadSwagger().then(function() {
+						console.log("reloaded swagger...", content, );
+						if (self.$services.swagger.operations[content]) {
+							self.initializeOperationInternal(rowGenerator, cellGenerator, content);
+						}
+						else {
+							console.error("Can not find operation", content);
+						}
+					});
+				}
+			}
+		},
+		initializeOperationInternal: function(rowGenerator, cellGenerator, content) {
+			console.log("initializing operation", content);
+			var self = this;
+			var acceptedRoutes = this.$services.router.router.list().filter(function(route) {
+				return route.accept && route.accept("operation", content);
+			});
+			// if we have multiple routes, only choose correctly annotated routes that we can ask the user which he wants
+			if (acceptedRoutes.length > 1) {
+				acceptedRoutes = acceptedRoutes.filter(function(x) {
+					return x.icon && x.name;	
+				});
+			}
+			var runRoute = function(route) {
+				var row = rowGenerator();
+				var cell = cellGenerator(row);
+				if (route.initialize) {
+					cell.$$initialize = function(instance) {
+						route.initialize("operation", content, instance, cell, row, self);
+					}
+				}
+				cell.alias = route.alias;
+				event.preventDefault();
+				event.stopPropagation();
+			};
+			// if there is only one, execute it immediately
+			if (acceptedRoutes.length == 1) {
+				runRoute(acceptedRoutes[0]);
+			}
+			// if we have multiple, show a popup
+			else if (acceptedRoutes.length > 1) {
+				this.$prompt("page-components-selector", {components: acceptedRoutes}).then(function(chosen) {
+					if (chosen) {
+						runRoute(chosen);
+					}	
+				});
 			}
 		},
 		save: function(event) {
@@ -725,6 +798,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 			return this.refs[reference];
 		},
 		mounted: function(cell, row, state, component) {
+			// run the initializer function (if any) with the component instance
+			if (cell.$$initialize) {
+				cell.$$initialize(component);
+				cell.$$initialize = null;
+			}
+			
 			var self = this;
 			
 			if (cell.ref) {
@@ -1578,6 +1657,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 				var value = this.$services.page.properties.filter(function(x) {
 					return x.key == name;
 				})[0];
+				if (value == null) {
+					this.$services.page.environmentProperties.filter(function(x) {
+						return x.key == name;
+					})[0];
+				}
 				return value ? value.value : null;
 			}
 			else if (name.indexOf("page.") == 0) {
@@ -1911,7 +1995,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 	methods: {
 		drop: function(event, row) {
 			var self = this;
-			var data = event.dataTransfer.getData("component-alias");
+			var data = this.$services.page.getDragData(event, "component-alias");
 			var rowTarget = document.getElementById(this.page.name + '_' + row.id);
 			var rect = rowTarget.getBoundingClientRect();
 			var below = Math.abs(event.clientY - rect.top) >= rect.height - (rect.height / 6);
@@ -1939,7 +2023,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				event.stopPropagation();
 			}
 			else {
-				data = event.dataTransfer.getData("structure-content");
+				data = this.$services.page.getDragData(event, "structure-content");
 				if (data) {
 					var structure = JSON.parse(data);
 					if (structure.type == "page-row") {
@@ -2005,9 +2089,10 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 		},
 		dragOver: function($event, row) {
-			var data = $event.dataTransfer.types.indexOf("component-alias") >= 0;
+			var data = this.$services.page.hasDragData($event, "component-alias");
+			console.log("dragging over row", $event, data);
 			if (!data) {
-				data = $event.dataTransfer.types.indexOf("structure-content") >= 0;
+				data = this.$services.page.hasDragData($event, "structure-content");
 			}
 			// TODO: in the future also drop page-cell and page-row from the side menu?
 			if (data) {
@@ -3262,22 +3347,22 @@ Vue.component("page-sidemenu", {
 			this.$services.page.copiedRow = null;
 		},
 		dragCell: function(event, row, cell) {
-			event.dataTransfer.setData("page-cell", cell.id);
+			this.$services.page.setDragData(event, "page-cell", cell.id);
 			if (event.ctrlKey) {
-				event.dataTransfer.setData("drag-action", "copy");	
+				this.$services.page.setDragData(event, "drag-action", "copy");
 			}
 		},
 		dragRow: function(event, row) {
-			event.dataTransfer.setData("page-row", row.id);
+			this.$services.page.setDragData(event, "page-row", row.id);
 			if (event.ctrlKey) {
-				event.dataTransfer.setData("drag-action", "copy");	
+				this.$services.page.setDragData(event, "drag-action", "copy");
 			}
 		},
 		acceptDragRow: function(event, row) {
-			if (event.dataTransfer.types.indexOf("page-cell") >= 0) {
+			if (this.$services.page.hasDragData(event, "page-cell")) {
 				event.preventDefault();
 			}
-			else if (event.dataTransfer.types.indexOf("page-row") >= 0) {
+			else if (this.$services.page.hasDragData(event, "page-row")) {
 				this.$services.page.pushDragItem(event.target);
 				var rect = event.target.getBoundingClientRect();
 				if (Math.abs(event.clientY - rect.top) >= rect.height / 2) {
@@ -3292,10 +3377,10 @@ Vue.component("page-sidemenu", {
 			}
 		},
 		acceptDragCell: function(event, row, cell) {
-			if (event.dataTransfer.types.indexOf("page-row") >= 0) {
+			if (this.$services.page.hasDragData(event, "page-row")) {
 				event.preventDefault();
 			}
-			else if (event.dataTransfer.types.indexOf("page-cell") >= 0) {
+			else if (this.$services.page.hasDragData(event, "page-cell")) {
 				this.$services.page.pushDragItem(event.target);
 				var rect = event.target.getBoundingClientRect();
 				if (Math.abs(event.clientY - rect.top) >= rect.height / 2) {
@@ -3310,11 +3395,11 @@ Vue.component("page-sidemenu", {
 			}
 		},
 		dropRow: function(event, row) {
-			var cellId = event.dataTransfer.getData("page-cell");
-			var rowId = event.dataTransfer.getData("page-row");
+			var cellId = this.$services.page.getDragData(event, "page-cell");
+			var rowId = this.$services.page.getDragData(event, "page-row");
 			if (cellId) {
 				var content = this.$services.page.getTarget(this.page.content, cellId);
-				var action = event.dataTransfer.getData("drag-action");
+				var action = this.$services.page.getDragData(event, "drag-action");
 				if (!row.cells) {
 					Vue.set(row, "cells", []);
 				}
@@ -3343,7 +3428,7 @@ Vue.component("page-sidemenu", {
 			}
 			if (rowId && row.id != rowId) {
 				var content = this.$services.page.getTarget(this.page.content, rowId);
-				var action = event.dataTransfer.getData("drag-action");
+				var action = this.$services.page.getDragData(event, "drag-action");
 				var parent = this.$services.page.getTarget(this.page.content, row.id, true);
 				
 				if (action == "copy") {
@@ -3377,12 +3462,12 @@ Vue.component("page-sidemenu", {
 			}
 		},
 		dropCell: function(event, row, cell) {
-			var cellId = event.dataTransfer.getData("page-cell");
-			var rowId = event.dataTransfer.getData("page-row");
+			var cellId = this.$services.page.getDragData(event, "page-cell");
+			var rowId = this.$services.page.getDragData(event, "page-row");
 			// if you drop a cell on a cell, you want to position it before or after it
 			if (cellId && cell.id != cellId) {
 				var content = this.$services.page.getTarget(this.page.content, cellId);
-				var action = event.dataTransfer.getData("drag-action");
+				var action = this.$services.page.getDragData(event, "drag-action");
 				var parent = this.$services.page.getTarget(this.page.content, cell.id, true);
 				
 				if (action == "copy") {
@@ -3415,7 +3500,7 @@ Vue.component("page-sidemenu", {
 			}
 			if (rowId && row.id != rowId) {
 				var content = this.$services.page.getTarget(this.page.content, rowId);
-				var action = event.dataTransfer.getData("drag-action");
+				var action = this.$services.page.getDragData(event, "drag-action");
 				if (action == "copy") {
 					content = JSON.parse(JSON.stringify(content));
 					this.$services.page.renumber(this.page, content);
@@ -3483,7 +3568,7 @@ document.addEventListener("keydown", function(event) {
 }, true);
 
 document.addEventListener("dragend", function() {
-	application.services.page.clearDrag();	
+	application.services.page.clearAllDrag();	
 });
 
 

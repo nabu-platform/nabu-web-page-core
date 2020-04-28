@@ -31,6 +31,7 @@ nabu.services.VueService(Vue.extend({
 			loading: true,
 			// application properties
 			properties: [],
+			environmentProperties: [],
 			// the devices for this application
 			devices: [],
 			// application styles
@@ -71,7 +72,9 @@ nabu.services.VueService(Vue.extend({
 			enabledFeatures: [],
 			// when testing, you can check the available features and toggle them (either on or off)
 			availableFeatures: [],
-			toggledFeatures: []
+			toggledFeatures: [],
+			// the drag/drop doesn't work very well in javafx webview?
+			dragTypes: []
 		}
 	},
 	activate: function(done) {
@@ -187,10 +190,47 @@ nabu.services.VueService(Vue.extend({
 				right.$$close();
 			}
 		},
+		clearAllDrag: function() {
+			this.clearDrag();
+			console.log("-----------> clearing drag");
+			this.dragTypes.splice(0);
+		},
 		clearDrag: function() {
 			this.dragItems.splice(0).forEach(function(x) {
 				x.classList.remove("hover-bottom", "hover-top", "hovering", "hover-left", "hover-right");
-			})
+			});
+		},
+		// this should work both in regular browers and javafx webview where the drag events are more or less messed up
+		setDragData: function(e, type, value) {
+			console.log("-> setting drag data", type, value);
+			if (e && e.dataTransfer && e.dataTransfer.setData) {
+				event.dataTransfer.setData(type, value);
+			}
+			this.dragTypes.push({type: type, value: value});
+		},
+		hasDragData: function(event, type) {
+			console.log("has data", event, type);
+			if (type == "operation" && event && event.dataTransfer && event.dataTransfer.data && event.dataTransfer.data.service) {
+				console.log("dragging native operation");
+				return true;
+			}
+			return (event && event.dataTransfer && event.dataTransfer.types && event.dataTransfer.types.indexOf(type) >= 0)
+				|| this.dragTypes.filter(function(x) { return x.type == type }).length > 0;
+		},
+		getDragData: function(event, type) {
+			var value = event && event.dataTransfer && event.dataTransfer.getData ? event.dataTransfer.getData(type) : null;
+			console.log("getting drag data", type, event, value);
+			if (!value && type == "operation" && event && event.dataTransfer && event.dataTransfer.data && event.dataTransfer.data.service) {
+				value = event.dataTransfer.data.service;
+				console.log("------------> dropped operation", value);
+			}
+			if (!value) {
+				value = this.dragTypes.filter(function(x) { return x.type == type })[0];
+				if (value) {
+					value = value.value;
+				}
+			}
+			return value;
 		},
 		pushDragItem: function(item) {
 			this.clearDrag();
@@ -301,6 +341,7 @@ nabu.services.VueService(Vue.extend({
 				self.testable = configuration.testable;
 				self.pages.splice(0, self.pages.length);
 				self.properties.splice(0, self.properties.length);
+				self.environmentProperties.splice(0);
 				self.devices.splice(0, self.devices.length);
 				self.contents.splice(0);
 				self.translations.splice(0);
@@ -313,6 +354,9 @@ nabu.services.VueService(Vue.extend({
 				}
 				if (configuration.properties) {
 					nabu.utils.arrays.merge(self.properties, configuration.properties);
+				}
+				if (configuration.environmentProperties) {
+					nabu.utils.arrays.merge(self.environmentProperties, configuration.environmentProperties);
 				}
 				if (configuration.devices) {
 					nabu.utils.arrays.merge(self.devices, configuration.devices);
@@ -594,7 +638,11 @@ nabu.services.VueService(Vue.extend({
 				Vue.delete(pageInstance.components, component.cell.id, null);
 			}	
 		},
+		reloadSwagger: function() {
+			return this.$services.swagger.$clear();
+		},
 		reloadCss: function() {
+			this.reloadSwagger();
 			var self = this;
 			nabu.utils.ajax({url:"${server.root()}page/v1/api/css-modified"}).then(function(response) {
 				if (response.responseText != null && !self.disableReload) {
@@ -875,7 +923,37 @@ nabu.services.VueService(Vue.extend({
 					var pageInstance = this.getPageInstance(component.page, component);
 					result = this.getBindingValue(pageInstance, value);
 				}
-				return result;
+				value = result;
+			}
+			if (typeof(value) == "string") {
+				var changed = true;
+				while (changed) {
+					changed = false;
+					var index = value.indexOf("{{");
+					if (index >= 0) {
+						var end = value.indexOf("}}", index);
+						if (end >= index) {
+							var rule = value.substring(index + 2, end);
+							var result = null;
+							var stateOwner = component;
+							while (!stateOwner.localState && stateOwner.$parent) {
+								stateOwner = stateOwner.$parent;
+							}
+							if (stateOwner && stateOwner.localState) {
+								result = this.eval(rule, stateOwner.localState, component);
+							}
+							if (result == null && stateOwner && stateOwner.state) {
+								result = this.eval(rule, stateOwner.state, component);
+							}
+							if (result == null && component.page) {
+								var pageInstance = this.getPageInstance(component.page, component);
+								result = this.getBindingValue(pageInstance, rule);
+							}
+							value = value.substring(0, index) + (result == null ? "" : result) + value.substring(end + 2);
+							changed = true;
+						}
+					}
+				}
 			}
 			return value;
 		},
@@ -1050,7 +1128,7 @@ nabu.services.VueService(Vue.extend({
 				condition = condition.replace("@" + "{" + x + "}", "true");
 			});
 			// replace all the disabled features with false
-			condition = condition.replace(/@\\{[^}]+\\}/m, "false");
+			condition = condition.replace(/@\{[^}]+\}/gm, "false");
 			
 			if (this.useEval) {
 				try {
@@ -1169,6 +1247,7 @@ nabu.services.VueService(Vue.extend({
 					home: this.home,
 					homeUser: this.homeUser,
 					properties: self.properties,
+					environmentProperties: self.environmentProperties,
 					devices: self.devices,
 					imports: self.imports,
 					state: self.applicationState,
@@ -1930,7 +2009,7 @@ nabu.services.VueService(Vue.extend({
 			var arrays = [];
 			// get all the arrays available in the page itself
 			// TODO: filter events that you are not registered on?
-			var parameters = this.getAvailableParameters(page);
+			var parameters = this.getAvailableParameters(page, null, true);
 			Object.keys(parameters).map(function(key) {
 				nabu.utils.arrays.merge(arrays, self.getArrays(parameters[key]).map(function(x) { return x == null ? key : key + "." + x }));
 			});
@@ -2133,6 +2212,9 @@ nabu.services.VueService(Vue.extend({
 			this.properties.map(function(property) {
 				parameters.properties[property.key] = property;
 			});
+			this.environmentProperties.map(function(property) {
+				parameters.properties[property.key] = property;
+			});
 			return parameters;
 		},
 		getProvidedParameters: function() {
@@ -2241,6 +2323,17 @@ nabu.services.VueService(Vue.extend({
 				url: "/",
 				priority: 1
 			});
+		},
+		dropOperationInto(operation, cell, failIfMissing) {
+			var self = this;
+			if (this.$services.swagger.operations[operation]) {
+				console.log("Dropping", operation);
+			}
+			else if (!failIfMissing) {
+				this.reloadSwagger().then(function() {
+					self.dropOperationInto(operation, cell, true);
+				});
+			}
 		}
 	},
 	watch: {

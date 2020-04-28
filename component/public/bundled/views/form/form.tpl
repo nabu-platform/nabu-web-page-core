@@ -16,6 +16,9 @@
 						v-if="!cell.state.operation && !cell.state.pageForm"/>
 					<n-form-combo label="Function" v-model="cell.state.functionId" v-if="cell.state.functionForm" 
 						:filter="$services.page.listFunctions"/>
+					<div class="list-actions">
+						<button @click="generateForm"><span>Generate form</span></button>
+					</div>
 					<n-form-text v-model="cell.state.title" label="Title"/>
 					<n-form-text v-model="cell.state.formId" label="Form Id"/>
 					<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
@@ -235,7 +238,7 @@
 		<n-form-text v-model="field.disabled" label="Disable field if" />
 		<n-form-text v-model="field.group" label="Field Group" v-if="groupable && !field.joinGroup" />
 		<n-form-checkbox v-model="field.joinGroup" label="Join Field Group" v-if="groupable && !field.group" />
-		<n-form-text v-model="field.description" label="Description" v-if="allowDescription" />
+		<n-form-text v-model="field.description" label="Description" v-if="false && allowDescription" />
 		<n-form-combo v-model="field.descriptionType" label="Description type" v-if="field.description" :items="['info','before','after']"/>
 		<n-form-text v-model="field.descriptionIcon" label="Description icon" v-if="field.description"/>
 		<n-form-combo v-model="field.type" :filter="filterTypes" label="Type"/>
@@ -249,7 +252,7 @@
 			:schema="schema"
 			:field="field"/>
 			
-		<page-event-value class="no-more-padding" :page="page" :container="field" title="Validation Success Event" name="validationSuccessEvent" @resetEvents="resetEvents"/>
+		<page-event-value class="no-more-padding" :page="page" :container="field" title="Validation Success Event" name="validationSuccessEvent" @resetEvents="$emit('resetEvents')"/>
 		
 		<div class="list-actions">
 			<button @click="field.styles == null ? $window.Vue.set(field, 'styles', [{class:null,condition:null}]) : field.styles.push({class:null,condition:null})">Add Style</button>

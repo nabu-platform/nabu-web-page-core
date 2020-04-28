@@ -120,6 +120,10 @@ nabu.services.VueService(Vue.extend({
 				input = parseFloat(input);
 			}
             return input.toFixed(amountOfDecimals);
+		},
+		conventionize: function(value) {
+			// we currently assume from lower camelcase to word
+			return value.substring(0, 1).toUpperCase() + value.substring(1).replace(/([A-Z]+)/g, " $1");
 		}
 	}
 }), { name: "nabu.page.services.Formatter" });
