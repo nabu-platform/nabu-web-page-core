@@ -2,6 +2,8 @@ Vue.component("page-field-fragment-javascript-configure", {
 	template: "<n-form-section>"
 		+ "		<n-ace mode='javascript' v-model='fragment.content'/>"
 		+ "		<n-form-combo label='Type' v-model='fragment.tag' :items=\"['span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div']\"/>"
+		+ "		<n-form-switch v-model='fragment.html' label='Allow html'/>"
+		+ "		<n-form-switch v-model='fragment.compile' label='Compile'/>"
 		+ "</n-form-section>",
 	props: {
 		cell: {
@@ -29,7 +31,7 @@ Vue.component("page-field-fragment-javascript-configure", {
 });
 
 Vue.component("page-field-fragment-javascript", {
-	template: "<component :is='tag'>{{value}}</component>",
+	template: "<component :is='tag' v-content.parameterized='{value:value,plain:!fragment.html,compile:!!fragment.compile}'/>",
 	props: {
 		cell: {
 			type: Object,

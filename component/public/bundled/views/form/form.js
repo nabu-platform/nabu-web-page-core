@@ -357,10 +357,10 @@ nabu.page.views.PageForm = Vue.extend({
 			});
 		},
 		isHidden: function(field) {
-			return field.hidden && this.$services.page.isCondition(field.hidden, this.createResult(), this);
+			return !!field.hidden && this.$services.page.isCondition(field.hidden, this.createResult(), this);
 		},
 		isDisabled: function(field) {
-			return field.disabled && this.$services.page.isCondition(field.disabled, this.createResult(), this);
+			return !!field.disabled && this.$services.page.isCondition(field.disabled, this.createResult(), this);
 		},
 		getGroupedFields: function(page) {
 			var groupedFields = [];
@@ -859,7 +859,7 @@ nabu.page.views.PageForm = Vue.extend({
 			this.result[field.name].push(result);
 		},
 		createResultDefinition: function() {
-			var result = {properties: {}}
+			var result = {properties: {}};
 			if (this.operation && this.operation.parameters) {
 				var self = this;
 				Object.keys(this.operation.parameters).map(function(key) {

@@ -1,7 +1,7 @@
 <template id="page-event-value">
 	<component :is="inline ? 'div' : 'n-collapsible'" :title="title" class="page-event-value">
 		<div :class="{'padded-content': !inline}">
-			<n-form-text v-model="container[name].name" label="Event Name" :timeout="600" @input="$emit('updatedEvents')"/>
+			<n-form-text v-model="container[name].name" :label="inline ? title : 'Event Name'" :timeout="600" @input="$emit('updatedEvents')"/>
 			<div v-for="eventField in container[name].eventFields" class="list-row">
 				<n-form-text v-model="eventField.name" label="Field Name" :timeout="600"/>
 				<n-form-combo v-model="eventField.stateValue" v-if="!eventField.isFixed" label="State Value"

@@ -408,7 +408,7 @@ Vue.component("page-field", {
 			return provided ? provided.component : null;
 		},
 		isHidden: function(fragment) {
-			if (fragment.hidden) {
+			if (!!fragment.hidden) {
 				return this.$services.page.isCondition(fragment.hidden, {record:this.data}, this); 
 			}
 			return false;

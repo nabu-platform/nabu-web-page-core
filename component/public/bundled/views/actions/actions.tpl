@@ -50,9 +50,9 @@
 									<n-form-text v-model="action.id" label="Id"/>
 									<n-form-text v-model="action.icon" label="Icon"/>
 								</n-form-section>
-								
-								<n-form-combo v-model="action.class" label="Class" :filter="$services.page.classes.bind($self, 'page-action')" />
-								<n-form-combo v-model="action.buttonClass" label="Button Class" :filter="$services.page.getSimpleClasses"/>
+ 
+								<n-form-combo v-model="action.class" label="Class" :filter="$services.page.classes.bind($self, 'page-action')" :timeout="600" />
+								<n-form-combo v-model="action.buttonClass" label="Button Class" :filter="$services.page.getSimpleClasses" :timeout="600"/>
 								
 								<n-form-combo v-model="action.event" v-if="false && !action.route && !action.url" label="Event" :filter="function(value) { return value ? [value, '$close'] : ['$close'] }"
 									 @input="$emit('updatedEvents')" :timeout="600"/>

@@ -398,7 +398,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			return this.edit || !action.condition || this.$services.page.isCondition(action.condition, this.state, this);
 		},
 		isDisabled: function(action) {
-			return action.disabled && this.$services.page.isCondition(action.disabled, this.state, this);
+			return !!action.disabled && this.$services.page.isCondition(action.disabled, this.state, this);
 		},
 		getActionHref: function(action) {
 			if (!this.cell.state.useButtons && action.url) {

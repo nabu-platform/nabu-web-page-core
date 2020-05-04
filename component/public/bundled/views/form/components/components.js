@@ -40,7 +40,7 @@ nabu.page.views.FormComponent = Vue.component("nabu-form-component", {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(this.page, this);
 			var state = self.$services.page.getPageState(pageInstance);
-			return this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, state, this);
+			return !!this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, state, this);
 		},
 		getSchema: function() {
 			if (!this.cell.state.name) {

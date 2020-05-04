@@ -668,7 +668,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 				// if it's still not there, we fail
 				else {
 					this.$services.page.reloadSwagger().then(function() {
-						console.log("reloaded swagger...", content, );
 						if (self.$services.swagger.operations[content]) {
 							self.initializeOperationInternal(rowGenerator, cellGenerator, content);
 						}
@@ -1207,6 +1206,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 				bindings: {}
 			});
 		},
+		isBinaryDownload: function(operationId) {
+			var operation = this.$services.swagger.operations[operationId];
+			return operation && operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream";
+		},
 		emit: function(name, value, reset) {
 			this.$services.page.report("emit", this.page.content.name, null, name, value);
 			var self = this;
@@ -1352,6 +1355,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 							);
 						}
 						
+						var emitDownloadFailed = function() {
+							if (nabu.page.event.getName(action, "downloadFailedEvent")) {
+								self.emit(
+									nabu.page.event.getName(action, "downloadFailedEvent"),
+									nabu.page.event.getInstance(action, "downloadFailedEvent", self.page, self)
+								);
+							}
+						}
+						
 						if (action.confirmation) {
 							self.$confirm({message:self.$services.page.translate(action.confirmation)}).then(function() {
 								if (wait) {
@@ -1368,7 +1380,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 								}
 								if (action.url) {
 									var url = self.$services.page.interpret(action.url, self);
-									if (action.anchor) {
+									if (action.anchor == "$blank") {
 										window.open(url);
 									}
 									else {
@@ -1419,8 +1431,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 										this.$services.attachment.download(parameters.nodeId, parameters.attachmentId);
 										eventReset();
 									}
-									else if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {             
-										window.location = self.$services.swagger.parameters(action.operation, parameters).url;
+									else if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {   
+										if (action.anchor != "$window") {
+											self.$services.page.download(self.$services.swagger.parameters(action.operation, parameters).url, emitDownloadFailed);
+										}
+										else {
+											window.location = self.$services.swagger.parameters(action.operation, parameters).url;
+										}
 										eventReset();
 									}
 									else {
@@ -1502,7 +1519,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 									eventReset();
 								}
 								else if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
-									window.location = self.$services.swagger.parameters(action.operation, parameters).url;
+									if (action.anchor != "$window") {
+										self.$services.page.download(self.$services.swagger.parameters(action.operation, parameters).url, emitDownloadFailed);
+									}
+									else {
+										window.location = self.$services.swagger.parameters(action.operation, parameters).url;
+									}
 									eventReset();
 								}
 								else {
@@ -1579,6 +1601,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 										else if (result) {
 											self.variables[state.name].push(result);
 										}
+									}
+									// can be resetting to null
+									else if (!result) {
+										Vue.set(self.variables, state.name, null);
 									}
 									else {
 										var resultKeys = Object.keys(result);

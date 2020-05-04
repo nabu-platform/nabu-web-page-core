@@ -103,7 +103,7 @@ nabu.services.VueService(Vue.extend({
 		});
 		window.addEventListener("keydown", function(event) {
 			//192 in firefox and 222 in chrome?
-			if (self.canEdit() && event.code == "Backquote") {
+			if (self.canEdit() && (event.code == "Backquote" || event.which == 121)) {
 				self.showConsole = !self.showConsole;
 			}
 		});
@@ -139,6 +139,38 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		download: function(url, errorHandler) {
+			// use iframes to better handle problems when they occur (e.g. a 500)
+			var iframe = iframe = document.createElement('iframe');
+			iframe.setAttribute("class", "hiddenDownloader");
+			iframe.style.visibility = 'hidden';
+			iframe.style.width = "0px";
+			iframe.style.height = "0px";
+			iframe.style.display = 'none';
+			// firefox only triggers this in case we get an error document back
+			// chrome always triggers this, even _before_ the download is complete, if we remove the iframe at that point from the DOM, the download fails
+			// so we leave the iframe in the DOM at this point
+			// we have very few ways to check if the downloaded was successful or not, but we can try to inspect the body of the iframe (its from the same origin) and determine based on the content there
+			iframe.onload = function(event) {
+				var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+				// no body or an empty body means it loaded ok!
+				if (iframeDocument && (!iframeDocument.body || iframeDocument.body.innerHTML == "")) {
+					console.log("File downloaded correctly", url);
+				}
+				else {
+					console.log("file download failed", url);
+					if (errorHandler) {
+						errorHandler(url);
+					}
+				}
+			}
+			// this is never triggered in any browser :(
+			iframe.onerror = function(event) {
+				console.log("failed!", event);
+			}
+			document.body.appendChild(iframe);
+			iframe.src = url;
+		},
 		// category is a general category of reports, for example we can have "analysis" reports or "event" reports or...
 		// the source is where it comes from, this is usually a page, but it could also be a service like the router, swagger,...
 		// the type is the general type of the report, for example a click event
@@ -209,9 +241,7 @@ nabu.services.VueService(Vue.extend({
 			this.dragTypes.push({type: type, value: value});
 		},
 		hasDragData: function(event, type) {
-			console.log("has data", event, type);
 			if (type == "operation" && event && event.dataTransfer && event.dataTransfer.data && event.dataTransfer.data.service) {
-				console.log("dragging native operation");
 				return true;
 			}
 			return (event && event.dataTransfer && event.dataTransfer.types && event.dataTransfer.types.indexOf(type) >= 0)
@@ -219,10 +249,8 @@ nabu.services.VueService(Vue.extend({
 		},
 		getDragData: function(event, type) {
 			var value = event && event.dataTransfer && event.dataTransfer.getData ? event.dataTransfer.getData(type) : null;
-			console.log("getting drag data", type, event, value);
 			if (!value && type == "operation" && event && event.dataTransfer && event.dataTransfer.data && event.dataTransfer.data.service) {
 				value = event.dataTransfer.data.service;
-				console.log("------------> dropped operation", value);
 			}
 			if (!value) {
 				value = this.dragTypes.filter(function(x) { return x.type == type })[0];
@@ -479,7 +507,7 @@ nabu.services.VueService(Vue.extend({
 					});
 					if (self.canEdit()) {
 						// start reloading the css at fixed intervals to pull in any relevant changes
-						self.reloadCss();
+						setTimeout(self.reloadCss, 10000);
 					}
 					done();
 				});
@@ -664,7 +692,7 @@ nabu.services.VueService(Vue.extend({
 						self.cssLastModified = date;
 					}
 				}
-				setTimeout(self.reloadCss, 2000);
+				setTimeout(self.reloadCss, 5000);
 			});
 		},
 		getFunctionDefinition: function(id) {
@@ -2324,7 +2352,8 @@ nabu.services.VueService(Vue.extend({
 				priority: 1
 			});
 		},
-		dropOperationInto(operation, cell, failIfMissing) {
+		// unused?
+		dropOperationInto: function (operation, cell, failIfMissing) {
 			var self = this;
 			if (this.$services.swagger.operations[operation]) {
 				console.log("Dropping", operation);

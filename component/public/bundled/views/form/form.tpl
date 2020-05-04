@@ -132,7 +132,7 @@
 							@label="function(value) { $window.Vue.set(labels, field.name, value) }"
 							v-focus="cell.state.autofocus == true && currentPage.fields.indexOf(field) == 0"
 							:validate-timeout="cell.state.validationTimeout"/>
-						<page-arbitrary v-else
+						<page-arbitrary v-else-if="!isHidden(field)"
 							:edit="edit"
 							:page="page"
 							:cell="cell"
@@ -275,6 +275,7 @@
 		<n-page-mapper v-if="target.route" :to="getTargetParameters(target)"
 			:from="availableParameters" 
 			v-model="target.bindings"/>
+		<n-form-ace v-model="target.hidden" label="Hide If"/>
 	</div>
 </template>
 
