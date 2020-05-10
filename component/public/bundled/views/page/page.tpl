@@ -240,8 +240,8 @@
 						<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function" :timeout="600"/>
 						<page-event-value class="no-more-padding" :page="page" :container="action" title="Chain Event" name="chainEvent" @resetEvents="resetEvents"/>
 						<n-form-switch v-if="action.operation || action.function" v-model="action.isSlow" label="Is slow operation?"/>
-						<n-form-text v-if="action.operation" v-model="action.event" label="Success Event" @input="resetEvents()" :timeout="600"/>
-						<n-form-text v-if="action.operation" v-model="action.errorEvent" label="Error Event" @input="resetEvents()" :timeout="600"/>
+						<n-form-text v-if="action.operation && !isBinaryDownload(action.operation)" v-model="action.event" label="Success Event" @input="resetEvents()" :timeout="600"/>
+						<n-form-text v-if="action.operation && !isBinaryDownload(action.operation)" v-model="action.errorEvent" label="Error Event" @input="resetEvents()" :timeout="600"/>
 						<n-form-switch v-if="action.operation" v-model="action.expandBindings" label="Field level bindings"/>
 						<div class="simple-row" v-if="action.operation && !action.route && action.expandBindings">
 							<n-form-combo 
@@ -393,19 +393,19 @@
 							<n-collapsible title="Cell Settings" key="cell-settings">
 								<div class="padded-content">
 									<h2>Content<span class="subscript">Choose the content you want to add to your cell</span></h2>
-									<n-form-text label="Cell Name" v-model="cell.name" info="A descriptive name"/>
+									<n-form-text label="Cell Name" v-model="cell.name" info="A descriptive name" :timeout="600"/>
 									<n-page-mapper v-if="cell.alias" 
 										:key="'page_' + pageInstanceId + '_' + cell.id + '_mapper'"
 										:to="getRouteParameters(cell)"
 										:from="getAvailableParameters(cell)" 
 										v-model="cell.bindings"/>
-									<n-form-text label="Condition" v-model="cell.condition" info="If you fill in a condition, the cell will only render the content if the condition evaluates to true"/>
+									<n-form-text label="Condition" v-model="cell.condition" info="If you fill in a condition, the cell will only render the content if the condition evaluates to true" :timeout="600"/>
 										
 									<h2>Additional<span class="subscript">Configure some additional settings for this cell</span></h2>
-									<n-form-text label="Cell Id" v-model="cell.customId" info="If you set a custom id for this cell, a container will be rendered in this cell with that id. This can be used for targeting with specific content."/>
-									<n-form-text label="Cell Width" v-model="cell.width" info="By default flex is used to determine cell size, you can either configure a number for flex or choose to go for a fixed value"/>
-									<n-form-text label="Cell Height" v-model="cell.height" info="You can configure any height, for example 200px"/>
-									<n-form-text label="Cell Reference" v-model="cell.ref" info="A reference you can use to retrieve this cell programmatically"/>
+									<n-form-text label="Cell Id" v-model="cell.customId" info="If you set a custom id for this cell, a container will be rendered in this cell with that id. This can be used for targeting with specific content." :timeout="600"/>
+									<n-form-text label="Cell Width" v-model="cell.width" info="By default flex is used to determine cell size, you can either configure a number for flex or choose to go for a fixed value" :timeout="600"/>
+									<n-form-text label="Cell Height" v-model="cell.height" info="You can configure any height, for example 200px" :timeout="600"/>
+									<n-form-text label="Cell Reference" v-model="cell.ref" info="A reference you can use to retrieve this cell programmatically" :timeout="600"/>
 									<n-form-combo label="Cell Renderer" v-model="cell.renderer" :items="getRenderers('cell')" :formatter="function(x) { return x.name }" 
 										:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
 									<n-form-section v-if="cell.renderer">

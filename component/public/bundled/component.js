@@ -86,13 +86,114 @@ window.addEventListener("load", function() {
 			accept: function(type, value) {
 				if (type == "operation") {
 					var operation = $services.swagger.operations[value];
-					return (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "post" || operation.method.toLowerCase() == "delete" || operation.method.toLowerCase() == "patch");         
+					return (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "post" || operation.method.toLowerCase() == "patch");         
 				}
 			},
-			initialize: function(type, value, component, cell, row, page) {
-				console.log("initializeing", component);
+			initialize: function(type, value, component, cell, row, pageInstance) {
 				cell.state.operation = value;
+				
+				// we need to this auto-update the bindings, not ideal...but for now
+				var operation = $services.swagger.operations[value];
+				component.updateOperation(operation);
+				
 				component.generateForm();
+				
+				var name = $services.page.guessNameFromOperation(value);
+				
+				// remove the last bit, for example if we have demo.rest.company.create, we want to find an operation
+				// that starts with demo.rest.company, for example "demo.rest.company.list"
+				var shared = value.replace(/\.[^.]+$/, "");
+				var getDataComponent = function(rows) {
+					for (var i = 0; i < rows.length; i++) {
+						if (rows[i].cells) {
+							for (var j = 0; j < rows[i].cells.length; j++) {
+								var cell = rows[i].cells[j];
+								// do a minimalistic check
+								if (cell.alias && cell.alias.indexOf("data-") == 0 && cell.state.operation) {
+									if (cell.state.operation.indexOf(shared) == 0) {
+										return cell;
+									}
+								}
+								if (cell.rows) {
+									var dataComponent = getDataComponent(cell.rows);
+									if (dataComponent != null) {
+										return dataComponent;
+									}
+								}
+							}
+						}
+					}
+					return null;
+				}
+				
+				var page = pageInstance.page;
+				// we scan the current page to see if there is a data component where we can add an event
+				if (page.content.rows) {
+					var dataComponent = getDataComponent(page.content.rows);
+					if (dataComponent != null) {
+						nabu.utils.vue.confirm({message:"Do you want to add this form to the existing data cell?"}).then(function() {
+							if (name != null) {
+								name = name.substring(0, 1).toUpperCase() + name.substring(1);
+							}
+							// we want the form in a prompt
+							cell.target = "prompt";
+							
+							var operation = $services.swagger.operations[value];
+							if (!dataComponent.state.actions) {
+								Vue.set(dataComponent.state, "actions", []);
+							}
+							if (operation.method.toLowerCase() == "post") {
+								if (name != null) {
+									cell.state.title = "%" + "{Create " + name + "}";
+								}
+								// make sure we send out a created event once done
+								cell.state.event = "created" + (name ? name : "");
+								// trigger on this create
+								cell.on = "create" + (name ? name : "");
+								// push an action to the datacomponent
+								dataComponent.state.actions.push({
+									name: "create" + (name ? name : ""),
+									global: true,
+									label: "%" + "{Create}",
+									type: "button",
+									class: "primary"
+								});
+								if (!dataComponent.state.refreshOn) {
+									Vue.set(dataComponent.state, "refreshOn", []);
+								}
+								// make sure we refresh on create
+								dataComponent.state.refreshOn.push("created" + (name ? name : ""));
+							}
+							else if (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "patch") {
+								if (name != null) {
+									cell.state.title = "%" + "{Update " + name + "}";
+								}
+								// make sure we synchronize changes so we don't need to refresh
+								cell.state.synchronize = true;
+								cell.state.event = "updated" + (name ? name : "");
+								// trigger on this create
+								cell.on = "update" + (name ? name : "");
+								// push an action to the datacomponent
+								dataComponent.state.actions.push({
+									name: "update" + (name ? name : ""),
+									global: false,
+									icon: "fa-pencil-alt",
+									type: "button",
+									class: "inline"
+								});
+								// reset events
+								pageInstance.resetEvents();
+								// allow for some time to stabilize events etc so we have correct definitions
+								// not very clean, i know...
+								setTimeout(function() {
+									// generate automapping of fields
+									component.autoMapFrom = cell.on;
+									component.automap();
+								}, 300);
+							}
+						});
+					}
+				}
 			}
 		});
 		

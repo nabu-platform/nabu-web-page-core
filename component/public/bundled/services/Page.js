@@ -667,7 +667,9 @@ nabu.services.VueService(Vue.extend({
 			}	
 		},
 		reloadSwagger: function() {
-			return this.$services.swagger.$clear();
+			if (!this.disableReload) {
+				return this.$services.swagger.$clear();
+			}
 		},
 		reloadCss: function() {
 			this.reloadSwagger();
@@ -1107,8 +1109,13 @@ nabu.services.VueService(Vue.extend({
 			var result = pageInstance.variables ? nabu.utils.objects.clone(pageInstance.variables) : {};
 			// copy internal parameters as well
 			if (pageInstance.parameters) {
-				var parameters = this.getPageParameters(page).properties;
-				Object.keys(parameters).forEach(function(key) {
+				//var parameters = this.getPageParameters(page).properties;
+/*				Object.keys(parameters).forEach(function(key) {
+					if (pageInstance.parameters[key] != null) {
+						result[key] = pageInstance.parameters[key];
+					}
+				});*/
+				Object.keys(pageInstance.parameters).forEach(function(key) {
 					if (pageInstance.parameters[key] != null) {
 						result[key] = pageInstance.parameters[key];
 					}
@@ -2217,6 +2224,16 @@ nabu.services.VueService(Vue.extend({
 				message: message,
 				title: message
 			});
+		},
+		guessNameFromOperation: function(operation) {
+			var parts = operation.split(".");
+			var reserved = ["create", "read", "update", "delete", "list", "get", "rest", "crud", "services"];
+			for (var i = parts.length - 1; i >= 0; i--) {
+				if (reserved.indexOf(parts[i]) < 0) {
+					return parts[i];
+				}
+			}
+			return null;
 		},
 		getResolvedPageParameterType: function(type) {
 			if (type == null || ['string', 'boolean', 'number', 'integer'].indexOf(type) >= 0) {

@@ -120,7 +120,16 @@ nabu.page.views.PageForm = Vue.extend({
 		}
 	},
 	created: function() {
-		console.log("created form");
+		// non-reactive cached schemas
+		// this was introduced for the following scenario:
+		// if you have a page form and that page has page parameters (or initial state?) that uses parameters defined in the swagger
+		// the act of resolving the parameters through getPageParameters and more specifically getResolvedPageParameterType:
+		// leads to an "infinite render" loop problem
+		// it is entirely unclear why this happens but we had a similar problem where using getPageParameters triggered an infinite render loop
+		// possibly we need/want the cache at the page service level for getResolvedPageParameterType?
+		// however this cache would be application wide
+		// for now, we opt for this option but should we add a cache at the page service level, we may want to revisit this
+		this.schemas = {};
 		this.normalize(this.cell.state);
 		
 		this.initialize();
@@ -148,8 +157,21 @@ nabu.page.views.PageForm = Vue.extend({
 		generateForm: function() {
 			var self = this;
 			var page = this.cell.state.pages[0];
+
+			var ignoreParameters = [];			
+			// if we have an operation, we assume path parameters are ids that are not filled in manually but piped from other places
+			if (this.cell.state.operation) {
+				var operation = this.$services.swagger.operations[this.cell.state.operation];
+				if (operation && operation.parameters) {
+					nabu.utils.arrays.merge(ignoreParameters, operation.parameters.filter(function(x) {
+						return x.in == "path";
+					}).map(function(x) {
+						return x.name;
+					}));
+				}
+			}
 			this.fieldsToAdd.forEach(function(field) {
-				if (field != "body") {
+				if (field != "body" && ignoreParameters.indexOf(field) < 0) {
 					var parts = field.split(".");
 					var schema = self.getSchemaFor(field);
 					var type = "text";
@@ -503,13 +525,13 @@ nabu.page.views.PageForm = Vue.extend({
 			this.configuring = true;	
 		},
 		normalize: function(state) {
-			if (!state.title) {
+			if (!state.hasOwnProperty("title")) {
 				Vue.set(state, "title", null);
 			}
-			if (!state.immediate) {
+			if (!state.hasOwnProperty("immediate")) {
 				Vue.set(state, "immediate", false);
 			}
-			if (!state.pages) {
+			if (!(state.pages instanceof Array)) {
 				Vue.set(state, "pages", []);
 			}
 			// if we still have fields directly in the state, it is actually a form with one page (the old way)
@@ -528,7 +550,7 @@ nabu.page.views.PageForm = Vue.extend({
 					fields: []
 				});
 			}
-			if (!state.class) {
+			if (!state.hasOwnProperty("class")) {
 				Vue.set(state, "class", null);
 			}
 			if (!state.hasOwnProperty("ok")) {
@@ -543,10 +565,10 @@ nabu.page.views.PageForm = Vue.extend({
 			if (!state.hasOwnProperty("cancel")) {
 				Vue.set(state, "cancel", "Cancel");
 			}
-			if (!state.event) {
+			if (!state.hasOwnProperty("event")) {
 				Vue.set(state, "event", null);
 			}
-			if (!state.synchronize) {
+			if (!state.hasOwnProperty("synchronize")) {
 				Vue.set(state, "synchronize", false);
 			}
 		},
@@ -585,6 +607,16 @@ nabu.page.views.PageForm = Vue.extend({
 			if (this.cell.state.errorEvent) {
 				result[this.cell.state.errorEvent] = this.$services.swagger.resolve("#/definitions/StructuredErrorResponse");
 			}
+			this.cell.state.pages.forEach(function(page) {
+				if (page.fields) {
+					page.fields.forEach(function(field) {
+						var event = nabu.page.event.getName(field, "validationSuccessEvent");
+						if (event != null) {
+							result[event] = {};
+						}
+					})
+				}
+			});
 			nabu.utils.objects.merge(result, this.getEventsRecursively(this));
 			return result;
 		},
@@ -760,55 +792,58 @@ nabu.page.views.PageForm = Vue.extend({
 			if (!field) {
 				return null;
 			}
-			var recursiveGet = function(schema, parts, index) {
-				if (schema.items) {
-					schema = schema.items;
-				}
-				var properties = schema.properties;
-				if (properties && properties[parts[index]]) {
-					if (index < parts.length - 1) {
-						return recursiveGet(properties[parts[index]], parts, index + 1);
+			if (!this.schemas[field]) {
+				var recursiveGet = function(schema, parts, index) {
+					if (schema.items) {
+						schema = schema.items;
 					}
-					else {
-						var result = properties[parts[index]];
-						result.required = result.required || schema.required && schema.required.indexOf(parts[index]) >= 0;
-						return result;
-					}
-				}
-			}
-			if (this.cell.state.functionForm) {
-				var properties = this.$services.page.getFunctionInput(this.cell.state.functionId);
-				var parts = field.split(".");
-				result = properties ? recursiveGet(properties, parts, 0) : null;
-			}
-			else if (this.cell.state.pageForm) {
-				var definition = this.$services.page.getPageParameters(this.page);
-				var parts = field.split(".");
-				return definition ? recursiveGet(definition, parts, 0) : null;
-			}
-			else {
-				var operation = this.$services.swagger.operations[this.cell.state.operation];
-				var result = null;
-				if (operation) {
-					var self = this;
-					// body parameter
-					if (field.indexOf("body.") == 0) {
-						var body = this.body;
-						var parts = field.substring("body.".length).split(".");
-						result = body.schema ? recursiveGet(body.schema, parts, 0) : null;
-					}
-					// non-body parameter
-					else {
-						for (var i = 0; i < operation.parameters.length; i++) {
-							var parameter = operation.parameters[i];
-							if (parameter.in != "body" && parameter.name == field) {
-								result = parameter;
-							}
-						};
+					var properties = schema.properties;
+					if (properties && properties[parts[index]]) {
+						if (index < parts.length - 1) {
+							return recursiveGet(properties[parts[index]], parts, index + 1);
+						}
+						else {
+							var result = properties[parts[index]];
+							result.required = result.required || schema.required && schema.required.indexOf(parts[index]) >= 0;
+							return result;
+						}
 					}
 				}
+				if (this.cell.state.functionForm) {
+					var properties = this.$services.page.getFunctionInput(this.cell.state.functionId);
+					var parts = field.split(".");
+					result = properties ? recursiveGet(properties, parts, 0) : null;
+				}
+				else if (this.cell.state.pageForm) {
+					var definition = this.$services.page.getPageParameters(this.page);
+					var parts = field.split(".");
+					result = definition ? recursiveGet(definition, parts, 0) : null;
+				}
+				else {
+					var operation = this.$services.swagger.operations[this.cell.state.operation];
+					var result = null;
+					if (operation) {
+						var self = this;
+						// body parameter
+						if (field.indexOf("body.") == 0) {
+							var body = this.body;
+							var parts = field.substring("body.".length).split(".");
+							result = body.schema ? recursiveGet(body.schema, parts, 0) : null;
+						}
+						// non-body parameter
+						else {
+							for (var i = 0; i < operation.parameters.length; i++) {
+								var parameter = operation.parameters[i];
+								if (parameter.in != "body" && parameter.name == field) {
+									result = parameter;
+								}
+							};
+						}
+					}
+				}
+				this.schemas[field] = result;
 			}
-			return result;
+			return this.schemas[field];
 		},
 		isList: function(field) {
 			var field = this.getSchemaFor(field);
@@ -1249,7 +1284,6 @@ Vue.component("page-form-field", {
 			required: false
 		},
 		validateTimeout: {
-			type: Number,
 			required: false
 		},
 		codes: {
@@ -1564,22 +1598,22 @@ Vue.component("page-form-configure-single", {
 			return provided ? provided.configure : null;
 		},
 		normalize: function(field) {
-			if (!field.name) {
+			if (!field.hasOwnProperty("name")) {
 				Vue.set(field, "name", null);
 			}
-			if (!field.label) {
+			if (!field.hasOwnProperty("label")) {
 				Vue.set(field, "label", null);
 			}
-			if (!field.description) {
+			if (!field.hasOwnProperty("description")) {
 				Vue.set(field, "description", null);
 			}
-			if (!field.type) {
+			if (!field.hasOwnProperty("type")) {
 				Vue.set(field, "type", null);
 			}
-			if (!field.enumerations) {
+			if (!(field.enumerations instanceof Array)) {
 				Vue.set(field, "enumerations", []);
 			}
-			if (!field.value) {
+			if (!field.hasOwnProperty("value")) {
 				Vue.set(field, "value", null);
 			}
 		}

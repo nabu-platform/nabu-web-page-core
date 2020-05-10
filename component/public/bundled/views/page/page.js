@@ -131,12 +131,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 					}
 				}, parseInt(self.page.content.autoRefresh));
 			}
+			self.initializeDefaultParameters();
 			if (self.page.content.initialEvents) {
 				self.page.content.initialEvents.forEach(function(x) {
 					self.fireInitialEvent(x);
 				});
 			}
-			self.initializeDefaultParameters();
 			if (self.page.content.parameters) {
 				self.page.content.parameters.forEach(function(parameter) {
 					if (parameter.name != null && parameter.defaults && parameter.defaults.length) {
