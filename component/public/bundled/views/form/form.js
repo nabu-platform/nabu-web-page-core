@@ -33,6 +33,7 @@ nabu.page.views.PageForm = Vue.extend({
 	data: function() {
 		return {
 			configuring: false,
+			subscriptions: [],
 			result: {},
 			// the original data (if possible), we want to be able to only update changed values
 			reference: {},
@@ -46,6 +47,11 @@ nabu.page.views.PageForm = Vue.extend({
 			started: null,
 			error: null
 		}
+	},
+	beforeDestroy: function() {
+		this.subscriptions.map(function(x) {
+			x();
+		});
 	},
 	computed: {
 		codes: function() {
@@ -143,6 +149,26 @@ nabu.page.views.PageForm = Vue.extend({
 			this.readOnly = true;
 		}
 		this.started = new Date();
+		
+		if (this.cell.state.submitOnEvent) {
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			this.cell.state.submitOnEvent.forEach(function(x) {
+				self.subscriptions.push(pageInstance.subscribe(x, function() {
+					self.doIt();
+				}));
+			});
+		}
+		
+		if (this.cell.state.cancelOnEvent) {
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			this.cell.state.cancelOnEvent.forEach(function(x) {
+				self.subscriptions.push(pageInstance.subscribe(x, function() {
+					self.cancel();
+				}));
+			});
+		}
 	},
 	// want ready because we need correct root
 	ready: function() {

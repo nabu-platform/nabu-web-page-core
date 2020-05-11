@@ -46,6 +46,30 @@
 					<n-form-text v-if="cell.state.allowReadOnly" v-model="cell.state.editIcon" label="Edit Icon"/>
 					<n-form-text v-model="cell.state.mode" label="Message Mode (the literal 'component' or a number)"/>
 					<n-form-text v-model="cell.state.validationTimeout" label="Validation Timeout"/>
+
+					<div class="list-actions">
+						<button @click="!cell.state.submitOnEvent ? $window.Vue.set(cell.state, 'submitOnEvent', [null]) : cell.state.submitOnEvent.push(null)"><span class="fa fa-plus"></span>Submit Event Listener</button>
+					</div>
+					<div class="padded-content" v-if="cell.state.submitOnEvent">
+						<div v-for="i in Object.keys(cell.state.submitOnEvent)" class="list-row">
+							<n-form-combo v-model="cell.state.submitOnEvent[i]"
+								label="Submit on event"
+								:filter="function(x) { return $services.page.getPageInstance(page, $self).getAvailableEvents() }"/>
+							<span @click="cell.state.submitOnEvent.splice(i, 1)" class="fa fa-times"></span>
+						</div>
+					</div>
+					
+					<div class="list-actions">
+						<button @click="!cell.state.cancelOnEvent ? $window.Vue.set(cell.state, 'cancelOnEvent', [null]) : cell.state.cancelOnEvent.push(null)"><span class="fa fa-plus"></span>Cancel Event Listener</button>
+					</div>
+					<div class="padded-content" v-if="cell.state.cancelOnEvent">
+						<div v-for="i in Object.keys(cell.state.cancelOnEvent)" class="list-row">
+							<n-form-combo v-model="cell.state.cancelOnEvent[i]"
+								label="Cancel on event"
+								:filter="function(x) { return $services.page.getPageInstance(page, $self).getAvailableEvents() }"/>
+							<span @click="cell.state.cancelOnEvent.splice(i, 1)" class="fa fa-times"></span>
+						</div>
+					</div>
 				</n-collapsible>
 				<n-collapsible title="Value Binding" v-if="!cell.state.pageForm">
 					<div class="list-row">

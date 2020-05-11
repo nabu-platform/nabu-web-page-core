@@ -6,6 +6,11 @@ Vue.component("page-form-input-file-configure", {
 		+ "</n-form-section>"
 		+ "<button @click=\"field.fileTypes ? field.fileTypes.push(null) : $window.Vue.set(field, 'fileTypes', [null])\"><span class='fa fa-plus'></span>Filetype</button>"
 		// ignore body as this presumes a pure binary upload, we use headers then
+		+ "<n-form-text label='Label drop' v-model='field.dropLabel'/>"
+		+ "<n-form-text label='Label browse' v-model='field.browseLabel'/>"
+		+ "<n-form-text label='Icon browse' v-model='field.browseIcon'/>"
+		+ "<n-form-switch label='Show selected files' v-model='field.visualiseSelectedFiles'/>"
+		+ "<n-form-text v-if='field.visualiseSelectedFiles' label='Delete icon' v-model='field.deleteIcon'/>"
 		+ "<n-form-combo v-if=\"field.name && field.name != 'body'\" v-model='field.contentType' label='Field to store content type' :items='possibleFields'/>"
 		+ "<n-form-combo v-if=\"field.name && field.name != 'body'\" v-model='field.fileName' label='Field to store file name' :items='possibleFields'/>"
 		+ "</n-form-section>",
@@ -44,6 +49,11 @@ Vue.component("page-form-input-file", {
 			+ "		:label='label'"
 			+ "		:value='files'"
 			+ "		:name='field.name'"
+			+ " 	:dropLabel='field.dropLabel ? $services.page.translate(field.dropLabel) : null'"
+			+ " 	:browseLabel='field.browseLabel ? $services.page.translate(field.browseLabel) : null'"
+			+ " 	:browseIcon='field.browseIcon'"
+			+ " 	:visualiseSelectedFiles='field.visualiseSelectedFiles'"
+			+ " 	:deleteIcon='field.deleteIcon'"
 			+ "		:timeout='timeout'"
 			+ "		:disabled='disabled'/>",
 	props: {
