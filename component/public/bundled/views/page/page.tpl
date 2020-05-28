@@ -7,7 +7,7 @@
 		<n-sidebar :inline="true" class="settings" v-if="viewComponents" @close="viewComponents = false" :autocloseable="false">
 			<page-components-overview/>
 		</n-sidebar>
-		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit && !embedded && !this.$services.page.editing" :draggable="true" 
+		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit && !embedded && !$services.page.editing" :draggable="true" 
 				@dragstart="dragMenu($event)"
 				:class="{'page-component': !page.content.path}"
 				:style="{'top': page.content.menuY ? page.content.menuY + 'px' : '0px', 'left': page.content.menuX ? page.content.menuX + 'px' : '0px'}">
@@ -190,13 +190,13 @@
 						<n-form-switch v-if="false" v-model="parameter.global" label="Is translation global?"/>
 						<div class="list-row" v-for="i in Object.keys(parameter.listeners)">
 							<n-form-combo v-model="parameter.listeners[i].to" :filter="function() { return $services.page.getAllAvailableKeys(page) }" />
-							<n-form-combo v-model="parameter.listeners[i].field" v-if="parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($this, parameter.type)" />
+							<n-form-combo v-model="parameter.listeners[i].field" v-if="parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($self, parameter.type)" />
 							<button @click="parameter.listeners.splice(i, 1)"><span class="fa fa-times"></span></button>
 						</div>
 						<div v-if="parameter.resetListeners">
 							<div class="list-row" v-for="i in Object.keys(parameter.resetListeners)">
 								<n-form-combo v-model="parameter.resetListeners[i].to" :filter="function() { return $services.page.getAllAvailableKeys(page) }" />
-								<n-form-combo v-model="parameter.resetListeners[i].field" v-if="false && parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($this, parameter.type)" description="Not yet"  />
+								<n-form-combo v-model="parameter.resetListeners[i].field" v-if="false && parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($self, parameter.type)" description="Not yet"  />
 								<button @click="parameter.resetListeners.splice(i, 1)"><span class="fa fa-times"></span></button>
 							</div>
 						</div>
@@ -211,7 +211,7 @@
 							</div>
 							<div v-if="parameter.defaults">
 								<n-form-section class="list-row" v-for="defaultValue in parameter.defaults">
-									<n-form-combo v-model="defaultValue.query" placeholder="Query" :filter="listFields.bind($this, parameter.type)"/>
+									<n-form-combo v-model="defaultValue.query" placeholder="Query" :filter="listFields.bind($self, parameter.type)"/>
 									<n-form-text v-model="defaultValue.value" placeholder='Value'/>
 									<button @click="parameter.defaults.splice(parameter.defaults.indexOf(defaultValue), 1)"><span class="fa fa-trash"></span></button>
 								</n-form-section>
@@ -262,6 +262,10 @@
 							v-model="action.bindings"/>
 							
 						<div class="list-item-actions">
+							<button @click="moveActionTop(action)"><span class="fa fa-chevron-left"></span></button>
+							<button @click="moveAction(action, -1)"><span class="fa fa-chevron-up"></span></button>
+							<button @click="moveAction(action, 1)"><span class="fa fa-chevron-down"></span></button>
+							<button @click="moveActionBottom(action)"><span class="fa fa-chevron-right"></span></button>
 							<button @click="page.content.actions.splice(page.content.actions.indexOf(action), 1)"><span class="fa fa-trash"></span></button>
 						</div>
 						
@@ -452,7 +456,7 @@
 									<n-form-text label="Right" v-model="cell.right" v-if="cell.target == 'absolute'"/>
 									<n-form-text label="Minimum Width" v-model="cell.minWidth" v-if="cell.target == 'absolute'"/>
 									<n-form-switch label="Position fixed?" v-model="cell.fixed" v-if="cell.target == 'absolute'"/>
-									<n-form-switch label="Autoclose" v-model="cell.autoclose" v-if="cell.target == 'absolute'"/>
+									<n-form-switch label="Autoclose" v-model="cell.autoclose" v-if="cell.target == 'absolute' || cell.target == 'prompt'"/>
 								</div>								
 								<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" @resetEvents="resetEvents"/>
 							</n-collapsible>
@@ -514,7 +518,7 @@
 							:stop-rerender="stopRerender"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</n-sidebar>
-					<n-prompt v-else-if="cell.target == 'prompt'" @close="close(cell)">
+					<n-prompt v-else-if="cell.target == 'prompt'" @close="close(cell)" :autoclose="cell.autoclose">
 						<div @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender } }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:depth="depth + 1"
@@ -634,7 +638,7 @@
 
 <template id="n-prompt">
 	<div class="n-prompt">
-		<div class="n-prompt-content">
+		<div class="n-prompt-content" v-auto-close="function() { if (autoclose) $emit('close') }">
 			<slot></slot>
 		</div>
 	</div>
@@ -713,3 +717,4 @@
 </template>
 
 
+ 

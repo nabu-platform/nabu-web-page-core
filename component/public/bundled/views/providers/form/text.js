@@ -68,6 +68,7 @@ Vue.component("page-form-input-text", {
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
+			+ "		v-bubble:blur"
 			+ "		:required='field.required'"
 			+ "		:validator='getValidator()'"
 			+ "		:info='field.info ? $services.page.translate(field.info) : null'"

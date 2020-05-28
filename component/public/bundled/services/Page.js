@@ -510,6 +510,16 @@ nabu.services.VueService(Vue.extend({
 						setTimeout(self.reloadCss, 10000);
 					}
 					done();
+				}, function() {
+					// even if the initial state for example fails, we want to continue, otherwise we end up with a blank screen
+					Vue.nextTick(function() {
+						self.loading = false;
+					});
+					if (self.canEdit()) {
+						// start reloading the css at fixed intervals to pull in any relevant changes
+						setTimeout(self.reloadCss, 10000);
+					}
+					done();
 				});
 			});
 		},
@@ -581,10 +591,12 @@ nabu.services.VueService(Vue.extend({
 						if (globalName != null) {
 							if (events[globalName] == null) {
 								var properties = event.properties;
-								// if we have an instance of it, we can resolve the definition
-								if (nabu.page.instances[page.content.name]) {
-									properties = nabu.page.instances[page.content.name].getEvents()[event.localName];
-								}
+								// if we have an instance of it, we can resolve the definition "realtime"
+								// for some reason this definition is sometimes wrong. it is also not in sync with the definition in json which (while outdated) is what we would expect
+								// we disable this for now as the usecases are too limited to draw any conclusions
+								//if (nabu.page.instances[page.content.name]) {
+								//	properties = nabu.page.instances[page.content.name].getEvents()[event.localName];
+								//}
 								events[globalName] = properties == null ? {properties:{}} : properties;
 							}
 						}
@@ -2073,7 +2085,7 @@ nabu.services.VueService(Vue.extend({
 				parts = path.split(".");
 				index = 0;
 			}
-			var properties = definition.type == "array" ? definition.items.properties : definition.properties;
+			var properties = definition == null ? null : (definition.type == "array" ? definition.items.properties : definition.properties);
 			if (properties) {
 				var child = properties[parts[index]];
 				if (index == parts.length - 1) {

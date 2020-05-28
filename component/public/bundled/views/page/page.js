@@ -285,6 +285,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 	mounted: function() {
 		console.log("mounted page", this.page.name, this.embedded);
 	},
+	ready: function() {
+		this.rendered = true;
+		this.postRender.splice(0).forEach(function(x) { x() });
+	},
 	created: function() {
 		console.log("creating page", this.page.name, this.stopRerender);
 		this.$services.page.setPageInstance(this.page, this);
@@ -385,10 +389,51 @@ nabu.page.views.Page = Vue.component("n-page", {
 			closing: false,
 			saved: null,
 			// any timers that might exist and need to be destroyed
-			timers: []
+			timers: [],
+			// actions to run post render (if any)
+			postRender: [],
+			// whether or not we are ready to go
+			rendered: false
 		}
 	},
 	methods: {
+		moveActionTop: function(action) {
+			var index = this.page.content.actions.indexOf(action);	
+			if (index > 0) {
+				this.page.content.actions.splice(index, 1);
+				this.page.content.actions.unshift(action);
+			}
+		},
+		moveActionBottom: function(action) {
+			var index = this.page.content.actions.indexOf(action);	
+			if (index >= 0) {
+				this.page.content.actions.splice(index, 1);
+				this.page.content.actions.push(action);
+			}
+		},
+		moveAction: function(action, amount) {
+			var index = this.page.content.actions.indexOf(action);	
+			if (index >= 0) {
+				var targetIndex = index + amount;
+				if (targetIndex >= 0 && targetIndex <= this.page.content.actions.length - 1) {
+					var targetItem = this.page.content.actions[targetIndex];
+					this.page.content.actions.splice(targetIndex, 1, this.page.content.actions[index]);
+					this.page.content.actions.splice(index, 1, targetItem);
+				}
+			}
+		},
+		route: function(alias, parameters, anchor, mask) {
+			var self = this;
+			var doIt = function() {
+				self.$services.router.route(alias, parameters, anchor, mask);
+			};
+			if (this.rendered) {
+				return doIt();
+			}
+			else {
+				this.postRender.push(doIt);
+			}
+		},
 		fireInitialEvent: function(x) {
 			var self = this;
 			if (nabu.page.event.getName(x, "definition") && (!x.condition || self.$services.page.isCondition(x.condition, self.$services.page.getPageState(self), self))) {           
@@ -1063,6 +1108,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 						events[nabu.page.event.getName(action, "timeoutEvent")] = type;
 					});
+					this.page.content.actions.filter(function(action) {
+						return nabu.page.event.getName(action, "downloadFailedEvent") != null;
+					}).forEach(function(action) {
+						var type = nabu.page.event.getType(action, "downloadFailedEvent");
+						if (type.properties && Object.keys(type.properties).length == 0 && action.on) {
+							type = action.on;
+						}
+						events[nabu.page.event.getName(action, "downloadFailedEvent")] = type;
+					});
 				}
 				
 				// add the cell events
@@ -1397,7 +1451,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 										window.location = self.$services.router.template(action.route, parameters);
 									}
 									else {
-										routePromise = self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
+										routePromise = self.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
 									}
 									if (element) {
 										if (routePromise && routePromise.then) {
@@ -1503,7 +1557,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 									window.location = self.$services.router.template(action.route, parameters);
 								}
 								else {
-									self.$services.router.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
+									self.route(action.route, parameters, action.anchor ? action.anchor : null, action.anchor ? true : false);
 								}
 							}
 							else if (action.operation && self.isGet(action.operation) && action.anchor == "$blank") {
@@ -2275,9 +2329,10 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			var state = {};
 			// inherit state from above
 			if (this.localState) {
+				var self = this;
 				Object.keys(this.localState).map(function(key) {
-					state[key] = this.localState[key];
-				})
+					state[key] = self.localState[key];
+				});
 			}
 			// add local state of row
 			if (row && row.data) {
@@ -3035,7 +3090,13 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 });
 
 Vue.component("n-prompt", {
-	template: "#n-prompt"
+	template: "#n-prompt",
+	props: {
+		autoclose: {
+			type: Boolean,
+			required: false
+		}
+	}
 });
 
 Vue.component("n-absolute", {

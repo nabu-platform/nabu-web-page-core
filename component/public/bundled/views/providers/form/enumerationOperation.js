@@ -151,6 +151,7 @@ Vue.component("page-form-input-enumeration-operation", {
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		v-bubble:label"
 			+ "		:timeout='600'"
+			+ "		v-bubble:blur"
 			+ "		:label='label'"
 			+ "		:value='value'"
 			+ "		:validator='getValidator()'"

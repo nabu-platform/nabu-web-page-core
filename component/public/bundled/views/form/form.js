@@ -1314,6 +1314,9 @@ Vue.component("page-form-field", {
 		},
 		codes: {
 			required: false
+		},
+		validateOnBlur: {
+			required: false
 		}
 	},
 	created: function() {
@@ -1343,6 +1346,11 @@ Vue.component("page-form-field", {
 		}
 	},
 	methods: {
+		blur: function() {
+			if (this.validateOnBlur) {
+				this.validate();
+			}
+		},
 		slowValidate: function() {
 			if (this.validateTimer != null) {
 				clearTimeout(this.validateTimer);

@@ -472,13 +472,16 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 				promise = this.$services.q.defer();
 				promise.resolve();
 			}
-			promise.then(function() {
-				elements.forEach(function(element) {
-					if (element.__vue__.$parent.doIt) {
-						element.__vue__.$parent.doIt();
-					}
+			var doIts = elements
+				.filter(function(element) { return !!element.__vue__.$parent.doIt })
+				.map(function(element) { return element.__vue__.$parent.doIt });
+			if (doIts.length) {
+				promise.then(function() {
+					doIts.forEach(function(doIt) {
+						doIt();
+					});
 				});
-			});
+			}
 			return promise;
 		},
 		getValidationResults: function(promiseResult) {

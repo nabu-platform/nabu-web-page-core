@@ -46,7 +46,8 @@
 					<n-form-text v-if="cell.state.allowReadOnly" v-model="cell.state.editIcon" label="Edit Icon"/>
 					<n-form-text v-model="cell.state.mode" label="Message Mode (the literal 'component' or a number)"/>
 					<n-form-text v-model="cell.state.validationTimeout" label="Validation Timeout"/>
-
+					<n-form-switch v-model="cell.state.validateOnBlur" label="Validate on blur"/>
+					
 					<div class="list-actions">
 						<button @click="!cell.state.submitOnEvent ? $window.Vue.set(cell.state, 'submitOnEvent', [null]) : cell.state.submitOnEvent.push(null)"><span class="fa fa-plus"></span>Submit Event Listener</button>
 					</div>
@@ -155,7 +156,8 @@
 							:is-disabled="isDisabled(field)"
 							@label="function(value) { $window.Vue.set(labels, field.name, value) }"
 							v-focus="cell.state.autofocus == true && currentPage.fields.indexOf(field) == 0"
-							:validate-timeout="cell.state.validationTimeout"/>
+							:validate-timeout="cell.state.validationTimeout"
+							:validate-on-blur="cell.state.validateOnBlur"/>
 						<page-arbitrary v-else-if="!isHidden(field)"
 							:edit="edit"
 							:page="page"
@@ -206,6 +208,7 @@
 		:page="page"
 		:codes="codes"
 		:cell="cell"
+		@blur="blur"
 		:field="field"
 		@input="function(newValue, otherField) { $emit('input', newValue, otherField); slowValidate(); }"
 		v-bubble:label

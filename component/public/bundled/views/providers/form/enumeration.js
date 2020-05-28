@@ -100,6 +100,7 @@ Vue.component("page-form-input-enumeration", {
 			+ "		:label='label'"
 			+ "		:value='value'"
 			+ "		v-bubble:label"
+			+ "		v-bubble:blur"
 			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
 			+ "		:description-type='field.descriptionType'"
 			+ "		:description-icon='field.descriptionIcon'"

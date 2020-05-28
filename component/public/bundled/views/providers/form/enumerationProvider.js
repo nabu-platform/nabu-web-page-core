@@ -80,6 +80,7 @@ Vue.component("page-form-input-enumeration-provider", {
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
 			+ "		v-bubble:label"
+			+ "		v-bubble:blur"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"

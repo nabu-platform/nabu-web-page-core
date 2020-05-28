@@ -50,6 +50,7 @@ Vue.component("page-form-input-date-picker", {
 			+ "		:description-type='field.descriptionType'"
 			+ "		:description-icon='field.descriptionIcon'"
 			+ "		:allow='getAllow()'"
+			+ "		v-bubble:blur"
 			+ "		:include-hours='field.includeHours'"
 			+ "		:pattern-comment='$services.page.translate(field.regexLabel)'"
 			+ "		:include-minutes='field.includeHours && field.includeMinutes'"
