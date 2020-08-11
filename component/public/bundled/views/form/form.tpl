@@ -140,7 +140,7 @@
 							:edit="edit"
 							:field="field"
 							@changed="changed"
-							:timeout="cell.state.immediate ? 600 : 0"
+							:timeout="600"
 							:schema="getSchemaFor(field.name)"/>
 						<page-form-field v-else-if="!field.arbitrary" :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" 
 							:value="getCurrentValue(field)"
@@ -148,7 +148,7 @@
 							:schema-resolver="getSchemaFor"
 							@changed="changed"
 							@input="function(newValue, otherField) { $window.Vue.set(result, otherField ? otherField : field.name, newValue); changed(); }"    
-							:timeout="cell.state.immediate ? 600 : 0"
+							:timeout="600"
 							:page="page"
 							:read-only="readOnly"
 							:cell="cell"

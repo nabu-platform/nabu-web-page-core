@@ -46,7 +46,8 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			lastAction: null,
 			configuringAction: null,
 			resolvedActions: [],
-			subscriptions: []
+			subscriptions: [],
+			running: []
 		}
 	},
 	beforeDestroy: function() {
@@ -269,6 +270,9 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 		},
 		getDynamicClasses: function(action) {
 			var classes = [];
+			if (this.running.indexOf(action) >= 0) {
+				classes.push("is-running");
+			}
 			if (action.styles) {
 				nabu.utils.arrays.merge(classes, this.$services.page.getDynamicClasses(action.styles, this.state, this));
 			}
@@ -398,7 +402,7 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 			return this.edit || !action.condition || this.$services.page.isCondition(action.condition, this.state, this);
 		},
 		isDisabled: function(action) {
-			return !!action.disabled && this.$services.page.isCondition(action.disabled, this.state, this);
+			return this.running.indexOf(action) >= 0 || (!!action.disabled && this.$services.page.isCondition(action.disabled, this.state, this));
 		},
 		getActionHref: function(action) {
 			if (!this.cell.state.useButtons && action.url) {
@@ -681,7 +685,17 @@ nabu.page.views.PageActions = Vue.component("page-actions", {
 						content.actor = this.cell.id;
 					}
 					if (eventName != null) {
-						pageInstance.emit(eventName, content ? content : {});
+						self.running.push(action);
+						var unlock = function() {
+							self.running.splice(self.running.indexOf(action), 1);
+						};
+						var result = pageInstance.emit(eventName, content ? content : {});
+						if (result.then) {
+							result.then(unlock, unlock);
+						}
+						else {
+							unlock();
+						}
 					}
 					this.lastAction = action;
 				}

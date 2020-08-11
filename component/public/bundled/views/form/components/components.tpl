@@ -8,10 +8,13 @@
 				<n-form-text v-model="cell.state.timeout" label="Timeout"/>
 				<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
 				<n-form-text v-model="cell.state.disabled" label="Disable if" />
+				<n-form-switch v-model="cell.state.validateOnBlur" label="Validate on blur"/>
 				<component :is="configurationComponent" :page="page" :cell="cell" :field="cell.state"/>
 			</n-collapsible>
 		</n-sidebar>
 		<component :is="formComponent" :page="page" :cell="cell"
+			ref="input"
+			@blur="blur"
 			:component-group="cell.state.componentGroup"
 			:field="cell.state"
 			:value="cell.state.name ? getPageInstance().get(cell.state.name) : null"

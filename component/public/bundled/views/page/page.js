@@ -68,6 +68,14 @@ Vue.mixin({
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				return this.$services.page.getBindingValue(pageInstance, path);
 			}
+			else {
+				if (path.indexOf("application.") == 0) {
+					var property = this.$services.page.properties.filter(function(x) {
+						return x.key == path.substring("application.".length);
+					})[0];
+					return property ? property.value : null;
+				}
+			}
 		}
 	}
 })

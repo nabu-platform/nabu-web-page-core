@@ -81,6 +81,16 @@ nabu.page.views.FormComponent = Vue.component("nabu-form-component", {
 		},
 		update: function(value) {
 			this.getPageInstance().set(this.cell.state.name, value);
+		},
+		validate: function () {
+			if (this.$refs && this.$refs.input) {
+				this.$refs.input.validate();
+			}
+		},
+		blur: function() {
+			if (this.cell.state.validateOnBlur) {
+				this.validate();
+			}
 		}
 	}
 })

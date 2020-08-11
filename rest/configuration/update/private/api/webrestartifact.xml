@@ -8,6 +8,7 @@
     <input>nabu.web.page.core.rest.configuration.updateInput</input>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
+    <geoPosition>false</geoPosition>
     <language>false</language>
     <allowFormBinding>false</allowFormBinding>
     <caseInsensitive>false</caseInsensitive>

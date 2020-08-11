@@ -169,6 +169,14 @@ nabu.services.VueService(Vue.extend({
 				console.log("failed!", event);
 			}
 			document.body.appendChild(iframe);
+			if (this.$services.language != null && this.$services.language.current != null) {
+				if (url.indexOf("?") <= 0) {
+					url += "?language=" + this.$services.language.current;
+				}
+				else {
+					url += "&language=" + this.$services.language.current;
+				}
+			}
 			iframe.src = url;
 		},
 		// category is a general category of reports, for example we can have "analysis" reports or "event" reports or...
@@ -402,7 +410,22 @@ nabu.services.VueService(Vue.extend({
 					nabu.utils.arrays.merge(self.contents, configuration.contents);
 				}
 				if (configuration.translations) {
-					nabu.utils.arrays.merge(self.translations, configuration.translations);
+					var decode = function(value) {
+						return value.replace(/\\n/g, "\n")
+							.replace(/\\"/g, '"');
+					}
+					nabu.utils.arrays.merge(self.translations, configuration.translations.map(function(x) {
+						// configurations are picked up directly from JSON files which have encoded properties
+						// so if you were to type a linefeed into a json file, it would become \n, get picked up as such and appear in the translation
+						// however, we can't match an encoded \n with an actual linefeed character
+						// so we decode it here, currently it is a whitelist of encoded properties
+						if (x && x.translation && x.name) {
+							x.name = decode(x.name);
+							// we assume the user copied the encoded characters
+							x.translation = decode(x.translation);
+						}
+						return x;
+					}));
 				}
 				if (configuration.imports) {
 					nabu.utils.arrays.merge(self.imports, configuration.imports);
@@ -511,9 +534,12 @@ nabu.services.VueService(Vue.extend({
 					}
 					done();
 				}, function() {
-					// even if the initial state for example fails, we want to continue, otherwise we end up with a blank screen
-					Vue.nextTick(function() {
+					Vue.nextTick(function(e) {
 						self.loading = false;
+						// route to error once the services are done initializing
+						setTimeout(function() {
+							self.$services.router.route("error");
+						}, 1);
 					});
 					if (self.canEdit()) {
 						// start reloading the css at fixed intervals to pull in any relevant changes
@@ -656,7 +682,7 @@ nabu.services.VueService(Vue.extend({
 			if (!pageInstance && component && component.$root && component.$root.pageInstanceId != null) {
 				pageInstance = nabu.page.instances[page.name + "." + component.$root.pageInstanceId];
 			}
-			return pageInstance ? pageInstance : nabu.page.instances[page.name];
+			return pageInstance ? pageInstance : nabu.page.instances[typeof(page) == "string" ? page : page.name];
 		},
 		setPageInstance: function(page, instance) {
 			nabu.page.instances[page.name] = instance;
@@ -668,7 +694,7 @@ nabu.services.VueService(Vue.extend({
 			if (instance.pageInstanceId) {
 				delete nabu.page.instances[page.name + "." + instance.pageInstanceId];
 			}
-			if (nabu.page.instances[page.name] == page) {
+			if (nabu.page.instances[page.name] == instance) {
 				delete nabu.page.instances[page.name];
 			}
 		},
@@ -1164,6 +1190,12 @@ nabu.services.VueService(Vue.extend({
 				state.page = page;
 			});
 			return state;
+		},
+		hasFeature: function(feature) {
+			// remove syntax if applicable
+			feature = feature.replace("@" + "{", "");
+			feature = feature.replace("}", "");
+			return this.enabledFeatures.indexOf(feature) >= 0;
 		},
 		eval: function(condition, state, instance) {
 			if (!condition) {
@@ -2395,6 +2427,10 @@ nabu.services.VueService(Vue.extend({
 		}
 	},
 	watch: {
+		// push the location to the swagger client
+		location: function(newValue) {
+			this.$services.swagger.geoPosition = newValue;
+		},
 		pages: function(newValue) {
 			if (!this.loading) {
 				this.loadPages(newValue);
@@ -2426,8 +2462,10 @@ nabu.services.VueService(Vue.extend({
 					div.setAttribute("id", "nabu-console-instance");
 					document.body.appendChild(div);
 					this.$services.router.route("nabu-console", {}, div);
+					document.body.classList.add("has-nabu-console");
 				}
 				else {
+					document.body.classList.remove("has-nabu-console");
 					this.limitReports();
 				}
 			}

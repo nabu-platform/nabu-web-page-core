@@ -1,6 +1,12 @@
-<structure interface="$self:api" name="pipeline">
-    <structure name="input"/>
-    <structure name="output"/>
+<structure name="pipeline">
+    <structure name="input">
+        <field name="webApplicationId" type="java.lang.String"/>
+        <field minOccurs="0" name="language" type="java.lang.String"/>
+    </structure>
+    <structure name="output">
+        <structure definition="nabu.web.page.core.types.rest.configuration" name="content"/>
+        <field minOccurs="0" name="lastModified" type="java.util.Date"/>
+    </structure>
     <structure comment="Nabu Page Builder configuration options" definition="nabu.web.page.core.types.configuration" name="configuration"/>
     <structure definition="be.nabu.libs.resources.api.ResourceProperties" maxOccurs="unbounded" minOccurs="0" name="pages"/>
     <structure comment="Parameters not contained in the path are found in the content (and most likely query parameters but also direct input)" definition="nabu.web.page.core.types.rest.page" name="resultPage"/>
@@ -12,5 +18,4 @@
     <field maxOccurs="unbounded" minOccurs="0" name="errorCodes" type="java.lang.String"/>
     <field minOccurs="0" name="featuresLastModified" type="java.util.Date"/>
     <structure comment="Nabu Page Builder environment specific configuration options" definition="nabu.web.page.core.types.environmentConfiguration" name="environmentSpecific"/>
-    <field minOccurs="0" name="lastModified" type="java.util.Date"/>
 </structure>
