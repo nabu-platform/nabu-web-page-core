@@ -1,5 +1,5 @@
 <template id="nabu-page">
-	<component :edit="edit" :is="pageTag()" :inline-all="true" class="page" :class="classes" :page="page.name" 
+	<component :edit="edit" :is="pageTag()" :inline-all="true" class="page" :class="classes" :body-class="bodyClasses" :page="page.name" 
 			@drop="dropMenu($event)" @dragover="dragOver($event)">
 		<div class="page-menu n-page-menu" v-if="edit && false">
 			<button @click="viewComponents = !viewComponents"><span class="fa fa-cubes" title="Add Components"></span></button>
@@ -81,6 +81,27 @@
 						<h2>Rendering<span class="subscript">These settings will influence how the page is rendered.</span></h2>
 						<n-form-combo label="Page Type" :filter="getPageTypes" v-model="page.content.pageType"/>
 						<n-form-text v-model="page.content.class" label="CSS Class"/>
+						
+						<div class="list-actions">
+							<button @click="page.content.styles == null ? $window.Vue.set(page.content, 'styles', [{class:null,condition:null}]) : page.content.styles.push({class:null,condition:null})"><span class="fa fa-plus"></span>Style</button>
+						</div>
+						<div class="padded-content" v-if="page.content.styles">
+							<n-form-section class="list-row" v-for="style in page.content.styles">
+								<n-form-text v-model="style.class" label="Class"/>
+								<n-form-text v-model="style.condition" label="Condition" class="vertical"/>
+								<span @click="cell.styles.splice(page.content.styles.indexOf(style), 1)" class="fa fa-times"></span>
+							</n-form-section>
+						</div>
+						<div class="list-actions">
+							<button @click="page.content.bodyStyles == null ? $window.Vue.set(page.content, 'bodyStyles', [{class:null,condition:null}]) : page.content.bodyStyles.push({class:null,condition:null})"><span class="fa fa-plus"></span>Body Style</button>
+						</div>
+						<div class="padded-content" v-if="page.content.bodyStyles">
+							<n-form-section class="list-row" v-for="style in page.content.bodyStyles">
+								<n-form-text v-model="style.class" label="Class"/>
+								<n-form-text v-model="style.condition" label="Condition" class="vertical"/>
+								<span @click="cell.bodyStyles.splice(page.content.bodyStyles.indexOf(style), 1)" class="fa fa-times"></span>
+							</n-form-section>
+						</div>
 						
 						<h2>Security<span class="subscript">You can configure additional security on a page to limit access.</span></h2>
 						

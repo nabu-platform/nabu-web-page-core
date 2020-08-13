@@ -289,6 +289,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 		this.timers.forEach(function(x) {
 			clearTimeout(x);
 		});
+		if (this.oldBodyClasses.length) {
+			document.body.classList.remove.apply(document.body.classList, this.oldBodyClasses.splice(0));
+		}
 	},
 	mounted: function() {
 		console.log("mounted page", this.page.name, this.embedded);
@@ -339,6 +342,17 @@ nabu.page.views.Page = Vue.component("n-page", {
 			//available.page = this.$services.page.getPageParameters(this.page);
 			//return available;
 		},
+		// we inject this into the tpl only to make it reactive
+		// the ultimate goal is to switch classes on the body
+		bodyClasses: function () {
+			if (this.page.content.bodyStyles && this.page.content.bodyStyles.length) {
+				var self = this;
+				return this.$services.page.getDynamicClasses(this.page.content.bodyStyles, self.variables, this);
+			}
+			else {
+				return [];
+			}
+		},
 		classes: function() {
 			var classes = [];
 			if (this.edit) {
@@ -346,6 +360,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			if (this.page.content.class) {
 				classes.push(this.page.content.class);
+			}
+			if (this.page.content.styles && this.page.content.styles.length) {
+				var self = this;
+				var dynamics = this.$services.page.getDynamicClasses(this.page.content.styles, self.variables, this);
+				nabu.utils.arrays.merge(classes, dynamics);
 			}
 			if (this.page.content.pageType) {
 				classes.push("page-type-" + this.page.content.pageType);
@@ -401,7 +420,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			// actions to run post render (if any)
 			postRender: [],
 			// whether or not we are ready to go
-			rendered: false
+			rendered: false,
+			oldBodyClasses: []
 		}
 	},
 	methods: {
@@ -2022,6 +2042,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 					});
 				}
 			}
+		},
+		bodyClasses: function (newVal) {
+			var self = this;
+			// the context is important here, it has to be the classList object itself
+			// otherwise you get an exception like "illegal invocation"
+			document.body.classList.remove.apply(document.body.classList, self.oldBodyClasses.splice(0));
+			document.body.classList.add.apply(document.body.classList, newVal);
+			nabu.utils.arrays.merge(self.oldBodyClasses, newVal);
 		}
 	}
 });
