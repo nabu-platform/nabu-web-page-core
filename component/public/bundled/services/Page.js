@@ -2392,6 +2392,7 @@ nabu.services.VueService(Vue.extend({
 		registerHome: function(home, homeUser) {
 			this.$services.router.unregister("home");
 			var self = this;
+			var originalHomeRoute = this.$services.router.router.list().filter(function(x) { return x.alias == "home" && x.isPage })[0];
 			this.$services.router.register({
 				alias: "home",
 				enter: function(parameters) {
@@ -2399,10 +2400,20 @@ nabu.services.VueService(Vue.extend({
 					// otherwise weird things happen
 					setTimeout(function() {
 						if (homeUser && self.$services.user.loggedIn) {
-							self.$services.router.route(homeUser, parameters);
+							if (homeUser == "home" && originalHomeRoute) {
+								originalHomeRoute.enter(parameters);
+							}
+							else {
+								self.$services.router.route(homeUser, parameters);
+							}
 						}
 						else if (home) {
-							self.$services.router.route(home, parameters);
+							if (home == "home" && originalHomeRoute) {
+								originalHomeRoute.enter(parameters);
+							}
+							else {
+								self.$services.router.route(home, parameters);
+							}
 						}
 						else {
 							self.$services.router.route("login", parameters);
