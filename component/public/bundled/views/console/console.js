@@ -1,4 +1,10 @@
 Vue.view("nabu-console", {
+	props: {
+		initialTab: {
+			type: String,
+			default: "events"
+		}	
+	},
 	data: function() {
 		return {
 			selected: null,
@@ -19,6 +25,9 @@ Vue.view("nabu-console", {
 				return self.$services.page.enabledFeatures.indexOf(x.name) < 0;
 			});
 		}
+	},
+	created: function() {
+		this.tab = this.initialTab;
 	},
 	methods: {
 		isHidden: function(report) {

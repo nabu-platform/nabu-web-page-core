@@ -18,4 +18,8 @@
         <field name="name" type="java.lang.String"/>
         <field name="operation" type="java.lang.String"/>
     </structure>
+    <structure comment="User specific settings" maxOccurs="unbounded" minOccurs="0" name="users">
+        <field maxOccurs="unbounded" minOccurs="0" name="roles" type="java.lang.String"/>
+        <field comment="The home page for this user" minOccurs="0" name="home" type="java.lang.String"/>
+    </structure>
 </structure>

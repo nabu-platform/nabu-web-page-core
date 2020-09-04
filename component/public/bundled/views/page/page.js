@@ -1145,6 +1145,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 						events[nabu.page.event.getName(action, "downloadFailedEvent")] = type;
 					});
+					this.page.content.actions.filter(function(action) {
+						return action.function && action.functionOutputEvent;
+					}).forEach(function(action) {
+						events[action.functionOutputEvent] = self.$services.page.getFunctionOutputFull(action.function);
+					});
 				}
 				
 				// add the cell events
@@ -1375,7 +1380,19 @@ nabu.page.views.Page = Vue.component("n-page", {
 									}
 								});
 							}
-							return self.$services.page.runFunction(func, input, self, promise);
+							var result = self.$services.page.runFunction(func, input, self, promise);
+							if (action.functionOutputEvent) {
+								var def = self.$services.page.getFunctionDefinition(action.function);
+								if (def.async) {
+									promise.then(function(asyncResult) {
+										self.emit(action.functionOutputEvent, asyncResult);
+									});
+								}
+								else {
+									self.emit(action.functionOutputEvent, result);
+								}
+							}
+							return result;
 						}
 						
 						promises.push(promise);
@@ -3307,6 +3324,16 @@ Vue.component("page-sidemenu", {
 				if (!event.shiftKey) {
 					event.stopPropagation();
 				}
+			}
+		},
+		showHtml: function(row, cell) {
+			var target = document.getElementById(this.page.name + '_' + row.id);
+			if (cell) {
+				target = document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
+			}
+			if (target != null) {
+				var html = target.innerHTML;
+				this.$services.page.showContent(html);
 			}
 		},
 		scrollIntoView: function(row, cell) {

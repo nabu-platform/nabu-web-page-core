@@ -2,7 +2,8 @@
 	<div class="nabu-console">
 		<div class="tabs">
 			<button class="tab" @click="tab = 'events'" :class="{'active': tab == 'events'}">Events</button
-			><button class="tab" @click="tab = 'features'" :class="{'active': tab == 'features'}">Features</button>
+			><button class="tab" @click="tab = 'features'" :class="{'active': tab == 'features'}">Features</button
+			><button class="tab" @click="tab = 'inspect'" :class="{'active': tab == 'inspect'}">Inspect</button>
 		</div>
 		<div v-if="tab == 'events'" class="tab-content">
 			<div class="menu">
@@ -39,6 +40,11 @@
 				<div class="feature-list">
 					<n-form-switch @input="enableFeature(feature)" v-for="feature in disabledFeatures" :label="feature.description ? feature.description : feature.name"/>
 				</div>
+			</div>
+		</div>
+		<div v-else-if="tab == 'inspect'" class="tab-content">
+			<div class="content">
+				{{ $services.page.inspectContent }}
 			</div>
 		</div>
 	</div>

@@ -258,6 +258,7 @@
 						<n-form-text v-model="action.timeout" v-if="action.operation" label="Action Timeout" info="You can emit an event if the action takes too long" :timeout="600"/>
 						<page-event-value class="no-more-padding"  v-if="action.operation && action.timeout" :page="page" :container="action" title="Timeout Event" name="timeoutEvent" @resetEvents="resetEvents"/>
 						<n-form-combo v-model="action.function" v-if="!action.route && !action.scroll && !action.url && !action.operation" label="Function" :filter="$services.page.listFunctions" />
+						<n-form-text v-if="action.function && $services.page.hasFunctionOutput(action.function)" v-model="action.functionOutputEvent" label="Function Output Event" info="Emit the output of the function as event"/>
 						<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function" :timeout="600"/>
 						<page-event-value class="no-more-padding" :page="page" :container="action" title="Chain Event" name="chainEvent" @resetEvents="resetEvents"/>
 						<n-form-switch v-if="action.operation || action.function" v-model="action.isSlow" label="Is slow operation?"/>
@@ -424,7 +425,7 @@
 										:to="getRouteParameters(cell)"
 										:from="getAvailableParameters(cell)" 
 										v-model="cell.bindings"/>
-									<n-form-text label="Condition" v-model="cell.condition" info="If you fill in a condition, the cell will only render the content if the condition evaluates to true" :timeout="600"/>
+									<n-form-ace label="Condition" v-model="cell.condition" info="If you fill in a condition, the cell will only render the content if the condition evaluates to true" :timeout="600"/>
 										
 									<h2>Additional<span class="subscript">Configure some additional settings for this cell</span></h2>
 									<n-form-text label="Cell Id" v-model="cell.customId" info="If you set a custom id for this cell, a container will be rendered in this cell with that id. This can be used for targeting with specific content." :timeout="600"/>
@@ -688,6 +689,7 @@
 					@click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
 				<div class="collapser">
 					<span class="fa" :class="{'fa-eye': !row.collapsed, 'fa-eye-slash': row.collapsed}" @click="row.collapsed = !row.collapsed"></span>
+					<span class="fa fa-code" @click="showHtml(row)"></span>
 					<span class="fa fa-times" @click="$emit('removeRow', row)"></span>
 				</div>
 				<div class="page-sideentry-menu" v-if="false">
@@ -714,6 +716,7 @@
 							@click.ctrl="scrollIntoView(row, cell)">{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
 						<div class="configurer">
 							<span class="fa fa-cog" v-if="hasConfigure(cell)" @click="configure(cell)"></span>
+							<span class="fa fa-code" @click="showHtml(row, cell)"></span>
 							<span class="fa fa-times" @click="removeCell(row.cells, cell)"></span>
 						</div>
 						<div class="page-sideentry-menu" v-if="false">

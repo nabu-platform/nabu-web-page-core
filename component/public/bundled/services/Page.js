@@ -73,8 +73,12 @@ nabu.services.VueService(Vue.extend({
 			// when testing, you can check the available features and toggle them (either on or off)
 			availableFeatures: [],
 			toggledFeatures: [],
+			// user specific settings
+			users: [],
 			// the drag/drop doesn't work very well in javafx webview?
-			dragTypes: []
+			dragTypes: [],
+			inspectContent: null,
+			consoleTab: null
 		}
 	},
 	activate: function(done) {
@@ -139,6 +143,11 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		showContent: function(content) {
+			this.inspectContent = content;
+			this.consoleTab = "inspect";
+			this.showConsole = true;
+		},
 		download: function(url, errorHandler) {
 			// use iframes to better handle problems when they occur (e.g. a 500)
 			var iframe = iframe = document.createElement('iframe');
@@ -384,6 +393,7 @@ nabu.services.VueService(Vue.extend({
 				self.enabledFeatures.splice(0);
 				self.availableFeatures.splice(0);
 				self.toggledFeatures.splice(0);
+				self.users.splice(0);
 				if (configuration.pages) {
 					nabu.utils.arrays.merge(self.pages, configuration.pages);
 					self.loadPages(self.pages);
@@ -405,6 +415,9 @@ nabu.services.VueService(Vue.extend({
 				}
 				if (configuration.homeUser) {
 					self.homeUser = configuration.homeUser;
+				}
+				if (configuration.users) {
+					nabu.utils.arrays.merge(self.users, configuration.users);
 				}
 				if (configuration.contents) {
 					nabu.utils.arrays.merge(self.contents, configuration.contents);
@@ -1325,6 +1338,7 @@ nabu.services.VueService(Vue.extend({
 					title: this.title,
 					home: this.home,
 					homeUser: this.homeUser,
+					users: this.users,
 					properties: self.properties,
 					environmentProperties: self.environmentProperties,
 					devices: self.devices,
@@ -1363,6 +1377,10 @@ nabu.services.VueService(Vue.extend({
 				});
 			}
 			return {properties:parameters};
+		},
+		hasFunctionOutput: function(id) {
+			var output = this.getFunctionOutputFull(id);
+			return Object.keys(output.properties).length > 0;
 		},
 		// really poor naming decisions lead to this...
 		getFunctionOutputFull: function(id, value) {
@@ -2390,8 +2408,13 @@ nabu.services.VueService(Vue.extend({
 			return keys;
 		},
 		registerHome: function(home, homeUser) {
-			this.$services.router.unregister("home");
+			// the previous dynamic home route
+			var previousDynamicHome = this.$services.router.router.list().filter(function(x) { return x.alias == "home" && !x.isPage })[0];
+			if (previousDynamicHome) {
+				this.$services.router.unregister(previousDynamicHome);
+			}
 			var self = this;
+			// check if there is a page-based home, we need to still support that
 			var originalHomeRoute = this.$services.router.router.list().filter(function(x) { return x.alias == "home" && x.isPage })[0];
 			this.$services.router.register({
 				alias: "home",
@@ -2399,7 +2422,32 @@ nabu.services.VueService(Vue.extend({
 					// the timeout disconnects the reroute from the current flow
 					// otherwise weird things happen
 					setTimeout(function() {
-						if (homeUser && self.$services.user.loggedIn) {
+						var applicableUser = self.users.filter(function(x) {
+							var hasAnyRole = false;
+							if (x.roles) {
+								x.roles.forEach(function(role) {
+									if (role == "$guest" && !self.$services.user.loggedIn) {
+										hasAnyRole = true;
+									}	
+									else if (role == "$user" && self.$services.user.loggedIn) {
+										hasAnyRole = true;
+									}
+									else if (self.$services.user.hasRole && self.$services.user.hasRole(role)) {
+										hasAnyRole = true;
+									}
+								});
+							}
+							return hasAnyRole;
+						})[0];
+						if (applicableUser && applicableUser.home) {
+							if (applicableUser.home == "home" && originalHomeRoute) {
+								originalHomeRoute.enter(parameters);
+							}
+							else {
+								self.$services.router.route(applicableUser.home, parameters);
+							}
+						}
+						else if (homeUser && self.$services.user.loggedIn) {
 							if (homeUser == "home" && originalHomeRoute) {
 								originalHomeRoute.enter(parameters);
 							}
@@ -2472,8 +2520,9 @@ nabu.services.VueService(Vue.extend({
 					var div = document.createElement("div");
 					div.setAttribute("id", "nabu-console-instance");
 					document.body.appendChild(div);
-					this.$services.router.route("nabu-console", {}, div);
+					this.$services.router.route("nabu-console", { initialTab: this.consoleTab }, div);
 					document.body.classList.add("has-nabu-console");
+					this.consoleTab = null;
 				}
 				else {
 					document.body.classList.remove("has-nabu-console");

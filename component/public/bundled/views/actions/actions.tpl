@@ -46,7 +46,9 @@
 									<n-form-switch label="Autotrigger" v-model="action.autotrigger"/>
 								</n-form-section>
 								<n-form-section v-else>
-									<n-form-text v-model="action.label" label="Label"/>
+									<n-form-text v-model="action.label" label="Label" v-if="!action.compileLabel"/>
+									<n-form-ace v-model="action.label" label="Label" v-else/>
+									<n-form-switch v-model="action.compileLabel" label="Compile"/>
 									<n-form-text v-model="action.id" label="Id"/>
 									<n-form-text v-model="action.icon" label="Icon"/>
 								</n-form-section>
@@ -154,7 +156,7 @@
 					@click="handle(action)"
 					v-if="!cell.state.useButtons && (action.route || hasEvent(action) || action.url || action.close)"
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
-						><span>{{ $services.page.translate($services.page.interpret(action.label, $self)) }}</span></a>
+						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:true, compile: !!action.compileLabel }"></span></a>
 				<button auto-close-actions class="page-action-button page-action-entry"
 					:data-event="action.name"
 					:class="getDynamicClasses(action)"
@@ -164,14 +166,14 @@
 					@click="handle(action)" 
 					v-else-if="cell.state.useButtons && (action.route || hasEvent(action) || action.url || action.close)"
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
-						><span>{{ $services.page.translate($services.page.interpret(action.label, $self)) }}</span></button>
+						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:true, compile: !!action.compileLabel }"></span></button>
 				<span class="page-action-label page-action-entry" 
 					@click="toggle(action)"
 					v-else
 					:class="getDynamicClasses(action)"
 					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
-						><span>{{ $services.page.translate($services.page.interpret(action.label, $self)) }}</span></span>
+						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:true, compile: !!action.compileLabel }"></span></span>
 				<page-actions :ref="'action_' + (edit ? getActions() : resolvedActions).indexOf(action)"
 					v-if="(action.actions && action.actions.length) || configuringAction == action"
 					:cell="cell"

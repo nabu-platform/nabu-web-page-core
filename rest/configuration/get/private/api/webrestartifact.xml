@@ -3,8 +3,10 @@
     <method>GET</method>
     <path>/configuration</path>
     <output>nabu.web.page.core.types.rest.configuration</output>
+    <token>false</token>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
+    <geoPosition>false</geoPosition>
     <language>true</language>
     <allowFormBinding>false</allowFormBinding>
     <caseInsensitive>false</caseInsensitive>
