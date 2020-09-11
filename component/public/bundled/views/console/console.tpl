@@ -42,10 +42,8 @@
 				</div>
 			</div>
 		</div>
-		<div v-else-if="tab == 'inspect'" class="tab-content">
-			<div class="content">
-				{{ $services.page.inspectContent }}
-			</div>
+		<div v-else-if="tab == 'inspect'" class="tab-content inspect">
+			<div class="content" v-content="cleanedUpContent"></div>
 		</div>
 	</div>
 </template>

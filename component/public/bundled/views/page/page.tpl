@@ -24,7 +24,7 @@
 				</div>
 			</span>
 			<span v-if="false && page.content.path" class="fa fa-sign-out-alt" v-route:logout></span>
-			<span class="fa fa-terminal" @click="$window.console.log('Page: ' + page.name, $self)"></span>
+			<span class="fa fa-terminal" @click="$window.console.log('Page: ' + page.name, $self.variables, $self)"></span>
 			<span class="fa fa-sync" v-if="$services.page.disableReload" @click="$services.page.disableReload = false" title="Start css reload"></span>
 			<span class="fa fa-ban" v-else title="Stop css reload" @click="$services.page.disableReload = true"></span>
 		</div>

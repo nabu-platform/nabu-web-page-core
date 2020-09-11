@@ -24,6 +24,41 @@ Vue.view("nabu-console", {
 			return this.$services.page.availableFeatures.filter(function(x) {
 				return self.$services.page.enabledFeatures.indexOf(x.name) < 0;
 			});
+		},
+		cleanedUpContent: function() {
+			if (!this.$services.page.inspectContent) {
+				return "No content to inspect";
+			}
+			else {
+				var depth = 0;
+				var content = this.$services.page.inspectContent;
+				// remove comments
+				content = content.replace(/(<!---->)/g, "");
+				var index = content.lastIndexOf("<");
+				while (index >= 0) {
+					var isClosing = content.substring(index + 1, index + 2) == "/";
+					if (!isClosing) {
+						depth--;
+					}
+					var whitespace = "";
+					for (var i = 0; i < depth; i++) {
+						whitespace += "\t";
+					}
+					content = content.substring(0, index) + whitespace + "&lt;" + content.substring(index + 1);
+					// closing tag
+					// because we loop in reverse, we need to do depth the other way around
+					if (isClosing) {
+						depth++;
+					}
+					index = content.lastIndexOf("<");
+				}
+				// if we have a tag that contains no other tags, we don't do a linefeed
+				content = content.replace(/(&lt;[^/>]*)>[\s]*([^>]+?)[\s]*(&lt;\/)/g, "$1&gt;$2$3");
+				content = content.replace(/>/g, "&gt;\n");
+				// highlighting
+				content = content.replace(/(&lt;.*?&gt;)/g, "<span class='tag'>$1</span>");
+				return content;
+			}
 		}
 	},
 	created: function() {

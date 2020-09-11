@@ -169,18 +169,20 @@ nabu.page.views.Page = Vue.component("n-page", {
 				self.page.content.parameters.map(function(parameter) {
 					if (parameter.resetListeners) {
 						parameter.resetListeners.forEach(function(listener) {
-							var to = listener.to;
-							if (to.indexOf("page.") == 0) {
-								to = to.substring("page.".length);
+							if (listener && listener.to) {
+								var to = listener.to;
+								if (to.indexOf("page.") == 0) {
+									to = to.substring("page.".length);
+								}
+								self.$watch("variables." + to, function() {
+									if (listener.field) {
+										console.error("Field level resets not supported yet");
+									}
+									else {
+										self.initializeDefaultParameters(true, [parameter.name]);
+									}
+								});
 							}
-							self.$watch("variables." + to, function() {
-								if (listener.field) {
-									console.error("Field level resets not supported yet");
-								}
-								else {
-									self.initializeDefaultParameters(true, [parameter.name]);
-								}
-							});
 						})
 					}
 				});

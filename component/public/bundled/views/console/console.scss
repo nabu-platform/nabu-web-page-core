@@ -12,6 +12,13 @@ body.has-nabu-console {
 	font-size: 0.8rem;
 	width: 100%;
 	border-top: solid 3px #ccc;
+	.tab-content.inspect .content {
+		white-space: pre;
+		
+		.tag {
+			color: #4da4a4;
+		}
+	}
 	.nabu-console {
 		h3 {
 			font-size: 1.2rem;

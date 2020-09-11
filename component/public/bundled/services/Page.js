@@ -1167,7 +1167,8 @@ nabu.services.VueService(Vue.extend({
 					}
 				});*/
 				Object.keys(pageInstance.parameters).forEach(function(key) {
-					if (pageInstance.parameters[key] != null) {
+					// runtime values in variables take precedence over static input parameters!
+					if (pageInstance.parameters[key] != null && !result.hasOwnProperty(key)) {
 						result[key] = pageInstance.parameters[key];
 					}
 				});
