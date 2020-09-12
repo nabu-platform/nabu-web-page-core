@@ -56,7 +56,7 @@ Vue.view("nabu-console", {
 				content = content.replace(/(&lt;[^/>]*)>[\s]*([^>]+?)[\s]*(&lt;\/)/g, "$1&gt;$2$3");
 				content = content.replace(/>/g, "&gt;\n");
 				// highlighting
-				content = content.replace(/(&lt;.*?&gt;)/g, "<span class='tag'>$1</span>");
+				content = content.replace(/(&lt;.*?&gt;)/g, "<span class='console-highlight-tag'>$1</span>");
 				return content;
 			}
 		}

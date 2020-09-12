@@ -5,7 +5,8 @@ body.has-nabu-console {
 	position: fixed;
 	bottom: 0;
 	left: 0;
-	z-index: 10000;
+	/* above sidebars */
+	z-index: 10001;
 	background-color: #272822;
 	color: white;
 	font-family: Monospace;
@@ -15,7 +16,7 @@ body.has-nabu-console {
 	.tab-content.inspect .content {
 		white-space: pre;
 		
-		.tag {
+		.console-highlight-tag {
 			color: #4da4a4;
 		}
 	}

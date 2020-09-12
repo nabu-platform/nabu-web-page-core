@@ -203,6 +203,14 @@
 							"url": "views/console/console.scss"
 						}
 					},
+					"video": {
+						"video.tpl": {
+							"url": "views/video/video.tpl"
+						}, 
+						"video.js": {
+							"url": "views/video/video.js"
+						}
+					},
 					"youtube": {
 						"youtube.tpl": {
 							"url": "views/youtube/youtube.tpl"
