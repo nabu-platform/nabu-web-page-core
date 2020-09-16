@@ -78,7 +78,10 @@ nabu.services.VueService(Vue.extend({
 			// the drag/drop doesn't work very well in javafx webview?
 			dragTypes: [],
 			inspectContent: null,
-			consoleTab: null
+			consoleTab: null,
+			branding: {},
+			// the current branding can be a combination of core branding and localized branding
+			currentBranding: {}
 		}
 	},
 	activate: function(done) {
@@ -394,6 +397,12 @@ nabu.services.VueService(Vue.extend({
 				self.availableFeatures.splice(0);
 				self.toggledFeatures.splice(0);
 				self.users.splice(0);
+				if (configuration.branding) {
+					Vue.set(self, "branding", configuration.branding);
+				}
+				else {
+					Vue.set(self, "branding", {});
+				}
 				if (configuration.pages) {
 					nabu.utils.arrays.merge(self.pages, configuration.pages);
 					self.loadPages(self.pages);
@@ -1346,7 +1355,8 @@ nabu.services.VueService(Vue.extend({
 					imports: self.imports,
 					state: self.applicationState,
 					googleSiteVerification: self.googleSiteVerification,
-					geoRefusalTimeout: self.geoRefusalTimeout
+					geoRefusalTimeout: self.geoRefusalTimeout,
+					branding: self.branding
 				}
 			});
 		},
@@ -2484,6 +2494,81 @@ nabu.services.VueService(Vue.extend({
 					self.dropOperationInto(operation, cell, true);
 				});
 			}
+		},
+		// update the branding parameters depending on the page
+		updateBranding: function(branding) {
+			console.log("updating branding", branding);
+			var self = this;
+			var fields = ["favicon", "title", "description", "image", "imageAlt", "facebookAppId", "twitterUserName"];
+			// the current branding takes the specific branding and (if absent) the default branding
+			fields.forEach(function(field) {
+				self.currentBranding[field] = branding[field] ? branding[field] : self.branding[field];
+				// an exception for title...
+				if (!self.currentBranding[field] && field == "title" && self.title) {
+					self.currentBranding[field] = self.title;
+				}
+			})
+			var og = ["title", "description", "image"];
+			
+			fields.forEach(function(field) {
+				if (field == "favicon") {
+					// updating favicon
+					var element = document.head.querySelector("link[rel='icon']");
+					var insertFavicon = true;
+					if (element) {
+						if (element.getAttribute("href") != self.currentBranding[field]) {
+							element.parentNode.removeChild(element);
+						}
+						else {
+							insertFavicon = false;
+						}
+					}
+					if (insertFavicon && self.currentBranding[field]) {
+						element = document.createElement("link");
+						element.setAttribute("rel", "icon");
+						element.setAttribute("type", "image/png");
+						element.setAttribute("href", self.currentBranding[field]);
+						document.head.appendChild(element);
+					}
+				}
+				else if (og.indexOf(field) >= 0) {
+					var element = document.head.querySelector("meta[property='og:" + field + "']");
+					var insert = true;
+					if (element) {
+						if (element.getAttribute("content") != self.currentBranding[field]) {
+							element.parentNode.removeChild(element);
+						}
+						else {
+							insert = false;
+						}
+					}
+					if (insert && self.currentBranding[field]) {
+						element = document.createElement("meta");
+						element.setAttribute("property", "og:" + field);
+						element.setAttribute("content", self.currentBranding[field]);
+						document.head.appendChild(element);
+					}
+				}
+				else if (field == "imageAlt") {
+					var element = document.head.querySelector("meta[name='twitter:image:alt']");
+					var insert = true;
+					if (element) {
+						if (element.getAttribute("content") != self.currentBranding[field]) {
+							element.parentNode.removeChild(element);
+						}
+						else {
+							insert = false;
+						}
+					}
+					if (insert && self.currentBranding[field]) {
+						element = document.createElement("meta");
+						element.setAttribute("name", "twitter:image:alt");
+						element.setAttribute("content", self.currentBranding[field]);
+						document.head.appendChild(element);
+					}
+				}
+				// TODO: the others are not reactive yet, they are generally not updated per page...
+			});
 		}
 	},
 	watch: {
@@ -2529,6 +2614,15 @@ nabu.services.VueService(Vue.extend({
 					document.body.classList.remove("has-nabu-console");
 					this.limitReports();
 				}
+			}
+		},
+		branding: {
+			deep: true,
+			handler: function(newValue) {
+				var self = this;
+				Vue.nextTick(function() {
+					self.updateBranding(self.branding);
+				})
 			}
 		}
 	}

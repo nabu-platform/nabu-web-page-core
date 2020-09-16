@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+	<head profile="http://www.w3.org/2005/10/profile">
+${{
+title ?= "Unnamed"
+css ?= "${server.root()}resources/css"
+boolean style ?= true
+javascript ?= "${server.root()}resources/javascript"
+target ?= null
+staticTarget ?= null
+bundlePath ?= null
+[] directories ?= null
+# whether or not to use the body for routing
+boolean body ?= false
+buildTime = date.format('yyyyMMddHHmmssSSS', date: date.date())
+additional ?= ""
+# interesting values: no-referrer, no-referrer-when-downgrade, same-origin, origin, strict-origin, origin-when-crossorigin, strict-origin-when-crossorigin, unsafe-url
+referrer ?= "origin"
+noresolve ?= false
+
+if (noresolve)
+	context.set("noresolve", noresolve)
+
+if (environment("mobile") == true)
+	echo('		<meta http-equiv="Content-Security-Policy" content="default-src \'self\' data: gap: cdvfile: https://ssl.gstatic.com ' + environment('url') + ' https://www.youtube.com \'unsafe-eval\' \'unsafe-inline\'; connect-src \'self\' ws: wss: http: https:; style-src \'self\' \'unsafe-inline\'; media-src *">')
+	echo('		<meta name="format-detection" content="telephone=no">')
+	echo('		<meta name="msapplication-tap-highlight" content="no">')
+	echo('		<script src="cordova.js"></script>')
+
+if (configuration/title != null)
+	title = configuration/title
+
+configuration = application.configuration("nabu.web.page.core.types.configuration")
+if (configuration/branding/favicon != null)
+	echo('		<link rel="icon" type="image/png" href="' + configuration/branding/favicon + '"/>\n')
+if (configuration/branding/title != null)
+	echo('		<meta property="og:title" content="' + configuration/branding/title + '"/>\n')
+else if (configuration/title != null)
+	echo('		<meta property="og:title" content="' + configuration/title + '"/>\n')
+
+if (configuration/branding/description != null)
+	echo('		<meta property="og:description" content="' + configuration/branding/description + '"/>\n')
+	
+if (configuration/branding/image != null)
+	echo('		<meta property="og:image" content="' + configuration/branding/image + '"/>\n')
+	echo('		<meta name="twitter:card" content="summary_large_image">\n')
+
+if (configuration/branding/imageAlt != null)
+	echo('		<meta name="twitter:image:alt" content="' + configuration/branding/imageAlt + '"/>\n')
+	
+if (configuration/branding/facebookAppId != null)
+	echo('		<meta property="fb:app_id" content="' + configuration/branding/facebookAppId + '"/>\n')
+	
+if (configuration/branding/twitterUserName != null)
+	echo('		<meta property="twitter:site" content="' + configuration/branding/twitterUserName + '"/>\n')
+
+if (environment("url") != null)
+	echo('		<meta property="og:url" content="' + environment("url") + environment("serverPath") + '"/>\n')
+	
+}}
+		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+		<meta name="referrer" content="${referrer}">
+		<script src="${javascript}?version=${environment('version')}&build=${buildTime}${when(language() == null, '', '&language=' + language())}"></script>
+		<link rel="stylesheet" type="text/css" href="${css}?version=${environment('version')}&build=${buildTime}${when(language() == null, '', '&language=' + language())}">
+		${additional}
+		<title>${title}</title>
+${{
+if (nabu.web.application.Services.hasFragment(environment("webApplicationId"), "nabu.web.core.rest.manifest")/has)
+	echo("<link rel='manifest' href='" + server.root() + "manifest.json'>")
+	echo("<meta name='apple-mobile-web-app-capable' content='yes'>")
+	echo("<meta name='mobile-web-app-capable' content='yes'>")
+	
+nabu.utils.tpl(target: target, staticTarget: staticTarget, bundlePath: bundlePath, directories: directories)
+}}
+	</head>
+	<body${when(style, " class='n-default'", "")}>
+		${when(!body, "<div id='body'></div>", "")}
+	</body>
+</html>

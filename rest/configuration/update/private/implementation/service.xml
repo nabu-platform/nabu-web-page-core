@@ -178,6 +178,15 @@
 			<from>input/content/environmentProperties</from>
 			<to>environmentSpecificConfiguration/properties</to>
 		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="9c034cbd-646b-409c-9a77-8954bba84f84"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>input/content/branding</from>
+			<to>configuration/branding</to>
+		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			comment="Store main configuration"

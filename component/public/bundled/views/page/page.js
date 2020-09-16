@@ -130,6 +130,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 				self.oldTitle = document.title;
 				document.title = self.$services.page.translate(self.$services.page.interpret(self.page.content.title, self));
 			}
+			if (self.page.content.branding) {
+				// don't copy it by reference, it will be updated...
+				self.oldBranding = nabu.utils.objects.deepClone(self.$services.page.currentBranding);
+				self.$services.page.updateBranding(self.page.content.branding);
+			}
 			if (self.page.content.autoRefresh) {
 				self.autoRefreshTimeout = setTimeout(function() {
 					if (!self.edit && !self.$services.page.wantEdit) {
@@ -287,6 +292,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 		if (this.oldTitle) {
 			document.title = this.oldTitle;
+		}
+		if (this.oldBranding) {
+			this.$services.page.updateBranding(this.oldBranding);
 		}
 		this.timers.forEach(function(x) {
 			clearTimeout(x);
