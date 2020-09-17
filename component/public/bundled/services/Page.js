@@ -1794,6 +1794,14 @@ nabu.services.VueService(Vue.extend({
 								});
 							}, 1);
 						}
+						// we update the og:url meta tag to make sure we can share this page
+						var url = "${environment('url')}";
+						// We only put absolute uris in the og:url meta tag
+						if (url && page.content.path) {
+							// the router returns a path with the server.root() in it
+							var absoluteUrl = url + self.$services.router.router.templateUrl(page.content.path, parameters, page.content.query);
+							self.updateUrl(absoluteUrl);
+						}
 						return new nabu.page.views.Page({propsData: {page: page, parameters: parameters, stopRerender: parameters ? parameters.stopRerender : false, pageInstanceId: self.pageCounter++, masked: mask }});
 					},
 					// ability to recognize page routes
@@ -2493,6 +2501,24 @@ nabu.services.VueService(Vue.extend({
 				this.reloadSwagger().then(function() {
 					self.dropOperationInto(operation, cell, true);
 				});
+			}
+		},
+		updateUrl: function(url) {
+			var element = document.head.querySelector("meta[property='og:url']");
+			var insert = true;
+			if (element) {
+				if (element.getAttribute("content") != url) {
+					element.parentNode.removeChild(element);
+				}
+				else {
+					insert = false;
+				}
+			}
+			if (insert && url) {
+				element = document.createElement("meta");
+				element.setAttribute("property", "og:url");
+				element.setAttribute("content", url);
+				document.head.appendChild(element);
 			}
 		},
 		// update the branding parameters depending on the page
