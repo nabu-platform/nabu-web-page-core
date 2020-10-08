@@ -8,7 +8,8 @@
     <permissionAction>feature.get</permissionAction>
     <output>nabu.utils.types.FeatureList</output>
     <lenient>false</lenient>
-    <webApplicationId>false</webApplicationId>
+    <webApplicationId>true</webApplicationId>
+    <geoPosition>false</geoPosition>
     <language>false</language>
     <allowFormBinding>false</allowFormBinding>
     <caseInsensitive>false</caseInsensitive>

@@ -146,6 +146,26 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		mergeObject: function(into, from) {
+			var keys = [];
+			Object.keys(from).forEach(function(key) {
+				if (into[key] instanceof Array && from[key] instanceof Array) {
+					into[key].splice(0);
+					nabu.utils.arrays.merge(into[key], from[key]);
+				}
+				else {
+					Vue.set(into, key, from[key]);
+				}
+				keys.push(key);
+			});
+			// delete the current keys
+			Object.keys(into).forEach(function(key) {
+				if (keys.indexOf(key) < 0) {
+					into[key] = null;
+					delete into[key];
+				}
+			});
+		},
 		showContent: function(content) {
 			this.inspectContent = content;
 			this.consoleTab = "inspect";
@@ -363,12 +383,32 @@ nabu.services.VueService(Vue.extend({
 					// inject ace editor
 					// check out https://cdnjs.com/libraries/ace/
 					// if it fails, we ignore it and set editing to false
+					// too many whitelist issues getting this from CDN, let's just ship it
+					/*
 					self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ace.js", function() {
 						self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-scss.js");
 						self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-javascript.js");
 						self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-html.js");
 						self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-language_tools.js");
 						self.inject("https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ext-whitespace.js");
+						promise.resolve();
+						// inject sass compiler (no longer used)
+						self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.js", function() {
+							self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.worker.js", function() {
+								promise.resolve();
+							});
+						});
+					}, function() {
+						self.editable = false;
+						promise.resolve();
+					});
+					*/
+					self.inject("${server.root()}resources/cdn/ace/1.3.3/ace.js", function() {
+						self.inject("${server.root()}resources/cdn/ace/1.3.3/mode-scss.js");
+						self.inject("${server.root()}resources/cdn/ace/1.3.3/mode-javascript.js");
+						self.inject("${server.root()}resources/cdn/ace/1.3.3/mode-html.js");
+						self.inject("${server.root()}resources/cdn/ace/1.3.3/ext-language_tools.js");
+						self.inject("${server.root()}resources/cdn/ace/1.3.3/ext-whitespace.js");
 						promise.resolve();
 						// inject sass compiler
 						/*self.inject("https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.9/sass.js", function() {
@@ -589,6 +629,7 @@ nabu.services.VueService(Vue.extend({
 			if (state && state.operation) {
 				var self = this;
 				return this.$services.swagger.execute(state.operation).then(function(result) {
+					console.log("updated state received", result);
 					Vue.set(self.variables, state.name, result);
 				});
 			}
@@ -1795,7 +1836,7 @@ nabu.services.VueService(Vue.extend({
 							}, 1);
 						}
 						// we update the og:url meta tag to make sure we can share this page
-						var url = "${environment('url')}";
+						var url = "${when(environment('url') != null, environment('url'), '')}";
 						// We only put absolute uris in the og:url meta tag
 						if (url && page.content.path) {
 							// the router returns a path with the server.root() in it
@@ -1810,7 +1851,9 @@ nabu.services.VueService(Vue.extend({
 					roles: page.content.roles != null && page.content.roles.length > 0 ? page.content.roles : null,
 					slow: !page.content.initial && page.content.slow,
 					parent: page.content.pageParent,
-					defaultAnchor: page.content.defaultAnchor
+					defaultAnchor: page.content.defaultAnchor,
+					// additional properties set on the page
+					properties: page.content.properties ? page.content.properties : []
 				};
 				
 				self.$services.router.unregister(self.alias(page));

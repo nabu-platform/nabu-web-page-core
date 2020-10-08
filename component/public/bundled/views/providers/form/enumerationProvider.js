@@ -1,6 +1,7 @@
 Vue.component("page-form-input-enumeration-provider-configure", {
 	template: "<n-form-section><n-form-combo v-model='field.enumerationProvider' :filter='enumerationFilter' label='Enumeration Provider'/>"
 		+ " <n-form-switch v-model='field.showRadioView' label='Show radio visualisation'/>"
+		+ " <n-form-switch v-model='field.required' label='Required'/>"
 		+ "	<n-form-combo v-if='valueOptions' :items='valueOptions' v-model='field.enumerationProviderValue' label='Value Field'/>"
 		+ "	<n-form-combo v-if='labelOptions' :items='labelOptions' v-model='field.enumerationProviderLabel' label='Label Field'/>"
 		+ "</n-form-section>",
@@ -79,6 +80,7 @@ Vue.component("page-form-input-enumeration-provider", {
 			+ " <n-form-combo v-else ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
+			+ "		:required='field.required ? field.required : null'"
 			+ "		v-bubble:label"
 			+ "		v-bubble:blur"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""

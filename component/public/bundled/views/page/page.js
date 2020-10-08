@@ -208,9 +208,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 			this.page.content.states.filter(function(state) { return !!state.name && state.inherited }).forEach(function(state) {
 				Vue.set(self.variables, state.name, self.$services.page.variables[state.applicationName]);
 				// you want to send out the event if _anyone_ updates it, not just you
-				self.$watch("$services.page.variables." + state.applicationName, function() {
+				self.$watch("$services.page.variables." + state.applicationName, function(newValue) {
 					// update local variable as well, otherwise changes won't be seen
-					Vue.set(self.variables, state.name, self.$services.page.variables[state.applicationName]);
+					if (self.variables[state.name]) {
+						self.$services.page.mergeObject(self.variables[state.name], newValue); // self.$services.page.variables[state.applicationName]
+					}
+					// first set?
+					else {
+						Vue.set(self.variables, state.name, newValue);
+					}
 					sendStateEvent(state);
 				}, {deep:false});
 			});
@@ -480,21 +486,21 @@ nabu.page.views.Page = Vue.component("n-page", {
 						nabu.page.event.getName(x, "definition"),
 						nabu.page.event.getInstance(x, "definition", self.page, self)
 					);
-					if (x.timeout) {
-						var timer = setTimeout(function() {
-							// remove this timer
-							var index = self.timers.indexOf(timer);
-							if (index >= 0) {
-								self.timers.splice(index, 1);
-							}
-							self.fireInitialEvent(x);
-						}, parseInt(x.timeout));
-						self.timers.push(timer);
-					}
 				}
 				catch (exception) {
 					console.error("Could not fire initial event", exception);
 				}
+			}
+			if (x.timeout) {
+				var timer = setTimeout(function() {
+					// remove this timer
+					var index = self.timers.indexOf(timer);
+					if (index >= 0) {
+						self.timers.splice(index, 1);
+					}
+					self.fireInitialEvent(x);
+				}, parseInt(x.timeout));
+				self.timers.push(timer);
 			}
 		},
 		initializeDefaultParameters: function(isInitial, names) {
@@ -1689,7 +1695,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				nabu.utils.arrays.merge(promises, this.page.content.states.filter(function(x) { return x.refreshOn != null && x.refreshOn.indexOf(name) >= 0 }).map(function(state) {
 					if (state.inherited) {
 						return self.$services.page.reloadState(state.applicationName).then(function(result) {
-							Vue.set(self.variables, state.name, result ? result : null);
+							//Vue.set(self.variables, state.name, result ? result : null);
 							sendStateEvent(state);
 						});
 					}

@@ -184,8 +184,8 @@
 					</div>
 					<n-collapsible class="list-item" :title="event ? $window.nabu.page.event.getName(event, 'definition') : 'unnamed'" v-for="event in page.content.initialEvents">
 						<n-form-text v-model="event.condition" label="Condition"/>
-						<n-form-text v-model="event.timeout" label="Repeat Interval (ms)"/>
-						<page-event-value :page="page" :container="event" title="Initial Event" name="definition" @resetEvents="resetEvents"/>
+						<n-form-text v-model="event.timeout" label="Repeat Interval (ms)" info="Every interval, the condition of this event will be checked, if true, the event is emitted, otherwise it will recheck at the next interval"/>
+						<page-event-value :page="page" :container="event" title="Initial Event" name="definition" @resetEvents="resetEvents" :inline="true"/>
 						<div class="list-item-actions">
 							<button @click="page.content.initialEvents.splice(page.content.initialEvents.indexOf(event), 1)"><span class="fa fa-trash"></span></button>
 						</div>

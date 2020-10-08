@@ -100,6 +100,14 @@
 										:filter="getRoutes"/>
 									<n-form-text v-model="page.content.defaultAnchor" label="Default Content Anchor" :timeout="600" @input="save(page)"/>
 									<!-- support for pages with input values -->
+									
+									<button @click="page.content.properties ? page.content.properties.push({}) : $window.Vue.set(page.content, 'properties', [{}])">Add Property</button>
+									<div v-if="page.content.properties">
+										<div v-for="property in page.content.properties">
+											<n-form-text v-model="property.key" label="Key"/>
+											<n-form-text v-model="property.value" label="Value"/>
+										</div>
+									</div>
 								</n-form-section>
 								<div class="global-actions">
 									<button @click="copy(page)">Copy</button>
