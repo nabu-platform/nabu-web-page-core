@@ -93,11 +93,22 @@ nabu.services.VueService(Vue.extend({
 			// e.g. "Sep" could trigger the millisecond replacement
 			// replacing a month with "May" could trigger the single "M" replacement though
 			// so first we replace the capital M with something that should never conflict
+			if (nabu.utils.dates.days) {
+				format = format.replace(/E/g, "#");
+			}
 			format = format.replace(/M/g, "=");
 			format = format.replace(/====/g, nabu.utils.dates.months()[date.getMonth()]);
 			format = format.replace(/===/g, nabu.utils.dates.months()[date.getMonth()].substring(0, 3));
 			format = format.replace(/==/g, (date.getMonth() < 9 ? "0" : "") + (date.getMonth() + 1));
 			format = format.replace(/=/g, date.getMonth() + 1);
+			
+			// this was added later, hence the defensive check for projects that don't have this yet
+			if (nabu.utils.dates.days) {
+				format = format.replace(/####/g, nabu.utils.dates.days()[nabu.utils.dates.dayOfWeek(date)]);
+				format = format.replace(/###/g, nabu.utils.dates.days()[nabu.utils.dates.dayOfWeek(date)].substring(0, 3));
+			}
+			format = format.replace(/##/g, (nabu.utils.dates.dayOfWeek(date) < 9 ? "0" : "") + (nabu.utils.dates.dayOfWeek(date) + 1));
+			format = format.replace(/#/g, nabu.utils.dates.dayOfWeek(date) + 1);
 			return format;
 		},
 		masterdata: function(id) {
@@ -119,7 +130,7 @@ nabu.services.VueService(Vue.extend({
 			if (typeof(input) != "number") {
 				input = parseFloat(input);
 			}
-            return input.toFixed(amountOfDecimals);
+            return Number(input.toFixed(amountOfDecimals)).toLocaleString(this.$services.page.getLocale());
 		},
 		conventionize: function(value) {
 			// we currently assume from lower camelcase to word

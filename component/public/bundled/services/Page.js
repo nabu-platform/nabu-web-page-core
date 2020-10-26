@@ -81,7 +81,8 @@ nabu.services.VueService(Vue.extend({
 			consoleTab: null,
 			branding: {},
 			// the current branding can be a combination of core branding and localized branding
-			currentBranding: {}
+			currentBranding: {},
+			defaultLocale: null
 		}
 	},
 	activate: function(done) {
@@ -146,6 +147,28 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		getLocale: function() {
+			// does the user have an explicitly chosen locale?
+			// TODO
+			if (this.defaultLocale) {
+				return this.defaultLocale;
+			}
+			else if (navigator.language) {
+				return navigator.language;
+			}
+			// IE
+			else if (navigator.userLanguage) {
+				return navigator.userLanguage;
+			}
+			// also IE
+			else if (navigator.browserLanguage) {
+				return navigator.browserLanguage;
+			}
+			// default
+			else {
+				return "en-US";
+			}
+		},
 		mergeObject: function(into, from) {
 			var keys = [];
 			Object.keys(from).forEach(function(key) {
@@ -437,6 +460,7 @@ nabu.services.VueService(Vue.extend({
 				self.availableFeatures.splice(0);
 				self.toggledFeatures.splice(0);
 				self.users.splice(0);
+				self.defaultLocale = configuration.defaultLocale;
 				if (configuration.branding) {
 					Vue.set(self, "branding", configuration.branding);
 				}
@@ -1397,6 +1421,7 @@ nabu.services.VueService(Vue.extend({
 					state: self.applicationState,
 					googleSiteVerification: self.googleSiteVerification,
 					geoRefusalTimeout: self.geoRefusalTimeout,
+					defaultLocale: self.defaultLocale,
 					branding: self.branding
 				}
 			});

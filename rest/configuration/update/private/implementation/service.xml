@@ -187,6 +187,15 @@
 			<from>input/content/branding</from>
 			<to>configuration/branding</to>
 		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="decb8165-c1dc-462b-a2c5-c8c6d7f73ae6"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>input/content/defaultLocale</from>
+			<to>configuration/defaultLocale</to>
+		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			comment="Store main configuration"

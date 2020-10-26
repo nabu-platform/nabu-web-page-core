@@ -66,7 +66,7 @@
 <template id="page-formatted-configure">
 	<div class="page-formatted-configure">
 		<n-form-combo v-model="fragment.format" label="Format as" :items="types"/>
-		<n-form-switch v-model="fragment.compile" label="Compile content" v-if="!skipCompile"/>
+		<n-form-switch v-model="fragment.compile" label="Compile content" v-if="!skipCompile && !mustCompile"/>
 		<n-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
 		<n-ace v-if="fragment.format == 'html'" mode="html" v-model="fragment.html"/>
 		<n-form-text v-if="fragment.format == 'number'" v-model="fragment.amountOfDecimals" label="Amount of decimals"/>
@@ -167,4 +167,61 @@
 			:should-style="shouldStyle"
 			@updated="function(value) { $emit('updated', value) }"/>
 	</dl>
+</template>
+
+<template id="page-fields-table">
+	<div class="page-fields page-fields-table" :class="cell.state.class">
+		<n-sidebar @close="configuring = false" v-if="configuring" class="settings" :inline="true">
+			<n-form class="layout2">
+				<n-collapsible title="Field Settings">
+					<n-form-text v-model="cell.state.class" label="Class"/>
+					<n-form-combo v-model="cell.state.display" label="Display modus" :items="['row', 'column']"/>
+					<n-form-switch v-model="cell.state.hideLabel" label="Hide label" v-if="label == null"/>
+				</n-collapsible>
+				<page-fields-edit :cell="cell" :allow-multiple="true" :page="page" :data="data" :should-style="shouldStyle"/>
+			</n-form>
+		</n-sidebar>
+		
+		<table class="classic data table-display-row" cellspacing="0" cellpadding="0" v-if="cell.state.display == 'row'">
+			<thead>
+				<tr class="top-header">
+					<td class="label" v-for="field in cell.state[fieldsName]">
+						<span v-if="field.label">{{$services.page.translate($services.page.interpret(field.label,$self))}}</span>
+						<span v-else>%{No label}</span>
+					</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td class="field" v-for="field in cell.state[fieldsName]">
+						<page-field :field="field" :data="data ? data : state" :label="false"
+							v-if="!field.hidden || !$services.page.isCondition(field.hidden, data ? data : state, $self)"
+							:edit="edit"
+							:page="page"
+							:cell="cell"
+							:should-style="shouldStyle"
+							@updated="function(value) { $emit('updated', value) }"/>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		
+		<table class="classic data table-display-column" cellspacing="0" cellpadding="0" v-if="cell.state.display == 'column'">
+			<tr v-for="field in cell.state[fieldsName]">
+				<td class="label">
+					<span v-if="field.label">{{$services.page.translate($services.page.interpret(field.label,$self))}}</span>
+					<span v-else>%{No label}</span>
+				</td>
+				<td class="field">
+					<page-field :field="field" :data="data ? data : state" :label="false"
+						v-if="!field.hidden || !$services.page.isCondition(field.hidden, data ? data : state, $self)"
+						:edit="edit"
+						:page="page"
+						:cell="cell"
+						:should-style="shouldStyle"
+						@updated="function(value) { $emit('updated', value) }"/>
+				</td>
+			</tr>
+		</table>
+	</div>
 </template>

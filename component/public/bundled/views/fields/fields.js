@@ -303,6 +303,96 @@ nabu.page.views.PageFields = Vue.component("page-fields", {
 	}
 });
 
+nabu.page.views.PageFieldsTable = Vue.component("page-fields-table", {
+	template: "#page-fields-table",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		parameters: {
+			type: Object,
+			required: false
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
+		edit: {
+			type: Boolean,
+			required: true
+		},
+		data: {
+			required: false
+		},
+		shouldStyle: {
+			type: Boolean,
+			required: false,
+			default: true
+		},
+		label: {
+			type: Boolean,
+			required: false,
+			default: null
+		},
+		localState: {
+			type: Object,
+			required: false
+		},
+		fieldsName: {
+			type: String,
+			required: false,
+			default: "fields"
+		}
+	},
+	data: function() {
+		return {
+			configuring: false
+		}
+	},
+	created: function() {
+		this.normalize(this.cell.state);
+	},
+	methods: {
+		configure: function() {
+			this.configuring = true;	
+		},
+		normalize: function(state) {
+			if (!state.class) {
+				Vue.set(state, "class", null);
+			}
+			if (!state.display) {
+				Vue.set(state, "class", "row");
+			}
+		},
+		getEvents: function() {
+			var result = {};
+			var self = this;
+			if (this.cell.state[this.fieldsName]) {
+				this.cell.state[this.fieldsName].forEach(function(field) {
+					if (field.fragments) {
+						field.fragments.forEach(function(fragment) {
+							if (fragment.clickEvent) {
+								if (typeof(fragment.clickEvent) == "string") {
+									result[fragment.clickEvent] = {};
+								}
+								else if (nabu.page.event.getName(fragment, "clickEvent") && nabu.page.event.getName(fragment, "clickEvent") != "$close") {
+									var type = nabu.page.event.getType(fragment, "clickEvent");
+									if (type.properties && Object.keys(type.properties).length == 0 && self.cell.on) {
+										type = self.cell.on;
+									}
+									result[nabu.page.event.getName(fragment, "clickEvent")] = type;
+								}
+							}	
+						});
+					}	
+				});
+			}
+			return result;
+		}
+	}
+});
+
 Vue.component("page-field", {
 	template: "#page-field",
 	props: {
@@ -496,7 +586,7 @@ Vue.component("page-formatted-configure", {
 });
 
 Vue.component("page-formatted", {
-	template: "<component :is='tag' v-content.parameterized=\"{value:formatted,plain:fragment.format == 'text', sanitize: !isHtml, compile: fragment.compile && !skipCompile }\"/>",
+	template: "<component :is='tag' v-content.parameterized=\"{value:formatted,plain:fragment.format == 'text', sanitize: !isHtml, compile: (mustCompile || fragment.compile) && !skipCompile }\"/>",
 	props: {
 		page: {
 			type: Object,
@@ -551,6 +641,9 @@ Vue.component("page-formatted", {
 			}
 			var formatter = nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0];
 			return formatter && formatter.skipCompile;
+		},
+		mustCompile: function() {
+			return this.fragment.format == "checkbox";	
 		},
 		formatted: function() {
 			if (this.fragment.format == "checkbox") {

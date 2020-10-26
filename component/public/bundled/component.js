@@ -61,7 +61,13 @@ window.addEventListener("load", function() {
 				return new nabu.page.views.PageFields({propsData: parameters});
 			}
 		});
-		
+		$services.router.register({
+			alias: "page-fields-table",
+			enter: function(parameters) {
+				return new nabu.page.views.PageFieldsTable({propsData: parameters});
+			}
+		});
+	
 		$services.router.register({
 			alias: "page-actions",
 			enter: function(parameters) {

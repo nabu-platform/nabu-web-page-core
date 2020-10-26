@@ -104,8 +104,8 @@
 									<button @click="page.content.properties ? page.content.properties.push({}) : $window.Vue.set(page.content, 'properties', [{}])">Add Property</button>
 									<div v-if="page.content.properties">
 										<div v-for="property in page.content.properties">
-											<n-form-text v-model="property.key" label="Key"/>
-											<n-form-text v-model="property.value" label="Value"/>
+											<n-form-text v-model="property.key" label="Key" :timeout="600" @input="save(page)"/>
+											<n-form-text v-model="property.value" label="Value":timeout="600" @input="save(page)"/>
 										</div>
 									</div>
 								</n-form-section>

@@ -206,7 +206,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			// inherit the state from the application
 			this.page.content.states.filter(function(state) { return !!state.name && state.inherited }).forEach(function(state) {
-				Vue.set(self.variables, state.name, self.$services.page.variables[state.applicationName]);
+				// clone it so they don't have the same references! otherwise the array merges might be weird (splice and merge on same array...)
+				Vue.set(self.variables, state.name, nabu.utils.objects.clone(self.$services.page.variables[state.applicationName]));
 				// you want to send out the event if _anyone_ updates it, not just you
 				self.$watch("$services.page.variables." + state.applicationName, function(newValue) {
 					// update local variable as well, otherwise changes won't be seen

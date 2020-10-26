@@ -8,12 +8,14 @@ Vue.component("page-form-input-address-configure", {
 		+ "	<n-form-combo v-model='field.city' label='City Field' :filter='getKeys'/>"
 		+ "	<n-form-combo v-model='field.postCode' label='Post Code Field' :filter='getKeys'/>"
 		+ "	<n-form-combo v-model='field.street' label='Street Field' :filter='getKeys'/>"
+		+ "	<n-form-combo v-model='field.additional' label='Additional Field' :filter='getKeys'/>"
 		+ "	<n-form-combo v-model='field.streetNumber' label='Street Number Field' :filter='getKeys' v-if='!field.streetIncludeNumber'/>"
 		+ "	<n-form-text v-model='field.countryLabel' label='Country Label' />"
 		+ "	<n-form-text v-model='field.cityLabel' label='City Label' />"
 		+ "	<n-form-text v-model='field.postCodeLabel' label='Postcode Label' />"
 		+ "	<n-form-text v-model='field.streetLabel' label='Street Label' />"
 		+ "	<n-form-text v-model='field.streetNumberLabel' label='Street Number Label' />"
+		+ "	<n-form-text v-model='field.additionalLabel' label='Additional Label' />"
 		+ "</n-form-section>",
 	props: {
 		cell: {
@@ -72,11 +74,13 @@ Vue.component("page-form-input-address", {
 			+ "     :post-code='field.postCode'"
 			+ "     :street='field.street'"
 			+ "     :street-number='field.streetNumber'"
+			+ "     :additional='field.additional'"
 			+ "     :country-label='$services.page.translate(field.countryLabel)'"
 			+ "     :city-label='$services.page.translate(field.cityLabel)'"
 			+ "     :post-code-label='$services.page.translate(field.postCodeLabel)'"
 			+ "     :street-label='$services.page.translate(field.streetLabel)'"
 			+ "     :street-number-label='$services.page.translate(field.streetNumberLabel)'"
+			+ "     :additional-label='$services.page.translate(field.additionalLabel)'"
 			+ "		:country-restriction='field.countryRestriction'"
 			+ "		:disabled='disabled'/>",
 	props: {

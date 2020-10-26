@@ -1,4 +1,4 @@
-<structure interface="$self:api" name="pipeline">
+<structure interface="nabu.web.page.core.rest.configuration.update:api" name="pipeline">
     <structure name="input"/>
     <structure name="output"/>
     <structure comment="Nabu Page Builder configuration options" definition="nabu.web.page.core.types.configuration" name="configuration"/>
