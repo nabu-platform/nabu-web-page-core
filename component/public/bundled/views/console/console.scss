@@ -38,6 +38,8 @@ body.has-nabu-console {
 				//background-color: #333;
 				background-color: inherit;
 				border-radius: 0;
+				text-transform: none;
+				font-weight: normal;
 				&.active {
 					color: #c2bef0;
 					border-color: #c2bef0;

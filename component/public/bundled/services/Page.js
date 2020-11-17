@@ -119,6 +119,9 @@ nabu.services.VueService(Vue.extend({
 		this.activate(done, true);
 	},
 	clear: function(done) {
+		Object.keys(nabu.page.instances).forEach(function(key) {
+			nabu.page.instances[key].emit("$clear", {});	
+		});
 		this.activate(done ? done : function() {}, false);
 	},
 	computed: {
@@ -2057,15 +2060,24 @@ nabu.services.VueService(Vue.extend({
 			
 			return result;
 		},
-		getAllAvailableKeys: function(page) {
+		getAllAvailableKeys: function(page, includeComplex, value) {
 			var keys = [];
 			var self = this;
 			var parameters = this.getAllAvailableParameters(page);
 			Object.keys(parameters).map(function(key) {
-				nabu.utils.arrays.merge(keys, self.getSimpleKeysFor(parameters[key]).map(function(x) {
+				// not the page itself? this is mostly for eventing purposes, for other purposes it might be interesting to keep it
+				if (includeComplex && key != "page") {
+					keys.push(key);
+				}
+				nabu.utils.arrays.merge(keys, self.getSimpleKeysFor(parameters[key], includeComplex).filter(function(x) { return x != null}).map(function(x) {
 					return key + "." + x;
 				}));
 			});
+			if (value) {
+				keys = keys.filter(function(x) {
+					return x && x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				});
+			}
 			return keys;
 		},
 		getAvailableKeys: function(page, cell, includeAllEvents) {

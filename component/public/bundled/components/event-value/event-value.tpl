@@ -12,7 +12,7 @@
 			</div>
 		</div>
 		<div class="list-actions" v-if="container[name].name">
-			<button @click="addEventField(container[name]) & $emit('updatedEvents')"><span class="fa fa-plus"></span>Add Field</button>
+			<button @click="addEventField(container[name]) & $emit('updatedEvents')"><span class="fa fa-plus"></span>Event Field</button>
 		</div>
 	</component>
 </template>

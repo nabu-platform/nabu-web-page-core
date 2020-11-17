@@ -1,3 +1,11 @@
+@font-face {
+	font-family: 'Lato';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(${server.root()}resources/page/font/Lato-Regular.ttf);
+}
+
 $page-primary: #D1D5DB;
 $page-primary-light: #F4F5F6;
 $page-primary-medium: #E9E9ED;
@@ -67,8 +75,117 @@ $major-frontend-color: #595e71;
 		}
 	}
 }
+.n-sidebar.right.page-settings {
+	box-shadow: -1px 0px 8px 4px $page-secondary;
+	border: none;
+}
+.n-sidebar.left.page-settings {
+	box-shadow: 1px 0px 8px 4px $page-secondary;
+	border: none;
+}
 .n-sidebar.settings, .page-startup-wizard, .pages, .page-settings {
+	font-family: 'Lato';
+	/* redesign */
 	background-color: $page-primary-filler;
+
+	/* collapsibles */
+	.n-collapsible {
+		&.n-collapsible-show {
+			border-bottom: solid 1px $page-primary;
+		}
+		.n-collapsible-title {
+			display: flex;
+			width: 100%;
+			font-size: 0.8rem;
+			font-weight: normal;
+			padding: 0.5rem 1rem;
+			margin: 0;
+			.fa {
+				margin-right: 1rem;
+				margin-top: 0.15rem;
+				&:before {
+					font-size: 11px;
+				}
+			}
+			.n-collapsible-title-before, .n-collapsible-title-after {
+				font-size: 0.7rem;
+				color: $page-primary-text-unfocused;
+				padding: 0rem;
+				margin-left: 1rem;
+				padding-top: 0.2rem;
+			}
+			.n-collapsible-title-after {
+				margin-left: 1rem;
+			}
+			.n-collapsible-title-buttons {
+				text-align: right;
+				display: inline-block;
+				margin-left: auto;
+				button {
+					padding: 0 0.3rem;
+					border: none;
+					background-color: transparent;
+				}
+			}
+			
+			background-color: $page-secondary-light;
+			color: $page-secondary-text;
+		}
+		.n-collapsible-content {
+			background-color: $page-primary-filler;
+		}
+	}
+	.n-collapsible {
+		.n-collapsible {
+			.n-collapsible-title {
+				background-color: $page-primary;
+				color: $page-primary-text;
+			}
+		}
+	}
+	
+	
+	/* form */
+	.n-form-text, .n-form-combo {
+		input {
+			width: 100% !important;
+			background-color: $page-primary-light;
+		}
+	}
+	
+	/* buttons */
+	button {
+		background-color: $page-primary-medium;
+		color: $page-primary-text;
+		font-size: 0.8rem;
+		font-weight: normal;
+		border: solid 1px $page-primary;
+		box-shadow: none;
+		padding: 0.3rem 0.5rem;
+		text-transform: none;
+		font-family: 'Lato' !important;
+		.n-info {
+			top: 0 !important;
+			margin-left: 0.7rem;
+			position: static;
+			.n-info-content {
+				left: 0;
+				top: unset;
+				text-transform: none;
+				text-align: left;
+				font-size: 0.8rem;
+			}
+		}
+		.fa {
+			&:before {
+				font-size: 10px;
+			}
+		}
+		&:hover {
+			border: solid 1px $page-primary-dark;
+		}
+	}
+	
 	
 	.last-saved {
 		label {
@@ -87,13 +204,16 @@ $major-frontend-color: #595e71;
 		}
 	}
 	.sidebar-actions {
-		background-color: #333;
+		background-color: $page-primary-medium;
+		border: solid 1px $page-primary;
+		border-style: solid none;
 		width: 100%;
-		color: white;
 		text-align: center;
 		button {
 			background-color: inherit;
+			color: $page-primary-text;
 			padding: 0.5rem 0.7rem;
+			border: none;
 		}
 	}
 	.n-form-text-color {
@@ -107,29 +227,64 @@ $major-frontend-color: #595e71;
 	&.sidemenu {
 		width: 300px;
 	}
+	h1 {
+		margin: 2rem 1rem;
+		font-size: 1.4rem;
+		font-weight: normal;
+		color: $page-primary-text;
+		margin-left: 2rem;
+		+ .subscript {
+			margin: 1rem;
+			margin-top: -1rem;
+			margin-bottom: 2rem;
+			margin-left: 2rem;
+		}
+	}
 	h2 {
 		margin: 0.7rem 0rem;
-		margin-bottom: 1.7rem;
+		margin-bottom: 1.3rem;
 		font-size: 1.2rem;
 		font-weight: normal;
-		color: #000;
+		color: $page-primary-text;
 		&:first-child {
 			margin-top: 0;
 		}
-		&:not(:first-child) {
+		&.not-first {
 			border: solid 1px #ccc;
 			border-style: solid none none none;
 			margin-top: 1rem;
 			padding-top: 1rem;
 		}
 	}
+	h4 {
+		font-weight: normal;
+		font-size: 0.9rem;
+		margin: 0.7rem 0rem;
+	}
 	.subscript {
 		font-size: 0.8rem;
 		display: block;
 		font-weight: normal;
-		color: #888;	
+		color: $page-primary-text-unfocused;	
 		margin: 0.7rem 0rem;
 		text-transform: none;
+	}
+	.message {
+		font-size: 0.8rem;
+		color: $page-primary-text;
+		margin: 1rem 0;
+		&.important {
+			padding: 1rem;
+			border: solid 1px $page-primary;
+			background-color: $page-primary-light;
+			margin: 1rem 0;
+		}
+	}
+	h2 + .subscript {
+		margin-top: 0;
+		+ .n-form-component {
+			margin-top: 2rem !important;
+		}
 	}
 	label {
 		font-size: 0.8rem !important;
@@ -159,11 +314,6 @@ $major-frontend-color: #595e71;
 			margin-left: 0.3rem;
 		}
 	}
-	.n-form-text {
-		input {
-			width: 100% !important;
-		}
-	}
 	.n-form-input-wrapper {
 		flex-grow: 1;
 	}
@@ -190,30 +340,33 @@ $major-frontend-color: #595e71;
 			}
 		}
 		&:not(.n-form-checkbox) {
-			margin-top: 1.2rem !important;
+			margin-top: 0.7rem !important;
 		}
 		&.n-form-checkbox label span {
 			font-size: 0.7rem;
 		}
 		> .n-form-label-wrapper {
-			display: flex;
-			
+			/* to position n-info correctly */
 			position: relative;
-			position: absolute;
-			top: -0.7rem;
-			left: 0.4rem;
-			border: solid 1px #ccc;
-			background-color: #eee;
+			display: flex;
+			padding: 0;
+			/* remove the border */
+			margin-right: auto;
+			border: solid 1px $page-primary-dark;
+			background-color: $page-primary;
+			border-bottom: none;
 			> label {
+				color: $page-primary-text !important;
 				font-size: 0.7rem !important;
-				margin: 0;
-				padding: 0 0.3rem;
-				color: #666;
+				margin: 0 !important;
+				padding: 0 0.3rem !important;
 				
 			}
 			.n-info {
+				position: static;
+				color: $page-primary-text;
 				top: 0.3rem;
-				line-height: 0rem;
+				line-height: 0.65rem;
 				.fa {
 					line-height: unset;
 					&:before {
@@ -221,6 +374,7 @@ $major-frontend-color: #595e71;
 					}
 				}
 				.n-info-content {
+					left: 0;
 					line-height: 0.9rem;
 					font-size: 0.8rem;
 				}
@@ -232,6 +386,7 @@ $major-frontend-color: #595e71;
 			font-size: 0.8rem !important;
 			width: 100%;
 			min-width: 5rem;
+			font-family: 'Lato' !important;
 		}
 		&.n-form-combo {
 			position: relative;
@@ -306,19 +461,6 @@ body[has-sidebar="true"] {
 				display: block;
 				margin-bottom: 0.3rem;
 			}
-			/*
-			button {
-				display: block;
-				margin-left: auto;
-				&+button {
-					margin-top: 0.3rem;
-				}
-				padding: 0.3rem 0.7rem;
-				background-color: #f6f6f6;
-				color: #333;
-				margin: 0;
-			}
-			*/
 		}
 		.page-cell-menu {
 			background-color: #eaeaea;
@@ -735,7 +877,15 @@ body[has-sidebar="true"] {
 		min-width: 300px;
 	}
 }
+main > .page-sidemenu {
+	border: solid 1px $page-primary;
+	border-style: solid none;
+}
 .page-sidemenu {
+	background-color: $page-primary-light;
+	.fa {
+		color: $page-primary-text-unfocused;
+	}
 	.hover-top {
 		border: solid 2px #666;
 		border-style: solid none none none;
@@ -747,7 +897,6 @@ body[has-sidebar="true"] {
 	.fa-times {
 		color: #555;
 	}
-	background-color: white;
 	//white-space: nowrap;
 	.row > .page-sideentry .page-sideentry-menu {
 		button {
@@ -782,14 +931,22 @@ body[has-sidebar="true"] {
 		border-style: none none solid solid;
 	}
 	.row > .page-sideentry {
-		background-color: #ccc;
 		padding: 0.3rem 0.7rem;
-		color: #333;
+		color: $page-primary-text;
 		font-weight: normal;
 		position: relative;
 		.opener {
 			margin-right: 0.7rem;
 			margin-top: 2px;
+			&.fa-chevron-right:before {
+				content: "\f0fe";
+			}
+			&.fa-chevron-down:before {
+				content: "\f146";
+			}
+			&:before {
+				font-size: 12px;
+			}
 		}
 	}
 	.collapser, .configurer {
@@ -797,16 +954,20 @@ body[has-sidebar="true"] {
 		position: absolute;
 		top: 0.3rem;
 		right: 0.3rem;
+		.fa {
+			&:before {
+				font-size: 12px;
+			}
+		}
 	}
 	.row, .cell {
 		> .page-sideentry {
 			cursor: pointer;
 			display: flex;
 			&.selected {
-				background-color: $major-background-color;
-				color: $major-frontend-color;
+				background-color: $page-primary;
 				.fa {
-					color: $major-frontend-color;
+					color: $page-primary-text;
 				}
 			}
 			> .name {
@@ -814,7 +975,6 @@ body[has-sidebar="true"] {
 			}
 		}
 		margin-left: 0.7rem;
-		margin-top: 0.2rem;
 		font-size: 0.8rem;
 		&:hover {
 			> .page-sideentry {
@@ -824,8 +984,7 @@ body[has-sidebar="true"] {
 		> .page-sideentry {
 			border: solid 1px #ccc;
 			border-style: none none none solid;
-			padding: 0.2rem;
-			padding-left: 0.5rem;
+			padding: 0.4rem;
 			position: relative;
 			.page-sideentry-menu {
 				display: none;
@@ -860,7 +1019,7 @@ body[has-sidebar="true"] {
 	.cell-icon {
 		margin-top: 3px;
 		font-family: 'Font Awesome 5 Free';
-		color: $major-background-color;
+		color: $page-primary-text-unfocused;
 		margin-right: 0.5rem;
 		&:before {
 			content: "\f1b2";

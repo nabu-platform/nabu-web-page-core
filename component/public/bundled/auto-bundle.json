@@ -19,6 +19,11 @@
 			}
 		},
 		"page": {
+			"font": {
+				"Lato-Regular.ttf": {
+					"url": "font/Lato-Regular.ttf"
+				}
+			},
 			"core": {
 				"images": {
 					"buttons.svg": {
@@ -253,8 +258,8 @@
 						"page.js": {
 							"url": "views/page/page.js"
 						}, 
-						"page.sass": {
-							"url": "views/page/page.sass"
+						"page.scss": {
+							"url": "views/page/page.scss"
 						}, 
 						"page.tpl": {
 							"url": "views/page/page.tpl"

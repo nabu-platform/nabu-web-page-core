@@ -52,8 +52,7 @@ $major-background-color: #6c6a93;
 $major-background-color: #dad9f0;
 $major-frontend-color: #595e71;
 
-.settings, .pages {
-	background-color: #f3f3f3;
+.settings, .pages, .page-settings {
 	i {
 		&.n-icon {
 			font-style: normal;
@@ -65,72 +64,13 @@ $major-frontend-color: #595e71;
 	.root-configuration {
 		padding: 1rem 2rem;
 	}
-	.list-item, .n-collapsible .n-collapsible {
-		.n-collapsible-title {
-			background-color: #eaeaea;
-			color: #000;
-		}
-	}
-	.list-sub-item {
-		.n-collapsible-title {
-			background-color: #fafafa;
-			color: #000;
-		}
-	}
+	
 	.list-item-actions {
 		position: relative;
-	}
-	button {
-		background-color: $major-background-color;
-		color: $major-frontend-color;
-		font-size: 0.7rem;
-		font-weight: normal;
-		text-transform: uppercase;
-		border: none;
-		box-shadow: none;
-		padding: 0.3rem 0.5rem;
-		.n-info {
-			top: 0 !important;
-			margin-left: 0.7rem;
-			position: static;
-			.n-info-content {
-				left: 0;
-				top: unset;
-				text-transform: none;
-				text-align: left;
-				font-size: 0.8rem;
-			}
-		}
-		.fa {
-			&:before {
-				font-size: 10px;
-			}
-		}
 	}
 	.list-item-actions {
 		text-align: right;
 		padding: 0.7rem;
-	}
-	.n-collapsible-title {
-		background-color: #ccc;
-		color: #333;
-		font-size: 0.8rem;
-		font-weight: normal;
-		//text-transform: uppercase;
-		padding: 0.3rem 1rem;
-		margin: 0;
-		.n-collapsible-title-content {
-			display: inline-block;
-			margin-left: 1rem;
-		}
-	}
-	.n-collapsible + .n-collapsible {
-		border: solid 2px #f3f3f3;
-		border-style: solid none none none;
-	}
-	.n-collapsible-content {
-		//padding: 1rem 1.7rem;
-		background-color: #f3f3f3;
 	}
 	.padded-content {
 		padding: 1rem 1.7rem;

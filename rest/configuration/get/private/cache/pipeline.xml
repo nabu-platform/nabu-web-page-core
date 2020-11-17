@@ -1,4 +1,4 @@
-<structure interface="$self:implementation" name="pipeline">
+<structure interface="nabu.web.page.core.rest.configuration.get:implementation" name="pipeline">
     <structure name="input"/>
     <structure name="output"/>
     <field name="etag" type="java.lang.String"/>

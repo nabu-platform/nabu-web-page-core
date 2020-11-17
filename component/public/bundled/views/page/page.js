@@ -169,6 +169,18 @@ nabu.page.views.Page = Vue.component("n-page", {
 				});
 			}
 			
+			// once all the state is done, calculate the computed
+			if (self.page.content.computed) {
+				self.page.content.computed.forEach(function(x) {
+					if (x.name && x.script) {
+						var result = self.calculateVariable(x.script);
+						if (result != null) {
+							self.$services.page.setValue(self.variables, x.name, result);
+						}
+					}	
+				});
+			}
+			
 			// set up watchers for reset events
 			if (self.page.content.parameters) {
 				self.page.content.parameters.map(function(parameter) {
@@ -511,15 +523,23 @@ nabu.page.views.Page = Vue.component("n-page", {
 					if (x.name != null && (!names || names.indexOf(x.name) >= 0)) {
 						// if it is not passed in as input, we set the default value
 						if (self.parameters[x.name] == null) {
+							console.log("recalculating!", x.name);
 							// check if we have a content setting
 							var value = self.$services.page.getContent(x.global ? null : self.page.name, x.name);
 							if (value == null) {
-								value = self.$services.page.interpret(x.default, self);
+								if (x.complexDefault) {
+									value = self.calculateVariable(x.defaultScript);
+									console.log("scripting!", value);
+								}
+								else {
+									value = self.$services.page.interpret(x.default, self);
+								}
 							}
 							else {
 								value = value.content;
 							}
 							// inherit from global state (especially interesting for mails/pdfs...)
+							// basically you inject state in a global parameters application.state and it will be auto-bound
 							if (value == null && application.state && application.state[x.name] != null) {
 								value = application.state[x.name];
 							}
@@ -1103,7 +1123,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			// and in general the result should only change if we route new content
 			if (!this.cachedEvents) {
 				var events = {
-					"$configure": {properties:{}}
+					"$configure": {properties:{}},
+					"$clear": {properties:{}}
 				};
 				
 				var self = this;
@@ -1258,6 +1279,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 		reset: function(name) {
 			Vue.delete(this.variables, name);
 		},
+		calculateVariable: function(script) {
+			return this.$services.page.eval(script, this.variables, this);
+		},
 		// not sure anymore why this is necessary?
 		// the clue seems to be that if a single field is update in a computed property, the entire property is emitted again as an event
 		// the same can probably be done with chained events so it is not entirely clear if this is relevant?
@@ -1267,8 +1291,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 			if (this.page.content.computed) {
 				var self = this;
 				this.page.content.computed.forEach(function(x) {
-					if (x.bindings) {
-						var recalculate = false;
+					if (x.refreshOn && x.refreshOn.indexOf(name) >= 0 && x.script) {
+						self.$emit(name, calculateVariable(x.script));
+					}
+/*						var recalculate = false;
 						// in theory there could be multiple, in really we currently only allow the one you defined explicitly
 						var keys = Object.keys(x.bindings);
 						// this ia short hack to do that, in the future we might want to do other stuff, the recalculate will need some work then
@@ -1295,8 +1321,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 								self.emit(x.name, value);
 								break;
 							}
-						}
-					}	
+						}*/
 				});
 			}
 		},
@@ -1306,8 +1331,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}	
 			this.page.content.computed.push({
 				name: null,
-				triggers: [],
-				bindings: {}
+				refreshOn: [],
+				// bindings are deprecated?
+				bindings: {},
+				script: null
 			});
 		},
 		isBinaryDownload: function(operationId) {
@@ -1345,7 +1372,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 							}
 						}
 					})
-				})
+				});
 			}
 			
 			var promises = [];
