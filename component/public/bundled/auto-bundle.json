@@ -132,8 +132,8 @@
 						}
 					}, 
 					"pages": {
-						"pages.sass": {
-							"url": "views/pages/pages.sass"
+						"pages.scss": {
+							"url": "views/pages/pages.scss"
 						}, 
 						"pages.js": {
 							"url": "views/pages/pages.js"
@@ -173,6 +173,17 @@
 						}, 
 						"markdown.scss": {
 							"url": "views/markdown/markdown.scss"
+						}
+					},
+					"offline": {
+						"offline.tpl": {
+							"url": "views/offline/offline.tpl"
+						},
+						"offline.js": {
+							"url": "views/offline/offline.js"
+						},
+						"offline.scss": {
+							"url": "views/offline/offline.scss"
 						}
 					},
 					"richtext": {

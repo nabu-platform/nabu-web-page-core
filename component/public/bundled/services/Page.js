@@ -116,6 +116,13 @@ nabu.services.VueService(Vue.extend({
 			}
 		});
 		this.isServerRendering = navigator.userAgent.match(/Nabu-Renderer/);
+		this.$services.swagger.offlineHandler = function() {
+			// if you have permission to still view the application while offline (e.g. tester), you shouldn't end up here anyway
+			// so we don't check the canTest()!
+			setTimeout(function() {
+				self.$services.router.route("offline");
+			}, 1);
+		}
 		this.activate(done, true);
 	},
 	clear: function(done) {
@@ -622,7 +629,7 @@ nabu.services.VueService(Vue.extend({
 						setTimeout(self.reloadCss, 10000);
 					}
 					done();
-				}, function() {
+				}, function(error) {
 					Vue.nextTick(function(e) {
 						self.loading = false;
 						// route to error once the services are done initializing

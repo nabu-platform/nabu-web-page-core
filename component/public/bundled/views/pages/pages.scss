@@ -3,40 +3,43 @@ $alpha-accent-contrast: #fff !default;
 $alpha-color: #fff !default;
 
 .pages {
+	max-width: 1024px;
+	margin: auto;
+	box-shadow: 4px 4px 4px 4px #aaa;
+	
 	.panes {
 		display: flex;
 		.pane {
 			max-width: 50%;
 			flex-grow: 1;
 			+ .pane {
-				border-left: solid 2px #fff;
+				border-left: solid 1px #E9E9ED;
 			}
 		}
 	}
-	h1 {
+	h1.main {
 		font-size: 1.2rem;
 		text-align: center;
 		border: $border;
 		border-style: none none solid none;
 		padding: 0.7rem;
 		margin: 0;
-		background-color: #333;
+		background-color: #1C1E22;
 		color: white;
 		.subscript {
 			margin-left: 0.3rem;
 			display: inline-block;
+			color: #666;
 		}
 	}
-	h2 {
-		background-color: #f0f0b9;
-		border: solid 1px darken(#f0f0b9, 30%);
-		border-style: solid none solid none;
+	h2.category {
 		color: #333;
-		padding: 0.3rem 1rem;
+		padding: 1rem 2rem;
 		margin: 0 !important;
-		font-size: 0.7rem !important;
-		text-transform: uppercase;
 		text-align: left;
+		&:first-letter {
+			text-transform: uppercase;
+		}
 		.fa {
 			margin-left: 0.3rem;
 			&:before {

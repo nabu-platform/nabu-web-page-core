@@ -269,15 +269,31 @@ nabu.page.views.Page = Vue.component("n-page", {
 					console.log("error is", error);
 					var route = "error";
 					
-					error.forEach(function(x) {
-						if (self.page.content.stateErrors) {
-							self.page.content.stateErrors.forEach(function(y) {
-								if (y.code == x.code) {
-									route = y.route;
-								}
-							});
-						}
-					});
+					// if we have an array, check all responses
+					// if at least one response indicates an offline server, we are going with the offline story!
+					if (error instanceof Array) {
+						error.forEach(function(x) {
+							if (x.status == 503 || x.status == 502) {
+								route = "offline";
+							}
+						})
+					}
+					else if (error.status == 503 || error.status == 502) {
+						route = "offline";
+					}
+					
+					// if we have not opted for offline behavior, check if we have custom error routing
+					if (route == "error") {
+						error.forEach(function(x) {
+							if (self.page.content.stateErrors) {
+								self.page.content.stateErrors.forEach(function(y) {
+									if (y.code == x.code) {
+										route = y.route;
+									}
+								});
+							}
+						});
+					}
 					
 					console.log("error route is", route);
 					
@@ -2638,6 +2654,28 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			var components = pageInstance.components;
 			return components[cell.id] && components[cell.id].configure;
 		},
+		canConfigureInline: function(cell) {
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			var components = pageInstance.components;
+			return components[cell.id] && components[cell.id].configurator;
+		},
+		getCellConfigurator: function(cell) {
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			var components = pageInstance.components;
+			return components[cell.id] && components[cell.id].configurator();
+		},
+		getCellConfiguratorInput: function(cell) {
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			var components = pageInstance.components;
+			var cellInstance = components[cell.id];
+			var result = {};
+			if (cellInstance.$options.props) {
+				Object.keys(cellInstance.$options.props).forEach(function(prop) {
+					result[prop] = cellInstance[prop];
+				});
+			}
+			return result;
+		},
 		configure: function(cell) {
 			if (this.canConfigure) {
 				var self = this;
@@ -3118,12 +3156,17 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				var doDefault = true;
 				// if we have a cell target with a configuration, show that, otherwise, we do the generic configuration
 				if (cell != null) {
-					var self = this;
-					var pageInstance = self.$services.page.getPageInstance(self.page, self);
-					var cellInstance = pageInstance.components[cell.id];
-					if (cellInstance && cellInstance.configure) {
-						cellInstance.configure();
-						doDefault = false;
+					if (this.canConfigureInline(cell)) {
+						this.configuring = cell.id;
+					}
+					else {
+						var self = this;
+						var pageInstance = self.$services.page.getPageInstance(self.page, self);
+						var cellInstance = pageInstance.components[cell.id];
+						if (cellInstance && cellInstance.configure) {
+							cellInstance.configure();
+							doDefault = false;
+						}
 					}
 				}
 				if (doDefault) {

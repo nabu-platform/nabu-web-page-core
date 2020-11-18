@@ -1,50 +1,54 @@
 <template id="page-fields-edit">
-	<n-collapsible title="Fields" class="page-fields list">
+	<div>
 		<div class="list-actions" v-if="allowMultiple">
-			<button @click="addField(false)">Add Field</button>
-			<button @click="addField(true)">Add Content</button>
+			<button @click="addField(false)"><span class="fa fa-plus"></span>Field</button>
+			<button @click="addField(true)"><span class="fa fa-plus"></span> Content</button>
 		</div>
-		<n-collapsible class="list-item" :title="field.label ? field.label : 'Unlabeled'" v-for="field in cell.state[fieldsName]">
-			<n-form-text v-model="field.label" label="Field Label"/>
-			<n-form-text v-if="!basic" v-model="field.hidden" label="Hide field if"/>
-			<n-form-text v-model="field.info" label="Info Content"/>
-			<n-form-text v-model="field.infoIcon" label="Info Icon" v-if="field.info"/>
+		<n-collapsible class="list-item dark" :title="field.label ? field.label : 'Unlabeled'" v-for="field in cell.state[fieldsName]" :after="field.arbitrary ? 'content' : 'field'">
+			<div slot="buttons">
+				<button v-if="allowMultiple" @click="cell.state[fieldsName].splice(cell.state[fieldsName].indexOf(field), 1)"><span class="fa fa-trash"></span></button>
+			</div>
+			<div class="padded-content">
+				<n-form-text v-model="field.label" label="Field Label"/>
+				<n-form-text v-if="!basic" v-model="field.hidden" label="Hide field if"/>
+				<n-form-text v-model="field.info" label="Info Content"/>
+				<n-form-text v-model="field.infoIcon" label="Info Icon" v-if="field.info"/>
+			</div>
 			<div v-if="!field.arbitrary">
 				<div class="list-item-actions">
-					<button @click="addFragment(field)">Add Fragment</button>
-					<button v-if="allowMultiple" @click="cell.state[fieldsName].splice(cell.state[fieldsName].indexOf(field), 1)">Remove Field</button>
+					<button @click="addFragment(field)"><span class="fa fa-plus"></span>Fragment</button>
 					<button v-if="allowMultiple" @click="fieldBeginning(field)"><span class="fa fa-chevron-circle-left"></span></button>
 					<button v-if="allowMultiple" @click="fieldUp(field)"><span class="fa fa-chevron-circle-up"></span></button>
 					<button v-if="allowMultiple" @click="fieldDown(field)"><span class="fa fa-chevron-circle-down"></span></button>
 					<button v-if="allowMultiple" @click="fieldEnd(field)"><span class="fa fa-chevron-circle-right"></span></button>
 				</div>
-				<n-collapsible :title="fragment.key ? fragment.key : fragment.type" v-for="fragment in field.fragments">
+				<n-collapsible :title="fragment.key ? fragment.key : fragment.type" v-for="fragment in field.fragments" class="padded">
+					<div slot="buttons">
+						<button @click="up(field, fragment)"><span class="fa fa-chevron-circle-up"></span></button>
+						<button @click="down(field, fragment)"><span class="fa fa-chevron-circle-down"></span></button>
+						<button @click="field.fragments.splice(field.fragments.indexOf(fragment), 1)"><span class="fa fa-trash"></span></button>
+					</div>
 					<n-form-combo v-model="fragment.type" label="Fragment Type" :items="fragmentTypes"/>
 					<n-form-text v-if="!basic" v-model="fragment.hidden" label="Hide fragment if"/>
 					<n-form-combo v-if="fragment.type == 'data'" v-model="fragment.key" label="Data Key" :filter="getKeys"/>
 					<n-form-text v-if="!basic" v-model="fragment.class" label="Fragment Class"/>
-					<page-event-value v-if="allowEvents" :page="page" :container="fragment" title="Click Event" name="clickEvent" v-bubble:resetEvents/>
 					
 					<component v-if="fragment.type" :cell="cell" :page="page" :keys="getKeys()"
 						:fragment="fragment"
 						:is="getProvidedConfiguration(fragment.type)"/>
 						
-					<div class="list-item-actions">
-						<button @click="up(field, fragment)"><span class="fa fa-chevron-circle-up"></span></button>
-						<button @click="down(field, fragment)"><span class="fa fa-chevron-circle-down"></span></button>
-						<button @click="field.fragments.splice(field.fragments.indexOf(fragment), 1)"><span class="fa fa-trash"></span></button>
-					</div>
+					<page-event-value v-if="allowEvents" :page="page" :container="fragment" title="Click Event" name="clickEvent" v-bubble:resetEvents :inline="true"/>
 				</n-collapsible>
 			</div>
 			<div v-else>
 				<div class="list-item-actions">
-					<button v-if="allowMultiple" @click="cell.state[fieldsName].splice(cell.state[fieldsName].indexOf(field), 1)">Remove Content</button>
 					<button v-if="allowMultiple" @click="fieldBeginning(field)"><span class="fa fa-chevron-circle-left"></span></button>
 					<button v-if="allowMultiple" @click="fieldUp(field)"><span class="fa fa-chevron-circle-up"></span></button>
 					<button v-if="allowMultiple" @click="fieldDown(field)"><span class="fa fa-chevron-circle-down"></span></button>
 					<button v-if="allowMultiple" @click="fieldEnd(field)"><span class="fa fa-chevron-circle-right"></span></button>
 				</div>
 				<page-configure-arbitrary
+					class="padded-content"
 					:page="page"
 					:cell="cell"
 					:target="field"
@@ -52,7 +56,7 @@
 			</div>
 
 			<div class="list-item-actions">
-				<button @click="addStyle(field)">Add Style</button>
+				<button @click="addStyle(field)"><span class="fa fa-plus"></span>Style</button>
 			</div>
 			<n-form-section class="list-row" v-for="style in field.styles">
 				<n-form-text v-model="style.class" label="Class"/>
@@ -60,7 +64,7 @@
 				<button @click="field.styles.splice(field.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
 			</n-form-section>
 		</n-collapsible>
-	</n-collapsible>
+	</div>
 </template>
 
 <template id="page-formatted-configure">
@@ -145,6 +149,18 @@
 					:class="[action.class, {'has-icon': action.icon}, {'inline': !action.class }]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></button>
 			</span>
 		</template>
+	</div>
+</template>
+
+<template id="page-fields-edit-main">
+	<div>
+		<n-collapsible title="Field Settings" class="padded">
+			<n-form-text v-model="cell.state.class" label="Class" v-if="false"/>
+			<n-form-combo v-model="cell.state.class" label="Fields Class" 
+					:filter="function(value) { return $services.page.classes('page-fields', value) }"/>
+			<n-form-switch v-model="cell.state.hideLabel" label="Hide label" v-if="label == null"/>
+		</n-collapsible>
+		<page-fields-edit :cell="cell" :allow-multiple="true" :page="page" :data="data" :should-style="shouldStyle"/>
 	</div>
 </template>
 

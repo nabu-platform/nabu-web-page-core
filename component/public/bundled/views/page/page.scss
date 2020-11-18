@@ -93,6 +93,11 @@ $major-frontend-color: #595e71;
 		&.n-collapsible-show {
 			border-bottom: solid 1px $page-primary;
 		}
+		&.dark {
+			.n-collapsible-title {	
+				background-color: $page-secondary-dark;	
+			}
+		}
 		.n-collapsible-title {
 			display: flex;
 			width: 100%;
@@ -109,7 +114,7 @@ $major-frontend-color: #595e71;
 			}
 			.n-collapsible-title-before, .n-collapsible-title-after {
 				font-size: 0.7rem;
-				color: $page-primary-text-unfocused;
+				color: $page-primary;
 				padding: 0rem;
 				margin-left: 1rem;
 				padding-top: 0.2rem;
@@ -125,6 +130,10 @@ $major-frontend-color: #595e71;
 					padding: 0 0.3rem;
 					border: none;
 					background-color: transparent;
+					color: $page-primary-light;
+				}
+				.fa {
+					margin-right: 0.3rem;
 				}
 			}
 			
@@ -140,6 +149,12 @@ $major-frontend-color: #595e71;
 			.n-collapsible-title {
 				background-color: $page-primary;
 				color: $page-primary-text;
+				button {
+					color: $page-primary-text;
+				}
+				.n-collapsible-title-before, .n-collapsible-title-after {
+					color: $page-primary-text-unfocused;
+				}
 			}
 		}
 	}
@@ -155,6 +170,8 @@ $major-frontend-color: #595e71;
 	
 	/* buttons */
 	button {
+		cursor: pointer;
+		border-radius: 3px;
 		background-color: $page-primary-medium;
 		color: $page-primary-text;
 		font-size: 0.8rem;
@@ -178,7 +195,7 @@ $major-frontend-color: #595e71;
 		}
 		.fa {
 			&:before {
-				font-size: 10px;
+				font-size: 12px;
 			}
 		}
 		&:hover {
@@ -239,6 +256,9 @@ $major-frontend-color: #595e71;
 			margin-bottom: 2rem;
 			margin-left: 2rem;
 		}
+		&.divider {
+			margin-top: 4rem;
+		}
 	}
 	h2 {
 		margin: 0.7rem 0rem;
@@ -246,6 +266,7 @@ $major-frontend-color: #595e71;
 		font-size: 1.2rem;
 		font-weight: normal;
 		color: $page-primary-text;
+		font-family: 'Lato';
 		&:first-child {
 			margin-top: 0;
 		}
@@ -256,10 +277,14 @@ $major-frontend-color: #595e71;
 			padding-top: 1rem;
 		}
 	}
+	h3 {
+		font-family: 'Lato';
+	}
 	h4 {
 		font-weight: normal;
 		font-size: 0.9rem;
 		margin: 0.7rem 0rem;
+		font-family: 'Lato';
 	}
 	.subscript {
 		font-size: 0.8rem;
@@ -318,6 +343,7 @@ $major-frontend-color: #595e71;
 		flex-grow: 1;
 	}
 	.n-form-component {
+		margin: 0.5rem 0;
 		.n-form-input-after {
 			display: none;
 		}
@@ -350,6 +376,9 @@ $major-frontend-color: #595e71;
 			position: relative;
 			display: flex;
 			padding: 0;
+			margin: 0;
+			/* to match the border radius of the input fields that are often underneath it */
+			margin-left: 3px;
 			/* remove the border */
 			margin-right: auto;
 			border: solid 1px $page-primary-dark;
@@ -387,6 +416,7 @@ $major-frontend-color: #595e71;
 			width: 100%;
 			min-width: 5rem;
 			font-family: 'Lato' !important;
+			border-radius: 3px;
 		}
 		&.n-form-combo {
 			position: relative;

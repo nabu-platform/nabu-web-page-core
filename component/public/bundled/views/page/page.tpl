@@ -489,7 +489,7 @@
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				<n-sidebar :autocloseable="false" v-if="configuring == cell.id" @close="configuring = null" class="page-settings" key="cell-settings" :inline="true">
 					<div class="sidebar-actions">
-						<button @click="configuring = null; configure(cell)" v-if="cell.alias && hasConfigure(cell)"><span class="fa fa-cog" title="Configure Cell Content"></span></button
+						<button @click="configuring = null; configure(cell)" v-if="cell.alias && hasConfigure(cell) && !canConfigureInline(cell)"><span class="fa fa-cog" title="Configure Cell Content"></span></button
 						><button @click="left(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-left"></span></button
 						><button @click="right(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-right"></span></button
 						><button @click="addRow(cell)"><span class="fa fa-plus" title="Add Row"></span></button
@@ -498,16 +498,17 @@
 						><button @click="removeCell(row.cells, cell)"><span class="fa fa-times" title="Remove Cell"></span></button>
 					</div>
 					<n-form class="layout2" key="cell-form">
-						<div class="padded-content">
-							<n-form-combo label="Content Route" :filter="filterRoutes" v-model="cell.alias"
-								:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
-								:required="true"
-								info="The content we want to route in the cell"/>
-						</div>
 						<n-form-section>
+							<h1>General cell configuration</h1>
+							<p class="subscript">Here you can configure cell settings that are available to all cells in the grid regardless of the content type.</p>
 							<n-collapsible title="Cell Settings" key="cell-settings">
 								<div class="padded-content">
-									<h2>Content<span class="subscript">Choose the content you want to add to your cell</span></h2>
+									<h2>Content</h2>
+									<p class="subscript">Choose the content you want to add to your cell</p>
+									<n-form-combo label="Content Type" :filter="filterRoutes" v-model="cell.alias"
+										:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
+										:required="true"
+										info="The type of content that should be displayed in this cell"/>
 									<n-form-text label="Cell Name" v-model="cell.name" info="A descriptive name" :timeout="600"/>
 									<n-page-mapper v-if="cell.alias" 
 										:key="'page_' + pageInstanceId + '_' + cell.id + '_mapper'"
@@ -568,15 +569,15 @@
 									<n-form-text label="Minimum Width" v-model="cell.minWidth" v-if="cell.target == 'absolute'"/>
 									<n-form-switch label="Position fixed?" v-model="cell.fixed" v-if="cell.target == 'absolute'"/>
 									<n-form-switch label="Autoclose" v-model="cell.autoclose" v-if="cell.target == 'absolute' || cell.target == 'prompt'"/>
+									<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" @resetEvents="resetEvents" :inline="true"/>
 								</div>								
-								<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" @resetEvents="resetEvents"/>
 							</n-collapsible>
 							<n-collapsible title="Styling">
 								<div class="padded-content">
-									<n-form-text label="Class" v-model="cell.class"/>
+									<n-form-text label="Cell Class" v-model="cell.class"/>
 								</div>
 								<div class="list-actions">
-									<button @click="cell.styles == null ? $window.Vue.set(cell, 'styles', [{class:null,condition:null}]) : cell.styles.push({class:null,condition:null})"><span class="fa fa-plus"></span>Style</button>
+									<button @click="cell.styles == null ? $window.Vue.set(cell, 'styles', [{class:null,condition:null}]) : cell.styles.push({class:null,condition:null})"><span class="fa fa-plus"></span>Cell Style</button>
 								</div>
 								<div class="padded-content" v-if="cell.styles">
 									<n-form-section class="list-row" v-for="style in cell.styles">
@@ -586,20 +587,30 @@
 									</n-form-section>
 								</div>
 							</n-collapsible>
+							<div v-if="canConfigureInline(cell)">
+								<h1>Content specific configuration</h1>
+								<p class="subscript">Here you can find additional configuration settings for the content type that you have chosen.</p>
+								<component :is="getCellConfigurator(cell)" v-bind="getCellConfiguratorInput(cell)"/>
+							</div>
 						</n-form-section>
 					</n-form>
 				</n-sidebar>
 				<div class="page-cell-menu n-page-menu" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
-					<button @click="left(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-left"></span></button
-					><button @click="right(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-right"></span></button
-					><button @click="cellUp(row, cell)" v-if="false"><span class="fa fa-chevron-circle-up"></span></button
-					><button @click="cellDown(row, cell)" v-if="false"><span class="fa fa-chevron-circle-down"></span></button
-					><button @click="addRow(cell)"><span class="fa fa-plus" title="Add Row"></span></button
-					><button @click="removeCell(row.cells, cell)"><span class="fa fa-times" title="Remove Cell"></span></button
-					><button @click="copyCell(cell)"><span class="fa fa-copy" title="Copy Cell"></span></button
-					><button @click="pasteRow(cell)" v-if="$services.page.copiedRow"><span class="fa fa-paste" title="Paste Row"></span></button
-					><button @click="configuring = cell.id"><span class="fa fa-magic" title="Set Cell Content"></span></button
-					><button @click="configure(cell)" v-if="cell.alias"><span class="fa fa-cog" title="Configure Cell Content"></span></button>
+					<div v-if="cell.alias && canConfigureInline(cell)">
+						<button @click="configuring = cell.id"><span class="fa fa-cog" title="Configure Cell"></span></button>
+					</div>
+					<div v-else>
+						<button @click="left(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-left"></span></button
+						><button @click="right(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-right"></span></button
+						><button @click="cellUp(row, cell)" v-if="false"><span class="fa fa-chevron-circle-up"></span></button
+						><button @click="cellDown(row, cell)" v-if="false"><span class="fa fa-chevron-circle-down"></span></button
+						><button @click="addRow(cell)"><span class="fa fa-plus" title="Add Row"></span></button
+						><button @click="removeCell(row.cells, cell)"><span class="fa fa-times" title="Remove Cell"></span></button
+						><button @click="copyCell(cell)"><span class="fa fa-copy" title="Copy Cell"></span></button
+						><button @click="pasteRow(cell)" v-if="$services.page.copiedRow"><span class="fa fa-paste" title="Paste Row"></span></button
+						><button @click="configuring = cell.id"><span class="fa fa-magic" title="Set Cell Content"></span></button
+						><button @click="configure(cell)" v-if="cell.alias"><span class="fa fa-cog" title="Configure Cell Content"></span></button>
+					</div>
 				</div>
 				
 				<div v-if="edit">

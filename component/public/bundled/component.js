@@ -19,6 +19,15 @@ window.addEventListener("load", function() {
 		});
 		
 		$services.router.register({
+			alias: "offline",
+			enter: function(parameters) {
+				var component = Vue.component("pages-offline");
+				return new component({propsData:parameters});
+			},
+			priority: -5
+		});
+		
+		$services.router.register({
 			alias: "page-static-image",
 			query: ["href"],
 			enter: function(parameters) {

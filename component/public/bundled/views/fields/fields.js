@@ -216,6 +216,50 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 	}
 });
 
+Vue.component("page-fields-edit-main", {
+	template: "#page-fields-edit-main",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		parameters: {
+			type: Object,
+			required: false
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
+		edit: {
+			type: Boolean,
+			required: true
+		},
+		data: {
+			required: false
+		},
+		shouldStyle: {
+			type: Boolean,
+			required: false,
+			default: true
+		},
+		label: {
+			type: Boolean,
+			required: false,
+			default: null
+		},
+		localState: {
+			type: Object,
+			required: false
+		},
+		fieldsName: {
+			type: String,
+			required: false,
+			default: "fields"
+		}
+	}
+})
+
 nabu.page.views.PageFields = Vue.component("page-fields", {
 	template: "#page-fields",
 	props: {
@@ -267,8 +311,13 @@ nabu.page.views.PageFields = Vue.component("page-fields", {
 		this.normalize(this.cell.state);
 	},
 	methods: {
+		/*
 		configure: function() {
 			this.configuring = true;	
+		},
+		*/
+		configurator: function() {
+			return "page-fields-edit-main";
 		},
 		normalize: function(state) {
 			if (!state.class) {

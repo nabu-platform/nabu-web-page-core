@@ -22,4 +22,5 @@
     <source>false</source>
     <allowRaw>false</allowRaw>
     <domain>false</domain>
+    <ignoreOffline>true</ignoreOffline>
 </restInterface>
