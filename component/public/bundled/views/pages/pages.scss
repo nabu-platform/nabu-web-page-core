@@ -6,15 +6,27 @@ $alpha-color: #fff !default;
 	max-width: 1024px;
 	margin: auto;
 	box-shadow: 4px 4px 4px 4px #aaa;
-	
+
+	.odd-block {
+		background-color: #F4F5F6;
+		border-top: solid 1px #ccccd4;
+	}	
 	.panes {
 		display: flex;
 		.pane {
-			max-width: 50%;
 			flex-grow: 1;
+			flex-basis: 0;
 			+ .pane {
-				border-left: solid 1px #E9E9ED;
+				border-left: solid 1px #ccccd4;
 			}
+		}
+		+ .panes {
+			border-top: solid 1px #ccccd4;
+		}
+	}
+	.n-collapsible {
+		.pane {
+			padding: 1rem;
 		}
 	}
 	h1.main {
@@ -32,7 +44,12 @@ $alpha-color: #fff !default;
 			color: #666;
 		}
 	}
-	h2.category {
+	.category-subscript {
+		padding: 1rem 2rem;
+		padding-top: 0;
+		margin: 0 !important;
+	}
+	h4.category {
 		color: #333;
 		padding: 1rem 2rem;
 		margin: 0 !important;
@@ -40,11 +57,13 @@ $alpha-color: #fff !default;
 		&:first-letter {
 			text-transform: uppercase;
 		}
-		.fa {
-			margin-left: 0.3rem;
-			&:before {
-				font-size: 11px;
-			}
+		button {
+			margin-left: 0.7rem;
+		}
+		.subscript {
+			display: inline-block;
+			margin-right: 1rem;
+			font-size: 0.7rem;
 		}
 	}
 	.introduction {

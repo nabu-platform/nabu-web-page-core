@@ -283,9 +283,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 					}
 					
 					// if we have not opted for offline behavior, check if we have custom error routing
-					if (route == "error") {
+					if (route == "error" && error.forEach) {
 						error.forEach(function(x) {
-							if (self.page.content.stateErrors) {
+							// sometimes x is null?
+							if (x && x.code && self.page.content.stateErrors) {
 								self.page.content.stateErrors.forEach(function(y) {
 									if (y.code == x.code) {
 										route = y.route;
@@ -346,7 +347,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		this.postRender.splice(0).forEach(function(x) { x() });
 	},
 	created: function() {
-		console.log("creating page", this.page.name, this.stopRerender);
+		console.log("creating page", this.page.name);
 		this.$services.page.setPageInstance(this.page, this);
 		var self = this;
 		// backwards compatibility
@@ -539,7 +540,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 					if (x.name != null && (!names || names.indexOf(x.name) >= 0)) {
 						// if it is not passed in as input, we set the default value
 						if (self.parameters[x.name] == null) {
-							console.log("recalculating!", x.name);
 							// check if we have a content setting
 							var value = self.$services.page.getContent(x.global ? null : self.page.name, x.name);
 							if (value == null) {

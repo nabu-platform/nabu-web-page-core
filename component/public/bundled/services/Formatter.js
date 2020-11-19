@@ -55,7 +55,13 @@ nabu.services.VueService(Vue.extend({
 				return code(value);
 			}
 			else {
-				var result = eval(code);
+				var result = (new Function('with(this) { return ' + code + ' }')).call({
+					value: value,
+					$value: $value,
+					state: state,
+					$services: this.$services
+				});
+				//var result = eval(code);
 				if (result instanceof Function) {
 					result = result.bind(this);
 					result = result(value);

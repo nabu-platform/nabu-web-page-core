@@ -76,15 +76,25 @@ $major-frontend-color: #595e71;
 	}
 }
 .n-sidebar.right.page-settings {
-	box-shadow: -1px 0px 8px 4px $page-secondary;
+	/* box-shadow: $page-secondary */
+	box-shadow: -1px 0px 8px 4px #aaa;
 	border: none;
 }
 .n-sidebar.left.page-settings {
-	box-shadow: 1px 0px 8px 4px $page-secondary;
+	box-shadow: 1px 0px 8px 4px #aaa;
 	border: none;
 }
 .n-sidebar.settings, .page-startup-wizard, .pages, .page-settings {
 	font-family: 'Lato';
+	
+	code {
+		font-size: 0.7rem;
+		font-family: 'Monospace';
+		background-color: $page-primary-medium;
+		color: $page-primary-text;
+		padding: 0.1rem 0.3rem;
+		margin: 0 0.3rem;
+	}
 	/* redesign */
 	background-color: $page-primary-filler;
 
@@ -95,7 +105,8 @@ $major-frontend-color: #595e71;
 		}
 		&.dark {
 			.n-collapsible-title {	
-				background-color: $page-secondary-dark;	
+				background-color: $page-secondary-dark !important;
+				color: $page-secondary-text !important;
 			}
 		}
 		.n-collapsible-title {
@@ -144,21 +155,18 @@ $major-frontend-color: #595e71;
 			background-color: $page-primary-filler;
 		}
 	}
-	.n-collapsible {
-		.n-collapsible {
-			.n-collapsible-title {
-				background-color: $page-primary;
+	.n-collapsible .n-collapsible, .n-collapsible.light {
+		.n-collapsible-title {
+			background-color: $page-primary;
+			color: $page-primary-text;
+			button {
 				color: $page-primary-text;
-				button {
-					color: $page-primary-text;
-				}
-				.n-collapsible-title-before, .n-collapsible-title-after {
-					color: $page-primary-text-unfocused;
-				}
+			}
+			.n-collapsible-title-before, .n-collapsible-title-after {
+				color: $page-primary-text-unfocused;
 			}
 		}
 	}
-	
 	
 	/* form */
 	.n-form-text, .n-form-combo {
@@ -203,6 +211,26 @@ $major-frontend-color: #595e71;
 		}
 	}
 	
+	/* tabs */
+	.tabs {
+		display: flex;
+		background-color: $page-primary-medium;
+		border: solid 1px $page-primary;
+		border-style: solid none;
+		.tab {
+			border: solid 2px $page-primary;
+			border-style: none none solid none;
+			padding: 1rem;
+			cursor: pointer;
+			&.selected, &:hover {
+				border-color: $page-primary-dark;
+			}
+			.fa {
+				margin-right: 0.7rem;
+			}
+		}
+	}
+	
 	
 	.last-saved {
 		label {
@@ -237,7 +265,7 @@ $major-frontend-color: #595e71;
 		width: 98%;
 	}
 	button {
-		.fa-plus {
+		.fa {
 			margin-right: 0.3rem;
 		}
 	}
@@ -256,9 +284,16 @@ $major-frontend-color: #595e71;
 			margin-bottom: 2rem;
 			margin-left: 2rem;
 		}
-		&.divider {
-			margin-top: 4rem;
-		}
+	}
+	.divider {
+		/*
+		background-color: $page-primary-medium;
+		border: solid 1px $page-primary;
+		border-style: solid none;
+		border-left: solid 10px $page-secondary;
+		*/
+		padding: 1rem 0;
+		margin: 0;
 	}
 	h2 {
 		margin: 0.7rem 0rem;
@@ -285,6 +320,7 @@ $major-frontend-color: #595e71;
 		font-size: 0.9rem;
 		margin: 0.7rem 0rem;
 		font-family: 'Lato';
+		color: $page-primary-text-unfocused;
 	}
 	.subscript {
 		font-size: 0.8rem;
@@ -343,6 +379,7 @@ $major-frontend-color: #595e71;
 		flex-grow: 1;
 	}
 	.n-form-component {
+		min-width: auto !important;
 		margin: 0.5rem 0;
 		.n-form-input-after {
 			display: none;
@@ -383,9 +420,10 @@ $major-frontend-color: #595e71;
 			margin-right: auto;
 			border: solid 1px $page-primary-dark;
 			background-color: $page-primary;
+			border-radius: 5px;
 			border-bottom: none;
 			> label {
-				color: $page-primary-text !important;
+				color: #666666 !important;
 				font-size: 0.7rem !important;
 				margin: 0 !important;
 				padding: 0 0.3rem !important;
@@ -396,6 +434,8 @@ $major-frontend-color: #595e71;
 				color: $page-primary-text;
 				top: 0.3rem;
 				line-height: 0.65rem;
+				margin: 0;
+				margin-top: 1px;
 				.fa {
 					line-height: unset;
 					&:before {

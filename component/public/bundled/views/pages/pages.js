@@ -11,7 +11,8 @@ nabu.page.views.Pages = Vue.extend({
 			pageToRoute: null,
 			// the currently open category
 			opened: null,
-			lastColor: {}
+			lastColor: {},
+			selectedTab: 'settings'
 		}
 	},
 	computed: {
@@ -100,6 +101,17 @@ nabu.page.views.Pages = Vue.extend({
 		this.$services.page.disableReload = false;	
 	},
 	methods: {
+		getDevice: function(name) {
+			var device = this.$services.page.devices.filter(function(x) { return x.name == name })[0];
+			if (device == null) {
+				device = {
+					name: name,
+					width: null
+				};
+				this.$services.page.devices.push(device);
+			}
+			return device;
+		},
 		addFunctionParameter: function(transformer, type) {
 			transformer[type].push({});
 		},

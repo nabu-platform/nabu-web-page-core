@@ -490,6 +490,7 @@ nabu.services.VueService(Vue.extend({
 				if (configuration.devices) {
 					nabu.utils.arrays.merge(self.devices, configuration.devices);
 				}
+				self.ensureDevices();
 				if (configuration.title) {
 					self.title = configuration.title;
 				}
@@ -573,7 +574,7 @@ nabu.services.VueService(Vue.extend({
 				if (!navigator.userAgent.match(/Nabu-Renderer/)) {
 					self.imports.forEach(function(x) {
 						if (x.type == 'javascript') {
-							self.inject(x.link, function() {}, function() {}, x.async);
+							self.inject(self.interpret(x.link), function() {}, function() {}, x.async);
 						}
 					});
 				}
@@ -644,6 +645,27 @@ nabu.services.VueService(Vue.extend({
 					done();
 				});
 			});
+		},
+		ensureDevices: function() {
+			var self = this;
+			var ensure = function(name, width) {
+				var device = self.devices.filter(function(x) { return x.name == name})[0];
+				if (device == null) {
+					self.devices.push({
+						name: name,
+						width: width
+					});
+				}
+				else if (device.width == null) {
+					device.width = width;
+				}
+			}
+			// we don't _need_ to set the device widths, we need to make sure the devices exist so you can choose them
+			// the placeholder in the edit screen visualizes the default without hard saving it to your application
+			// the default itself is set in the breakpoint injector
+			ensure("phone", null); // 512
+			ensure("tablet", null);	// 960
+			ensure("desktop", null); // 1280
 		},
 		getApplicationStateNames: function(value) {
 			var values = this.applicationState.filter(function(x) { return !!x.name }).map(function(x) {
@@ -1294,6 +1316,25 @@ nabu.services.VueService(Vue.extend({
 			feature = feature.replace("@" + "{", "");
 			feature = feature.replace("}", "");
 			return this.enabledFeatures.indexOf(feature) >= 0;
+		},
+		evalInContext: function(context, code) {
+			var value;
+			try {
+				// for expressions
+				value = eval('with(context) { ' + js + ' }');
+			}
+			catch (e) {
+				if (e instanceof SyntaxError) {
+					try {
+						// for statements
+						value = (new Function('with(this) { ' + js + ' }')).call(context);
+					}
+					catch (e) {
+						// do nothing
+					}
+				}
+			}
+			return value;	
 		},
 		eval: function(condition, state, instance) {
 			if (!condition) {
@@ -2610,7 +2651,6 @@ nabu.services.VueService(Vue.extend({
 		},
 		// update the branding parameters depending on the page
 		updateBranding: function(branding) {
-			console.log("updating branding", branding);
 			var self = this;
 			var fields = ["favicon", "title", "description", "image", "imageAlt", "facebookAppId", "twitterUserName"];
 			// the current branding takes the specific branding and (if absent) the default branding

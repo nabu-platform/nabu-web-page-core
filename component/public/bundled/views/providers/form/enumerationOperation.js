@@ -218,9 +218,6 @@ Vue.component("page-form-input-enumeration-operation", {
 			provider: null
 		}
 	},
-	created: function() {
-		console.log("***created enumerationOperation.js with validator", this.getValidator());
-	},
 	methods: {
 		// enumerationOperation: null,
 		// enumerationFormatter
