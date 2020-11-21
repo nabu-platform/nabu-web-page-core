@@ -679,7 +679,7 @@
 					</template>
 				</template>
 			</component>
-			<n-sidebar :autocloseable="false" v-if="configuring == row.id" @close="configuring = null" class="page-settings" :inline="true" >
+			<n-sidebar :autocloseable="false" v-if="configuring == row.id" @close="configuring = null" class="page-settings" :inline="true">
 				<div class="sidebar-actions">
 					<button @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button
 					><button @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button

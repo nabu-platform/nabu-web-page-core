@@ -3008,9 +3008,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 		},
 		addCell: function(target) {
-			if (!target.cells) {
-				Vue.set(target, "cells", []);
-			}
+			var self = this;
 			var cell = {
 				id: this.page.content.counter++,
 				rows: [],
@@ -3039,6 +3037,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				devices: [],
 				clickEvent: null
 			};
+			if (!target.cells) {
+				Vue.set(target, "cells", []);
+			}
 			target.cells.push(cell);
 			return cell;
 		},
