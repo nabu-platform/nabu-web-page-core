@@ -10,9 +10,21 @@ window.addEventListener("load", function() {
 		});
 		
 		$services.router.register({
-			alias: "pages",
+			alias: "home",
 			enter: function(parameters) {
-				return new nabu.page.views.Pages({propsData:parameters});
+				// if you have not overridden this alias (home) but you have added a route at "/", let's look for that
+				// it takes presedence over the pages here
+				var hasHomeRoute = $services.router.router.findRoute("${server.root()}");
+				// it must not have the alias home, to prevent circular refreshes etc
+				if (hasHomeRoute && hasHomeRoute.route && hasHomeRoute.route.alias != "home") {
+					setTimeout(function() {
+						console.log("routing to", hasHomeRoute);
+						$services.router.route(hasHomeRoute.route.alias);
+					}, 1);
+				}
+				else {
+					return new nabu.page.views.Pages({propsData:parameters});
+				}
 			},
 			priority: -5,
 			url: "/"

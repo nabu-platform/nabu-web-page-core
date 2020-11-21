@@ -128,8 +128,8 @@
 							<n-form-section class="pane">
 								<n-form-text :value="page.name" label="Name (lowercase and dashes)" :required="true" :timeout="600" @input="function(newValue) { updatePageName(page, newValue) }" :validator="customNameValidator"/>
 								<n-form-text v-model="page.content.category" label="Category" :timeout="600" @input="save(page)"/>
-								<n-form-switch info="For simple applications you can set this page as a common root to all other pages" 
-									v-if="!page.content.pageParent && !page.content.path" label="Is initial" v-model="page.content.initial" @input="save(page)"/>
+								<n-form-switch info="You can set this page as a default common root to all other pages that don't have any parent specified" 
+									v-if="!page.content.pageParent && !page.content.path" label="Is default parent page" v-model="page.content.initial" @input="save(page)"/>
 								<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow" @input="save(page)"/>
 								<n-form-text v-if="!page.content.initial" v-model="page.content.path" label="Path" :timeout="600" @input="save(page)"/>
 								<n-form-combo v-if="!page.content.initial" v-model="page.content.pageParent" label="Page Parent" :timeout="600" @input="save(page)"

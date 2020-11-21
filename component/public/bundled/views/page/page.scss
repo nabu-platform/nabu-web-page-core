@@ -629,24 +629,23 @@ body[has-sidebar="true"] {
 	}
 	.page-edit {
 		&.page-component {
-			background-color: steelblue;
-			span {
-				font-size: 0.7rem;
-			}
+			background-color: $page-primary-medium;
+			border-style: dashed;
 		}
+		background-color: $page-primary;
+		border: solid 1px $page-primary-dark;
+		border-radius: 3px;
 		padding: 0.3rem;
 		position: absolute;
 		top: 0rem;
 		z-index: 100;
-		background-color: #333;
 		color: #fff;
-		border: $border;
 		span {
 			font-size: 0.8rem;
-			text-transform: uppercase;
 			margin: 0 0.7rem;
 			display: inline-block;
 			cursor: pointer;
+			color: $page-primary-text;
 		}
 		.language-selector {
 			position: relative;
@@ -654,7 +653,8 @@ body[has-sidebar="true"] {
 				display: none;
 				position: absolute;
 				top: 90%;
-				background-color: #333;
+				background-color: $page-primary;
+				color: $page-primary-text;
 				padding: 0.3rem;
 				span {
 					padding: 0.3rem;

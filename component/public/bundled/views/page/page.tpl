@@ -7,7 +7,8 @@
 		<n-sidebar :inline="true" class="page-settings" v-if="viewComponents" @close="viewComponents = false" :autocloseable="false">
 			<page-components-overview/>
 		</n-sidebar>
-		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit && !embedded && !$services.page.editing" :draggable="true" 
+		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit && !embedded && !$services.page.editing" 
+				:draggable="true" 
 				@dragstart="dragMenu($event)"
 				:class="{'page-component': !page.content.path}"
 				:style="{'top': page.content.menuY ? page.content.menuY + 'px' : '0px', 'left': page.content.menuX ? page.content.menuX + 'px' : '0px'}">
@@ -499,7 +500,7 @@
 					</div>
 					<n-form class="layout2" key="cell-form">
 						<n-form-section>
-							<h1>General cell configuration</h1>
+							<h1>Cell configuration</h1>
 							<p class="subscript">Here you can configure cell settings that are available to all cells in the grid regardless of the content type.</p>
 							<n-collapsible title="Cell Settings" key="cell-settings">
 								<div class="padded-content">
@@ -588,7 +589,7 @@
 								</div>
 							</n-collapsible>
 							<div v-if="canConfigureInline(cell)">
-								<h1>Content specific configuration</h1>
+								<h1>Content configuration</h1>
 								<p class="subscript">Here you can find additional configuration settings for the content type that you have chosen.</p>
 								<component :is="getCellConfigurator(cell)" v-bind="getCellConfiguratorInput(cell)"/>
 							</div>

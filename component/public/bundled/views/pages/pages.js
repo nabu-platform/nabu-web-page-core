@@ -117,11 +117,8 @@ nabu.page.views.Pages = Vue.extend({
 		},
 		updatePageName: function(page, newValue) {
 			console.log("page name is", page.name, newValue);
-			var result = this.$refs["category_" + page.content.category][0].validate(true);
-			if (result.length == 0) {
-				// check that the name is not in use
-				this.$services.page.rename(page, newValue);
-			}
+			// check that the name is not in use
+			this.$services.page.rename(page, newValue);
 		},
 		customNameValidator: function(newValue) {
 			var messages = [];
