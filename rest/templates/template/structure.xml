@@ -1,0 +1,7 @@
+<structure name="template">
+    <field name="name" type="java.lang.String"/>
+    <field minOccurs="0" name="category" type="java.lang.String"/>
+    <field minOccurs="0" name="description" type="java.lang.String"/>
+    <field minOccurs="0" name="icon" type="java.lang.String"/>
+    <field name="content" type="java.lang.String"/>
+</structure>

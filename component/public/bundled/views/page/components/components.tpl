@@ -2,7 +2,7 @@
 	<div class="page-components-overview">
 		<div class="tabs">
 			<div @click="selected = 'components'" class="tab" :class="{'selected': selected == 'components'}">Components</div>
-			<div @click="selected = 'structures'" class="tab" :class="{'selected': selected == 'structures'}">Content</div>
+			<div @click="selected = 'templates'" class="tab" :class="{'selected': selected == 'templates'}">Templates</div>
 			<div @click="selected = 'operations'" class="tab" :class="{'selected': selected == 'operations'}">Operations</div>
 		</div>
 		<div v-if="selected == 'components'">
@@ -17,26 +17,26 @@
 				</div>
 			</n-collapsible>
 		</div>
-		<div v-else-if="selected == 'structures'">
-			<n-collapsible class="component-category" v-for="category in structureCategories" :title="prettyPrint(category)">
-				<div class="page-structure" v-for="structure in getStructureCategory(category)" :draggable="true" 
-						@dragstart="dragStructure($event, structure)">
-					<img :draggable="false" :src="'${server.root()}resources/' + structure.icon" class="component-icon" v-if="structure.icon"/>
+		<div v-else-if="selected == 'templates'">
+			<n-collapsible class="component-category" v-for="category in templateCategories" :title="prettyPrint(category)">
+				<div class="page-template" v-for="template in getTemplateCategory(category)" :draggable="true" 
+						@dragstart="dragTemplate($event, template)">
+					<img :draggable="false" :src="'${server.root()}resources/' + template.icon" class="component-icon" v-if="template.icon"/>
 					<div class="about">
-						<span class="name">{{ structure.name }}</span>
-						<p class="structure-description" v-if="structure.description">{{ structure.description }}</p>
+						<span class="name">{{ template.name }}</span>
+						<p class="template-description" v-if="template.description">{{ template.description }}</p>
 					</div>
 				</div>
 			</n-collapsible>
 		</div>
 		<div v-else-if="selected == 'operations'">
 			<n-collapsible class="component-category" v-for="category in getOperationCategories()" :title="prettyPrint(category)">
-				<div class="page-structure" v-for="operation in getOperationCategory(category)" :draggable="true" 
+				<div class="page-template" v-for="operation in getOperationCategory(category)" :draggable="true" 
 						@dragstart="dragOperation($event, operation)">
 					<div class="about operation">
 						<span class="operation-folder">{{operationFolder(operation.id)}}</span>
 						<span class="name">{{ prettyPrintOperation(operation.id) }}</span>
-						<p class="structure-description" v-if="operation.summary">{{ operation.summary }}</p>
+						<p class="template-description" v-if="operation.summary">{{ operation.summary }}</p>
 					</div>
 				</div>
 			</n-collapsible>

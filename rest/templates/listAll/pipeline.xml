@@ -1,0 +1,9 @@
+<structure name="pipeline">
+    <structure name="input">
+        <field name="webApplicationId" type="java.lang.String"/>
+    </structure>
+    <structure name="output">
+        <structure definition="nabu.web.page.core.rest.templates.template" maxOccurs="unbounded" minOccurs="0" name="templates"/>
+    </structure>
+    <field maxOccurs="unbounded" minOccurs="0" name="files" type="java.lang.String"/>
+</structure>

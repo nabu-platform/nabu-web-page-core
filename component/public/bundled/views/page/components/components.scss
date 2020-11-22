@@ -1,5 +1,5 @@
 .page-components-overview, .page-components-selector {
-	.page-component, .page-structure {
+	.page-component, .page-template {
 		display: flex;
 		width: 100%;
 		padding: 1rem;
@@ -29,7 +29,7 @@
 			color: #aaa;
 			margin: 0;
 		}
-		+.page-component, +.page-structure {
+		+.page-component, +.page-template {
 			border-top: none;
 		}
 	}

@@ -36,9 +36,9 @@ Vue.component("page-components-overview", {
 			});
 			return groups;
 		},
-		structureCategories: function() {
+		templateCategories: function() {
 			var groups = [];
-			this.structures.forEach(function(x) {
+			this.$services.page.templates.forEach(function(x) {
 				if (x.category && groups.indexOf(x.category) < 0) {
 					groups.push(x.category);
 				}
@@ -106,8 +106,8 @@ Vue.component("page-components-overview", {
 				return id.substring(0, id.length - pretty.length - 1);
 			}
 		},
-		getStructureCategory: function(category) {
-			return this.structures.filter(function(x) {
+		getTemplateCategory: function(category) {
+			return this.$services.page.templates.filter(function(x) {
 				return x.category == category || (category == "Miscellaneous" && x.category == null);
 			});
 		},
@@ -122,8 +122,9 @@ Vue.component("page-components-overview", {
 				this.$services.page.setDragData(event, "form-name", component.form);
 			}
 		},
-		dragStructure: function(event, structure) {
-			this.$services.page.setDragData(event, "structure-content", JSON.stringify(structure.content));
+		dragTemplate: function(event, template) {
+			// the content is already stringified at this point
+			this.$services.page.setDragData(event, "template-content", template.content);
 		},
 		prettyPrint: function(name) {
 			name = name.replace(/([A-Z]+)/, " $1");

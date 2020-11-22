@@ -36,6 +36,8 @@ nabu.services.VueService(Vue.extend({
 			devices: [],
 			// application styles
 			styles: [],
+			// templates available for use
+			templates: [],
 			// functions
 			functions: [],
 			// custom content
@@ -589,6 +591,11 @@ nabu.services.VueService(Vue.extend({
 					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.function.list").then(function(list) {
 						if (list && list.styles) {
 							nabu.utils.arrays.merge(self.functions, list.styles.map(function(x) { return JSON.parse(x.content) }));
+						}
+					}));
+					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.templates.list").then(function(list) {
+						if (list && list.templates) {
+							nabu.utils.arrays.merge(self.templates, list.templates);
 						}
 					}));
 				}
@@ -1770,12 +1777,18 @@ nabu.services.VueService(Vue.extend({
 			return page.name;
 		},
 		rename: function(page, name) {
-			var oldName = page.name;
-			page.name = name;
-			var self = this;
-			return this.update(page).then(function() {
-				self.removeByName(oldName);
-			})	
+			var newName = this.dashify(name);
+			// if we actually renamed it...
+			if (newName != page.name) {
+				newName = this.uniquifyPageName(newName);
+				var oldName = page.name;
+				page.name = newName;
+				page.content.label = name;
+				var self = this;
+				return this.update(page).then(function() {
+					self.removeByName(oldName);
+				});
+			}
 		},
 		remove: function(page) {
 			var self = this;
@@ -1786,13 +1799,28 @@ nabu.services.VueService(Vue.extend({
 		removeByName: function(name) {
 			return this.$services.swagger.execute("nabu.web.page.core.rest.page.delete", {name: name});
 		},
+		uniquifyPageName: function(pageName) {
+			var existing = this.pages.map(function(x) {
+				return x.name;
+			});
+			var tryName = pageName;
+			var counter = 1;
+			while (existing.indexOf(tryName) >= 0) {
+				tryName = pageName + counter;
+			}
+			return tryName;
+		},
 		create: function(name, category) {
-			var content = this.normalize({});
+			var newName = this.uniquifyPageName(this.dashify(name));
+			
+			var content = this.normalize({
+				label: name
+			});
 			if (category) {
 				content.category = category;
 			}
 			return this.update({
-				name: name,
+				name: newName,
 				content: content
 			});
 		},
@@ -1889,6 +1917,8 @@ nabu.services.VueService(Vue.extend({
 									break;
 								}
 							}*/
+							// we push a row so we can route _something_
+							// otherwise everything might break!
 							if (!found) {
 								page.content.rows.push({
 									id: 0,
@@ -2722,6 +2752,64 @@ nabu.services.VueService(Vue.extend({
 				}
 				// TODO: the others are not reactive yet, they are generally not updated per page...
 			});
+		},
+		dashify: function(content) {
+			return this.underscorify(content).replace(/_/g, "-");
+		},
+		underscorify: function(content) {
+			return content.replace(/[^\w]+/g, "_").replace(/([A-Z]+)/g, "_$1").replace(/^_/, "").replace(/_$/, "")
+				.replace(/[_]+/g, "_").toLowerCase();
+		},
+		camelify: function(content) {
+			// first we do underscores, it is easiest
+			// if we start or end with an underscore, remove it
+			content = this.underscorify(content);
+			var parts = content.split("_")
+			var result = null;
+			for (var i = 0; i < parts.length; i++) {
+				if (result == null) {
+					result = parts[i];
+				}
+				else {
+					result += parts[i].substring(0, 1).toUpperCase() + parts[i].substring(1);
+				}
+			}
+			return result;
+		},
+		normalizeCell: function(cell) {
+			if (cell.rows == null) {
+				cell.rows = [];
+			}
+			if (cell.bindings == null) {
+				cell.bindings = {};
+			}
+			if (cell.instances == null) {
+				cell.instances = {};
+			}
+			if (cell.devices == null) {
+				cell.devices = [];
+			}
+			if (cell.state == null) {
+				cell.state = {};
+			}
+			if (cell.id == null) {
+				cell.id = -1;
+			}
+			cell.rows.forEach(this.normalizeRow);
+			return cell;
+		},
+		normalizeRow: function(row) {
+			if (row.cells == null) {
+				row.cells = [];
+			}
+			if (row.instances == null) {
+				row.instances = {};
+			}
+			if (row.id == null) {
+				row.id = -1;
+			}
+			row.cells.forEach(this.normalizeCell);
+			return row;
 		}
 	},
 	watch: {

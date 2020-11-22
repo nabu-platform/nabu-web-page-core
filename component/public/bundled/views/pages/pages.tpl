@@ -118,15 +118,15 @@
 				</footer>
 				<div v-for="category in categories">
 					<h4 class="category" :key="category" :ref="'category_' + category">{{category}}<button title="Copy entire category" @click="copyCategory(category)"><span class="fa fa-copy"></span></button></h4>
-					<n-collapsible :title="page.name ? page.name : 'Unnamed Page'" v-for="page in getPagesFor(category)" class="" :key="page.id" after="Page">
+					<n-collapsible :title="page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')" v-for="page in getPagesFor(category)" class="" :key="page.id" after="Page">
 						<div slot="buttons">
-							<button v-if="!page.content.initial" @click="route(page)" title="Open this page"><span class="fa fa-search"></span></button>
+							<button @click="route(page)" title="Open this page"><span class="fa fa-search"></span></button>
 							<button @click="copy(page)"><span class="fa fa-copy" title="Copy this page"></span></button>
 							<button @click="remove(page)"><span class="fa fa-trash" title="Delete this page"></span></button>
 						</div>
 						<div class="panes">
 							<n-form-section class="pane">
-								<n-form-text :value="page.name" label="Name (lowercase and dashes)" :required="true" :timeout="600" @input="function(newValue) { updatePageName(page, newValue) }" :validator="customNameValidator"/>
+								<n-form-text :value="page.content.label ? page.content.label : page.name" label="Name" :required="true" :timeout="600" @input="function(newValue) { updatePageName(page, newValue) }" />
 								<n-form-text v-model="page.content.category" label="Category" :timeout="600" @input="save(page)"/>
 								<n-form-switch info="You can set this page as a default common root to all other pages that don't have any parent specified" 
 									v-if="!page.content.pageParent && !page.content.path" label="Is default parent page" v-model="page.content.initial" @input="save(page)"/>
@@ -288,7 +288,9 @@
 <template id="nabu-create-page">
 	<n-form class="nabu-create-page layout2" ref="form">
 		<n-form-section>
-			<n-form-combo v-model="category" label="Category" :required="true" :filter="checkCategory"/>
+			<n-form-switch label="Create a new category" v-model="newCategory" v-if="hasAnyCategories"/>
+			<n-form-combo v-if="!newCategory" v-model="category" label="Existing Category" :required="true" :filter="checkCategory"/>
+			<n-form-text v-else v-model="category" label="New Category" :required="true"/>
 			<n-form-text v-model="name" label="Name" :required="true" :validator="validator"/>
 		</n-form-section>
 		<footer>

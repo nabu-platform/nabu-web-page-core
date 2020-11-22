@@ -62,6 +62,57 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				x();
 			});
 		},
+		computed: {
+			// if we got actions in the input, we are likely a nested actions!
+			// don't auto calculate anymore!
+			isAutoCalculated: function() {
+				return this.cell.state.autoActions && !this.actions;
+			},
+			autoCategories: function() {
+				var categories = [];
+				var hasEmpty = false;
+				this.$services.page.pages.map(function(x) {
+					if (!x.content.category) {
+						hasEmpty = true;
+					}
+					else if (categories.indexOf(x.content.category ? x.content.category : null) < 0) {
+						categories.push(x.content.category ? x.content.category : null);
+					}
+				});
+				categories.sort();
+				if (hasEmpty) {
+					categories.unshift(null);
+				}
+				return categories;
+			},
+			autoActions: function() {
+				var self = this;
+				var normalize = function(action) {
+					if (!action.bindings) {
+						action.bindings = {};
+					}
+					if (!action.actions) {
+						action.actions = [];
+					}
+					if (!action.activeRoutes) {
+						action.activeRoutes = [];
+					}
+					return action;
+				}
+				var result = this.autoCategories.map(function(x) {
+					return normalize({
+						label: x ? x : "Misc",
+						actions: self.getPagesFor(x).filter(function(y) { return !!y.content.path }).map(function(y) {
+							return normalize({
+								label: y.content.label ? y.content.label : y.content.name,
+								route: y.content.name
+							});
+						})
+					});
+				});
+				return result;
+			}
+		},
 		ready: function() {
 			var self = this;
 			if (this.active || this.cell.state.defaultAction) {
@@ -92,6 +143,11 @@ nabu.page.views.PageActionsGenerator = function(name) {
 			});
 		},
 		methods: {
+			getPagesFor: function(category) {
+				return this.$services.page.pages.filter(function(x) {
+					return (!category && !x.content.category) || x.content.category == category;
+				});
+			},
 			validatableItems: function(value) {
 				var values = [];
 				var elements = document.getElementsByTagName("form");
@@ -268,7 +324,13 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				state.actions.map(function(action) {
 					if (!action.activeRoutes) {
 						Vue.set(action, "activeRoutes", []);
-					}	
+					}
+					if (!action.actions) {
+						Vue.set(action, "actions", []);
+					}
+					if (!action.bindings) {
+						Vue.set(action, "bindings", {});	
+					}
 				});
 			},
 			hasActiveChild: function(action) {

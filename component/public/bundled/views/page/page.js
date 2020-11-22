@@ -577,14 +577,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 		stopEdit: function() {
 			if (this.edit && !this.closing) {
 				this.closing = true;
-				var right = document.querySelector("#n-sidebar-right-instance");
+				//var right = document.querySelector("#n-sidebar-right-instance");
+				var right = document.querySelector(".n-sidebar.right");
 				if (right && right.__vue__ && right.__vue__.close) {
 					right.__vue__.close();
 				}
 				else if (right && right.$$close) {
 					right.$$close();
 				}
-				var left = document.querySelector("#n-sidebar-left-instance");
+				//var left = document.querySelector("#n-sidebar-left-instance");
+				var left = document.querySelector(".n-sidebar.left");
 				if (left && left.__vue__ && left.__vue__.close) {
 					left.__vue__.close();
 				}
@@ -735,7 +737,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			else if (this.$services.page.hasDragData(event, "component-alias")) {
 				event.preventDefault();
 			}
-			else if (this.$services.page.hasDragData(event, "structure-content")) {
+			else if (this.$services.page.hasDragData(event, "template-content")) {
 				event.preventDefault();
 			}
 			else if (this.$services.page.hasDragData(event, "operation")) {
@@ -759,16 +761,33 @@ nabu.page.views.Page = Vue.component("n-page", {
 				event.preventDefault();
 				event.stopPropagation();
 			}
-			if (this.$services.page.getDragData(event, "structure-content")) {
-				var content = JSON.parse(this.$services.page.getDragData(event, "structure-content"));
-				if (content.rows instanceof Array) {
-					var rows = content.rows.map(function(x) {
-						return self.$services.page.renumber(self.page, x);	
-					});
-					nabu.utils.arrays.merge(this.page.content.rows, rows);
+			if (this.$services.page.getDragData(event, "template-content")) {
+				var content = JSON.parse(this.$services.page.getDragData(event, "template-content"));
+				// row drop from templates
+				if (content.type == "page-row") {
+					console.log("adding", content.content);
+					if (!self.page.content.rows) {
+						Vue.set(self.page.content, "rows", []);
+					}
+					if (content.content instanceof Array) {
+						content.content.forEach(function(row) {
+							self.page.content.rows.push(self.$services.page.renumber(self.page, self.$services.page.normalizeRow(row)));
+						});
+					}
+					else {
+						self.page.content.rows.push(self.$services.page.renumber(self.page, self.$services.page.normalizeRow(content.content)));
+					}
 				}
-				if (content.actions instanceof Array) {
-					nabu.utils.arrays.merge(this.page.content.actions, content.actions);
+				else {
+					if (content.rows instanceof Array) {
+						var rows = content.rows.map(function(x) {
+							return self.$services.page.renumber(self.page, x);	
+						});
+						nabu.utils.arrays.merge(this.page.content.rows, rows);
+					}
+					if (content.actions instanceof Array) {
+						nabu.utils.arrays.merge(this.page.content.actions, content.actions);
+					}
 				}
 				event.preventDefault();
 				event.stopPropagation();
@@ -2216,7 +2235,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				event.stopPropagation();
 			}
 			else {
-				data = this.$services.page.getDragData(event, "structure-content");
+				data = this.$services.page.getDragData(event, "template-content");
 				if (data) {
 					var structure = JSON.parse(data);
 					if (structure.type == "page-row") {
@@ -2285,7 +2304,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			var data = this.$services.page.hasDragData($event, "component-alias");
 			console.log("dragging over row", $event, data);
 			if (!data) {
-				data = this.$services.page.hasDragData($event, "structure-content");
+				data = this.$services.page.hasDragData($event, "template-content");
 			}
 			// TODO: in the future also drop page-cell and page-row from the side menu?
 			if (data) {

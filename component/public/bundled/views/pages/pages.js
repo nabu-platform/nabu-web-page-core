@@ -34,6 +34,11 @@ nabu.page.views.Pages = Vue.extend({
 			return categories;
 		}
 	},
+	created: function() {
+		if (this.$services.page.pages.length > 0) {
+			this.selectedTab = "pages";
+		}	
+	},
 	ready: function() {
 		document.body.removeAttribute("page");
 		document.body.removeAttribute("category");
@@ -116,9 +121,11 @@ nabu.page.views.Pages = Vue.extend({
 			transformer[type].push({});
 		},
 		updatePageName: function(page, newValue) {
-			console.log("page name is", page.name, newValue);
-			// check that the name is not in use
-			this.$services.page.rename(page, newValue);
+			if (newValue) {
+				console.log("page name is", page.name, newValue);
+				// check that the name is not in use
+				this.$services.page.rename(page, newValue);
+			}
 		},
 		customNameValidator: function(newValue) {
 			var messages = [];
@@ -227,8 +234,19 @@ nabu.page.views.PageCreate = Vue.extend({
 	data: function() {
 		return {
 			category: null,
-			name: null
+			name: null,
+			newCategory: false
 		}
+	},
+	computed: {
+		hasAnyCategories: function() {
+			return this.categories.length > 0;
+		}	
+	},
+	created: function() {
+		if (!this.hasAnyCategories) {
+			this.newCategory = true;
+		}	
 	},
 	methods: {
 		checkCategory: function(value) {
