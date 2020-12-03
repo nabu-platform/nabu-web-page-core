@@ -1853,6 +1853,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 			if (name == "page") {
 				return this.parameters;
 			}
+			else if (name == "parent") {
+				var parentInstance = this.page.content.pageParent ? this.$services.page.getPageInstanceByName(this.page.content.pageParent) : null;
+				// this should probably be "variables"? currently keeping consistent with above "page" entry, that should probably be variables too though...
+				return parentInstance ? parentInstance.parameters : null;
+			}
 			else if (name == "application.title") {
 				return this.$services.page.title;
 			}
@@ -1867,6 +1872,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 					})[0];
 				}
 				return value ? value.value : null;
+			}
+			else if (name.indexOf("parent.") == 0) {
+				var name = name.substring("parent.".length);
+				var parentInstance = this.page.content.pageParent ? this.$services.page.getPageInstanceByName(this.page.content.pageParent) : null;
+				return parentInstance ? parentInstance.get("page." + name) : null;
 			}
 			else if (name.indexOf("page.") == 0) {
 				var name = name.substring("page.".length);

@@ -153,7 +153,7 @@ nabu.services.VueService(Vue.extend({
 					self.wantEdit = !self.wantEdit;
 				}
 				else {
-					self.$services.router.route("login");
+					self.$services.router.route("login", null, null, true);
 				}
 			}
 		});
@@ -791,6 +791,12 @@ nabu.services.VueService(Vue.extend({
 			}
 			return page ? this.getPageInstance(page, component) : null;
 		},
+		getPageInstanceByName: function(pageName, component) {
+			var page = this.pages.filter(function(x) {
+				return x.content.name == pageName;
+			})[0];
+			return page ? this.getPageInstance(page, component) : null;
+		},
 		getPageInstance: function(page, component) {
 			var pageInstance = null;
 			if (component && component.pageInstanceId != null) {
@@ -1027,7 +1033,7 @@ nabu.services.VueService(Vue.extend({
 			}
 			var enumerators = this.enumerators;
 			// allow for fixed values
-			var value = bindingValue.indexOf("fixed") == 0 ? this.translate(bindingValue.substring("fixed.".length)) : pageInstance.get(bindingValue);
+			var value = bindingValue.indexOf("fixed") == 0 ? this.translate(bindingValue.substring("fixed.".length)) : (pageInstance ? pageInstance.get(bindingValue) : null);
 			var key = bindingValue.split(".")[0];
 			// allow for enumerated values, if there is a provider with that name, check it
 			if (!value && enumerators[key]) {
@@ -2022,6 +2028,15 @@ nabu.services.VueService(Vue.extend({
 			if (!route) {
 				return result;
 			}
+			if (route.parent) {
+				var parentRoute = this.$services.router.get(route.parent);
+				if (parentRoute) {
+					var parentResult = this.getRouteParameters(parentRoute);
+					if (parentResult && parentResult.properties) {
+						nabu.utils.objects.merge(result.properties, parentResult.properties);
+					}
+				}
+			}
 			if (route.url) {
 				this.pathParameters(route.url).map(function(key) {
 					result.properties[key] = {
@@ -2085,6 +2100,15 @@ nabu.services.VueService(Vue.extend({
 				result.application = application;
 			}
 
+			// if you inherit from another page, we add that as well
+			if (page.content.pageParent) {
+				var parentPage = this.pages.filter(function(x) {
+					return x.content.name == page.content.pageParent;
+				})[0];
+				if (parentPage != null) {
+					result.parent = this.getPageParameters(parentPage);
+				}
+			}
 			// and the page itself
 			result.page = this.getPageParameters(page);
 			
@@ -2193,6 +2217,15 @@ nabu.services.VueService(Vue.extend({
 				result.application = application;
 			}
 			
+			// if you inherit from another page, we add that as well
+			if (page.content.pageParent) {
+				var parentPage = this.pages.filter(function(x) {
+					return x.content.name == page.content.pageParent;
+				})[0];
+				if (parentPage != null) {
+					result.parent = this.getPageParameters(parentPage);
+				}
+			}
 			// and the page itself
 			result.page = this.getPageParameters(page);
 
@@ -2641,7 +2674,7 @@ nabu.services.VueService(Vue.extend({
 							}
 						}
 						else {
-							self.$services.router.route("login", parameters);
+							self.$services.router.route("login", parameters, null, true);
 						}
 					}, 1)
 				},
@@ -2759,6 +2792,22 @@ nabu.services.VueService(Vue.extend({
 		underscorify: function(content) {
 			return content.replace(/[^\w]+/g, "_").replace(/([A-Z]+)/g, "_$1").replace(/^_/, "").replace(/_$/, "")
 				.replace(/[_]+/g, "_").toLowerCase();
+		},
+		prettify: function(text) {
+			text = this.underscorify(text);
+			var result = null;
+			text.split(/_/).forEach(function(x) {
+				if (!result) {
+					result = "";
+				}
+				else {
+					result += " ";
+				}
+				if (x.length > 0) {
+					result += x.substring(0, 1).toUpperCase() + x.substring(1);
+				}
+			});
+			return result;
 		},
 		camelify: function(content) {
 			// first we do underscores, it is easiest

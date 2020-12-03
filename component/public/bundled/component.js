@@ -104,7 +104,8 @@ window.addEventListener("load", function() {
 		$services.router.register({
 			alias: "page-form",
 			enter: function(parameters) {
-				return new nabu.page.views.PageForm({propsData: parameters});
+				var component = Vue.component("page-form");
+				return new component({propsData: parameters});
 			},
 			name: "Form",
 			category: "Form",

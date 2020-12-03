@@ -110,6 +110,11 @@ nabu.page.views.PageActionsGenerator = function(name) {
 						})
 					});
 				});
+				for (var i = result.length - 1; i >= 0; i--) {
+					if (result[i].actions.length == 0) {
+						result.splice(i, 1);
+					}
+				}
 				return result;
 			}
 		},
@@ -295,6 +300,10 @@ nabu.page.views.PageActionsGenerator = function(name) {
 			},
 			getActions: function() {
 				return this.actions ? this.actions : this.cell.state.actions;
+			},
+			// still need to allow configuring of child actions
+			configureChild: function() {
+				configuring = true;
 			},
 			configurator: function() {
 				return "page-actions-configure";	
@@ -791,7 +800,7 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				// give it time to render and resolve the $ref
 				Vue.nextTick(function() {
 					var key = "action_" + self.getActions().indexOf(action);
-					self.$refs[key][0].configure();
+					self.$refs[key][0].configureChild();
 				});
 			},
 			up: function(action) {

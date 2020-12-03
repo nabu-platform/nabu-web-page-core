@@ -575,7 +575,7 @@
 							</n-collapsible>
 							<n-collapsible title="Styling">
 								<div class="padded-content">
-									<n-form-text label="Cell Class" v-model="cell.class"/>
+									<n-form-text label="Cell Class" v-model="cell.class" :timeout="600"/>
 								</div>
 								<div class="list-actions">
 									<button @click="cell.styles == null ? $window.Vue.set(cell, 'styles', [{class:null,condition:null}]) : cell.styles.push({class:null,condition:null})"><span class="fa fa-plus"></span>Cell Style</button>

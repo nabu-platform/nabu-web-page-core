@@ -103,7 +103,7 @@
 				<div class="list-item-actions">
 					<button @click="action.activeRoutes.push('')"><span class="fa fa-plus"></span>Active Route<n-info>When is this action considered active (apart from the route you can already assign)?</n-info></button>
 				</div>
-				<div class="list-row" v-for="i in Object.keys(action.activeRoutes)" class="padded-content">
+				<div class="list-row padded-content" v-for="i in Object.keys(action.activeRoutes)">
 					<n-form-combo v-model="action.activeRoutes[i]" label="Active Route" :filter="function(value) { return listRoutes(value, true) }"/>
 					<span @click="action.activeRoutes.splice(i, 1)" class="fa fa-times"></span>
 				</div>

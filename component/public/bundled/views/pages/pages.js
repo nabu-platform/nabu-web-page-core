@@ -99,7 +99,7 @@ nabu.page.views.Pages = Vue.extend({
 			});
 		}
 		else {
-			this.$services.router.route("login");
+			this.$services.router.route("login", null, null, true);
 		}
 	},
 	beforeDestroy: function() {
@@ -200,9 +200,24 @@ nabu.page.views.Pages = Vue.extend({
 		},
 		route: function(page) {
 			this.pageToRoute = page;
+			var parentParameters = null;
+			if (page.content.pageParent) {
+				var parentPage = this.$services.page.pages.filter(function(x) {
+					return x.content.name == page.content.pageParent;
+				})[0];
+				if (parentPage) {
+					parentParameters = this.$services.page.getPageParameters(parentPage);
+				}
+			}
 			var parameters = this.$services.page.getPageParameters(page);
-			if (Object.keys(parameters.properties).length) {
+			console.log("parameters are", parameters, page);
+			if (Object.keys(parameters.properties).length || (parentParameters && Object.keys(parentParameters.properties).length)) {
 				var result = {};
+				if (parentParameters) {
+					Object.keys(parentParameters.properties).map(function(key) {
+						result[key] = null;	
+					});
+				}
 				Object.keys(parameters.properties).map(function(key) {
 					result[key] = null;
 				})

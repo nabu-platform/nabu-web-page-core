@@ -1,126 +1,129 @@
+<template id="page-form-configure-all">
+	<n-form class="layout2">
+		<n-collapsible title="Form Settings" class="padded">
+			<n-form-combo label="Operation" :value="operation" :filter="getOperations"
+				@input="updateOperation"
+				:formatter="function(x) { return x.id }"
+				v-if="!cell.state.pageForm && !cell.state.functionForm"/>
+			<n-form-switch label="Page form" v-model="cell.state.pageForm"
+				v-if="!cell.state.operation && !cell.state.functionForm"/>
+			<n-form-switch label="Function form" v-model="cell.state.functionForm"
+				v-if="!cell.state.operation && !cell.state.pageForm"/>
+			<n-form-combo label="Function" v-model="cell.state.functionId" v-if="cell.state.functionForm" 
+				:filter="$services.page.listFunctions"/>
+			<div class="list-actions">
+				<button @click="generateForm"><span>Generate form</span></button>
+			</div>
+			<n-form-text v-model="cell.state.title" label="Title"/>
+			<n-form-text v-model="cell.state.formId" label="Form Id"/>
+			<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
+			<n-form-text v-model="cell.state.analysisId" label="Analysis Id" info="You can set an explicit name for this form for analysis purposes"/>
+			<n-form-text v-model="cell.state.class" label="Form Class"/>
+			<n-form-switch v-model="cell.state.immediate" label="Save On Change"/>
+			<n-form-text v-model="cell.state.cancel" v-if="!cell.state.immediate" label="Cancel Label"/>
+			<n-form-text v-model="cell.state.ok" v-if="!cell.state.immediate" label="Ok Label"/>
+			<n-form-text v-model="cell.state.next" v-if="!cell.state.immediate && cell.state.pages.length > 1" label="Next Label"/>
+			<n-form-text v-model="cell.state.previous" v-if="!cell.state.immediate && cell.state.pages.length > 1" label="Previous Label"/>
+			<n-form-text v-model="cell.state.event" label="Success Event" :timeout="600" @input="$emit('updatedEvents')"/>
+			<n-form-text v-model="cell.state.cancelEvent" label="Cancel Event" :timeout="600" @input="$emit('updatedEvents')"/>
+			<n-form-text v-if="cell.state.event" v-model="cell.state.submitEvent" label="Submit Event" :timeout="600" @input="$emit('updatedEvents')"/>
+			<n-form-text v-if="cell.state.operation || cell.state.functionForm" v-model="cell.state.errorEvent" label="Error Event" :timeout="600" @input="$emit('updatedEvents')"/>
+			<n-form-text v-model="cell.state.errorEventCodes" label="Error Event Codes" v-if="cell.state.errorEvent"/>
+			<n-form-switch v-if="!cell.state.pageForm && !cell.state.functionForm" v-model="cell.state.synchronize" label="Synchronize Changes"/>
+			<n-form-switch v-model="cell.state.autofocus" label="Autofocus"/>
+			<n-form-switch v-model="cell.state.autoclose" label="Autoclose"/>
+			<n-form-switch v-if="cell.state.pages.length >= 2" v-model="cell.state.pageTabs" label="Pages as tabs"/>
+			<n-form-switch v-if="cell.state.pages.length >= 2" v-model="cell.state.partialSubmit" label="Allow partial submit"/>
+			<n-form-switch v-model="cell.state.allowReadOnly" label="Allow read only mode"/>
+			<n-form-switch v-if="cell.state.allowReadOnly" v-model="cell.state.startAsReadOnly" label="Start in read only mode"/>
+			<n-form-switch v-if="cell.state.allowReadOnly" v-model="cell.state.onlyOneEdit" label="Allow only one in edit mode"/>
+			<n-form-text v-if="cell.state.allowReadOnly" v-model="cell.state.edit" label="Edit Label"/>
+			<n-form-text v-if="cell.state.allowReadOnly" v-model="cell.state.editIcon" label="Edit Icon"/>
+			<n-form-text v-model="cell.state.mode" label="Message Mode (the literal 'component' or a number)"/>
+			<n-form-text v-model="cell.state.validationTimeout" label="Validation Timeout"/>
+			<n-form-switch v-model="cell.state.validateOnBlur" label="Validate on blur"/>
+			
+			<div class="list-actions">
+				<button @click="!cell.state.submitOnEvent ? $window.Vue.set(cell.state, 'submitOnEvent', [null]) : cell.state.submitOnEvent.push(null)"><span class="fa fa-plus"></span>Submit Event Listener</button>
+			</div>
+			<div class="padded-content" v-if="cell.state.submitOnEvent">
+				<div v-for="i in Object.keys(cell.state.submitOnEvent)" class="list-row">
+					<n-form-combo v-model="cell.state.submitOnEvent[i]"
+						label="Submit on event"
+						:filter="function(x) { return $services.page.getPageInstance(page, $self).getAvailableEvents() }"/>
+					<span @click="cell.state.submitOnEvent.splice(i, 1)" class="fa fa-times"></span>
+				</div>
+			</div>
+			
+			<div class="list-actions">
+				<button @click="!cell.state.cancelOnEvent ? $window.Vue.set(cell.state, 'cancelOnEvent', [null]) : cell.state.cancelOnEvent.push(null)"><span class="fa fa-plus"></span>Cancel Event Listener</button>
+			</div>
+			<div class="padded-content" v-if="cell.state.cancelOnEvent">
+				<div v-for="i in Object.keys(cell.state.cancelOnEvent)" class="list-row">
+					<n-form-combo v-model="cell.state.cancelOnEvent[i]"
+						label="Cancel on event"
+						:filter="function(x) { return $services.page.getPageInstance(page, $self).getAvailableEvents() }"/>
+					<span @click="cell.state.cancelOnEvent.splice(i, 1)" class="fa fa-times"></span>
+				</div>
+			</div>
+		</n-collapsible>
+		<n-collapsible title="Value Binding" v-if="!cell.state.pageForm">
+			<div class="list-row">
+				<n-form-combo :items="Object.keys(availableParameters)" v-model="autoMapFrom"/>
+				<button @click="automap" :disabled="!autoMapFrom">Automap</button>
+			</div>
+			<div class="padded-content">
+				<n-page-mapper :to="fieldsToAdd" :from="availableParameters" 
+					v-model="cell.bindings"/>
+			</div>
+		</n-collapsible>
+		<n-collapsible title="Validation Codes">
+			<div v-if="cell.state.codes">
+				<div class="list-row" v-for="code in cell.state.codes">
+					<n-form-text v-model="code.code" label="Code" :timeout='600'/>
+					<n-form-text v-model="code.title" label="Title" :timeout='600'/>
+					<span @click="cell.state.codes.splice(cell.state.codes.indexOf(code), 1)" class="fa fa-times"></span>
+				</div>
+			</div>
+			<div class="list-actions">
+				<button @click="cell.state.codes ? cell.state.codes.push({code:null,title:null}) : $window.Vue.set(cell.state, 'codes', [{code:null,title:null}])">Add code</button>
+			</div>
+		</n-collapsible>
+		<div v-for="cellPage in cell.state.pages">
+			<page-form-configure :title="cellPage.name"
+				:allow-read-only="cell.state.allowReadOnly"
+				:schema-resolver="getSchemaFor"
+				:groupable="true"
+				:edit-name="true"
+				:fields="cellPage.fields" 
+				:is-list="isList"
+				:possible-fields="fieldsToAdd"
+				:page="page"
+				@input="function(newValue) { cellPage.name = newValue }"
+				:cell="cell"
+				root-tag="div"
+				:dark="true"/>
+			<div class="list-actions">
+				<span>Page Actions: </span>
+				<button v-if="cell.state.pages.length > 1" @click="upAllPage(cellPage)"><span class="fa fa-chevron-circle-left"></span></button>
+				<button v-if="cell.state.pages.length > 1" @click="upPage(cellPage)"><span class="fa fa-chevron-circle-up"></span></button>
+				<button v-if="cell.state.pages.length > 1" @click="downPage(cellPage)"><span class="fa fa-chevron-circle-down"></span></button>
+				<button v-if="cell.state.pages.length > 1" @click="downAllPage(cellPage)"><span class="fa fa-chevron-circle-right"></span></button>
+				<button @click="copyPage(cellPage)"><span class="fa fa-copy"></span></button>
+				<button v-if="cell.state.pages.length > 1" @click="deletePage(cellPage)">Delete {{cellPage.name}}</button>
+			</div>
+		</div>
+		<div class="list-actions">
+			<button @click="addPage">Add Form Page</button>
+		</div>
+	</n-form>
+</template>
 <template id="page-form">
 	<div class="page-form"
 			@drop="drop($event)" 
 			@dragover="dragOver($event)"
 			@dragexit="dragExit($event)">
-		<n-sidebar @close="configuring = false" v-if="configuring" class="settings" :inline="true">
-			<n-form class="layout2">
-				<n-collapsible title="Form Settings" class="padded">
-					<n-form-combo label="Operation" :value="operation" :filter="getOperations"
-						@input="updateOperation"
-						:formatter="function(x) { return x.id }"
-						v-if="!cell.state.pageForm && !cell.state.functionForm"/>
-					<n-form-switch label="Page form" v-model="cell.state.pageForm"
-						v-if="!cell.state.operation && !cell.state.functionForm"/>
-					<n-form-switch label="Function form" v-model="cell.state.functionForm"
-						v-if="!cell.state.operation && !cell.state.pageForm"/>
-					<n-form-combo label="Function" v-model="cell.state.functionId" v-if="cell.state.functionForm" 
-						:filter="$services.page.listFunctions"/>
-					<div class="list-actions">
-						<button @click="generateForm"><span>Generate form</span></button>
-					</div>
-					<n-form-text v-model="cell.state.title" label="Title"/>
-					<n-form-text v-model="cell.state.formId" label="Form Id"/>
-					<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
-					<n-form-text v-model="cell.state.analysisId" label="Analysis Id" info="You can set an explicit name for this form for analysis purposes"/>
-					<n-form-text v-model="cell.state.class" label="Form Class"/>
-					<n-form-switch v-model="cell.state.immediate" label="Save On Change"/>
-					<n-form-text v-model="cell.state.cancel" v-if="!cell.state.immediate" label="Cancel Label"/>
-					<n-form-text v-model="cell.state.ok" v-if="!cell.state.immediate" label="Ok Label"/>
-					<n-form-text v-model="cell.state.next" v-if="!cell.state.immediate && cell.state.pages.length > 1" label="Next Label"/>
-					<n-form-text v-model="cell.state.previous" v-if="!cell.state.immediate && cell.state.pages.length > 1" label="Previous Label"/>
-					<n-form-text v-model="cell.state.event" label="Success Event" :timeout="600" @input="$emit('updatedEvents')"/>
-					<n-form-text v-model="cell.state.cancelEvent" label="Cancel Event" :timeout="600" @input="$emit('updatedEvents')"/>
-					<n-form-text v-if="cell.state.event" v-model="cell.state.submitEvent" label="Submit Event" :timeout="600" @input="$emit('updatedEvents')"/>
-					<n-form-text v-if="cell.state.operation || cell.state.functionForm" v-model="cell.state.errorEvent" label="Error Event" :timeout="600" @input="$emit('updatedEvents')"/>
-					<n-form-text v-model="cell.state.errorEventCodes" label="Error Event Codes" v-if="cell.state.errorEvent"/>
-					<n-form-switch v-if="!cell.state.pageForm && !cell.state.functionForm" v-model="cell.state.synchronize" label="Synchronize Changes"/>
-					<n-form-switch v-model="cell.state.autofocus" label="Autofocus"/>
-					<n-form-switch v-model="cell.state.autoclose" label="Autoclose"/>
-					<n-form-switch v-if="cell.state.pages.length >= 2" v-model="cell.state.pageTabs" label="Pages as tabs"/>
-					<n-form-switch v-if="cell.state.pages.length >= 2" v-model="cell.state.partialSubmit" label="Allow partial submit"/>
-					<n-form-switch v-model="cell.state.allowReadOnly" label="Allow read only mode"/>
-					<n-form-switch v-if="cell.state.allowReadOnly" v-model="cell.state.startAsReadOnly" label="Start in read only mode"/>
-					<n-form-switch v-if="cell.state.allowReadOnly" v-model="cell.state.onlyOneEdit" label="Allow only one in edit mode"/>
-					<n-form-text v-if="cell.state.allowReadOnly" v-model="cell.state.edit" label="Edit Label"/>
-					<n-form-text v-if="cell.state.allowReadOnly" v-model="cell.state.editIcon" label="Edit Icon"/>
-					<n-form-text v-model="cell.state.mode" label="Message Mode (the literal 'component' or a number)"/>
-					<n-form-text v-model="cell.state.validationTimeout" label="Validation Timeout"/>
-					<n-form-switch v-model="cell.state.validateOnBlur" label="Validate on blur"/>
-					
-					<div class="list-actions">
-						<button @click="!cell.state.submitOnEvent ? $window.Vue.set(cell.state, 'submitOnEvent', [null]) : cell.state.submitOnEvent.push(null)"><span class="fa fa-plus"></span>Submit Event Listener</button>
-					</div>
-					<div class="padded-content" v-if="cell.state.submitOnEvent">
-						<div v-for="i in Object.keys(cell.state.submitOnEvent)" class="list-row">
-							<n-form-combo v-model="cell.state.submitOnEvent[i]"
-								label="Submit on event"
-								:filter="function(x) { return $services.page.getPageInstance(page, $self).getAvailableEvents() }"/>
-							<span @click="cell.state.submitOnEvent.splice(i, 1)" class="fa fa-times"></span>
-						</div>
-					</div>
-					
-					<div class="list-actions">
-						<button @click="!cell.state.cancelOnEvent ? $window.Vue.set(cell.state, 'cancelOnEvent', [null]) : cell.state.cancelOnEvent.push(null)"><span class="fa fa-plus"></span>Cancel Event Listener</button>
-					</div>
-					<div class="padded-content" v-if="cell.state.cancelOnEvent">
-						<div v-for="i in Object.keys(cell.state.cancelOnEvent)" class="list-row">
-							<n-form-combo v-model="cell.state.cancelOnEvent[i]"
-								label="Cancel on event"
-								:filter="function(x) { return $services.page.getPageInstance(page, $self).getAvailableEvents() }"/>
-							<span @click="cell.state.cancelOnEvent.splice(i, 1)" class="fa fa-times"></span>
-						</div>
-					</div>
-				</n-collapsible>
-				<n-collapsible title="Value Binding" v-if="!cell.state.pageForm">
-					<div class="list-row">
-						<n-form-combo :items="Object.keys(availableParameters)" v-model="autoMapFrom"/>
-						<button @click="automap" :disabled="!autoMapFrom">Automap</button>
-					</div>
-					<div class="padded-content">
-						<n-page-mapper :to="fieldsToAdd" :from="availableParameters" 
-							v-model="cell.bindings"/>
-					</div>
-				</n-collapsible>
-				<n-collapsible title="Validation Codes">
-					<div v-if="cell.state.codes">
-						<div class="list-row" v-for="code in cell.state.codes">
-							<n-form-text v-model="code.code" label="Code"/>
-							<n-form-text v-model="code.title" label="Title"/>
-							<span @click="cell.state.codes.splice(cell.state.codes.indexOf(code), 1)" class="fa fa-times"></span>
-						</div>
-					</div>
-					<div class="list-actions">
-						<button @click="cell.state.codes ? cell.state.codes.push({code:null,title:null}) : $window.Vue.set(cell.state, 'codes', [{code:null,title:null}])">Add code</button>
-					</div>
-				</n-collapsible>
-				<div v-for="cellPage in cell.state.pages">
-					<page-form-configure :title="cellPage.name"
-						:allow-read-only="cell.state.allowReadOnly"
-						:schema-resolver="getSchemaFor"
-						:groupable="true"
-						:edit-name="true"
-						:fields="cellPage.fields" 
-						:is-list="isList"
-						:possible-fields="fieldsToAdd"
-						:page="page"
-						@input="function(newValue) { cellPage.name = newValue }"
-						:cell="cell"/>
-					<div class="list-actions">
-						<span>Page Actions: </span>
-						<button v-if="cell.state.pages.length > 1" @click="upAllPage(cellPage)"><span class="fa fa-chevron-circle-left"></span></button>
-						<button v-if="cell.state.pages.length > 1" @click="upPage(cellPage)"><span class="fa fa-chevron-circle-up"></span></button>
-						<button v-if="cell.state.pages.length > 1" @click="downPage(cellPage)"><span class="fa fa-chevron-circle-down"></span></button>
-						<button v-if="cell.state.pages.length > 1" @click="downAllPage(cellPage)"><span class="fa fa-chevron-circle-right"></span></button>
-						<button @click="copyPage(cellPage)"><span class="fa fa-copy"></span></button>
-						<button v-if="cell.state.pages.length > 1" @click="deletePage(cellPage)">Delete {{cellPage.name}}</button>
-					</div>
-				</div>
-				<div class="list-actions">
-					<button @click="addPage">Add Form Page</button>
-				</div>
-			</n-form>
-		</n-sidebar>
+	
 		<div class="form-tabs" v-if="cell.state.pages.length >= 2 && (cell.state.pageTabs || edit)">
 			<button v-for="page in cell.state.pages" @click="setPage(page)"
 				:class="{'is-active': currentPage == page}">{{$services.page.interpret(page.name, self)}}</button>
@@ -221,39 +224,41 @@
 </template>
 
 <template id="page-form-configure">
-	<n-collapsible class="list" :title="title">
+	<component :is="rootTag" class="list" :title="title">
 		<div class="root-configuration">
 			<n-form-text :value="title" label="Form Page Name" v-if="editName" v-bubble:input/>
 		</div>
 		<div class="list-actions">
-			<button @click="addField(false)">Add Field</button>
-			<button @click="addField(true)">Add Content</button>
+			<button @click="addField(false)"><span class="fa fa-plus"></span>Field</button>
+			<button @click="addField(true)"><span class="fa fa-plus"></span>Content</button>
 		</div>
-		<n-collapsible class="field list-item" v-for="field in fields" :title="field.label ? field.label : field.name">
-			<page-configure-arbitrary v-if="field.arbitrary" 
-				:page="page"
-				:cell="cell"
-				:target="field"
-				:keys="possibleFields"/>
-				
-			<page-form-configure-single v-else :field="field" :possible-fields="possibleFields"
-				:groupable="groupable"
-				:hidable="true"
-				:is-list="isList"
-				:page="page"
-				:schema="schemaResolver(field.name)"
-				:cell="cell"/>
-				
-			<n-form-switch v-model="field.hideInReadOnly" v-if="allowReadOnly" label="Hide In Read Only Mode"/>
-			<div class="list-item-actions">
-				<button @click="upAll(field)"><span class="fa fa-chevron-circle-left"></span></button>
+		<n-collapsible v-for="field in fields" :title="field.label ? field.label : field.name" :class="{'dark': dark}">
+			<div slot="buttons">
+				<button @click="upAll(field)" v-if="false"><span class="fa fa-chevron-circle-left"></span></button>
 				<button @click="up(field)"><span class="fa fa-chevron-circle-up"></span></button>
 				<button @click="down(field)"><span class="fa fa-chevron-circle-down"></span></button>
-				<button @click="downAll(field)"><span class="fa fa-chevron-circle-right"></span></button>
+				<button @click="downAll(field)" v-if="false"><span class="fa fa-chevron-circle-right"></span></button>
 				<button @click="fields.splice(fields.indexOf(field), 1)"><span class="fa fa-trash"></span></button>
 			</div>
+			<div class="padded-content">
+				<page-configure-arbitrary v-if="field.arbitrary" 
+					:page="page"
+					:cell="cell"
+					:target="field"
+					:keys="possibleFields"/>
+					
+				<page-form-configure-single v-else :field="field" :possible-fields="possibleFields"
+					:groupable="groupable"
+					:hidable="true"
+					:is-list="isList"
+					:page="page"
+					:schema="schemaResolver(field.name)"
+					:cell="cell"/>
+					
+				<n-form-switch v-model="field.hideInReadOnly" v-if="allowReadOnly" label="Hide In Read Only Mode"/>
+			</div>
 		</n-collapsible>
-	</n-collapsible>
+	</component>
 </template>
 
 <template id="page-form-configure-single">
@@ -279,7 +284,7 @@
 			:schema="schema"
 			:field="field"/>
 			
-		<page-event-value class="no-more-padding" :page="page" :container="field" title="Validation Success Event" name="validationSuccessEvent" @resetEvents="$emit('resetEvents')"/>
+		<page-event-value class="no-more-padding" :page="page" :container="field" title="Validation Success Event" name="validationSuccessEvent" @resetEvents="$emit('resetEvents')" :inline="true"/>
 		
 		<div class="list-actions">
 			<button @click="field.styles == null ? $window.Vue.set(field, 'styles', [{class:null,condition:null}]) : field.styles.push({class:null,condition:null})">Add Style</button>

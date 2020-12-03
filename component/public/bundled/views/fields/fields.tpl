@@ -58,11 +58,13 @@
 			<div class="list-item-actions">
 				<button @click="addStyle(field)"><span class="fa fa-plus"></span>Style</button>
 			</div>
-			<n-form-section class="list-row" v-for="style in field.styles">
-				<n-form-text v-model="style.class" label="Class"/>
-				<n-form-text v-model="style.condition" label="Condition"/>
-				<button @click="field.styles.splice(field.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
-			</n-form-section>
+			<div class="padded-content">
+				<n-form-section class="list-row" v-for="style in field.styles">
+					<n-form-text v-model="style.class" label="Class"/>
+					<n-form-text v-model="style.condition" label="Condition"/>
+					<button @click="field.styles.splice(field.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
+				</n-form-section>
+			</div>
 		</n-collapsible>
 	</div>
 </template>
