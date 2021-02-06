@@ -274,15 +274,6 @@
 			</steps>
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
-					id="535f4a1b-4ede-48f7-9d3a-3dcea43e4299"
-					mask="false"
-					optional="false"
-					fixedValue="true">
-				<from>true</from>
-				<to>useAsContext</to>
-			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-					disabled="false"
 					id="09d2d268-a208-430f-b6a1-f493d525942e"
 					mask="false"
 					optional="false"
@@ -927,15 +918,6 @@
 						fixedValue="false">
 					<from>configuration/providers/translationProvider</from>
 					<to>implementationId</to>
-				</steps>
-				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-						disabled="false"
-						id="00889796-8c86-4e9c-adbe-ffdd762b88ee"
-						mask="false"
-						optional="false"
-						fixedValue="true">
-					<from>true</from>
-					<to>useAsContext</to>
 				</steps>
 			</steps>
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"

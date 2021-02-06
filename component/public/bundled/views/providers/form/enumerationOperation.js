@@ -228,6 +228,9 @@ Vue.component("page-form-input-enumeration-operation", {
 		enumerationFilter: function(value) {
 			return this.enumerationFilterAny(value, false);
 		},
+		// if we set the "asResolve", we are actually resolving the existing value, so for example if you have an ID already
+		// and you want to resolve it to the full object so you can get the correct label to show, it will be called with the resolve id
+		// the query is used to find _new_ values
 		enumerationFilterAny: function(value, asResolve) {
 			if (!this.field.enumerationOperation) {
 				return [];

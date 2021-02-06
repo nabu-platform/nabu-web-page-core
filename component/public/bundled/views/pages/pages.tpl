@@ -108,13 +108,14 @@
 				</div>
 			</div>
 			
-			<div v-if="selectedTab == 'pages'">
+			<div v-if="selectedTab == 'pages'" @drop="dropOnPages($event)" @dragover="dragOverPages($event)">
 				<div class="divider">
 					<h1>Pages</h1>
 					<p class="subscript">You can add and remove pages to your application.</p>
 				</div>
 				<footer class="list-actions">
 					<button @click="create"><span class="fa fa-plus"></span>Page</button>
+					<button @click="showTemplates = true" v-if="hasTemplates"><span class="fa fa-plus"></span>Template</button>
 				</footer>
 				<div v-for="category in categories">
 					<h4 class="category" :key="category" :ref="'category_' + category">{{category}}<button title="Copy entire category" @click="copyCategory(category)"><span class="fa fa-copy"></span></button></h4>
@@ -154,6 +155,18 @@
 						</div>
 					</n-collapsible>
 				</div>
+				<n-sidebar v-if="showTemplates" @close="showTemplates = false" class="page-components-overview">
+					<n-collapsible class="component-category" v-for="category in templateCategories" :title="$services.page.prettify(category)">
+						<div class="page-template" v-for="template in getTemplateCategory(category)" :class="{'selected': selectedTemplates.indexOf(template) >= 0 }" :draggable="true" 
+								@dragstart="dragTemplate($event, template)">
+							<img :draggable="false" :src="'${server.root()}resources/' + template.icon" class="component-icon" v-if="template.icon"/>
+							<div class="about">
+								<span class="name">{{ template.name }}</span>
+								<p class="template-description" v-if="template.description">{{ template.description }}</p>
+							</div>
+						</div>
+					</n-collapsible>
+				</n-sidebar>
 			</div>
 			
 			<div v-if="selectedTab == 'styles'">

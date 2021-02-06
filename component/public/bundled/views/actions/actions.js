@@ -303,7 +303,7 @@ nabu.page.views.PageActionsGenerator = function(name) {
 			},
 			// still need to allow configuring of child actions
 			configureChild: function() {
-				configuring = true;
+				this.configuring = true;
 			},
 			configurator: function() {
 				return "page-actions-configure";	

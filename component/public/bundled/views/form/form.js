@@ -185,6 +185,8 @@ nabu.page.formComponentConstructer = function(name) {
 			generateForm: function() {
 				var self = this;
 				var page = this.cell.state.pages[0];
+				// by default we want inline reporting of exceptions
+				this.cell.state.mode = "component";
 	
 				var ignoreParameters = [];			
 				// if we have an operation, we assume path parameters are ids that are not filled in manually but piped from other places
@@ -396,12 +398,21 @@ nabu.page.formComponentConstructer = function(name) {
 			automap: function() {
 				var source = this.availableParameters[this.autoMapFrom];
 				var self = this;
-				Object.keys(this.cell.bindings).map(function(key) {
+				this.fieldsToAdd.forEach(function(key) {
+				//Object.keys(this.cell.bindings).map(function(key) {
 					// only automap those that are not filled in
 					if (!self.cell.bindings[key]) {
-						var keyToCheck = key.indexOf(".") < 0 ? key : key.substring(key.indexOf(".") + 1);
-						if (!!source.properties[keyToCheck]) {
-							Vue.set(self.cell.bindings, key, self.autoMapFrom + "." + keyToCheck);
+						var keyToCheck = key;
+						while (keyToCheck) {
+							if (!!source.properties[keyToCheck]) {
+								Vue.set(self.cell.bindings, key, self.autoMapFrom + "." + keyToCheck);
+								break;
+							}
+							var index = keyToCheck.indexOf(".");
+							if (index < 0) {
+								break;
+							}
+							keyToCheck = keyToCheck.substring(index + 1);
 						}
 					}
 				});

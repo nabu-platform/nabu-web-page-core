@@ -1,1 +1,39 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?><node artifactManager="be.nabu.eai.module.rest.provider.RESTServiceManager" created="2018-04-27T09:24:31.653+02:00" lastModified="2020-11-13T13:46:13.347+01:00" leaf="true" version="132"><environmentId>apollo</environmentId><hidden>false</hidden><properties/><references>nabu.web.page.core.types.configuration</references><references>nabu.utils.String.find</references><references>nabu.utils.List.add</references><references>nabu.utils.Runtime.getCurrentToken</references><references>nabu.web.application.Services.hasPermission</references><references>nabu.web.page.core.interfaces.getAllContent</references><references>java.util.Date</references><references>nabu.web.application.Services.substitutions</references><references>nabu.utils.Runtime.getFeatures</references><references>nabu.utils.List.unique</references><references>nabu.utils.Server.property</references><references>java.lang.Integer</references><references>nabu.utils.List.sort</references><references>nabu.web.page.core.services.getLastModifiedPage</references><references>nabu.web.application.Services.information</references><references>nabu.web.application.Services.configuration</references><references>nabu.web.page.core.types.translation</references><references>java.lang.Boolean</references><references>nabu.web.application.Services.hasRole</references><references>java.lang.String</references><references>nabu.utils.String.split</references><references>be.nabu.libs.resources.api.ResourceProperties</references><references>nabu.web.page.core.services.getConfigurationEtag</references><references>nabu.web.page.core.types.rest.configuration</references><references>nabu.web.page.core.types.environmentConfiguration</references><references>nabu.web.page.core.types.rest.page</references><references>nabu.utils.List.addAll</references><references>nabu.utils.Resource.list</references><references>nabu.web.page.core.interfaces.translationProvider</references><references>nabu.utils.String.replace</references><references>nabu.utils.List.size</references><references>nabu.web.page.core.services.getCommonConfiguration</references><references>nabu.utils.Resource.read</references></node>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<node artifactManager="be.nabu.eai.module.rest.provider.RESTServiceManager" created="2018-04-27T09:24:31.653+02:00" lastModified="2021-01-15T12:20:46.366+01:00" leaf="true" version="133">
+    <environmentId>apollo</environmentId>
+    <hidden>false</hidden>
+    <properties/>
+    <references>nabu.web.page.core.types.configuration</references>
+    <references>nabu.utils.String.find</references>
+    <references>nabu.utils.List.add</references>
+    <references>nabu.utils.Runtime.getCurrentToken</references>
+    <references>nabu.web.application.Services.hasPermission</references>
+    <references>nabu.web.page.core.interfaces.getAllContent</references>
+    <references>java.util.Date</references>
+    <references>nabu.web.application.Services.substitutions</references>
+    <references>nabu.utils.Runtime.getFeatures</references>
+    <references>nabu.utils.List.unique</references>
+    <references>nabu.utils.Server.property</references>
+    <references>java.lang.Integer</references>
+    <references>nabu.utils.List.sort</references>
+    <references>nabu.web.page.core.services.getLastModifiedPage</references>
+    <references>nabu.web.application.Services.information</references>
+    <references>nabu.web.application.Services.configuration</references>
+    <references>nabu.web.page.core.types.translation</references>
+    <references>java.lang.Boolean</references>
+    <references>nabu.web.application.Services.hasRole</references>
+    <references>java.lang.String</references>
+    <references>nabu.utils.String.split</references>
+    <references>be.nabu.libs.resources.api.ResourceProperties</references>
+    <references>nabu.web.page.core.services.getConfigurationEtag</references>
+    <references>nabu.web.page.core.types.rest.configuration</references>
+    <references>nabu.web.page.core.types.environmentConfiguration</references>
+    <references>nabu.web.page.core.types.rest.page</references>
+    <references>nabu.utils.List.addAll</references>
+    <references>nabu.utils.Resource.list</references>
+    <references>nabu.web.page.core.interfaces.translationProvider</references>
+    <references>nabu.utils.String.replace</references>
+    <references>nabu.utils.List.size</references>
+    <references>nabu.web.page.core.services.getCommonConfiguration</references>
+    <references>nabu.utils.Resource.read</references>
+</node>

@@ -1,2 +1,2 @@
-@tags Page Builder Core
+@tags Nabu Page Builder
 

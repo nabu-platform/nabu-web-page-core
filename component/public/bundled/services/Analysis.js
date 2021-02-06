@@ -11,22 +11,28 @@
  * 
  * 
  * Example:
- * 	- event: which button you clicked
- *  - type: you clicked a button
- * 	- category: you did something with a button
+ * 	- event: which button you clicked (e.g. finalize-order)
+ *  - type: you clicked a button (button-click)
+ * 	- category: you did something with a button (button)
  * 	- group: if you want to combine multiple buttons into a custom grouping for reporting reasons
  */
 Vue.service("analysis", {
+	// if we wait on the page, we know the user is already loaded as well
+	services: ["page"],
 	data: function() {
 		return {
 			provider: null,
-			id: 0,
+			id: 1,
 			environment: "${nabu.utils.Server.getServerGroup()/group}",
 			mobile: navigator.userAgent.toLowerCase().indexOf("mobi") >= 0,
 			platform: "${when(environment('mobile') == true, 'hybrid', 'website')}",
 			application: "${environment('webApplicationId')}",
 			language: "${language()}"
 		}
+	},
+	activate: function(done) {
+		this.start();
+		done();
 	},
 	methods: {
 		apply: function(x) {
@@ -62,6 +68,7 @@ Vue.service("analysis", {
 				referrer: document.referrer ? document.referrer : null,
 				userAgent: navigator.userAgent
 			};
+			data.eventId = this.id++;
 			// we add the location if we have it
 			if (this.$services.page.location) {
 				data.location = this.$services.page.location;
@@ -82,5 +89,20 @@ Vue.service("analysis", {
 			}
 		});
 		done();
+	}
+});
+
+// stop the session when unloading
+// for chrome
+window.addEventListener("beforeunload", function(event) {
+	if (application.services && application.services.analysis) {
+		application.services.analysis.stop();
+	}
+});
+
+// for not-chrome
+window.addEventListener("unload", function(event) {
+	if (application.services && application.services.analysis) {
+		application.services.analysis.stop();
 	}
 });

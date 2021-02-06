@@ -135,6 +135,10 @@
 				@mouseover="show(action)" @mouseout="hide(action)"
 				:sequence="(isAutoCalculated ? autoActions : (edit ? getActions() : resolvedActions)).indexOf(action) + 1">
 			
+			<n-sidebar class="page-settings" v-if="configuringAction" :inline="true" @close="configuringAction = null" :autocloseable="false">
+				<component is="page-actions-configure" :cell="cell" :page="page" :edit="edit" :actions="configuringAction.actions"/>
+			</n-sidebar>
+			
 			<page-arbitrary v-if="action.arbitrary"
 				:edit="edit"
 				:page="page"
@@ -184,6 +188,6 @@
 					v-show="(edit && false) || showing.indexOf(action) >= 0"/>
 			</template>
 		</li>
-		<li v-if="edit && !getActions().length && !cell.state.autoActions" class="page-placeholder"><button class="page-placeholder" @click="addAction(false);configure()"><span class="fa fa-plus"></span>Static</button><button class="page-placeholder" @click="addAction(true);configure()"><span class="fa fa-plus"></span>Dynamic</button></li>
+		<li v-if="edit && !getActions().length && !cell.state.autoActions" class="page-placeholder"><button class="page-placeholder" @click="addAction(false);"><span class="fa fa-plus"></span>Static</button><button class="page-placeholder" @click="addAction(true);configure()"><span class="fa fa-plus"></span>Dynamic</button></li>
 	</ul>
 </template>

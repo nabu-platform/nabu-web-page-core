@@ -38,6 +38,8 @@ nabu.services.VueService(Vue.extend({
 			styles: [],
 			// templates available for use
 			templates: [],
+			// full page templates that are available for use
+			pageTemplates: [],
 			// functions
 			functions: [],
 			// custom content
@@ -58,7 +60,7 @@ nabu.services.VueService(Vue.extend({
 			cssLastModified: null,
 			cssError: null,
 			functionError: null,
-			disableReload: false,
+			disableReload: true,
 			validations: [],
 			googleSiteVerification: null,
 			// the page we are editing?
@@ -159,6 +161,63 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		suggestDevices: function(value) {
+			var devices = this.devices.map(function(x) { return x.name }); 
+			if (value && value.match(/[0-9]+/)) { 
+				devices.unshift(value) 
+			}
+			return devices;
+		},
+		isDevice: function(devices) {
+			var actual = this.$services.resizer.width;
+			for (var i = 0; i < devices.length; i++) {
+				if (devices[i].operator && devices[i].name) {
+					var operator = devices[i].operator;
+					var width = 0;
+					if (devices[i].name.match(/[0-9]+/)) {
+						width = parseInt(devices[i].name);
+					}
+					else {
+						var device = this.devices.filter(function(x) { return x.name == devices[i].name })[0];
+						if (device && device.width) {
+							width = parseInt(device.width);
+						}
+						// the default devices!
+						else if (device && !device.width && device.name == "desktop") {
+							width = 1280;
+						}
+						else if (device && !device.width && device.name == "tablet") {
+							width = 960;
+						}
+						else if (device && !device.width && device.name == "phone") {
+							width = 512;
+						}
+					}
+					// infinitely big, so matches any query requesting larger
+					if (width == 0) {
+						if (operator != ">" && operator != ">=") {
+							return false;
+						}
+					}
+					else if (operator == "<" && actual >= width) {
+						return false;
+					}
+					else if (operator == "<=" && actual > width) {
+						return false;
+					}
+					else if (operator == ">" && actual <= width) {
+						return false;
+					}
+					else if (operator == ">=" && actual < width) {
+						return false;
+					}
+					else if (operator == "==" && actual != width) {
+						return false;
+					}
+				}
+			}
+			return true;
+		},
 		getLocale: function() {
 			// does the user have an explicitly chosen locale?
 			// TODO
@@ -595,7 +654,21 @@ nabu.services.VueService(Vue.extend({
 					}));
 					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.templates.list").then(function(list) {
 						if (list && list.templates) {
-							nabu.utils.arrays.merge(self.templates, list.templates);
+							list.templates.forEach(function(template) {
+								try {
+									var content = JSON.parse(template.content);
+									if (content.type == "page") {
+										self.pageTemplates.push(template);
+									}
+									else {
+										self.templates.push(template);
+									}
+								}
+								catch (exception) {
+									console.error("Can not parse JSON", exception, template.content);
+								}
+							});
+							//nabu.utils.arrays.merge(self.templates, list.templates);
 						}
 					}));
 				}
@@ -638,11 +711,17 @@ nabu.services.VueService(Vue.extend({
 					}
 					done();
 				}, function(error) {
+					var route = "error";
+					error.forEach(function(x) {
+						if (x && (x.status == 503 || x.status == 502)) {
+							route = "offline";
+						}
+					});
 					Vue.nextTick(function(e) {
 						self.loading = false;
 						// route to error once the services are done initializing
 						setTimeout(function() {
-							self.$services.router.route("error");
+							self.$services.router.route(route, null, null, route == "offline");
 						}, 1);
 					});
 					if (self.canEdit()) {
@@ -1299,7 +1378,7 @@ nabu.services.VueService(Vue.extend({
 				return true;
 			}
 			var result = this.eval(condition, state, instance);
-			return result == true;
+			return !!result;
 		},
 		getPageState: function(pageInstance) {
 			var state = {};
@@ -1825,6 +1904,9 @@ nabu.services.VueService(Vue.extend({
 			if (category) {
 				content.category = category;
 			}
+			// we automatically add page path, it is usually in sync
+			// especially now that we add a default skeleton, this makes it easier
+			content.path = "/" + this.dashify(name);
 			return this.update({
 				name: newName,
 				content: content

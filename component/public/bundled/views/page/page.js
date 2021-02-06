@@ -1867,7 +1867,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					return x.key == name;
 				})[0];
 				if (value == null) {
-					this.$services.page.environmentProperties.filter(function(x) {
+					value = this.$services.page.environmentProperties.filter(function(x) {
 						return x.key == name;
 					})[0];
 				}
@@ -2215,6 +2215,11 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		});
 	},
 	methods: {
+		suggesPageRowClasses: function(value) {
+			return this.$services.page.classes("page-row", value).filter(function(x) {
+				return ["empty", "hover-top", "hover-bottom", "hover-left", "hover-right", "hovering"].indexOf(x) < 0;
+			});
+		},
 		drop: function(event, row) {
 			var self = this;
 			var data = this.$services.page.getDragData(event, "component-alias");

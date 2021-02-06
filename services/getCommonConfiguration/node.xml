@@ -1,1 +1,31 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?><node artifactManager="be.nabu.eai.module.services.vm.VMServiceManager" created="2020-06-26T08:27:54.125+02:00" lastModified="2020-06-26T10:29:07.611+02:00" leaf="true" version="22"><environmentId>apollo</environmentId><hidden>false</hidden><properties/><references>nabu.web.page.core.types.configuration</references><references>nabu.utils.String.find</references><references>nabu.utils.List.add</references><references>nabu.web.page.core.interfaces.getAllContent</references><references>java.util.Date</references><references>nabu.web.application.Services.substitutions</references><references>nabu.utils.List.unique</references><references>java.lang.Integer</references><references>nabu.utils.List.sort</references><references>nabu.web.page.core.services.getLastModifiedPage</references><references>nabu.web.application.Services.information</references><references>nabu.web.application.Services.configuration</references><references>nabu.web.page.core.types.translation</references><references>java.lang.String</references><references>nabu.utils.String.split</references><references>be.nabu.libs.resources.api.ResourceProperties</references><references>nabu.web.page.core.types.rest.configuration</references><references>nabu.web.page.core.types.environmentConfiguration</references><references>nabu.web.page.core.types.rest.page</references><references>nabu.utils.List.addAll</references><references>nabu.utils.Resource.list</references><references>nabu.web.page.core.interfaces.translationProvider</references><references>nabu.utils.String.replace</references><references>nabu.utils.List.size</references><references>nabu.utils.Resource.read</references></node>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<node artifactManager="be.nabu.eai.module.services.vm.VMServiceManager" created="2020-06-26T08:27:54.125+02:00" lastModified="2021-01-18T10:25:11.746+01:00" leaf="true" version="24">
+    <environmentId>apollo</environmentId>
+    <hidden>false</hidden>
+    <properties/>
+    <references>nabu.web.page.core.types.configuration</references>
+    <references>nabu.utils.String.find</references>
+    <references>nabu.utils.List.add</references>
+    <references>nabu.web.page.core.interfaces.getAllContent</references>
+    <references>java.util.Date</references>
+    <references>nabu.web.application.Services.substitutions</references>
+    <references>nabu.utils.List.unique</references>
+    <references>java.lang.Integer</references>
+    <references>nabu.utils.List.sort</references>
+    <references>nabu.web.page.core.services.getLastModifiedPage</references>
+    <references>nabu.web.application.Services.information</references>
+    <references>nabu.web.application.Services.configuration</references>
+    <references>nabu.web.page.core.types.translation</references>
+    <references>java.lang.String</references>
+    <references>nabu.utils.String.split</references>
+    <references>be.nabu.libs.resources.api.ResourceProperties</references>
+    <references>nabu.web.page.core.types.rest.configuration</references>
+    <references>nabu.web.page.core.types.environmentConfiguration</references>
+    <references>nabu.web.page.core.types.rest.page</references>
+    <references>nabu.utils.List.addAll</references>
+    <references>nabu.utils.Resource.list</references>
+    <references>nabu.web.page.core.interfaces.translationProvider</references>
+    <references>nabu.utils.String.replace</references>
+    <references>nabu.utils.List.size</references>
+    <references>nabu.utils.Resource.read</references>
+</node>

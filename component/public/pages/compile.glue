@@ -2,7 +2,7 @@
 @operationId nabu.page.scss.compile
 @title Compile scss
 @output base64Binary
-@tags Page Builder Core
+@tags Nabu Page Builder
 
 @content
 nabu.web.page.core.types.rest.styleInput content ?= null

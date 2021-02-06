@@ -12,7 +12,9 @@ nabu.page.views.Pages = Vue.extend({
 			// the currently open category
 			opened: null,
 			lastColor: {},
-			selectedTab: 'settings'
+			selectedTab: 'settings',
+			showTemplates: false,
+			selectedTemplates: []
 		}
 	},
 	computed: {
@@ -32,6 +34,24 @@ nabu.page.views.Pages = Vue.extend({
 				categories.unshift(null);
 			}
 			return categories;
+		},
+		hasTemplates: function() {
+			return this.$services.page.pageTemplates.length > 0;
+		},
+		templateCategories: function() {
+			var groups = [];
+			this.$services.page.pageTemplates.forEach(function(x) {
+				if (x.category && groups.indexOf(x.category) < 0) {
+					groups.push(x.category);
+				}
+				else if (x.category == null && groups.indexOf("Miscellaneous") < 0) {
+					groups.push("Miscellaneous");
+				}
+			});
+			groups.sort(function(a, b) {
+				return a.toLowerCase().localeCompare(b.toLowerCase());
+			});
+			return groups;
 		}
 	},
 	created: function() {
@@ -106,6 +126,46 @@ nabu.page.views.Pages = Vue.extend({
 		this.$services.page.disableReload = false;	
 	},
 	methods: {
+		dropOnPages: function(event) {
+			if (this.$services.page.getDragData(event, "template-content")) {
+				var content = JSON.parse(this.$services.page.getDragData(event, "template-content"));
+				// row drop from templates
+				if (content.type == "page") {
+					console.log("dropped", content);
+					this.$services.page.update({
+						name: content.content.name,
+						content: content.content
+					});
+				}
+			}
+		},
+		dragOverPages: function(event) {
+			if (this.$services.page.getDragData(event, "template-content")) {
+				var content = JSON.parse(this.$services.page.getDragData(event, "template-content"));
+				// row drop from templates
+				if (content.type == "page") {
+					event.preventDefault();
+				}
+			}
+		},
+		toggleSelectionFor: function(template) {
+			var index = this.selectedTemplates.indexOf(template);
+			if (index >= 0) {
+				this.selectedTemplates.splice(index, 1);
+			}
+			else {
+				this.selectedTemplates.push(template);
+			}
+		},
+		dragTemplate: function(event, template) {
+			// the content is already stringified at this point
+			this.$services.page.setDragData(event, "template-content", template.content);
+		},
+		getTemplateCategory: function(category) {
+			return this.$services.page.pageTemplates.filter(function(x) {
+				return x.category == category || (category == "Miscellaneous" && x.category == null);
+			});
+		},
 		getDevice: function(name) {
 			var device = this.$services.page.devices.filter(function(x) { return x.name == name })[0];
 			if (device == null) {

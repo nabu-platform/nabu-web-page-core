@@ -216,6 +216,15 @@
 					<from>development</from>
 					<to>key</to>
 				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="08a59eba-2e74-41ea-a87d-0f729600ac08"
+						mask="false"
+						optional="false"
+						fixedValue="true">
+					<from>false</from>
+					<to>defaultValue</to>
+				</steps>
 			</steps>
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"

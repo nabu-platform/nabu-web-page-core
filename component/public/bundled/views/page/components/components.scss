@@ -32,6 +32,9 @@
 		+.page-component, +.page-template {
 			border-top: none;
 		}
+		&.selected {
+			background-color: lightgreen;
+		}
 	}
 }
 
