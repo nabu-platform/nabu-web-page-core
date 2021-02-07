@@ -703,6 +703,12 @@ Vue.component("page-formatted", {
 			}
 			// formatting is optional
 			else if (this.fragment.format == null || this.fragment.format == "text") {
+				if (this.fragment.maxLength && this.value) {
+					var result = ("" + this.value);
+					if (result.length > parseInt(this.fragment.maxLength)) {
+						result = result.substring(0, parseInt(this.fragment.maxLength)) + "...";
+					}
+				}
 				return this.value;
 			}
 			else if (this.fragment.format == "literal") {

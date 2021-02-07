@@ -66,6 +66,7 @@
 <template id="page-formatted-configure">
 	<div class="page-formatted-configure">
 		<n-form-combo v-model="fragment.format" label="Format as" :items="types"/>
+		<n-form-text label="Max Length" v-model="fragment.maxLength" v-if="fragment.format == 'text'"/>
 		<n-form-switch v-model="fragment.compile" label="Compile content" v-if="!skipCompile && !mustCompile"/>
 		<n-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
 		<n-ace v-if="fragment.format == 'html'" mode="html" v-model="fragment.html"/>
