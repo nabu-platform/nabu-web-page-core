@@ -1344,11 +1344,33 @@ Vue.component("page-form-field", {
 		if (this.field.fixed) {
 			this.$emit("input", this.field.value);
 		}
+		
+		if (this.field.listeners && this.field.listeners.length > 0) {
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			this.field.listeners.forEach(function(x) {
+				console.log("subscribing", x);
+				self.subscriptions.push(pageInstance.subscribe(x.to.replace(/^([^.]+).*/, "$1"), function(value) {
+					// this was initially added to fill in filter fields in a data component
+					// for some reason, this bit was triggered with the correct value but then immediately retriggered with the incorrect value
+					// perhaps the event is triggering a load which in turn triggers an unset of some sort?
+					// it is not entirely clear but for the current purposes, it is enough to ignore null values
+					// perhaps in the future, if we want to unset values with a remote event (not sure how that would go though?) we could try to dig deeper
+					// perhaps a "reset" listener is better suited, as emitting null is not ideal anyway
+					var result = value ? self.$services.page.getValue(value, x.to.replace(/^[^.]+[.](.*)/, "$1")) : null;
+					// it seems to immediately trigger to null?
+					if (result != null) {
+						self.$emit("input", result);
+					}
+				}));
+			});
+		}
 	},
 	// mostly a copy paste from form-section
 	data: function() {
 		return {
-			labels: []
+			labels: [],
+			subscriptions: []
 		}
 	},
 	computed: {

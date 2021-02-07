@@ -6,6 +6,10 @@
 		</div>
 		<n-collapsible class="list-item dark" :title="field.label ? field.label : 'Unlabeled'" v-for="field in cell.state[fieldsName]" :after="field.arbitrary ? 'content' : 'field'">
 			<div slot="buttons">
+				<button v-if="allowMultiple" @click="fieldBeginning(field)"><span class="fa fa-chevron-circle-left"></span></button>
+				<button v-if="allowMultiple" @click="fieldUp(field)"><span class="fa fa-chevron-circle-up"></span></button>
+				<button v-if="allowMultiple" @click="fieldDown(field)"><span class="fa fa-chevron-circle-down"></span></button>
+				<button v-if="allowMultiple" @click="fieldEnd(field)"><span class="fa fa-chevron-circle-right"></span></button>
 				<button v-if="allowMultiple" @click="cell.state[fieldsName].splice(cell.state[fieldsName].indexOf(field), 1)"><span class="fa fa-trash"></span></button>
 			</div>
 			<div class="padded-content">
@@ -17,10 +21,6 @@
 			<div v-if="!field.arbitrary">
 				<div class="list-item-actions">
 					<button @click="addFragment(field)"><span class="fa fa-plus"></span>Fragment</button>
-					<button v-if="allowMultiple" @click="fieldBeginning(field)"><span class="fa fa-chevron-circle-left"></span></button>
-					<button v-if="allowMultiple" @click="fieldUp(field)"><span class="fa fa-chevron-circle-up"></span></button>
-					<button v-if="allowMultiple" @click="fieldDown(field)"><span class="fa fa-chevron-circle-down"></span></button>
-					<button v-if="allowMultiple" @click="fieldEnd(field)"><span class="fa fa-chevron-circle-right"></span></button>
 				</div>
 				<n-collapsible :title="fragment.key ? fragment.key : fragment.type" v-for="fragment in field.fragments" class="padded">
 					<div slot="buttons">
@@ -41,12 +41,6 @@
 				</n-collapsible>
 			</div>
 			<div v-else>
-				<div class="list-item-actions">
-					<button v-if="allowMultiple" @click="fieldBeginning(field)"><span class="fa fa-chevron-circle-left"></span></button>
-					<button v-if="allowMultiple" @click="fieldUp(field)"><span class="fa fa-chevron-circle-up"></span></button>
-					<button v-if="allowMultiple" @click="fieldDown(field)"><span class="fa fa-chevron-circle-down"></span></button>
-					<button v-if="allowMultiple" @click="fieldEnd(field)"><span class="fa fa-chevron-circle-right"></span></button>
-				</div>
 				<page-configure-arbitrary
 					class="padded-content"
 					:page="page"
@@ -113,7 +107,7 @@
 					:record="data"/>
 			</dd>
 			<dd v-if="otherActions.length">
-				<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
+				<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:data}, $self)" 
 					v-for="action in otherActions" 
 					@click="trigger(action)"
 					:class="[action.class, {'has-icon': action.icon}, {'inline': !action.class }]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></button>
@@ -130,7 +124,7 @@
 				@click.native="handleClick(fragment)"
 				@updated="function(value) { $emit('updated', value) }"/>
 			<span v-if="otherActions.length">
-				<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
+				<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:data}, $self)" 
 					v-for="action in otherActions" 
 					@click="trigger(action)"
 					:class="[action.class, {'has-icon': action.icon}, {'inline': !action.class }]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></button>
@@ -145,7 +139,7 @@
 				:component="$self"
 				:record="data"/>
 			<span v-if="otherActions.length">
-				<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
+				<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:data}, $self)" 
 					v-for="action in otherActions" 
 					@click="trigger(action)"
 					:class="[action.class, {'has-icon': action.icon}, {'inline': !action.class }]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></button>

@@ -379,6 +379,12 @@ window.addEventListener("load", function() {
 			namespace: "nabu.page"
 		});
 		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-hidden", 
+			configure: "page-form-input-text-configure", 
+			name: "hidden",
+			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-form-input", { 
 			component: "page-form-input-password", 
 			configure: "page-form-input-password-configure", 
 			name: "password",

@@ -287,7 +287,7 @@
 		<page-event-value class="no-more-padding" :page="page" :container="field" title="Validation Success Event" name="validationSuccessEvent" @resetEvents="$emit('resetEvents')" :inline="true"/>
 		
 		<div class="list-actions">
-			<button @click="field.styles == null ? $window.Vue.set(field, 'styles', [{class:null,condition:null}]) : field.styles.push({class:null,condition:null})">Add Style</button>
+			<button @click="field.styles == null ? $window.Vue.set(field, 'styles', [{class:null,condition:null}]) : field.styles.push({class:null,condition:null})"><span class="fa fa-plus"></span>Style</button>
 		</div>
 		<div v-if="field.styles">
 			<n-form-section class="list-row" v-for="style in field.styles">
@@ -295,7 +295,20 @@
 				<n-form-text v-model="style.condition" label="Condition"/>
 				<button @click="field.styles.splice(field.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
 			</n-form-section>
-		</div>	
+		</div>
+		
+		<h4>Update Listener</h4>
+		<p class="subscript">Whenever an event is emitted, you can capture a value from it by configuring an update listener.</p>
+		<div class="list-item-actions">
+			<button @click="field.listeners ? field.listeners.push({to:null, field: null}) : $window.Vue.set(field, 'listeners', [{}])"><span class="fa fa-plus"></span>Update Listener</button>
+		</div>
+		<div v-if="field.listeners">
+			<div class="list-row" v-for="i in Object.keys(field.listeners)">
+				<n-form-combo v-model="field.listeners[i].to" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
+				<n-form-combo v-model="field.listeners[i].field" v-if="field.type && field.type.indexOf('.') >= 0" :filter="listFields.bind($self, field.type)" />
+				<span @click="field.listeners.splice(i, 1)" class="fa fa-times"></span>
+			</div>
+		</div>
 	</div>
 </template>
 

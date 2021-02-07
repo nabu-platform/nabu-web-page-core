@@ -80,6 +80,7 @@ Vue.component("page-form-input-text", {
 			+ "		:step='field.step ? parseFloat($services.page.interpret(field.step, $self)) : null'"
 			+ "		:name='field.name'"
 			+ "		:timeout='timeout'"
+			+ "		v-show='!hidden'"
 			+ "		:disabled='disabled'/>",
 	props: {
 		cell: {
@@ -122,6 +123,11 @@ Vue.component("page-form-input-text", {
 		},
 		codes: {
 			required: false
+		},
+		hidden: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	computed: {
@@ -159,4 +165,50 @@ Vue.component("page-form-input-text", {
 });
 
 
-
+Vue.component("page-form-input-hidden", {
+	template: "<page-form-input-text :cell='cell' :page='page' :field='field' :value='value' :label='label' :timeout='timeout' "
+		+ ":disabled='disabled' :schema='schema' :read-only='readOnly' :placeholder='placeholder' :codes='codes' :hidden='true'/>",
+	props: {
+		cell: {
+			type: Object,
+			required: true
+		},
+		page: {
+			type: Object,
+			required: true
+		},
+		field: {
+			type: Object,
+			required: true
+		},
+		value: {
+			required: true
+		},
+		label: {
+			type: String,
+			required: false
+		},
+		timeout: {
+			required: false
+		},
+		disabled: {
+			type: Boolean,
+			required: false
+		},
+		schema: {
+			type: Object,
+			required: false
+		},
+		readOnly: {
+			type: Boolean,
+			required: false
+		},
+		placeholder: {
+			type: String,
+			required: false
+		},
+		codes: {
+			required: false
+		}
+	}
+});
