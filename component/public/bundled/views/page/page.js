@@ -63,19 +63,25 @@ Vue.mixin({
 		}	
 	},
 	methods: {
-		$value: function(path) {
+		$value: function(path, literal) {
+			if (!literal) {
+				literal = application && application.configuration && 
+					(application.configuration.interpretValues == null || application.configuration.interpretValues == false);
+			}
+			var result = null;
 			if (this.page) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
-				return this.$services.page.getBindingValue(pageInstance, path);
+				result = this.$services.page.getBindingValue(pageInstance, path);
 			}
 			else {
 				if (path.indexOf("application.") == 0) {
 					var property = this.$services.page.properties.filter(function(x) {
 						return x.key == path.substring("application.".length);
 					})[0];
-					return property ? property.value : null;
+					result = property ? property.value : null;
 				}
 			}
+			return literal ? result : this.$services.page.parseValue(result);
 		}
 	}
 })
@@ -471,6 +477,19 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		getOperationArrays: function(operation) {
+			if (operation) {
+				var op = this.$services.swagger.operations[operation];
+				if (op.responses["200"] != null && op.responses["200"].schema != null) {
+					var schema = op.responses["200"].schema;
+					if (schema["$ref"]) {
+						var definition = this.$services.swagger.resolve(schema["$ref"]);
+						return this.$services.page.getArrays(definition);
+					}
+				}
+			}
+			return [];
+		},
 		moveActionTop: function(action) {
 			var index = this.page.content.actions.indexOf(action);	
 			if (index > 0) {
@@ -1185,6 +1204,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 							if (response && response.schema) {
 								schema = self.$services.swagger.resolve(response.schema);
 							}
+							// we only want the array in it
+							if (action.singlify) {
+								var theParts = action.singlify.split(".");
+								for (var i = 0; i < theParts.length; i++) {
+									schema = schema.properties[theParts[i]];
+								}
+								if (schema.items) {
+									schema = schema.items;
+								}
+							}
 							events[action.event] = schema ? schema : {};
 						}
 					});
@@ -1398,7 +1427,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 								self.$services.page.setValue(self.variables, parameter.name + "." + listener.field, interested);
 							}
 							else {
-								if (!interested) {
+								if (interested == null) {
 									Vue.delete(self.variables, parameter.name);
 								}
 								else {
@@ -1621,6 +1650,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 									else {
 										async = true;
 										self.$services.swagger.execute(action.operation, parameters).then(function(result) {
+											if (action.singlify) {
+												var arr = self.$services.page.getValue(result, action.singlify);
+												result = arr && arr.length > 0 ? arr[0] : null;
+											}
 											if (action.event) {
 												// we get null from a 204
 												self.emit(action.event, result == null ? {} : result);
@@ -1708,6 +1741,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 								else {
 									async = true;
 									self.$services.swagger.execute(action.operation, parameters).then(function(result) {
+										if (action.singlify) {
+											var arr = self.$services.page.getValue(result, action.singlify);
+											result = arr && arr.length > 0 ? arr[0] : null;
+										}
 										if (action.event) {
 											// we get null from a 204
 											self.emit(action.event, result == null ? {} : result);

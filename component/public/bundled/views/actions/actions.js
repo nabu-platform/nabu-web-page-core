@@ -148,6 +148,12 @@ nabu.page.views.PageActionsGenerator = function(name) {
 			});
 		},
 		methods: {
+			paste: function() {
+				var action = this.$services.page.pasteItem("page-action");	
+				if (action) {
+					this.getActions().push(action);
+				}
+			},
 			getPagesFor: function(category) {
 				return this.$services.page.pages.filter(function(x) {
 					return (!category && !x.content.category) || x.content.category == category;

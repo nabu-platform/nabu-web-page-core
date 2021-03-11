@@ -27,11 +27,16 @@ Vue.service("analysis", {
 			mobile: navigator.userAgent.toLowerCase().indexOf("mobi") >= 0,
 			platform: "${when(environment('mobile') == true, 'hybrid', 'website')}",
 			application: "${environment('webApplicationId')}",
-			language: "${language()}"
+			language: "${language()}",
+			timezone: null
 		}
 	},
 	activate: function(done) {
 		this.start();
+		// let's try to get the timezone!
+		this.timezone = Intl && Intl.DateTimeFormat	&& Intl.DateTimeFormat().resolvedOptions
+			? Intl.DateTimeFormat().resolvedOptions().timeZone 
+			: null;
 		done();
 	},
 	methods: {
@@ -66,7 +71,8 @@ Vue.service("analysis", {
 				created: new Date().toISOString(),
 				url: window.location.href,
 				referrer: document.referrer ? document.referrer : null,
-				userAgent: navigator.userAgent
+				userAgent: navigator.userAgent,
+				timezone: this.timezone
 			};
 			data.eventId = this.id++;
 			// we add the location if we have it

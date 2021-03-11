@@ -16,12 +16,14 @@
 		</n-collapsible>
 		<div v-if="!cell.state.autoActions">
 			<div class="list-actions">
+				<button v-if="$services.page.isCopied('page-action')" @click="paste"><span class="fa fa-paste"></span></button>
 				<button @click="addAction(false)"><span class="fa fa-plus"></span>Static</button>
 				<button @click="addAction(true)"><span class="fa fa-plus"></span>Dynamic</button>
 				<button @click="addContent()"><span class="fa fa-plus"></span>Content</button>
 			</div>
 			<n-collapsible class="list-item dark" :title="action.label ? action.label : action.name" v-for="action in getActions()">
 				<div slot="buttons">
+					<button @click="$services.page.copyItem('page-action', action)"><span class="fa fa-copy"></span></button>
 					<button @click="up(action)"><span class="fa fa-chevron-circle-up"></span></button>
 					<button @click="down(action)"><span class="fa fa-chevron-circle-down"></span></button>
 					<button @click="getActions().splice(getActions().indexOf(action), 1)"><span class="fa fa-trash"></span></button>
@@ -35,7 +37,7 @@
 						:keys="$services.page.getAvailableParameters(page, cell)"/>
 				</div>
 				<div v-else class="padded-content">
-					<n-form-text v-model="action.name" label="Name" info="The name is used for analytics purposes, check the console to see how this works"/>
+					<n-form-text v-model="action.name" label="Name" info="The name is used for analytics purposes, check the console to see how this works" :timeout="600"/>
 					<n-form-section v-if="action.dynamic">
 						<n-form-combo v-model="action.operation" label="Operation" :filter="getActionOperations"/>
 						<n-page-mapper :to="getInputParameters(action)" 

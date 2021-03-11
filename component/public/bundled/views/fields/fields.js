@@ -204,14 +204,17 @@ nabu.page.views.PageFieldsEdit = Vue.component("page-fields-edit", {
 			});
 		},
 		getKeys: function(value) {
+			var keys;
 			// you can provide external keys
 			if (this.keys) {
-				return this.keys;
+				keys = this.keys;
 			}
-			// otherwise we just try to get the default ones available to you
-			var parameters = this.$services.page.getAvailableParameters(this.page, this.cell, true);
-			var keys = this.$services.page.getSimpleKeysFor({properties:parameters});
-			return value ? keys.filter(function(x) { x.toLowerCase().indexOf(value.toLowerCase()) >= 0 }) : keys;
+			else {
+				// otherwise we just try to get the default ones available to you
+				var parameters = this.$services.page.getAvailableParameters(this.page, this.cell, true);
+				keys = this.$services.page.getSimpleKeysFor({properties:parameters});
+			}
+			return value ? keys.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 }) : keys;
 		}
 	}
 });

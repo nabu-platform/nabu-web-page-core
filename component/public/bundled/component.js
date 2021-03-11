@@ -81,7 +81,11 @@ window.addEventListener("load", function() {
 			alias: "page-fields",
 			enter: function(parameters) {
 				return new nabu.page.views.PageFields({propsData: parameters});
-			}
+			},
+			category: "Content",
+			name: "Fields",
+			description: "Display a number of fields.",
+			icon: "page/core/images/page-fields.svg"
 		});
 		$services.router.register({
 			alias: "page-fields-table",

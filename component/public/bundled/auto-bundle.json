@@ -52,6 +52,9 @@
 					},
 					"form.svg": {
 						"url": "images/form.svg"
+					},
+					"page-fields.svg": {
+						"url": "images/page-fields.svg"
 					}
 				},
 				"components": {
