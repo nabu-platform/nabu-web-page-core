@@ -960,6 +960,38 @@ nabu.page.views.Page = Vue.component("n-page", {
 		ref: function(reference) {
 			return this.refs[reference];
 		},
+		// destroy a component from the page
+		destroyComponent: function(component, cell) {
+			if (this.components[cell.id] != null) {
+				if (this.components[cell.id] instanceof Array) {
+					var index = this.components[cell.id].indexOf(component);
+					if (index >= 0) {
+						this.components[cell.id].splice(index, 1);
+					}
+					if (this.components[cell.id].length == 0) {
+						Vue.delete(this.components, cell.id, null);
+					}
+					// make singular again
+					else if (this.components[cell.id].length == 1) {
+						this.components[cell.id] = this.components[cell.id][0];
+					}
+				}
+				else if (this.components[cell.id] == component) {
+					Vue.delete(this.components, cell.id, null);
+				}
+			}
+		},
+		// in the beginning we only kept track of one component per cell id
+		// there can not be multiple, it is not entirely clear how this should work for now
+		// repeats are turned off in edit mode so shouldn't trigger multiple components, but page-arbitrary can
+		// upside: we can offer a solution for configuration of arbitrary, downside: the state etc is still not ok (probably...?)
+		getComponentForCell: function(cellId) {
+			var result = this.components[cellId];
+			if (result instanceof Array) {
+				return result[0];
+			}
+			return result;
+		},
 		mounted: function(cell, row, state, component) {
 			// run the initializer function (if any) with the component instance
 			if (cell.$$initialize) {
@@ -983,12 +1015,25 @@ nabu.page.views.Page = Vue.component("n-page", {
 				if (cell.ref) {
 					self.refs[cell.ref] = null;
 				}
-				self.$services.page.destroy(component);
+				// currently all this does is update the components, which is better done here
+				//self.$services.page.destroy(component);
+				self.destroyComponent(component, cell);
 			});
 			
 			// reset event cache
 			this.cachedEvents = null;
-			this.components[cell.id] = component;
+			// if it already exists, we have multiple components for the same cell id, this is possible in for example a "for each" scenario
+			// or when dealing with arbitrary content that the parent does not have full knowledge about and might register itself
+			if (this.components[cell.id] != null) {
+				// if not an array yet, we make it an array
+				if (!(this.components[cell.id] instanceof Array)) {
+					this.components[cell.id] = [this.components[cell.id]];
+				}
+				this.components[cell.id].push(component);
+			}
+			else {
+				this.components[cell.id] = component;
+			}
 			
 			// we subscribe to a very specific event that will reset all the registered events
 			// this is because it is cached...
@@ -1041,14 +1086,26 @@ nabu.page.views.Page = Vue.component("n-page", {
 			// make sure we have a watchable variable for each event
 			if (component.getEvents) {
 				var self = this;
-				Object.keys(component.getEvents()).map(function(name) {
-					if (!self.variables[name]) {
-						Vue.set(self.variables, name, null);
+				var eventResult = component.getEvents();
+				if (eventResult) {
+					var subscribeToEvent = function(name) {
+						if (!self.variables[name]) {
+							Vue.set(self.variables, name, null);
+						}
+						component.$on(name, function(value) {
+							self.emit(name, value);
+						});
 					}
-					component.$on(name, function(value) {
-						self.emit(name, value);
-					});
-				})
+					if (typeof(eventResult) == "string") {
+						subscribeToEvent(eventResult);
+					}
+					else if (eventResult instanceof Array) {
+						// TODO: add array support
+					}
+					else {
+						Object.keys(eventResult).map(subscribeToEvent);
+					}
+				}
 			}
 			
 			// if we have old-timey event registration, use it to pick up page events
@@ -1261,13 +1318,30 @@ nabu.page.views.Page = Vue.component("n-page", {
 				
 				Object.keys(this.components).map(function(cellId) {
 					var component = self.components[cellId];
-					if (component && component.getEvents) {
-						var cellEvents = component.getEvents();
-						if (cellEvents) {
-							Object.keys(cellEvents).map(function(key) {
-								events[key] = cellEvents[key];
-							});
+					var handle = function(component) {
+						if (component && component.getEvents) {
+							var cellEvents = component.getEvents();
+							if (cellEvents) {
+								// if you have no particular content, you can just send the name of the event
+								if (typeof(cellEvents) == "string") {
+									events[cellEvents] = {};
+								}
+								else if (cellEvents instanceof Array) {
+									// TODO: support arrays of strings and/or objects?
+								}
+								else {
+									Object.keys(cellEvents).map(function(key) {
+										events[key] = cellEvents[key];
+									});
+								}
+							}
 						}
+					}
+					if (component instanceof Array) {
+						component.forEach(handle);
+					}
+					else {
+						handle(component);
 					}
 				});
 				Object.keys(events).map(function(name) {
@@ -2403,7 +2477,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		hasConfigure: function(cell) {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
-			var cellInstance = pageInstance.components[cell.id];
+			var cellInstance = pageInstance.getComponentForCell(cell.id);
 			return cellInstance && cellInstance.configure;
 		},
 		setRowConfiguring: function(id) {
@@ -2722,23 +2796,22 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		},
 		canConfigure: function(cell) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			var components = pageInstance.components;
-			return components[cell.id] && components[cell.id].configure;
+			var component = pageInstance.getComponentForCell(cell.id);
+			return component && component.configure;
 		},
 		canConfigureInline: function(cell) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			var components = pageInstance.components;
-			return components[cell.id] && components[cell.id].configurator;
+			var component = pageInstance.getComponentForCell(cell.id);
+			return component && component.configurator;
 		},
 		getCellConfigurator: function(cell) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			var components = pageInstance.components;
-			return components[cell.id] && components[cell.id].configurator();
+			var component = pageInstance.getComponentForCell(cell.id);
+			return component && component.configurator();
 		},
 		getCellConfiguratorInput: function(cell) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			var components = pageInstance.components;
-			var cellInstance = components[cell.id];
+			var cellInstance = pageInstance.getComponentForCell(cell.id);
 			var result = {};
 			if (cellInstance.$options.props) {
 				Object.keys(cellInstance.$options.props).forEach(function(prop) {
@@ -2751,7 +2824,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			if (this.canConfigure) {
 				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
-				var cellInstance = pageInstance.components[cell.id];
+				var cellInstance = pageInstance.getComponentForCell(cell.id);
 				cellInstance.configure();
 			}
 		},
@@ -3234,7 +3307,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 					else {
 						var self = this;
 						var pageInstance = self.$services.page.getPageInstance(self.page, self);
-						var cellInstance = pageInstance.components[cell.id];
+						var cellInstance = pageInstance.getComponentForCell(cell.id);
 						if (cellInstance && cellInstance.configure) {
 							cellInstance.configure();
 							doDefault = false;
@@ -3505,13 +3578,13 @@ Vue.component("page-sidemenu", {
 		hasConfigure: function(cell) {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
-			var cellInstance = pageInstance.components[cell.id];
+			var cellInstance = pageInstance.getComponentForCell(cell.id);
 			return cellInstance && cellInstance.configure;
 		},
 		configure: function(cell) {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
-			var cellInstance = pageInstance.components[cell.id];
+			var cellInstance = pageInstance.getComponentForCell(cell.id);
 			cellInstance.configure();
 		},
 		toggleRow: function(row) {

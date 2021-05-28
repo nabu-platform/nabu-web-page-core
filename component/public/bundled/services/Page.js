@@ -825,6 +825,12 @@ nabu.services.VueService(Vue.extend({
 			return entity;
 		},
 		saveStyle: function(style) {
+			// we don't want to see any changes done by reference to the style content while the validation occurs
+			// or we might include unvalidated changes
+			// there is still the edge cases of for example a second validation following pretty soon after the first one, race conditioning it to return faster and the older saving later
+			// effectively wiping out the last changes
+			// we combat this a bit by increasing the timeout to 1s, reducing the chance of such a race
+			style = nabu.utils.objects.clone(style);
 			var self = this;
 			this.$services.swagger.execute("nabu.page.scss.compile", {body:{content:style.content}}).then(function() {
 				self.cssError = null;
@@ -904,6 +910,18 @@ nabu.services.VueService(Vue.extend({
 			})[0];
 			return page ? this.getPageInstance(page, component) : null;
 		},
+		getParentPageInstance: function(page, component) {
+			var currentInstance = this.getPageInstance(page, component);
+			var parentInstance = null;
+			// let's check through the parents
+			while (!parentInstance && currentInstance && currentInstance.$parent) {
+				currentInstance = currentInstance.$parent;
+				if (currentInstance.page) {
+					parentInstance = this.getPageInstance(currentInstance.page, currentInstance);
+				}
+			}
+			return parentInstance;
+		},
 		getPageInstance: function(page, component) {
 			var pageInstance = null;
 			if (component && component.pageInstanceId != null) {
@@ -937,11 +955,14 @@ nabu.services.VueService(Vue.extend({
 				delete nabu.page.instances[page.name];
 			}
 		},
+		// this may no longer be in use, there was a call from the page instance to this which reverted to the page instance, this has been optimized away
+		// it is not clear if anyone else is using it atm, so it now points to the page method call
 		destroy: function(component) {
 			if (component.page && component.cell) {
 				var pageInstance = this.$services.page.getPageInstance(component.page, component);
-				Vue.delete(pageInstance.components, component.cell.id, null);
-			}	
+				//Vue.delete(pageInstance.components, component.cell.id, null);
+				pageInstance.destroyComponent(component, component.cell);
+			}
 		},
 		reloadSwagger: function() {
 			if (!this.disableReload) {
@@ -2236,6 +2257,13 @@ nabu.services.VueService(Vue.extend({
 					result.parent = this.getPageParameters(parentPage);
 				}
 			}
+			// if not defined explicitly, we might still have a parent in this context?
+			else {
+				var parentInstance = self.$services.page.getParentPageInstance(page, context);
+				if (parentInstance && parentInstance.page) {
+					result["parent"] = this.getPageParameters(parentInstance.page);
+				}
+			}
 			// and the page itself
 			result.page = this.getPageParameters(page);
 			
@@ -2351,6 +2379,13 @@ nabu.services.VueService(Vue.extend({
 				})[0];
 				if (parentPage != null) {
 					result.parent = this.getPageParameters(parentPage);
+				}
+			}
+			// if not defined explicitly, we might still have a parent in this context?
+			else {
+				var parentInstance = self.$services.page.getParentPageInstance(page, self);
+				if (parentInstance && parentInstance.page) {
+					result["parent"] = this.getPageParameters(parentInstance.page);
 				}
 			}
 			// and the page itself

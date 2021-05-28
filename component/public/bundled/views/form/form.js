@@ -423,6 +423,21 @@ nabu.page.formComponentConstructer = function(name) {
 			isDisabled: function(field) {
 				return !!field.disabled && this.$services.page.isCondition(field.disabled, this.createResult(), this);
 			},
+			pasteField: function(page) {
+				var field = this.$services.page.pasteItem("page-form-field");	
+				if (field) {
+					if (!page.fields) {
+						Vue.set(page, "fields", []);
+					}
+					page.fields.push(field);
+				}
+			},
+			pastePage: function() {
+				var page = this.$services.page.pasteItem("page-form-page");		
+				if (page) {
+					this.cell.state.pages.push(page);
+				}
+			},
 			getGroupedFields: function(page) {
 				var groupedFields = [];
 				page.fields.map(function(field) {
@@ -1727,9 +1742,32 @@ Vue.component("page-configure-arbitrary", {
 			default: function() { return [] }
 		}
 	},
+	data: function() {
+		return {
+			hasConfigurator: false
+		}
+	},
 	created: function() {
 		if (this.target.bindings == null) {
 			this.target.bindings = {}
+		}
+		var self = this;
+		// we want to find the rendered instance
+		var pageInstance = this.$services.page.getPageInstance(this.page, this);
+		var components = pageInstance.components[this.cell.id];
+		this.instance = null;
+		if (components) {
+			if (components.$$arbitraryCellId == this.cell.id) {
+				this.instance = components;
+			}
+			else if (components instanceof Array) {
+				components.forEach(function(x) {
+					if (x.$$arbitraryCellId == self.cell.id) {
+						self.instance = x;
+					}
+				});
+			}
+			this.hasConfigurator = this.instance != null && this.instance.configurator;
 		}
 	},
 	computed: {
@@ -1767,6 +1805,21 @@ Vue.component("page-configure-arbitrary", {
 			});
 			return routes.map(function(x) { return x.alias });
 		},
+		getCellConfigurator: function(cell) {
+			return this.instance ? this.instance.configurator() : "div";
+		},
+		getCellConfiguratorInput: function(cell) {
+			var result = {};
+			if (this.instance) {
+				var self = this;
+				if (this.instance.$options.props) {
+					Object.keys(this.instance.$options.props).forEach(function(prop) {
+						result[prop] = self.instance[prop];
+					});
+				}
+			}
+			return result;
+		}
 	}
 });
 
@@ -1838,11 +1891,16 @@ Vue.component("page-arbitrary", {
 		},
 		mounted: function(instance) {
 			this.instance = instance;
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			// make sure we register the instance so it is correctly picked up
+			pageInstance.mounted(this.cell, null, null, instance);
+			// if we have events, reset the page ones
 			if (this.instance.getEvents) {
-				var self = this;
-				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				pageInstance.resetEvents();
 			}
+			// we use this to look up the correct component during configuration
+			instance.$$arbitraryCellId = this.cell.id;
 		},
 		validate: function(soft) {
 			if (this.instance && this.instance.validate) {

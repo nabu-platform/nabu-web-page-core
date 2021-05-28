@@ -5,7 +5,7 @@
 				:filter="function(value) { return $services.page.classes('page-actions', value) }"/>
 			<n-form-text v-model="cell.state.activeClass" label="Active Class" info="The class that is set on the active action, this defaults to 'is-active'"/>
 			<n-form-text v-model="cell.state.analysisId" label="Analysis Group" info="For analysis purposes we can group all the actions together" />
-			<n-form-combo v-model="cell.state.defaultAction" label="Default Action" info="The default action will be activated upon first creation"
+			<n-form-combo v-model="cell.state.defaultAction" label="Default Action" info="The default action will be activated upon first creation. You must fill in the name of the action to select it."
 				:filter="function() { return cell.state.actions.map(function(x) { return x.name }) }"/>
 			<n-form-switch v-model="cell.state.useButtons" label="Use Buttons"/>
 			<n-form-switch v-model="cell.state.isFixedHeader" label="Fix as header"/>
@@ -29,7 +29,7 @@
 					<button @click="getActions().splice(getActions().indexOf(action), 1)"><span class="fa fa-trash"></span></button>
 				</div>
 				
-				<div v-if="action.arbitrary">
+				<div v-if="action.arbitrary" class="padded-content">
 					<page-configure-arbitrary v-if="action.arbitrary" 
 						:page="page"
 						:cell="cell"
@@ -91,7 +91,7 @@
 					</n-form-section>
 				</div>
 				
-				<div class="list-item-actions">
+				<div class="list-item-actions" v-if="!action.arbitrary">
 					<button @click="action.triggers ? action.triggers.push('') : $window.Vue.set(action, 'triggers', [''])"><span class="fa fa-plus"></span>Trigger<n-info>You can have this action trigger when another event occurs.</n-info></button>
 				</div>
 				<div v-if="action.triggers" class="padded-content">
@@ -102,7 +102,7 @@
 					<n-form-switch v-model="action.triggerIfHidden" v-if="action.triggers.length && action.condition" label="Allow trigger if hidden"/>
 				</div>
 				
-				<div class="list-item-actions">
+				<div class="list-item-actions" v-if="!action.arbitrary">
 					<button @click="action.activeRoutes.push('')"><span class="fa fa-plus"></span>Active Route<n-info>When is this action considered active (apart from the route you can already assign)?</n-info></button>
 				</div>
 				<div class="list-row padded-content" v-for="i in Object.keys(action.activeRoutes)">
@@ -160,7 +160,7 @@
 					@click="handle(action)"
 					v-if="!cell.state.useButtons && (action.route || hasEvent(action) || action.url || action.close)"
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
-						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:true, compile: !!action.compileLabel }"></span></a>
+						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></a>
 				<button auto-close-actions class="page-action-button page-action-entry"
 					:data-event="action.name"
 					:class="getDynamicClasses(action)"
@@ -170,14 +170,14 @@
 					@click="handle(action)" 
 					v-else-if="cell.state.useButtons && (action.route || hasEvent(action) || action.url || action.close)"
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
-						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:true, compile: !!action.compileLabel }"></span></button>
+						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></button>
 				<span class="page-action-label page-action-entry" 
 					@click="toggle(action)"
 					v-else
 					:class="getDynamicClasses(action)"
 					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
 						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
-						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:true, compile: !!action.compileLabel }"></span></span>
+						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></span>
 				<page-actions :ref="'action_' + (edit ? getActions() : resolvedActions).indexOf(action)"
 					v-if="(action.actions && action.actions.length) || configuringAction == action"
 					:cell="cell"

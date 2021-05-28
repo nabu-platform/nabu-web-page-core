@@ -186,7 +186,7 @@
 							<n-form-text v-model="lastColor[style.name]" :timeout="600" label="Color Code"/>
 						</div>
 					</div>
-					<n-ace v-model="style.content" :timeout="600" @input="$services.page.saveStyle(style)" :ref="'editors_' + style.name"/>
+					<n-ace v-model="style.content" :timeout="1000" @input="$services.page.saveStyle(style)" :ref="'editors_' + style.name"/>
 				</n-collapsible>
 			</div>
 			

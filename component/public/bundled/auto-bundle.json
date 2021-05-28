@@ -375,7 +375,10 @@
 							}, 
 							"enumeration.js": {
 								"url": "views/providers/form/enumeration.js"
-							}, 
+							},
+							"enumerationArray.js": {
+								"url": "views/providers/form/enumerationArray.js"
+							},
 							"enumerationOperation.js": {
 								"url": "views/providers/form/enumerationOperation.js"
 							}, 

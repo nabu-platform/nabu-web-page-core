@@ -443,6 +443,12 @@ window.addEventListener("load", function() {
 			namespace: "nabu.page"
 		});
 		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-enumeration-array",
+			configure: "page-form-input-enumeration-array-configure", 
+			name: "enumeration-array",
+			namespace: "nabu.page"
+		});
+		nabu.page.provide("page-form-input", { 
 			component: "page-form-input-static-image", 
 			configure: "page-form-input-static-image-configure", 
 			name: "static-image",
@@ -591,13 +597,38 @@ window.addEventListener("load", function() {
 			namespace: "nabu.cms"
 		});
 		
+		Vue.component("page-percentage-slider-configurator", {
+			props: {
+				page: {
+					type: Object,
+					required: true
+				},
+				cell: {
+					type: Object,
+					required: true
+				},
+				fragment: {
+					type: Object,
+					required: true
+				}
+			},
+			template: "<div><n-form-switch v-model='fragment.percentageReverse' label='Reverse percentage'/><n-form-switch v-model='fragment.percentageSmallRange' label='Is [0-1] range'/></div>"
+		});
+			
 		nabu.page.provide("page-format", {
-			format: function(value) {
-				return "<n-form-text :disabled='true' type='range' :value='" + (value * 100) + "' :minimum='0' :step='1' :maximum='100'/>";
+			format: function(value, fragment, page, cell) {
+				if (fragment && fragment.percentageSmallRange && value) {
+					value *= 100;
+				}
+				if (fragment && fragment.percentageReverse && value != null) {
+					value = 100 - value;
+				}
+				return "<input disabled='true' type='range' value='" + value + "' minimum='0' step='1' maximum='100' :value='" + value + "'/>";
 			},
 			html: true,
 			skipCompile: false,
 			name: "percentage-slider",
+			configure: "page-percentage-slider-configurator",
 			namespace: "nabu.page"
 		});
 		
