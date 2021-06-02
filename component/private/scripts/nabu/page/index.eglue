@@ -27,10 +27,10 @@ if (environment("mobile") == true)
 	echo('		<meta name="msapplication-tap-highlight" content="no">')
 	echo('		<script src="cordova.js"></script>')
 
+configuration = application.configuration("nabu.web.page.core.types.configuration")
+
 if (configuration/title != null)
 	title = configuration/title
-
-configuration = application.configuration("nabu.web.page.core.types.configuration")
 if (configuration/branding/favicon != null)
 	echo('		<link rel="icon" type="image/png" href="' + configuration/branding/favicon + '"/>\n')
 if (configuration/branding/title != null)
