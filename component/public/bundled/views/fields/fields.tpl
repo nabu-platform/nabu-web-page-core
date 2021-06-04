@@ -176,8 +176,8 @@
 				<page-fields-edit :cell="cell" :allow-multiple="true" :page="page" :data="data" :should-style="shouldStyle"/>
 			</n-form>
 		</n-sidebar>
-		<page-field v-for="field in cell.state[fieldsName]" :field="field" :data="data ? data : state" :label="label == null ? !cell.state.hideLabel : label"
-			v-if="!field.hidden || !$services.page.isCondition(field.hidden, data ? data : state, $self)"
+		<page-field v-for="field in cell.state[fieldsName]" :field="field" :data="data ? data : $services.page.getPageInstance(page, $self).variables" :label="label == null ? !cell.state.hideLabel : label"
+			v-if="!field.hidden || !$services.page.isCondition(field.hidden, data ? data : $services.page.getPageInstance(page, $self).variables, $self)"
 			:edit="edit"
 			:page="page"
 			:cell="cell"

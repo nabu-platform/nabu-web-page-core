@@ -2769,7 +2769,7 @@ nabu.services.VueService(Vue.extend({
 					if (parameter.in == "body") {
 						var type = self.$services.swagger.resolve(parameter);
 						if (type.schema.properties) {
-							nabu.utils.arrays.merge(keys, self.getSimpleKeysFor(type.schema).map(function(x) { return "body." + x }));
+							nabu.utils.arrays.merge(keys, self.getSimpleKeysFor(type.schema, true, true).map(function(x) { return "body." + x }));
 						}
 					}
 					else {
