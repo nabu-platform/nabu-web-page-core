@@ -506,8 +506,8 @@ window.addEventListener("load", function() {
 		
 		nabu.page.provide("page-icon", {
 			name: "Font Awesome",
-			html: function(icon) {
-				return "<span class='icon fa " + icon + "'></span>";
+			html: function(icon, additionalCss) {
+				return "<span class='icon fa " + icon + (additionalCss ? " " + additionalCss : "") + "'></span>";
 			},
 			priority: -1,
 			allowOther: true,
@@ -612,7 +612,7 @@ window.addEventListener("load", function() {
 					required: true
 				}
 			},
-			template: "<div><n-form-switch v-model='fragment.percentageReverse' label='Reverse percentage'/><n-form-switch v-model='fragment.percentageSmallRange' label='Is [0-1] range'/></div>"
+			template: "<div><n-form-switch v-model='fragment.percentageReverse' label='Reverse percentage'/><n-form-switch v-model='fragment.percentageSmallRange' label='Is [0-1] range' /><n-form-text v-model='fragment.round' label='Round Number'/></div>"
 		});
 			
 		nabu.page.provide("page-format", {
@@ -622,6 +622,9 @@ window.addEventListener("load", function() {
 				}
 				if (fragment && fragment.percentageReverse && value != null) {
 					value = 100 - value;
+				}
+				if (fragment && fragment.round && value != null) {
+					value = parseFloat($services.formatter.number(value, parseInt(fragment.round)));
 				}
 				return "<input disabled='true' type='range' value='" + value + "' minimum='0' step='1' maximum='100' :value='" + value + "'/>";
 			},

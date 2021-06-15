@@ -181,9 +181,11 @@
 					</div>
 					<n-collapsible class="list-item" v-for="parameter in page.content.parameters" :title="parameter.name" :after="parameter.name ? null : 'Unnamed Variable'">
 						<div slot="buttons">
+							<button @click="moveInternalUp(parameter)"><span class="fa fa-chevron-circle-up"></span></button>
+							<button @click="moveInternalDown(parameter)"><span class="fa fa-chevron-circle-down"></span></button>
 							<button @click="page.content.parameters.splice(page.content.parameters.indexOf(parameter), 1)"><span class="fa fa-trash"></span></button>	
 						</div>
-						<n-form-text v-model="parameter.name" :required="true" label="Name"/>
+						<n-form-text v-model="parameter.name" :required="true" label="Name" :timeout="600"/>
 						<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :filter="getParameterTypes"/>
 						<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
 						<n-form-text v-model="parameter.default" label="Default Value" v-if="!parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
@@ -244,7 +246,7 @@
 						<div slot="buttons">
 							<button @click="page.content.states.splice(page.content.states.indexOf(state), 1)"><span class="fa fa-trash"></span></button>
 						</div>
-						<n-form-text :value="state.name" @input="function(newValue) { if (!validateStateName(newValue).length) state.name = newValue; }" label="Name" :required="true" :validator="validateStateName"/>
+						<n-form-text :value="state.name" @input="function(newValue) { if (!validateStateName(newValue).length) state.name = newValue; }" label="Name" :required="true" :validator="validateStateName" :timeout="600"/>
 						<div v-if="state.inherited">
 							<n-form-combo v-model="state.applicationName" :filter="$services.page.getApplicationStateNames" label="Application State" />
 						</div>
@@ -347,6 +349,7 @@
 						<n-form-text v-if="action.function && $services.page.hasFunctionOutput(action.function)" v-model="action.functionOutputEvent" label="Function Output Event" info="Emit the output of the function as event"/>
 						<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function" :timeout="600"/>
 						<page-event-value class="no-more-padding" :page="page" :container="action" title="Chain Event" name="chainEvent" @resetEvents="resetEvents" :inline="true"/>
+						<n-form-text v-model="action.chainTimeout" v-if="nabu.page.event.getName(action, 'chainEvent') != null" label="Timeout for chain event"/>
 						<n-form-switch v-if="action.operation || action.function" v-model="action.isSlow" label="Is slow operation?"/>
 						<n-form-text v-if="action.operation && !isBinaryDownload(action.operation)" v-model="action.event" label="Success Event" @input="resetEvents()" :timeout="600"/>
 						<n-form-text v-if="action.operation && !isBinaryDownload(action.operation)" v-model="action.errorEvent" label="Error Event" @input="resetEvents()" :timeout="600"/>

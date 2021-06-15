@@ -1748,6 +1748,9 @@ Vue.component("page-configure-arbitrary", {
 		}
 	},
 	created: function() {
+		if (!this.target.arbitraryId) {
+			Vue.set(this.target, "arbitraryId", Math.random());
+		}
 		if (this.target.bindings == null) {
 			this.target.bindings = {}
 		}
@@ -1762,7 +1765,7 @@ Vue.component("page-configure-arbitrary", {
 			}
 			else if (components instanceof Array) {
 				components.forEach(function(x) {
-					if (x.$$arbitraryCellId == self.cell.id) {
+					if (x.$$arbitraryCellId == self.cell.id && x.$$arbitraryId == self.target.arbitraryId) {
 						self.instance = x;
 					}
 				});
@@ -1894,6 +1897,7 @@ Vue.component("page-arbitrary", {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			// make sure we register the instance so it is correctly picked up
+			// this will allow for example events to bubble up etc (presumably)
 			pageInstance.mounted(this.cell, null, null, instance);
 			// if we have events, reset the page ones
 			if (this.instance.getEvents) {
@@ -1901,6 +1905,8 @@ Vue.component("page-arbitrary", {
 			}
 			// we use this to look up the correct component during configuration
 			instance.$$arbitraryCellId = this.cell.id;
+			// if we have multiple arbitrary in a single cell (e.g. in page-actions), we want to be able to differentiate them
+			instance.$$arbitraryId = this.target.arbitraryId;
 		},
 		validate: function(soft) {
 			if (this.instance && this.instance.validate) {

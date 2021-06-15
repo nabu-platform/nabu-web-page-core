@@ -9,6 +9,7 @@
     <output>nabu.web.page.core.rest.resource.resourceList</output>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
+    <geoPosition>false</geoPosition>
     <language>false</language>
     <allowFormBinding>false</allowFormBinding>
     <caseInsensitive>false</caseInsensitive>
@@ -21,4 +22,5 @@
     <source>false</source>
     <allowRaw>false</allowRaw>
     <domain>false</domain>
+    <ignoreOffline>false</ignoreOffline>
 </restInterface>

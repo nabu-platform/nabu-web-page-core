@@ -357,13 +357,14 @@ nabu.services.VueService(Vue.extend({
 				this.reports.splice(20);
 			}
 		},
-		getIconHtml: function(icon) {
+		// the additional allows you to easily pass in additional css classes
+		getIconHtml: function(icon, additionalCss) {
 			var providers = nabu.page.providers("page-icon");
 			providers.sort(function(a, b) {
 				return a.priority - b.priority;	
 			});
 			var provider = providers[0];
-			return provider.html(icon);
+			return provider.html(icon, additionalCss);
 		},
 		getNameColor: function(name) {
 			var saturation = 80;
@@ -972,28 +973,33 @@ nabu.services.VueService(Vue.extend({
 		reloadCss: function() {
 			this.reloadSwagger();
 			var self = this;
-			nabu.utils.ajax({url:"${server.root()}page/v1/api/css-modified"}).then(function(response) {
-				if (response.responseText != null && !self.disableReload) {
-					var date = new Date(response.responseText);
-					if (!self.cssLastModified) {
-						self.cssLastModified = date;
-					}
-					else if (date.getTime() > self.cssLastModified.getTime()) {
-						// actually reload
-						var links = document.head.getElementsByTagName("link");
-						for (var i = 0; i < links.length; i++) {
-							var original = links[i].getAttribute("original");
-							if (!original) {
-								original = links[i].href;
-								links[i].setAttribute("original", original);
-							}
-							links[i].setAttribute("href", original + "&loadTime=" + date.getTime());
+			if (!self.disableReload) {
+				nabu.utils.ajax({url:"${server.root()}page/v1/api/css-modified"}).then(function(response) {
+					if (response.responseText != null && !self.disableReload) {
+						var date = new Date(response.responseText);
+						if (!self.cssLastModified) {
+							self.cssLastModified = date;
 						}
-						self.cssLastModified = date;
+						else if (date.getTime() > self.cssLastModified.getTime()) {
+							// actually reload
+							var links = document.head.getElementsByTagName("link");
+							for (var i = 0; i < links.length; i++) {
+								var original = links[i].getAttribute("original");
+								if (!original) {
+									original = links[i].href;
+									links[i].setAttribute("original", original);
+								}
+								links[i].setAttribute("href", original + "&loadTime=" + date.getTime());
+							}
+							self.cssLastModified = date;
+						}
 					}
-				}
+					setTimeout(self.reloadCss, 5000);
+				});
+			}
+			else {
 				setTimeout(self.reloadCss, 5000);
-			});
+			}
 		},
 		getFunctionDefinition: function(id) {
 			return this.listFunctionDefinitions().filter(function(x) { return x.id == id })[0];
@@ -2054,6 +2060,11 @@ nabu.services.VueService(Vue.extend({
 				var pagePath = page.content.path;
 				if (pagePath && pagePath.indexOf("/") != 0) {
 					pagePath = "/" + pagePath;
+				}
+				// allow for translatable urls
+				// may not work during translation redirects!!
+				if (pagePath) {
+					pagePath = self.translate(pagePath);
 				}
 				var route = {
 					alias: self.alias(page),

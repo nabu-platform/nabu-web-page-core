@@ -345,15 +345,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 			document.body.classList.remove.apply(document.body.classList, this.oldBodyClasses.splice(0));
 		}
 	},
-	mounted: function() {
-		console.log("mounted page", this.page.name, this.embedded);
-	},
 	ready: function() {
 		this.rendered = true;
 		this.postRender.splice(0).forEach(function(x) { x() });
 	},
 	created: function() {
-		console.log("creating page", this.page.name);
 		this.$services.page.setPageInstance(this.page, this);
 		var self = this;
 		// backwards compatibility
@@ -377,7 +373,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 	beforeMount: function() {
 		this.$services.page.setPageInstance(this.page, this);
 		// keep a stringified copy of the last parameters so we can diff
-		this.lastParameters = JSON.stringify(this.parameters);
+		// no longer needed? @2021-06-10: it seems this was only for the initial rerender
+		// which has long since been deprecated
+		//this.lastParameters = JSON.stringify(this.parameters);
 	},
 	destroyed: function() {
 		this.$services.page.destroyPageInstance(this.page, this);
@@ -441,7 +439,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			components: {},
 			// contains (amongst other things) the event instances
 			variables: {},
-			lastParameters: null,
+			//lastParameters: null,
 			configuring: false,
 			// per cell
 			closed: {},
@@ -477,6 +475,21 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		moveInternalUp: function(parameter) {
+			var index = this.page.content.parameters.indexOf(parameter);
+			if (index > 0) {
+				this.page.content.parameters.splice(index, 1);
+				this.page.content.parameters.splice(index - 1, 0, parameter);
+			}
+		},
+		moveInternalDown: function(parameter) {
+			var index = this.page.content.parameters.indexOf(parameter);
+			// not the last one
+			if (index < this.page.content.parameters.length - 1) {
+				this.page.content.parameters.splice(index, 1);
+				this.page.content.parameters.splice(index + 1, 0, parameter);
+			}
+		},
 		getOperationArrays: function(operation) {
 			if (operation) {
 				var op = this.$services.swagger.operations[operation];
@@ -564,7 +577,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 							if (value == null) {
 								if (x.complexDefault) {
 									value = self.calculateVariable(x.defaultScript);
-									console.log("scripting!", value);
 								}
 								else {
 									value = self.$services.page.interpret(x.default, self);
@@ -773,7 +785,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 				event.stopPropagation();
 			}
 			if (this.$services.page.getDragData(event, "component-alias")) {
-				console.log("dropping component-alias");
 				var row = this.addRow(this.page.content);
 				var cell = this.addCell(row);
 				cell.alias = this.$services.page.getDragData(event, "component-alias");
@@ -784,7 +795,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 				var content = JSON.parse(this.$services.page.getDragData(event, "template-content"));
 				// row drop from templates
 				if (content.type == "page-row") {
-					console.log("adding", content.content);
 					if (!self.page.content.rows) {
 						Vue.set(self.page.content, "rows", []);
 					}
@@ -1617,10 +1627,18 @@ nabu.page.views.Page = Vue.component("n-page", {
 								if (Object.keys(content).length == 0) {
 									content = value;
 								}
-								pageInstance.emit(
-									nabu.page.event.getName(action, "chainEvent"),
-									content
-								);
+								var doIt = function() {
+									pageInstance.emit(
+										nabu.page.event.getName(action, "chainEvent"),
+										content
+									);
+								}
+								if (action.chainTimeout) {
+									setTimeout(doIt, parseInt(action.chainTimeout));
+								}
+								else {
+									doIt();
+								}
 							});
 						}
 						promise.then(function() { stop() }, function(error) { stop(error) });
@@ -2237,7 +2255,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	watch: {
-		parameters: function(newValue) {
+		/*parameters: function(newValue) {
 			var oldValue = JSON.parse(this.lastParameters);
 			var changedValues = [];
 			// find all the fields that have changed
@@ -2248,7 +2266,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			});
 			this.lastParameters = JSON.stringify(newValue);
 			//this.rerender(changedValues);
-		},
+		},*/
 		'page.content.globalEvents': {
 			deep: true,
 			handler: function(newValue) {
@@ -2428,7 +2446,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		},
 		dragOver: function($event, row) {
 			var data = this.$services.page.hasDragData($event, "component-alias");
-			console.log("dragging over row", $event, data);
 			if (!data) {
 				data = this.$services.page.hasDragData($event, "template-content");
 			}

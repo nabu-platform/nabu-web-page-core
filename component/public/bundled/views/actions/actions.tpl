@@ -159,7 +159,7 @@
 					:id="$services.page.interpret(action.id, $self)"
 					@click="handle(action)"
 					v-if="!cell.state.useButtons && (action.route || hasEvent(action) || action.url || action.close)"
-						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
+						><html-fragment v-if="action.icon" :html="$services.page.getIconHtml(action.icon)"></html-fragment
 						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></a>
 				<button auto-close-actions class="page-action-button page-action-entry"
 					:data-event="action.name"
@@ -169,14 +169,14 @@
 					:id="$services.page.interpret(action.id, $self)"
 					@click="handle(action)" 
 					v-else-if="cell.state.useButtons && (action.route || hasEvent(action) || action.url || action.close)"
-						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
+						><html-fragment v-if="action.icon" :html="$services.page.getIconHtml(action.icon)"></html-fragment
 						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></button>
 				<span class="page-action-label page-action-entry" 
 					@click="toggle(action)"
 					v-else
 					:class="getDynamicClasses(action)"
 					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
-						><span v-if="action.icon" class="icon fa" :class="action.icon"></span
+						><html-fragment v-if="action.icon" :html="$services.page.getIconHtml(action.icon)"></html-fragment
 						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></span>
 				<page-actions :ref="'action_' + (edit ? getActions() : resolvedActions).indexOf(action)"
 					v-if="(action.actions && action.actions.length) || configuringAction == action"

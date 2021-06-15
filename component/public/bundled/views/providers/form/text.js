@@ -11,8 +11,8 @@ Vue.component("page-form-input-text-configure", {
 		+ "	<n-form-text v-model='field.afterIcon' label='After Icon' v-if='field.after'/>"
 		+ "	<n-form-text v-model='field.suffix' label='Suffix' v-if='!field.suffixIcon'/>"
 		+ "	<n-form-text v-model='field.suffixIcon' label='Suffix Icon' v-if='!field.suffix'/>"
-		+ "	<n-form-text v-model='field.minimum' label='Minimum' v-if=\"field.textType == 'range'\"/>"
-		+ "	<n-form-text v-model='field.maximum' label='Maximum' v-if=\"field.textType == 'range'\"/>"
+		+ "	<n-form-text v-model='field.minimum' label='Minimum' v-if=\"field.textType == 'range' || field.textType == 'number'\"/>"
+		+ "	<n-form-text v-model='field.maximum' label='Maximum' v-if=\"field.textType == 'range' || field.textType == 'number'\"/>"
 		+ "	<n-form-text v-model='field.step' label='Step' v-if=\"field.textType == 'range'\"/>"
 		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"
 		+ "	<h2>Validation Codes<span class='subscript'>You can remap validation codes with different messages here</span></h2>"
@@ -144,7 +144,6 @@ Vue.component("page-form-input-text", {
 			codes.forEach(function(code) {
 				result[code.code] = self.$services.page.translate(code.title);
 			});
-			console.log("all codes are", result);
 			return result;
 		},
 		textType: function() {
