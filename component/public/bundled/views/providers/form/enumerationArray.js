@@ -77,6 +77,9 @@ Vue.component("page-form-input-enumeration-array-configure", {
 	}
 });
 
+// removed content from the n-form-radio as was defined for the neo project
+// it does not appear to add anything of value, if something does not work, this should be checked first
+// The code in question: ><template slot='label' scope='props'><label @click='props.select(props.value); $event.stopPropagation()' class='n-form-label' v-content='enumerationFormatter(props.value)'></label></template></n-form-radio
 Vue.component("page-form-input-enumeration-array", {
 	template: "<div>"
 			+ "<n-form-radio v-if='field.showRadioView'"
@@ -96,7 +99,7 @@ Vue.component("page-form-input-enumeration-array", {
 			+ "		:must-choose='field.mustChoose ? $services.page.interpret(field.mustChoose, $self) : null'"
 			+ "		:formatter='enumerationFormatter'"
 			+ "		:extracter='enumerationExtracter'"
-			+ "		:disabled='disabled'><template slot='label' scope='props'><label @click='props.select(props.value); $event.stopPropagation()' class='n-form-label' v-content='enumerationFormatter(props.value)'></label></template></n-form-radio>"
+			+ "		:disabled='disabled'/>"
 			+ "<n-form-combo ref='form' v-else"
 			+ "		:filter='enumerationFilter'"
 			+ "		:formatter='enumerationFormatter'"

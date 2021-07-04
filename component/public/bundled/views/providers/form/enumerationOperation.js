@@ -16,6 +16,9 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			+ "		<n-form-combo v-if='field.enumerationOperation && field.enumerationOperationValue' :filter='function() { return getEnumerationParameters(field.enumerationOperation) }' v-model='field.enumerationOperationResolve' label='Resolve Field'/>"
 			+ "		<page-fields-edit :allow-multiple='false' fields-name='enumerationFields' v-if='field.enumerationOperation && field.enumerationOperationLabelComplex' :cell='{state:field}' :page='page' :keys='getEnumerationFields(field.enumerationOperation)' :allow-editable='false'/>"
 			+ "		<n-form-text v-model='field.emptyValue' label='Empty Value Text'/>"
+			+ " 	<n-form-switch v-model='field.showRadioView' label='Show radio visualisation'/>"
+			+ " 	<n-form-switch v-model='field.selectFirstIfEmpty' label='Select the first value if none has been selected yet'/>"
+			+ "		<n-form-text v-if='field.showRadioView' v-model='field.mustChoose' label='Must choose' placeholder='=true' allow-typing='true' />"
 			+ "	<n-form-text v-model='field.info' label='Info Content'/>"
 			+ "	<n-form-text v-model='field.before' label='Before Content'/>"
 			+ "	<n-form-text v-model='field.beforeIcon' label='Before Icon' v-if='field.before'/>"
@@ -153,7 +156,26 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 });
 
 Vue.component("page-form-input-enumeration-operation", {
-	template: "<n-form-combo ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter' :resolver='enumerationResolver'"
+	template: "<div>"
+			+ "<n-form-radio v-if='field.showRadioView'"
+			+ "		:items='resolvedItems'"
+			+ "		ref='form'"
+			+ "		:edit='!readOnly'"
+			+ "		:placeholder='placeholder'"
+			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		:label='label ? $services.page.interpret(label, $self) : null'"
+			+ "		:value='value'"
+			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
+			+ "		:description-type='field.descriptionType'"
+			+ "		:description-icon='field.descriptionIcon'"
+			+ "		:schema='schema'"
+			+ "		v-bubble:label"
+			+ "		:required='field.required'"
+			+ "		:must-choose='field.mustChoose ? $services.page.interpret(field.mustChoose, $self) : null'"
+			+ "		:formatter='enumerationFormatter'"
+			+ "		:extracter='enumerationExtracter'"
+			+ "		:disabled='disabled'/>"
+			+ "<n-form-combo v-else ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter' :resolver='enumerationResolver'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
@@ -172,7 +194,7 @@ Vue.component("page-form-input-enumeration-operation", {
 			+ "		:description-type='field.descriptionType'"
 			+ "		:description-icon='field.descriptionIcon'"
 			+ "		:schema='schema'"
-			+ "		:disabled='disabled'/>",
+			+ "		:disabled='disabled'/></div>",
 	props: {
 		cell: {
 			type: Object,
@@ -215,7 +237,16 @@ Vue.component("page-form-input-enumeration-operation", {
 	},
 	data: function() {
 		return {
-			provider: null
+			provider: null,
+			resolvedItems: []
+		}
+	},
+	created: function() {
+		if (this.field.showRadioView) {
+			var self = this;
+			this.enumerationFilterAny(null, false).then(function(x) {
+				nabu.utils.arrays.merge(self.resolvedItems, x);
+			});
 		}
 	},
 	methods: {
@@ -244,9 +275,9 @@ Vue.component("page-form-input-enumeration-operation", {
 			else if (asResolve && this.field.enumerationOperationResolve) {
 				parameters[this.field.enumerationOperationResolve] = value;
 			}
+			var self = this;
 			// map any additional bindings
 			if (this.field.enumerationOperationBinding) {
-				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				Object.keys(this.field.enumerationOperationBinding).map(function(key) {
 					var target = parameters;
@@ -266,6 +297,9 @@ Vue.component("page-form-input-enumeration-operation", {
 					Object.keys(response).map(function(key) {
 						if (response[key] instanceof Array) {
 							result = response[key];
+							if (self.field.selectFirstIfEmpty && self.value == null && result && result.length > 0) {
+								self.$emit("input", self.enumerationExtracter(result[0]));
+							}
 						}
 					});
 				}

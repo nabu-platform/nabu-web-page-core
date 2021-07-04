@@ -1009,6 +1009,7 @@ nabu.page.formComponentConstructer = function(name) {
 						Vue.set(tmp, parts[parts.length - 1], self.$services.page.getBindingValue(pageInstance, self.cell.bindings[name]));
 					}
 				});
+				console.log("result is", transformed);
 				return transformed;
 			},
 			changed: function() {

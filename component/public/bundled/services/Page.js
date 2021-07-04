@@ -187,7 +187,7 @@ nabu.services.VueService(Vue.extend({
 				content: content
 			});
 			this.copiedType = item;
-			this.copiedContent = content;
+			this.copiedContent = clone ? JSON.parse(JSON.stringify(content)) : content;
 		},
 		suggestDevices: function(value) {
 			var devices = this.devices.map(function(x) { return x.name }); 
@@ -1243,23 +1243,28 @@ nabu.services.VueService(Vue.extend({
 			}
 			return value;
 		},
-		interpret: function(value, component) {
+		interpret: function(value, component, state) {
 			if (typeof(value) == "string" && value.length > 0 && value.substring(0, 1) == "=") {
 				value = value.substring(1);
 				var result = null;
-				var stateOwner = component;
-				while (!stateOwner.localState && stateOwner.$parent) {
-					stateOwner = stateOwner.$parent;
+				if (state) {
+					result = this.eval(value, state, component);
 				}
-				if (stateOwner && stateOwner.localState) {
-					result = this.eval(value, stateOwner.localState, component);
-				}
-				if (result == null && stateOwner && stateOwner.state) {
-					result = this.eval(value, stateOwner.state, component);
-				}
-				if (result == null && component.page) {
-					var pageInstance = this.getPageInstance(component.page, component);
-					result = this.getBindingValue(pageInstance, value);
+				else if (component) {
+					var stateOwner = component;
+					while (!stateOwner.localState && stateOwner.$parent) {
+						stateOwner = stateOwner.$parent;
+					}
+					if (stateOwner && stateOwner.localState) {
+						result = this.eval(value, stateOwner.localState, component);
+					}
+					if (result == null && stateOwner && stateOwner.state) {
+						result = this.eval(value, stateOwner.state, component);
+					}
+					if (result == null && component.page) {
+						var pageInstance = this.getPageInstance(component.page, component);
+						result = this.getBindingValue(pageInstance, value);
+					}
 				}
 				value = result;
 			}
@@ -1273,7 +1278,10 @@ nabu.services.VueService(Vue.extend({
 						if (end >= index) {
 							var rule = value.substring(index + 2, end);
 							var result = null;
-							if (component) {
+							if (state) {
+								result = this.eval(rule, state, component);
+							}
+							else if (component) {
 								var stateOwner = component;
 								while (!stateOwner.localState && stateOwner.$parent) {
 									stateOwner = stateOwner.$parent;
@@ -1449,8 +1457,14 @@ nabu.services.VueService(Vue.extend({
 			if (!condition) {
 				return true;
 			}
-			var result = this.eval(condition, state, instance);
-			return !!result;
+			try {
+				var result = this.eval(condition, state, instance);
+				return !!result;
+			}
+			catch (exception) {
+				console.error("Could not evaluate condition", condition, exception);
+				return false;
+			}
 		},
 		getPageState: function(pageInstance) {
 			var state = {};
@@ -1511,6 +1525,17 @@ nabu.services.VueService(Vue.extend({
 			});
 			// replace all the disabled features with false
 			condition = condition.replace(/@\{[^}]+\}/gm, "false");
+			
+			// for a long time, state was meant to incorporate local state from repeats etc, but the use of local state is being reduced, partly because it is not reactive (for anything that is _not_ local) and memory
+			// instead we tend to use data-card etc for actual repeats so it does not appear to be necessary anymore?
+			// anyway, because of that local state, we often put the data (e.G. for a table) in "record", so you needed to type state.record.myField (to prevent unintentional naming collissions)
+			// however, not always, in forms it was directly the form field, for example "state.myField".
+			// this made it hard to predict when you needed record and when you didn't, resulting in a lot of trial and error
+			// so now, if we see state.record, we will expand the data onto state itself
+			// this remains backwards compatible (state.record.myField will keep working) but more predictable going forward (use state.myField)
+			if (state) {
+				
+			}
 			
 			if (this.useEval) {
 				try {

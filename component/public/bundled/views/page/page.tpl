@@ -230,6 +230,7 @@
 									<span @click="parameter.resetListeners.splice(i, 1)" class="fa fa-times"></span>
 								</div>
 							</div>
+							<page-event-value :page="page" :container="parameter" title="State reset event" name="updatedEvent" @resetEvents="resetEvents" :inline="true"/>
 						</div>
 					</n-collapsible>
 				</n-collapsible>
@@ -257,6 +258,7 @@
 								v-model="state.bindings"/>
 						</div>
 						<page-event-value :page="page" :container="state" title="Successful Update Event" name="updateEvent" @resetEvents="resetEvents" :inline="true"/>
+						<n-form-ace v-model="state.condition" label="Condition" info="If left empty it will always run. If filled in, it will only run if the condition returns true." :timeout="600"/>
 						<h4>Refresh Events</h4>
 						<p class="subscript">You can refresh this state when a particular event occurs.</p>
 						<div class="list" v-if="state.refreshOn">
@@ -332,6 +334,8 @@
 					</div>
 					<n-collapsible class="list-item" :title="action.name ? action.name : 'Unnamed Trigger'" :after="action.on ? 'on ' + action.on : null" v-for="action in page.content.actions">
 						<div slot="buttons">
+							<button @click="moveTriggerUp(action)"><span class="fa fa-chevron-circle-up"></span></button>
+							<button @click="moveTriggerDown(action)"><span class="fa fa-chevron-circle-down"></span></button>
 							<button @click="page.content.actions.splice(page.content.actions.indexOf(action), 1)"><span class="fa fa-trash"></span></button>
 						</div>
 						<n-form-text v-model="action.name" label="Name" :required="true" :timeout="600"/>
@@ -349,7 +353,7 @@
 						<n-form-text v-if="action.function && $services.page.hasFunctionOutput(action.function)" v-model="action.functionOutputEvent" label="Function Output Event" info="Emit the output of the function as event"/>
 						<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function" :timeout="600"/>
 						<page-event-value class="no-more-padding" :page="page" :container="action" title="Chain Event" name="chainEvent" @resetEvents="resetEvents" :inline="true"/>
-						<n-form-text v-model="action.chainTimeout" v-if="nabu.page.event.getName(action, 'chainEvent') != null" label="Timeout for chain event"/>
+						<n-form-text v-model="action.chainTimeout" v-if="$window.nabu.page.event.getName(action, 'chainEvent') != null" label="Timeout for chain event" :timeout="600"/>
 						<n-form-switch v-if="action.operation || action.function" v-model="action.isSlow" label="Is slow operation?"/>
 						<n-form-text v-if="action.operation && !isBinaryDownload(action.operation)" v-model="action.event" label="Success Event" @input="resetEvents()" :timeout="600"/>
 						<n-form-text v-if="action.operation && !isBinaryDownload(action.operation)" v-model="action.errorEvent" label="Error Event" @input="resetEvents()" :timeout="600"/>
@@ -394,6 +398,25 @@
 						</div>
 					</n-collapsible>
 				</n-collapsible>	
+				<n-collapsible title="Notifications" class="list">
+					<div class="list-actions">
+						<button @click="addNotification"><span class="fa fa-plus"></span>Notification</button>
+					</div>
+					<div v-if="page.content.notifications">
+						<n-collapsible class="list-item" :title="(notification.name ? notification.name : 'unnamed')" :after="notification.on ? 'on ' + notification.on : null" v-for="notification in page.content.notifications">
+							<n-form-text v-model="notification.name" label="Name" :timeout="600" info="Allows you to target this notification at a later point if needed"/>
+							<n-form-text v-model="notification.duration" label="Duration" :timeout="600" info="How long the notification should stay up (in ms)"/>
+							<n-form-combo v-model="notification.on" label="Trigger On" :filter="getAvailableEvents"/>	
+							<n-form-text v-model="notification.condition" label="Condition" v-if="notification.on" :timeout="600"/>
+							<n-form-text v-model="notification.title" label="Title" :timeout="600" info="An optional title for this notification, it can include variables from the originating event using the {{}} syntax"/>
+							<n-form-text v-model="notification.message" label="Message" :timeout="600" info="An optional title for this notification, it can include variables from the originating event using the {{}} syntax"/>
+							<n-form-combo v-model="notification.severity" label="Severity" :timeout="600" :items="['info', 'warning', 'error']"/>
+							<n-form-switch v-model="notification.closeable" label="Closeable" info="Can the user explicitly close the notification?"/>
+							<n-form-text v-model="notification.icon" label="Icon" :timeout="600" info="The correct value for this depends on your icon provider and the notification provider"/>
+							<page-event-value :inline="true" class="no-more-padding" :page="page" :container="notification" title="Notification Event" name="chainEvent" :name-modifiable="false"/>
+						</n-collapsible>
+					</div>
+				</n-collapsible>
 				<n-collapsible title="Analysis" class="list">
 					<div class="list-actions">
 						<button @click="addAnalysis"><span class="fa fa-plus"></span>Analysis</button>

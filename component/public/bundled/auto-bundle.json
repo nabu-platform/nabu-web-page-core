@@ -107,6 +107,9 @@
 					"Analysis.js": {
 						"url": "services/Analysis.js"
 					},
+					"Notifier.js": {
+						"url": "services/Notifier.js"
+					},
 					"Data.js": {
 						"url": "services/Data.js"
 					}
@@ -305,6 +308,14 @@
 						}, 
 						"actions.tpl": {
 							"url": "views/actions/actions.tpl"
+						}
+					},
+					"notifier": {
+						"notifier.js": {
+							"url": "views/notifier/notifier.js"
+						}, 
+						"notifier.scss": {
+							"url": "views/notifier/notifier.scss"
 						}
 					},
 					"skeletons": {

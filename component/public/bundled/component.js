@@ -1,3 +1,23 @@
+// https://jsfiddle.net/Linusborg/mfqjk5hm/
+// https://github.com/vuejs/vue/issues/7431
+// try to avoid wrapper elements when inserting html
+// not entirely sure if this is still responsive?
+Vue.component('html-fragment', {
+	functional: true,
+	props: {
+		html: {
+			type: String, 
+			required: true
+		}
+	},
+	render: function(h, ctx) {
+		return new Vue({
+			beforeCreate: function() { this.$createElement = h }, // not necessary, but cleaner imho
+			template: "<div>" + ctx.props.html + "</div>"
+		}).$mount()._vnode.children;
+	}
+});
+
 window.addEventListener("load", function() {
 	application.bootstrap(function($services) {
 		
@@ -507,7 +527,10 @@ window.addEventListener("load", function() {
 		nabu.page.provide("page-icon", {
 			name: "Font Awesome",
 			html: function(icon, additionalCss) {
-				return "<span class='icon fa " + icon + (additionalCss ? " " + additionalCss : "") + "'></span>";
+				// if you don't include the fa-prefix (of any kind, like fas etc)
+				// we assume you want to remain agnostic of the fa prefix and readd it
+				// the chance for collission is low and can still be addressed using css
+				return "<span class='icon fa " + icon + (additionalCss ? " " + additionalCss : "") + (icon.indexOf("fa") != 0 ? " fa-" + icon : "") + "'></span>";
 			},
 			priority: -1,
 			allowOther: true,
