@@ -1814,18 +1814,18 @@ nabu.page.views.Page = Vue.component("n-page", {
 									if (element) {
 										if (routePromise && routePromise.then) {
 											routePromise.then(function() {
-												element.scrollIntoView();
+												element.scrollIntoView({behavior: 'smooth'});
 											});
 										}
 										else {
-											element.scrollIntoView();
+											element.scrollIntoView({behavior: 'smooth'});
 										}
 									}
 								}
 								else if (action.scroll) {
 									eventReset();
 									if (element) {
-										element.scrollIntoView();
+										element.scrollIntoView({behavior: 'smooth'});
 									}
 								}
 								else if (action.operation && self.isGet(action.operation) && action.anchor == "$blank") {
@@ -1907,7 +1907,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 									element = document.getElementById(action.scroll);
 								}
 								if (element) {
-									element.scrollIntoView();
+									element.scrollIntoView({behavior: 'smooth'});
 								}
 							}
 							else if (action.route) {
