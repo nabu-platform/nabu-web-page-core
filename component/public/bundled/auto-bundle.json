@@ -170,6 +170,14 @@
 							}
 						}
 					}, 
+					"custom-validator": {
+						"custom-validator.tpl": {
+							"url": "views/custom-validator/custom-validator.tpl"
+						}, 
+						"custom-validator.js": {
+							"url": "views/custom-validator/custom-validator.js"
+						}
+					},
 					"markdown": {
 						"markdown.tpl": {
 							"url": "views/markdown/markdown.tpl"

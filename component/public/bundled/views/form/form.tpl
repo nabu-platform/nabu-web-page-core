@@ -26,7 +26,7 @@
 			<n-form-text v-model="cell.state.previous" v-if="!cell.state.immediate && cell.state.pages.length > 1" label="Previous Label" :timeout="600"/>
 			<n-form-text v-model="cell.state.event" label="Success Event" :timeout="600" @input="$updateEvents()"/>
 			<n-form-text v-model="cell.state.cancelEvent" label="Cancel Event" :timeout="600" @input="$updateEvents()"/>
-			<n-form-text v-if="cell.state.event" v-model="cell.state.submitEvent" label="Submit Event" :timeout="600" @input="$updateEvents()" :timeout="600"/>
+			<n-form-text v-if="cell.state.event" v-model="cell.state.submitEvent" label="Submit Event" @input="$updateEvents()" :timeout="600"/>
 			<n-form-text v-if="cell.state.operation || cell.state.functionForm" v-model="cell.state.errorEvent" label="Error Event" :timeout="600" @input="$updateEvents()" :timeout="600"/>
 			<n-form-text v-model="cell.state.errorEventCodes" label="Error Event Codes" v-if="cell.state.errorEvent" :timeout="600"/>
 			<n-form-switch v-if="!cell.state.pageForm && !cell.state.functionForm" v-model="cell.state.synchronize" label="Synchronize Changes"/>
@@ -40,6 +40,7 @@
 			<n-form-text v-if="cell.state.allowReadOnly" v-model="cell.state.edit" label="Edit Label" :timeout="600"/>
 			<n-form-text v-if="cell.state.allowReadOnly" v-model="cell.state.editIcon" label="Edit Icon" :timeout="600"/>
 			<n-form-text v-model="cell.state.mode" label="Message Mode (the literal 'component' or a number)" :timeout="600"/>
+			<n-form-text v-model="cell.state.formValidationMessages" label="Amount of validation messages to show at form level" placeholder="0"/>
 			<n-form-text v-model="cell.state.validationTimeout" label="Validation Timeout" :timeout="600"/>
 			<n-form-switch v-model="cell.state.validateOnBlur" label="Validate on blur"/>
 			
@@ -153,7 +154,7 @@
 							:parent-value="result"
 							:schema-resolver="getSchemaFor"
 							@changed="changed"
-							@input="function(newValue, otherField) { $window.Vue.set(result, otherField ? otherField : field.name, newValue); changed(); }"    
+							@input="function(newValue, otherField) { $window.Vue.set(result, otherField ? otherField : field.name, newValue); changed(field.name); }"    
 							:timeout="600"
 							:page="page"
 							:read-only="readOnly"
@@ -260,6 +261,7 @@
 					:cell="cell"/>
 					
 				<n-form-switch v-model="field.hideInReadOnly" v-if="allowReadOnly" label="Hide In Read Only Mode"/>
+				<n-form-combo :filter="function(x) { return possibleFields }" v-model="field.resetOnUpdate" label="Reset on update"/>
 			</div>
 		</n-collapsible>
 	</component>

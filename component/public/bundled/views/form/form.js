@@ -11,6 +11,10 @@ if (!nabu.page.views) { nabu.page.views = {} }
 
 // the synchronize generally triggers a rerender of the form which in turn means we lose focus
 
+// TODO: resetOnUpdate: currently you can only reset on a single field and only reset to null
+// in the to-be we want to be able to reset on multiple fields (so an array instead of a string)
+// and the reset should be to the actual initial value which can be null but can also be a bound value
+
 nabu.page.formComponentConstructer = function(name) {
 	return Vue.component(name, {
 		template: "#" + name,
@@ -474,7 +478,16 @@ nabu.page.formComponentConstructer = function(name) {
 					}
 				}
 				else {
+					this.showMessages(messages);
 					this.scrollToException(messages);
+				}
+			},
+			showMessages: function(messages) {
+				if (this.cell.state.formValidationMessages && parseInt(this.cell.state.formValidationMessages) > 0) {
+					this.messages.splice(0);
+					nabu.utils.arrays.merge(this.messages, messages.filter(function(x) {
+						return !x.handled;
+					}).splice(0, Math.min(messages.length, parseInt(this.cell.state.formValidationMessages))));
 				}
 			},
 			scrollToException: function(messages) {
@@ -1012,7 +1025,18 @@ nabu.page.formComponentConstructer = function(name) {
 				console.log("result is", transformed);
 				return transformed;
 			},
-			changed: function() {
+			changed: function(fieldName) {
+				// reset any values that should be reset...
+				if (fieldName && this.cell.state.pages) {
+					var self = this;
+					this.cell.state.pages.forEach(function(page) {
+						page.fields.forEach(function(x) {
+							if (x.resetOnUpdate == fieldName || (x.resetOnUpdate instanceof Array && x.resetOnUpdate.indexOf(fieldName) >= 0)) {
+								Vue.set(self.result, x.name, null);
+							}
+						})
+					})
+				}
 				if (this.cell.state.immediate) {
 					this.doIt();
 				}
@@ -1243,6 +1267,7 @@ nabu.page.formComponentConstructer = function(name) {
 					}
 					else {
 						self.doingIt = false;
+						this.showMessages(messages);
 						this.scrollToException(messages);
 					}
 				}
@@ -1377,6 +1402,10 @@ Vue.component("page-form-field", {
 					// it seems to immediately trigger to null?
 					if (result != null) {
 						self.$emit("input", result);
+						// currently we reuse this one, but maybe we should always validate at that point?
+						if (self.validateOnBlur) {
+							setTimeout(self.validate, 1);
+						}
 					}
 				}));
 			});
@@ -1777,14 +1806,16 @@ Vue.component("page-configure-arbitrary", {
 	computed: {
 		availableParameters: function() {
 			var available = this.$services.page.getAvailableParameters(this.page, this.cell, true);
-			if (this.keys.length) {
+			// to allow for simple types as well, we don't check for keys
+			// this means we will get a "record.$all"
+//			if (this.keys.length) {
 				available.record = {properties:{}};
 				this.keys.forEach(function(key) {
 					available.record.properties[key] = {
 						type: "string"
 					}
 				});
-			}
+//			}
 			return available;
 		}
 	},

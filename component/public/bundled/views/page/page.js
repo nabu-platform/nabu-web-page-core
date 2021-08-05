@@ -729,9 +729,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			this.page.content.initialEvents.push({condition:null, definition: {}});
 		},
-		listFields: function(type) {
+		listFields: function(type, value) {
 			var type = this.$services.swagger.resolve(type);
-			return this.$services.page.getSimpleKeysFor(type);
+			return this.$services.page.getSimpleKeysFor(type).filter(function(x) { return !value || (x && x.toLowerCase().indexOf(value.toLowerCase()) >= 0) });
 		},
 		validateStateName: function(name) {
 			var blacklisted = ["page", "application", "record", "state", "localState"];

@@ -322,8 +322,8 @@
 						<div slot="buttons">
 							<button @click="page.content.initialEvents.splice(page.content.initialEvents.indexOf(event), 1)"><span class="fa fa-trash"></span></button>
 						</div>
-						<n-form-text v-model="event.condition" label="Condition"/>
-						<n-form-text v-model="event.timeout" label="Repeat Interval (ms)" info="Every interval, the condition of this event will be checked, if true, the event is emitted, otherwise it will recheck at the next interval"/>
+						<n-form-text v-model="event.condition" label="Condition" :timeout="600"/>
+						<n-form-text v-model="event.timeout" label="Repeat Interval (ms)" info="Every interval, the condition of this event will be checked, if true, the event is emitted, otherwise it will recheck at the next interval" :timeout="600"/>
 						<page-event-value :page="page" :container="event" title="Initial Event" name="definition" @resetEvents="resetEvents" :inline="true"/>
 					</n-collapsible>
 				</n-collapsible>

@@ -1351,6 +1351,9 @@ nabu.services.VueService(Vue.extend({
 		getInputBindings: function(operation) {
 			var self = this;
 			var bindings = {};
+			if (typeof(operation) == "string") {
+				operation = this.$services.swagger.operations[operation];
+			}
 			if (operation && operation.parameters) {
 				var self = this;
 				operation.parameters.map(function(parameter) {
@@ -1381,11 +1384,16 @@ nabu.services.VueService(Vue.extend({
 			}
 			return bindings;
 		},
+		filterOperations: function(value, accept) {
+			return this.getOperations(accept).filter(function(x) {
+				return !value || x.id.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+			});
+		},
 		getOperations: function(accept) {
 			var result = [];
 			var operations = this.$services.swagger.operations;
 			Object.keys(operations).map(function(operationId) {
-				if (accept(operations[operationId])) {
+				if (accept == null || accept(operations[operationId])) {
 					result.push(operations[operationId]);
 				}
 			});
@@ -1433,6 +1441,10 @@ nabu.services.VueService(Vue.extend({
 				return self.$services.page.interpret(style.class, instance);
 			});
 		},
+		getRestrictedParameters: function() {
+			// component is mostly for page-arbitrary
+			return ["page", "cell", "edit", "component"];
+		},
 		getPageParameterValues: function(page, pageInstance) {
 			// copy things like query parameters & path parameters
 			var result = pageInstance.variables ? nabu.utils.objects.clone(pageInstance.variables) : {};
@@ -1444,7 +1456,8 @@ nabu.services.VueService(Vue.extend({
 						result[key] = pageInstance.parameters[key];
 					}
 				});*/
-				Object.keys(pageInstance.parameters).forEach(function(key) {
+				var restricted = this.getRestrictedParameters();
+				Object.keys(pageInstance.parameters).filter(function(x) { return restricted.indexOf(x) < 0 }).forEach(function(key) {
 					// runtime values in variables take precedence over static input parameters!
 					if (pageInstance.parameters[key] != null && !result.hasOwnProperty(key)) {
 						result[key] = pageInstance.parameters[key];
