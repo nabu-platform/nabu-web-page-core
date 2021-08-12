@@ -100,6 +100,12 @@ Vue.component("page-form-input-file", {
 			files: []
 		}
 	},
+	// restore the previous state (if any)
+	created: function() {
+		if (this.value instanceof File) {
+			this.files.push(this.value);
+		}
+	},
 	computed: {
 		textType: function() {
 			return this.field.textType ? this.field.textType : 'text';
@@ -108,13 +114,22 @@ Vue.component("page-form-input-file", {
 	methods: {
 		changed: function(newValue) {
 			var file = newValue && newValue.length ? newValue[0] : null;
-			this.$emit("input", file);
 			if (this.field.contentType) {
 				this.$services.page.setValue(this.parentValue, this.field.contentType, file ? file.type : null);
+				if (this.field.fileName.indexOf(".") > 0) {
+					Vue.set(this.parentValue, this.field.contentType, file ? file.type : null);
+				}
 			}
 			if (this.field.fileName) {
 				this.$services.page.setValue(this.parentValue, this.field.fileName, file ? file.name : null);
+				// also set .-separated syntax
+				if (this.field.fileName.indexOf(".") > 0) {
+					Vue.set(this.parentValue, this.field.fileName, file ? file.name : null);
+				}
 			}
+			// only emit this _after_ we set the previous
+			// otherwise forms with "submit on change" might trigger before the above values are set
+			this.$emit("input", file);
 		},
 		validate: function(soft) {
 			var messages = [];

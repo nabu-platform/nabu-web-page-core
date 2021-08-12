@@ -167,7 +167,7 @@
 					</div>
 					<div class="padded-content" v-if="page.content.query && page.content.query.length">
 						<div class="list-row" v-for="i in Object.keys(page.content.query)">
-							<n-form-text v-model="page.content.query[i]"/>
+							<n-form-text v-model="page.content.query[i]" :timeout="600"/>
 							<span @click="removeQuery(i)" class="fa fa-times"></span>
 						</div>
 					</div>
@@ -384,6 +384,8 @@
 							<button @click="moveAction(action, 1)"><span class="fa fa-chevron-down"></span></button>
 							<button @click="moveActionBottom(action)"><span class="fa fa-chevron-right"></span></button>
 						</div>
+						
+						<n-form-ace v-model="action.script" label="Execute Script"/>
 						
 						<h4>Reset Events</h4>
 						<p class="subscript">If this trigger executes, we can reset other events.</p>

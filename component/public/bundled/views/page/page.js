@@ -1404,7 +1404,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 				Object.keys(this.components).map(function(cellId) {
 					var component = self.components[cellId];
 					var handle = function(component) {
-						if (component && component.getEvents) {
+						// pages will _not_ send their events by default to other pages (only through global events)
+						// so this we skip the page components in this listing
+						if (component && component.getEvents && !self.$services.page.isPage(component)) {
 							var cellEvents = component.getEvents();
 							if (cellEvents) {
 								// if you have no particular content, you can just send the name of the event
@@ -1590,7 +1592,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			// we don't want to trigger listeners if we are resetting an event, you must _explicitly_ choose to set a value to null if necessary
 			if (this.page.content.parameters && !reset) {
 				this.page.content.parameters.map(function(parameter) {
-					parameter.listeners.map(function(listener) {
+					// we want to ignore "partial" listeners (like if you added one and forgot to fill it in)
+					parameter.listeners.filter(function(listener) { return listener.to != null || listener.split != null }).map(function(listener) {
 						// backwards compatibility
 						var parts = listener.to ? listener.to.split(".") : listener.split(".");
 						// we are setting the variable we are interested in
@@ -1698,6 +1701,19 @@ nabu.page.views.Page = Vue.component("n-page", {
 								}
 							}
 							return result;
+						}
+						
+						var runScript = function() {
+							if (action.script) {
+								var script = action.script;
+								// if we don't wrap it in a function, it might only execute the first line
+								// when dealing with formatting or conditions that might be wanted
+								// however, in this location we want to execute a full script, we are not assigning or conditioning
+								if (script.trim().indexOf("function") != 0) {
+									script = "function(){ " + script + "}";
+								}
+								self.$services.page.eval(script, self.variables, self);
+							}
 						}
 						
 						promises.push(promise);
@@ -1879,6 +1895,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 								else {
 									eventReset();
 								}
+								runScript();
 								if (!async) {
 									promise.resolve();
 								}
@@ -1970,6 +1987,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 							else {
 								eventReset();
 							}
+							runScript();
 							if (!async) {
 								promise.resolve();
 							}
@@ -2119,9 +2137,22 @@ nabu.page.views.Page = Vue.component("n-page", {
 				return value ? value.value : null;
 			}
 			else if (name.indexOf("parent.") == 0) {
+				// TODO: to be verified that this work in a stable way
+				// the problem we have is: you want to persist state at for example the skeleton level
+				// however, some pages might be nested in other pages (especially page components)
+				// they don't need to / want to know the depth at which they are rendered (and this may differ)
+				// so instead of going up 1 level, we want to check all levels until we find a match
+				// the potential problems can arise if there is a recursive loop possibly in this structure
 				var name = name.substring("parent.".length);
 				var parentInstance = this.page.content.pageParent ? this.$services.page.getPageInstanceByName(this.page.content.pageParent) : null;
-				return parentInstance ? parentInstance.get("page." + name) : null;
+				var result = parentInstance ? parentInstance.get("page." + name) : null;
+				if (result == null) {
+					var parentInstance = this.$services.page.getParentPageInstance(parentInstance ? parentInstance.page : this.page, parentInstance ? parentInstance : this);
+					if (parentInstance) {
+						result = parentInstance.get("parent." + name);
+					}
+				}
+				return result;
 			}
 			else if (name.indexOf("page.") == 0) {
 				var name = name.substring("page.".length);

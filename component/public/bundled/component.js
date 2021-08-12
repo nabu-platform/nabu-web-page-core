@@ -649,6 +649,14 @@ window.addEventListener("load", function() {
 				if (fragment && fragment.round && value != null) {
 					value = parseFloat($services.formatter.number(value, parseInt(fragment.round)));
 				}
+				// make sure it ends up within the range, otherwise we can't display it well
+				// it seems that if you set a negative number, it just takes Math.abs()?
+				if (value < 0) {
+					value = 0;
+				}
+				if (value > 100) {
+					value = 100;
+				}
 				return "<input disabled='true' type='range' value='" + value + "' minimum='0' step='1' maximum='100' :value='" + value + "'/>";
 			},
 			html: true,

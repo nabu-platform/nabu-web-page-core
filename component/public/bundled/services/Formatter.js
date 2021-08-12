@@ -136,10 +136,13 @@ nabu.services.VueService(Vue.extend({
 			if (typeof(input) != "number") {
 				input = parseFloat(input);
 			}
-            var result = input.toFixed(amountOfDecimals);
-            // Number() removes the trailing 0 but does allow for regional formatting
-            // so currently it is "choose wisely"?
-            return retainTrailing ? result : Number(result).toLocaleString(this.$services.page.getLocale());
+             var result = input.toFixed(amountOfDecimals);
+            var options = {};
+            if (retainTrailing) {
+            	options.minimumFractionDigits = amountOfDecimals;
+            	options.maximumFractionDigits = amountOfDecimals;
+            }
+            return Number(result).toLocaleString(this.$services.page.getLocale(), options);
 		},
 		conventionize: function(value) {
 			// we currently assume from lower camelcase to word

@@ -167,6 +167,10 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		// check if a component is in fact a page
+		isPage: function(component) {
+			return component && component.$options && component.$options.template && component.$options.template == "#nabu-page";
+		},
 		pasteItem: function(item) {
 			var content = null;
 			if (this.isCopied(item)) {
@@ -2568,6 +2572,26 @@ nabu.services.VueService(Vue.extend({
 			}
 			return null;
 		},
+		cloneByReference: function(object) {
+			var self = this;
+			var result;
+			if (object instanceof Array) {
+				result = [];
+				object.forEach(function(x) {
+					result.push(self.cloneByReference(x));
+				});
+			}
+			else if (self.isObject(object)) {
+				result = {};
+				Object.keys(object).forEach(function(key) {
+					result[key] = self.cloneByReference(object[key]);
+				});
+			}
+			else {
+				result = object;
+			}
+			return result;
+		},
 		explode: function(into, from, path) {
 			var self = this;
 			Object.keys(from).forEach(function(key) {
@@ -2575,7 +2599,11 @@ nabu.services.VueService(Vue.extend({
 					var value = from[key];
 					if (value != null) {
 						var childPath = path ? path + "." + key : key;
-						if (self.isObject(value)) {
+						// if we explode the arrays as well, they are added like myarray.0.myitem etc
+						// in the form engine this can make it hard to manipulate lists as a list item
+						// because the arrays are exploded but the form list items work directly on the actual arrays
+						// when remerging, the array items are overwritten by the exploded version
+						if (self.isObject(value) && !(value instanceof Array)) {
 							if (!value._isVue) {
 								self.explode(into, value, childPath);
 							}

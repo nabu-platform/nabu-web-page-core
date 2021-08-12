@@ -321,8 +321,10 @@ nabu.page.formComponentConstructer = function(name) {
 				});*/
 				// we _need_ to take a serialized copy of the state, otherwise the createResult will always update the state when trying to create a result object
 				var page = this.$services.page.getPageParameterValues(self.page, pageInstance);
-				// take a cloned copy
-				Vue.set(this, "result", JSON.parse(JSON.stringify(page)));
+				// we do need a newly referenced object because we want to enrich it
+				// the reason we want to bypass serialization when relevant is for files...
+				// we can't use stringification cloning because of objects like file, blob,...
+				Vue.set(this, "result", this.$services.page.cloneByReference(page));
 				// must recreate the "." separated values, necessary for "complex" multifield form components like address
 				// other components get a correct initial value because we get the field from the result (getCurrentValue)
 				//this.$services.page.explode(reference, this.result);
@@ -990,12 +992,15 @@ nabu.page.formComponentConstructer = function(name) {
 						}
 						tmp = tmp[parts[i]];
 					}
-					// merge them, note that typeof(null) == "object"...
-					if (tmp[parts[parts.length - 1]] != null && typeof(tmp[parts[parts.length - 1]]) == "object") {
-						nabu.utils.objects.merge(tmp[parts[parts.length - 1]], result[name]);
-					}
-					else {
-						Vue.set(tmp, parts[parts.length - 1], result[name]);
+					// if they are already the same object, no action is needed
+					if (tmp[parts[parts.length - 1]] !== result[name]) {
+						// merge them, note that typeof(null) == "object"...
+						if (tmp[parts[parts.length - 1]] != null && typeof(tmp[parts[parts.length - 1]]) == "object") {
+							nabu.utils.objects.merge(tmp[parts[parts.length - 1]], result[name]);
+						}
+						else {
+							Vue.set(tmp, parts[parts.length - 1], result[name]);
+						}
 					}
 					// if it is a complex field, set the string value as well
 					// this makes it easier to check later on if it has been set or not
@@ -1022,7 +1027,6 @@ nabu.page.formComponentConstructer = function(name) {
 						Vue.set(tmp, parts[parts.length - 1], self.$services.page.getBindingValue(pageInstance, self.cell.bindings[name]));
 					}
 				});
-				console.log("result is", transformed);
 				return transformed;
 			},
 			changed: function(fieldName) {
@@ -1090,8 +1094,8 @@ nabu.page.formComponentConstructer = function(name) {
 							var parameters = this.$services.page.getPageParameters(self.page);
 							Object.keys(result).forEach(function(x) {
 								// we have both the object-based notation and the . separated notation in the result
-								// in this case, for correct merging, we want to use the . separated, never the object in its entirety
-								if (result[x] == null || (result != null && (Object(result[x]) !== result[x] || result[x] instanceof Date || result[x] instanceof File))) {
+								// in this case, for correct merging, we want to use the . separated, never the object in its entirety, unless it is an array!
+								if (result[x] == null || result[x] instanceof Array || (result != null && (Object(result[x]) !== result[x] || result[x] instanceof Date || result[x] instanceof File))) {
 									// only set if changed, otherwise we might overwrite external changes to the page state
 									if (self.hasChanged(x, result[x])) {
 										pageInstance.set("page." + x, result[x]);
@@ -1808,14 +1812,14 @@ Vue.component("page-configure-arbitrary", {
 			var available = this.$services.page.getAvailableParameters(this.page, this.cell, true);
 			// to allow for simple types as well, we don't check for keys
 			// this means we will get a "record.$all"
-//			if (this.keys.length) {
+			if (this.keys instanceof Array) {
 				available.record = {properties:{}};
 				this.keys.forEach(function(key) {
 					available.record.properties[key] = {
 						type: "string"
 					}
 				});
-//			}
+			}
 			return available;
 		}
 	},

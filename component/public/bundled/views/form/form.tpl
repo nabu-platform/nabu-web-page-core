@@ -140,6 +140,7 @@
 				<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">
 					<n-form-section v-for="field in group.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name) && !isHidden(field) && (!readOnly || !field.hideInReadOnly)">
 						<component v-if="isList(field.name)"
+							:read-only="readOnly"
 							:is="getProvidedListComponent(field.type)"
 							:value="result"
 							:page="page"
