@@ -332,12 +332,30 @@ nabu.page.formComponentConstructer = function(name) {
 				this.$services.page.explode(this.result, this.result);
 				//Vue.set(this, "reference", JSON.parse(JSON.stringify(reference)));
 				//Vue.set(this, "reference", reference);
-				Vue.set(this, "reference", JSON.parse(JSON.stringify(this.result)));
+				//Vue.set(this, "reference", JSON.parse(JSON.stringify(this.result)));
+				// use the same strategy for cloning the reference, otherwise this might have serialized versions of actual objects, which fail in "hasChanged"
+				Vue.set(this, "reference", this.$services.page.cloneByReference(this.result));
 			},
 			hasChanged: function(path, value) {
 				if (this.cell.state.pageForm) {
 					var originalValue = this.reference[path];
 					//var originalValue = this.$services.page.getValue(this.reference, path);
+					
+					// for arrays we do a separate check for each item
+					if (value instanceof Array && originalValue instanceof Array) {
+						var changed = false;
+						if (value.length != originalValue.length) {
+							changed = true;
+						}
+						else {
+							for (var i = 0; i < value.length; i++) {
+								if (value[i] !== originalValue[i]) {
+									changed = true;
+								}
+							}
+						}
+						return changed;
+					}
 					return value !== originalValue;
 				}
 				// for now...
@@ -1044,8 +1062,10 @@ nabu.page.formComponentConstructer = function(name) {
 				if (this.cell.state.immediate) {
 					this.doIt();
 				}
-				// update local state to reflect the change
-				Vue.set(this.localState, "form", this.createResult());
+				if (this.localState) {
+					// update local state to reflect the change
+					Vue.set(this.localState, "form", this.createResult());
+				}
 			},
 			doIt: function() {
 				var self = this;
@@ -1095,7 +1115,7 @@ nabu.page.formComponentConstructer = function(name) {
 							Object.keys(result).forEach(function(x) {
 								// we have both the object-based notation and the . separated notation in the result
 								// in this case, for correct merging, we want to use the . separated, never the object in its entirety, unless it is an array!
-								if (result[x] == null || result[x] instanceof Array || (result != null && (Object(result[x]) !== result[x] || result[x] instanceof Date || result[x] instanceof File))) {
+								if (result[x] == null || result[x] instanceof Array || (result != null && (Object(result[x]) !== result[x] || result[x] instanceof Date || result[x] instanceof File || result[x] instanceof Blob))) {
 									// only set if changed, otherwise we might overwrite external changes to the page state
 									if (self.hasChanged(x, result[x])) {
 										pageInstance.set("page." + x, result[x]);
@@ -1394,7 +1414,6 @@ Vue.component("page-form-field", {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			this.field.listeners.forEach(function(x) {
-				console.log("subscribing", x);
 				self.subscriptions.push(pageInstance.subscribe(x.to.replace(/^([^.]+).*/, "$1"), function(value) {
 					// this was initially added to fill in filter fields in a data component
 					// for some reason, this bit was triggered with the correct value but then immediately retriggered with the incorrect value
@@ -1927,6 +1946,9 @@ Vue.component("page-arbitrary", {
 				});
 			}
 			return parameters;
+		},
+		created: function(result) {
+			this.$services.page.rendering++;	
 		},
 		mounted: function(instance) {
 			this.instance = instance;

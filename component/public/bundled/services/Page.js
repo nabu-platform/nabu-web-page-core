@@ -88,7 +88,11 @@ nabu.services.VueService(Vue.extend({
 			currentBranding: {},
 			defaultLocale: null,
 			copiedType: null,
-			copiedContent: null
+			copiedContent: null,
+			rendering: 0,
+			// we start off false to mitigate initial faulty stable detection
+			stable: false,
+			stableTimer: null
 		}
 	},
 	activate: function(done) {
@@ -2619,7 +2623,8 @@ nabu.services.VueService(Vue.extend({
 		isObject: function(object) {
 			return Object(object) === object 
 				&& !(object instanceof Date)
-				&& !(object instanceof File);
+				&& !(object instanceof File)
+				&& !(object instanceof Blob);
 		},
 		isPublicPageParameter: function(page, name) {
 			if (page && page.content && page.content.path) {
@@ -3101,6 +3106,25 @@ nabu.services.VueService(Vue.extend({
 		}
 	},
 	watch: {
+		rendering: function(newValue) {
+			if (newValue > 0) {
+				if (this.stableTimer) {
+					clearTimeout(this.stableTimer);
+					this.stableTimer = null;
+				}
+				this.stable = false;
+			}
+			else {
+				var self = this;
+				this.stableTimer = setTimeout(function() {
+					self.stable = true;
+				}, 100);
+			}
+			console.log("rendering", newValue);	
+		},
+		stable: function(newValue) {
+			console.log("rendering stable", newValue);	
+		},
 		// push the location to the swagger client
 		location: function(newValue) {
 			this.$services.swagger.geoPosition = newValue;
@@ -3168,3 +3192,9 @@ document.addEventListener("mousemove", function(event) {
 });
 
 
+var clearTemplates = function() {
+	var scripts = document.head.getElementsByTagName("script");
+	for (var i = scripts.length - 1; i >= 0; i--) {
+		scripts[i].parentNode.removeChild(scripts[i]);
+	}
+}

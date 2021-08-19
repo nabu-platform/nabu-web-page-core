@@ -136,13 +136,11 @@ nabu.services.VueService(Vue.extend({
 			if (typeof(input) != "number") {
 				input = parseFloat(input);
 			}
-             var result = input.toFixed(amountOfDecimals);
             var options = {};
-            if (retainTrailing) {
-            	options.minimumFractionDigits = amountOfDecimals;
-            	options.maximumFractionDigits = amountOfDecimals;
-            }
-            return Number(result).toLocaleString(this.$services.page.getLocale(), options);
+            // we used to use toFixed, but it does do rounding, it just cuts off
+            options.minimumFractionDigits = retainTrailing ? amountOfDecimals : 0;
+            options.maximumFractionDigits = amountOfDecimals;
+            return Number(input).toLocaleString(this.$services.page.getLocale(), options);
 		},
 		conventionize: function(value) {
 			// we currently assume from lower camelcase to word

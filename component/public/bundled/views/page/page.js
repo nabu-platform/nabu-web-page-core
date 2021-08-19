@@ -384,10 +384,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	ready: function() {
+		this.$services.page.rendering--;
 		this.rendered = true;
 		this.postRender.splice(0).forEach(function(x) { x() });
 	},
 	created: function() {
+		this.$services.page.rendering++;
 		this.$services.page.setPageInstance(this.page, this);
 		var self = this;
 		// backwards compatibility
@@ -1693,11 +1695,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 								var def = self.$services.page.getFunctionDefinition(action.function);
 								if (def.async) {
 									promise.then(function(asyncResult) {
-										self.emit(action.functionOutputEvent, asyncResult);
+										self.emit(action.functionOutputEvent, asyncResult ? asyncResult : {});
 									});
 								}
 								else {
-									self.emit(action.functionOutputEvent, result);
+									self.emit(action.functionOutputEvent, result ? result : {});
 								}
 							}
 							return result;
@@ -2114,12 +2116,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 				return null;
 			}
 			if (name == "page") {
-				return this.parameters;
+				return this.variables;
 			}
 			else if (name == "parent") {
 				var parentInstance = this.page.content.pageParent ? this.$services.page.getPageInstanceByName(this.page.content.pageParent) : null;
-				// this should probably be "variables"? currently keeping consistent with above "page" entry, that should probably be variables too though...
-				return parentInstance ? parentInstance.parameters : null;
+				return parentInstance ? parentInstance.variables : null;
 			}
 			else if (name == "application.title") {
 				return this.$services.page.title;
@@ -3189,6 +3190,12 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			return Object.keys(cell.bindings).reduce(function(consensus, name) {
 				return consensus || changedValues.indexOf(cell.bindings[name]) >= 0;
 			}, false);
+		},
+		getCreatedComponent: function(row, cell) {
+			return this.createdComponent.bind(this, row, cell);
+		},
+		createdComponent: function(row, cell, result) {
+			this.$services.page.rendering++;
 		},
 		mounted: function(cell, row, state, component) {
 			var self = this;

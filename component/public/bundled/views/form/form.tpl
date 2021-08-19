@@ -333,5 +333,5 @@
 </template>
 
 <template id="page-arbitrary">
-	<div @click.native="handle" :class="target.class" v-route-render="{ alias: target.route, parameters: getParameters(), mounted: mounted }"></div>
+	<div @click.native="handle" :class="target.class" v-route-render="{ alias: target.route, parameters: getParameters(), mounted: mounted, created:created }"></div>
 </template> 
