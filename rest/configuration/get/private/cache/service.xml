@@ -131,6 +131,185 @@
 			<to>featuresLastModified</to>
 		</steps>
 	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			comment="The client last modified has no millisecond precision, so we need to strip that from these timestamps"
+			disabled="false"
+			id="001cfae7-4d96-4beb-ac21-7c9e32b130df">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="652c2cba-0b70-4545-bff9-479f1925f623"
+				serviceId="nabu.utils.Date.format"
+				resultName="result53f2e2df593746d080b3c86c6ccfaf6c"
+				temporaryMapping="true"
+				x="69"
+				y="33"
+				invocationOrder="0"
+				asynchronous="false"
+				recache="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="5c0370f2-05e8-4f70-aa86-4215ead336ac"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>lastModified</from>
+				<to>date</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="167712ec-bc6d-45b2-a4d1-eb7f1c20c0d5"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>yyyy-MM-dd'T'HH:mm:ss</from>
+				<to>properties/format</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="cab73d37-891e-4f0b-8070-5df10d095e1d"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>UTC</from>
+				<to>properties/timezone</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="7bc1e994-726f-4a39-8082-e839310d7b38"
+				serviceId="nabu.utils.Date.parse"
+				resultName="resulta64063acfba84f6888ca945789c4c802"
+				temporaryMapping="true"
+				x="264"
+				y="110"
+				invocationOrder="1"
+				asynchronous="false"
+				recache="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="895e6d00-58d8-4bb1-a26c-bcab2ae7894a"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>result53f2e2df593746d080b3c86c6ccfaf6c/string</from>
+				<to>string</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="b81b41bf-7393-4fba-8d1e-36ccb3350c5c"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>dateTime</from>
+				<to>properties/format</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="34633683-bcdb-4414-88ef-6b85cae113d3"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>UTC</from>
+				<to>properties/timezone</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="0b460c69-5778-4e9a-a500-42ab16345363"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>resulta64063acfba84f6888ca945789c4c802/date</from>
+			<to>lastModified</to>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="92d06e74-8930-4072-b057-0fb7585277f2"
+				serviceId="nabu.utils.Date.format"
+				resultName="resulta6c60e85356a48d3a9a4256916f9e8e5"
+				temporaryMapping="true"
+				x="40"
+				y="262"
+				invocationOrder="0"
+				asynchronous="false"
+				recache="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="65f603d9-5ec3-487c-b445-b481aa520158"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>featuresLastModified</from>
+				<to>date</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="0576cded-1a23-4624-8b3b-eaa80fd7a09b"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>yyyy-MM-dd'T'HH:mm:ss</from>
+				<to>properties/format</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="1822f34e-cca2-4b79-83c2-84c65124b306"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>UTC</from>
+				<to>properties/timezone</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="c6f00b0b-5180-4569-afd9-5638b4cbde7e"
+				serviceId="nabu.utils.Date.parse"
+				resultName="result8d954ed40fd743eeb678bad87bf28a16"
+				temporaryMapping="true"
+				x="267"
+				y="392"
+				invocationOrder="1"
+				asynchronous="false"
+				recache="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="2d7c54b5-4810-4622-96ff-859ef273e3dc"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>resulta6c60e85356a48d3a9a4256916f9e8e5/string</from>
+				<to>string</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="ff54c38e-961d-4a1f-9caa-66971530f333"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>dateTime</from>
+				<to>properties/format</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="8107b47b-5c32-42ea-97d3-cf468315e5bb"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>UTC</from>
+				<to>properties/timezone</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="cf81ca46-383a-4dd6-bd33-49619c8d25ab"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>result8d954ed40fd743eeb678bad87bf28a16/date</from>
+			<to>featuresLastModified</to>
+		</steps>
+	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Switch"
 			disabled="false"
 			id="2ab6ea1f-42d4-4245-a7e5-ee3552a18712">

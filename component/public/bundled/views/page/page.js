@@ -1080,13 +1080,23 @@ nabu.page.views.Page = Vue.component("n-page", {
 			return result;
 		},
 		mounted: function(cell, row, state, component) {
+			var self = this;
+			
+			if (component.$mounted) {
+				self.$services.page.rendering--;
+			}
+			else {
+				component.$on("hook:mounted", function() {
+					self.$services.page.rendering--;
+				});
+			}
+
+			
 			// run the initializer function (if any) with the component instance
 			if (cell.$$initialize) {
 				cell.$$initialize(component);
 				cell.$$initialize = null;
 			}
-			
-			var self = this;
 			
 			if (cell.ref) {
 				this.refs[cell.ref] = component;
