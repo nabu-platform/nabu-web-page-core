@@ -532,6 +532,9 @@
 						<n-form-section>
 							<h1>Cell configuration</h1>
 							<p class="subscript">Here you can configure cell settings that are available to all cells in the grid regardless of the content type.</p>
+							<div class="padded-content">
+								<n-form-text label="Cell Name" v-model="cell.name" info="A descriptive name" :timeout="600"/>
+							</div>
 							<n-collapsible title="Cell Settings" key="cell-settings">
 								<div class="padded-content">
 									<h2>Content</h2>
@@ -540,7 +543,6 @@
 										:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
 										:required="true"
 										info="The type of content that should be displayed in this cell"/>
-									<n-form-text label="Cell Name" v-model="cell.name" info="A descriptive name" :timeout="600"/>
 									<n-page-mapper v-if="cell.alias" 
 										:key="'page_' + pageInstanceId + '_' + cell.id + '_mapper'"
 										:to="getRouteParameters(cell)"
