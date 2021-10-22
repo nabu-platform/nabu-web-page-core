@@ -1191,6 +1191,19 @@ nabu.services.VueService(Vue.extend({
 					value = enumerators[key].value ? enumeration[enumerators[key].value] : enumeration;
 				}
 			}
+			// let's check parent contexts
+			if (value == null && context != null) {
+				while (context) {
+					if (context.getCellValue) {
+						var localResult = context.getCellValue(bindingValue);
+						if (localResult != null) {
+							value = localResult;
+							break;
+						}
+					}
+					context = context.$parent;
+				}
+			}
 			return value;
 		},
 		translateErrorCode: function(value, defaultValue) {
@@ -1199,8 +1212,22 @@ nabu.services.VueService(Vue.extend({
 				if (x.translation == x.name) {
 					return false;
 				}
-				return value.toLowerCase() == x.name.toLowerCase()
-					|| value.match(new RegExp(x.name.replace(/\*/g, ".*")));
+				if (value.toLowerCase() == x.name.toLowerCase()) {
+					return true;
+				}
+				else {
+					// if we try to cast something to a regex that is not meant as a regex, it may error out
+					// we don't care at that point, just ignore it
+					// the backend already allows for generalization through regex, not sure if this is necessary in the translations
+					// might also require for example that a * is present before actually attempting this?
+					try {
+						return value.match(new RegExp(x.name.replace(/\*/g, ".*")));
+					}
+					catch (exception) {
+						// not a regex!
+					}
+				}
+				return false;
 			});
 			var translation = null;
 			if (translations.length > 1) {
@@ -1451,7 +1478,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		getRestrictedParameters: function() {
 			// component is mostly for page-arbitrary
-			return ["page", "cell", "edit", "component"];
+			return ["page", "cell", "edit", "component", "parameters", "localState"];
 		},
 		getPageParameterValues: function(page, pageInstance) {
 			// copy things like query parameters & path parameters
@@ -2847,6 +2874,9 @@ nabu.services.VueService(Vue.extend({
 			var self = this;
 			var keys = [];
 			if (operation) {
+				if (typeof(operation) == "string") {
+					operation = this.$services.swagger.operations[operation];
+				}
 				operation.parameters.map(function(parameter) {
 					if (parameter.in == "body") {
 						var type = self.$services.swagger.resolve(parameter);
@@ -3120,7 +3150,6 @@ nabu.services.VueService(Vue.extend({
 					self.stable = true;
 				}, 100);
 			}
-			console.log("rendering", newValue);	
 		},
 		stable: function(newValue) {
 			console.log("rendering stable", newValue);	

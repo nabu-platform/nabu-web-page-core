@@ -569,7 +569,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		getOperationArrays: function(operation) {
 			if (operation) {
 				var op = this.$services.swagger.operations[operation];
-				if (op.responses["200"] != null && op.responses["200"].schema != null) {
+				if (op && op.responses["200"] != null && op.responses["200"].schema != null) {
 					var schema = op.responses["200"].schema;
 					if (schema["$ref"]) {
 						var definition = this.$services.swagger.resolve(schema["$ref"]);
@@ -1643,6 +1643,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 							category: "trigger",
 							type: "page-analysis",
 							event: nabu.page.event.getName(analysis, "chainEvent"),
+							// more consistent with the eventing backend
+							content: content,
+							// DEPRECATED: needed for backwards compatibility
 							data: content
 						});
 					})
@@ -1805,7 +1808,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 						
 						if (action.confirmation) {
-							self.$confirm({message:self.$services.page.translate(action.confirmation)}).then(function() {
+							self.$confirm({message:self.$services.page.translate(self.$services.page.interpret(action.confirmation, self))}).then(function() {
 								if (wait) {
 									self.$services.q.wait(promise, parseInt(action.timeout), wait);
 								}

@@ -494,6 +494,13 @@ window.addEventListener("load", function() {
 			namespace: "google",
 			multipleFields: true
 		});
+		nabu.page.provide("page-form-input", { 
+			component: "page-form-input-validate-custom", 
+			configure: "page-form-input-validate-custom-configure",
+			name: "validate",
+			namespace: "nabu.page",
+			multipleFields: true
+		});	
 		
 		// form list providers
 		nabu.page.provide("page-form-list-input", { 
@@ -593,7 +600,7 @@ window.addEventListener("load", function() {
 			html: true,
 			configure: "page-format-resolver",
 			name: "resolve",
-			namespace: "nabu.cms"
+			namespace: "nabu.page"
 		});
 		
 		nabu.page.provide("page-format", {
@@ -617,7 +624,27 @@ window.addEventListener("load", function() {
 			html: true,
 			skipCompile: true,
 			name: "page",
-			namespace: "nabu.cms"
+			namespace: "nabu.page"
+		});
+		
+		nabu.page.provide("page-format", {
+			format: function(value) {
+				return "<a ref='noopener noreferrer nofollow' href='tel:" + value + "'>" + value + "</a>";
+			},
+			html: true,
+			skipCompile: true,
+			name: "phone",
+			namespace: "nabu.page"
+		});
+		
+		nabu.page.provide("page-format", {
+			format: function(value) {
+				return "<a ref='noopener noreferrer nofollow' href='mailto:" + value + "'>" + value + "</a>";
+			},
+			html: true,
+			skipCompile: true,
+			name: "email",
+			namespace: "nabu.page"
 		});
 		
 		Vue.component("page-percentage-slider-configurator", {
@@ -715,7 +742,7 @@ window.addEventListener("load", function() {
 			html: true,
 			skipCompile: true,
 			name: "highlight",
-			namespace: "nabu.cms"
+			namespace: "nabu.page"
 		});
 		
 		var markdownToParse = [];
@@ -758,7 +785,7 @@ window.addEventListener("load", function() {
 			html: true,
 			skipCompile: true,
 			name: "markdown",
-			namespace: "nabu.cms"
+			namespace: "nabu.page"
 		});
 		
 		return $services.$register({

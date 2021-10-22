@@ -410,6 +410,9 @@
 							"enumerationProvider.js": {
 								"url": "views/providers/form/enumerationProvider.js"
 							}, 
+							"custom-validator.js": {
+								"url": "views/providers/form/custom-validator.js"
+							}, 
 							"text.js": {
 								"url": "views/providers/form/text.js"
 							}, 
@@ -459,6 +462,11 @@
 				}, 
 				"component.js": {
 					"url": "component.js"
+				},
+				"polyfill": {
+					"mobile-drag-drop.js": {
+						"url": "https://raw.githubusercontent.com/Bernardo-Castilho/dragdroptouch/master/DragDropTouch.js"
+					}
 				}
 			}
 		}
