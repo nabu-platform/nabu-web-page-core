@@ -63,7 +63,7 @@ Vue.component("page-form-input-enumeration-array-configure", {
 		},
 		getEnumerationFields: function(array) {
 			var properties = {};
-			var available = this.$services.page.getAvailableParameters(this.page, this.cell);
+			var available = this.$services.page.getAllAvailableParameters(this.page, this.cell);
 			var variable = this.field.enumerationArray.substring(0, this.field.enumerationArray.indexOf("."));
 			var rest = this.field.enumerationArray.substring(this.field.enumerationArray.indexOf(".") + 1);
 			if (available[variable]) {
