@@ -66,7 +66,7 @@
 					
 					<n-form-section v-if="!action.dynamic">
 						<n-form-combo v-model="action.route" v-if="(!action.event || !action.event.name) && !action.url" :filter="listRoutes" label="Route"/>
-						<n-form-combo v-model="action.anchor" v-if="action.route" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
+						<n-form-combo v-model="action.anchor" v-if="action.route || action.url" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 						<n-form-switch v-model="action.absolute" v-if="action.route && !cell.state.useButtons" label="Absolute"/>
 						<n-form-switch v-model="action.mask" label="Mask" v-if="action.route"/>
 						<n-form-text v-model="action.url" label="URL" v-if="!action.route && (!action.event || !action.event.name)" :timeout="600"/>
@@ -152,7 +152,7 @@
 				<span v-if="edit && !action.dynamic" class="fa fa-cog" @click="configureAction(action)"></span>
 				<a auto-close-actions class="page-action-link page-action-entry" :href="getActionHref(action)"
 					:data-event="action.name"
-					:target="action.anchor == '$blank' ? '_blank' : null"
+					:target="action.anchor == '$blank' && (action.url || action.route) ? '_blank' : null"
 					:class="getDynamicClasses(action)"
 					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
 					:disabled="isDisabled(action)"
