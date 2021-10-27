@@ -21,11 +21,11 @@ Vue.component("page-form-list-input-dynamic-configure", {
 
 Vue.component("page-form-list-input-dynamic", {
 	template: "<n-form-section ref='form' class='dynamic-input'>"
-					+ "		<template v-if='value[name ? name : field.name]'>"
-					+ "			<div v-for='i in Object.keys(value[name ? name : field.name])' class='dynamic-input-iteration'>"
+					+ "		<template v-if='currentValue'>"
+					+ "			<div v-for='i in Object.keys(currentValue)' class='dynamic-input-iteration'>"
 					+ "				<template v-if='isSimpleList()'>"
 					+ "					<page-form-field :key=\"field.name + '_value' + i\" :field='getSimpleField()'"
-					+ "						v-model='value[name ? name : field.name][i]'"
+					+ "						v-model='currentValue[i]'"
 					+ "						:schema='getSchemaFor()'"
 					+ "						@input=\"$emit('changed')\""
 					+ "						:timeout='timeout'"
@@ -38,7 +38,7 @@ Vue.component("page-form-list-input-dynamic", {
 					+ "							v-if=\"getField(field.name + '.' + key)\" >"
 					+ "						<component v-if=\"getProvidedListComponent(field.name + '.' + key) != null\""
 					+ "							:is=\"getProvidedListComponent(field.name + '.' + key)\""
-					+ "							:value='value[name ? name : field.name][i]'"
+					+ "							:value='currentValue[i]'"
 					+ "							:page='page'"
 					+ "							:cell='cell'"
 					+ "							:edit='edit'"
@@ -50,7 +50,7 @@ Vue.component("page-form-list-input-dynamic", {
 					+ "							:schema=\"getSchemaFor(key)\""
 					+ "							:class=\"getField(field.name + '.' + key).group\"/>"
 					+ "						<page-form-field v-else :key=\"field.name + '_value' + i + '_' + key\" :field=\"getField(field.name + '.' + key)\"" 
-					+ "							:schema=\"getSchemaFor(key)\" v-model='value[name ? name : field.name][i][key]'"
+					+ "							:schema=\"getSchemaFor(key)\" v-model='currentValue[i][key]'"
 					+ "							@input=\"$emit('changed')\""
 					+ "							:timeout='timeout'"
 					+ "							:page='page'"
@@ -58,10 +58,10 @@ Vue.component("page-form-list-input-dynamic", {
 					+ "							:class=\"getField(field.name + '.' + key).group\"/>"
 					+ "					</div>"
 					+ "				</template>"
-					+ "		<button :class='field.buttonRemoveClass' @click='value[name ? name : field.name].splice(i, 1)'>%{Remove} {{field.label ? field.label : field.name}}</button>"
+					+ "		<button :class='field.buttonRemoveClass' @click='currentValue.splice(i, 1)'>%{Remove} {{field.label ? $services.page.translate(field.label) : field.name}}</button>"
 					+ "	</div>"
 					+ "</template>"
-					+ "		<button :class='field.buttonAddClass' @click='addInstanceOfField'>%{Add} {{field.label ? field.label : field.name}}</button>"
+					+ "		<button :class='field.buttonAddClass' @click='addInstanceOfField'>%{Add} {{field.label ? $services.page.translate(field.label) : field.name}}</button>"
 				+ "</n-form-section>",
 	props: {
 		cell: {
@@ -103,6 +103,34 @@ Vue.component("page-form-list-input-dynamic", {
 			required: false
 		}
 	},
+	computed: {
+		// if you have a nested array (say body.fixed.ips)
+		// in the past, it would be available under that exact name
+		// with changes to the form engine, it could be for example "body.fixed" as a record which contains ips
+		// for this reason, we do a slightly more complex lookup for the current value
+		currentValue: function() {
+			var path = this.name ? this.name : this.field.name;
+			var original = path;
+			while (path) {
+				if (this.value[path]) {
+					if (path != original) {
+						return this.$services.page.getValue(this.value[path], original.substring(path.length + 1));
+					}
+					else {
+						return this.value[path];
+					}
+				}
+				var index = path.lastIndexOf(".");
+				if (index > 0) {
+					path = path.substring(0, index);
+				}
+				else {
+					break;
+				}
+			}
+			return null;
+		}	
+	},
 	methods: {
 		validate: function(soft) {
 			return this.$refs.form.validate(soft);
@@ -116,8 +144,10 @@ Vue.component("page-form-list-input-dynamic", {
 		addInstanceOfField: function() {
 			var field = this.field;
 			var name = this.name ? this.name : field.name;
-			if (!this.value[name]) {
+			var valueToUse = this.currentValue;
+			if (!valueToUse) {
 				Vue.set(this.value, name, []);
+				valueToUse = this.value[name];
 			}
 			var schema = this.schema;
 			if (schema.items) {
@@ -130,7 +160,7 @@ Vue.component("page-form-list-input-dynamic", {
 					result[key] = null;
 				});
 			}
-			this.value[name].push(result);
+			valueToUse.push(result);
 		},
 		getChildren: function() {
 			var schema = this.schema;
