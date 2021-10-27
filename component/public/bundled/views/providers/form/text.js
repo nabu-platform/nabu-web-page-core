@@ -5,6 +5,7 @@ Vue.component("page-form-input-text-configure", {
 		+ "	<n-form-text v-model='field.minLength' label='Min Length' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.maxLength' label='Max Length' :timeout='600'/>"
 		+ "	<n-form-switch v-model='field.showLength' label='Show Length' v-if='field.maxLength'/>"
+		+ "	<n-form-switch v-model='field.showCustomSpinner' label='Use custom spinners' v-if=\"field.textType == 'number'\"/>"
 		+ "	<n-form-combo v-model='field.required' label='Required' :items=\"[true,false]\" />"
 		+ "	<n-form-text v-model='field.info' label='Info Content' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.before' label='Before Content' :timeout='600'/>"
@@ -85,6 +86,7 @@ Vue.component("page-form-input-text", {
 			+ "		:name='field.name'"
 			+ "		:timeout='timeout'"
 			+ "		v-show='!hidden'"
+			+ "		:show-custom-spinner='field.showCustomSpinner'"
 			+ "		:disabled='disabled'/>",
 	props: {
 		cell: {
