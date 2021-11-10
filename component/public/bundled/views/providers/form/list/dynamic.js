@@ -1,7 +1,7 @@
 // TODO: for simple lists: generate a new page-form-configure-single entity but with isList not filled in
 
 Vue.component("page-form-list-input-dynamic-configure", {
-	template: "<div><n-form-text v-model='field.buttonAddClass' label='Button Add Class'/><n-form-text v-model='field.buttonRemoveClass' label='Button Remove Class'/></div>",
+	template: "<div><n-form-text v-model='field.buttonAddClass' placeholder='primary' label='Button Add Class'/><n-form-text v-if='false' v-model='field.buttonRemoveClass' placeholder='secondary' label='Button Remove Class'/></div>",
 	props: {
 		cell: {
 			type: Object,
@@ -57,11 +57,11 @@ Vue.component("page-form-list-input-dynamic", {
 					+ "							:cell='cell'"
 					+ "							:class=\"getField(field.name + '.' + key).group\"/>"
 					+ "					</div>"
-					+ "				</template>"
-					+ "		<button :class='field.buttonRemoveClass' @click='currentValue.splice(i, 1)'>%{Remove} {{field.label ? $services.page.translate(field.label) : field.name}}</button>"
+					+ "				</template><span class='fa fa-times' @click='currentValue.splice(i, 1)'></span>"
+					+ "		<button v-if='false' :class=\"field.buttonRemoveClass ? field.buttonRemoveClass : 'secondary'\" @click='currentValue.splice(i, 1)'>%{Remove} {{field.label ? $services.page.translate(field.label) : field.name}}</button>"
 					+ "	</div>"
 					+ "</template>"
-					+ "		<button :class='field.buttonAddClass' @click='addInstanceOfField'>%{Add} {{field.label ? $services.page.translate(field.label) : field.name}}</button>"
+					+ "		<button :class=\"field.buttonAddClass ? field.buttonAddClass : 'primary'\" @click='addInstanceOfField'>%{Add} {{field.label ? $services.page.translate(field.label) : field.name}}</button>"
 				+ "</n-form-section>",
 	props: {
 		cell: {

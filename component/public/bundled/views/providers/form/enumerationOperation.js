@@ -75,7 +75,7 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 		enumerationFilter: function(value) {
 			var providers = nabu.page.providers("page-enumerate").map(function(x) { return x.name });
 			if (value) {
-				providers = providers.filter(function(x) { return x.toLowerCase().indeOf(value.toLowerCase()) >= 0 });
+				providers = providers.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
 			}
 			providers.sort();
 			return providers;
