@@ -92,10 +92,23 @@ nabu.services.VueService(Vue.extend({
 			rendering: 0,
 			// we start off false to mitigate initial faulty stable detection
 			stable: false,
-			stableTimer: null
+			stableTimer: null,
+			// we actually start with true, we are assuming you have a v-if bound to this boolean
+			// we don't want the cookie banner to temporarily visually appear until we can establish whether or not you accepted them
+			// due to the loading strategy this should not occur but still...
+			hasAcceptedCookies: true
 		}
 	},
 	activate: function(done) {
+		// intercept all cookie actions
+		this.interceptCookies();
+		// make sure we fix the cookie stuff, this uses the cookies services
+		// we do this periodically to catch evil scripts!
+		this.synchronizeCookies();
+		
+		// check if we have already accepted the cookies
+		this.calculateAcceptedCookies();
+		
 		var self = this;
 		// non-reactive
 		this.pageCounter = 0;
@@ -171,6 +184,29 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		calculateAcceptedCookies: function() {
+			this.hasAcceptedCookies = !!this.$services.cookies.get("cookie-settings");	
+		},
+		getAllowedCookies: function() {
+			// these technical cookies are always allowed
+			// JSESSIONID allows for server-side sessions
+			// language allows the user to choose a language, even if not logged in at the time of choosing
+			// the device cookie allows for remembering existing user, validating new devices, notifying the user if a new device is used...
+			// the realm cookie (in combination with te device cookie) actually holds the secret to remembering users
+			// the cookie settings allow to store additional whitelisted cookies
+			var allowedCookies = ["JSESSION", "language", "Device-${environment('realm')}", "Realm-${environment('realm')}", "cookie-settings"];
+			// check if we have already whitelisted cookies
+			var cookieSettings = this.$services.cookies.get("cookie-settings");
+			if (cookieSettings) {
+				try {
+					nabu.utils.arrays.merge(allowedCookies, JSON.parse(cookieSettings));
+				}
+				catch (exception) {
+					// ignore, someone messed with it?
+				}
+			}
+			return allowedCookies;
+		},
 		// check if a component is in fact a page
 		isPage: function(component) {
 			return component && component.$options && component.$options.template && component.$options.template == "#nabu-page";
@@ -2019,6 +2055,11 @@ nabu.services.VueService(Vue.extend({
 					self.removeByName(oldName);
 				});
 			}
+			// you update the label, but it amounts to the same name
+			else if (newName == page.name && name != page.content.label) {
+				page.content.label = name;
+				return this.update(page);
+			}
 		},
 		remove: function(page) {
 			var self = this;
@@ -3133,6 +3174,121 @@ nabu.services.VueService(Vue.extend({
 			}
 			row.cells.forEach(this.normalizeCell);
 			return row;
+		},
+		unsetCookie: function(cookie) {
+			var index = cookie.indexOf('=');
+			var name = index >= 0 ? cookie.substring(0, index) : cookie;
+			var path = null;
+			if (cookie.indexOf("path") >= 0) {
+				path = cookie.replace(/.*;[\s]*path[\s]*=[\s]*([^;]+).*/s, "$1");
+				if (path == cookie) {
+					path = null;
+				}
+			}
+			if (path == null) {
+				path = "${when(environment('cookiePath') == null, environment('serverPath'), environment('cookiePath'))}";
+			}
+			var expires = "";
+			var days = -365;
+			var value = "cleared"; 
+			var domain = null;
+			if (cookie.indexOf("domain") >= 0) {
+				domain = cookie.replace(/.*;[\s]*domain[\s]*=[\s]*([^;]+).*/s, "$1");
+				if (domain == cookie) {
+					domain = null;
+				}
+			}
+			var date = new Date();
+			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+			expires = "; expires=" + date.toUTCString();
+			var fullCookie = name + "=" + value + expires + "; path=" + path
+				+ (domain ? ";domain=" + domain : "");
+			// pre and post intercept
+			if (document.originalCookie) {
+				document.originalCookie = fullCookie;
+			}
+			else {
+				document.cookie = fullCookie;
+			}
+			// it seems setting with domain "null" does not unset cookies at for example ".sub.domain.com"
+			// we do a second round with the actual domain, this seems to work to remove those as well
+			if (domain == null) {
+				domain = "${environment('host')}";
+			}
+			var fullCookie = name + "=" + value + expires + "; path=" + path
+				+ (domain ? ";domain=" + domain : "");
+			if (document.originalCookie) {
+				document.originalCookie = fullCookie;
+			}
+			else {
+				document.cookie = fullCookie;
+			}
+		},
+		// list all the cookies you want to accept, as an array
+		acceptCookies: function(cookies) {
+			if (!cookies) {
+				cookies = [];
+			}
+			else if (!(cookies instanceof Array)) {
+				cookies = [cookies];
+			}
+			// remember _100_ years!
+			this.$services.cookies.set("cookie-settings", JSON.stringify(cookies), 365*100);
+			this.calculateAcceptedCookies();
+		},
+		interceptCookies: function() {
+			var self = this;
+			// now we write an intercept so any new cookies being written can not violate this
+			var originalCookie = "originalCookie";
+			// we redirect document.cookie to document.originalCookie
+			Object.defineProperty(
+				Document.prototype, 
+				originalCookie, 
+				Object.getOwnPropertyDescriptor(Document.prototype, 'cookie')
+			);
+			// we redefine document.cookie
+			Object.defineProperty(Document.prototype, 'cookie', {
+				enumerable: true,
+				configurable: true,
+				get: function() {
+					return this[originalCookie];
+				},
+				set: function(value) {
+					var allowedCookies = self.getAllowedCookies();
+					// we check if the cookie is allowed
+					var index = value.indexOf('=');
+					if (index >= 0) {
+						var cookieName = value.substring(0, index);
+						// if it's allowed, we let it pass
+						if (allowedCookies.indexOf(cookieName) >= 0) {
+							this[originalCookie] = value;
+						}
+						else {
+							self.unsetCookie(value);
+						}
+					}
+				}
+			});
+		},
+		synchronizeCookies: function() {
+			var allowedCookies = this.getAllowedCookies();
+
+			var self = this;
+			// first up: remove any cookies that should not be there
+			// the problem is load order, we can't fully guarantee to intercept all cookie setting, because that would require the javascript to be run before any includes are resolved
+			// because this is hard to guarantee, we simply remove the cookies later on if it is relevant
+			var cookies = document.cookie.split(/[\s]*;[\s]*/);
+			for (var i = 0; i < cookies.length; i++) {
+				var index = cookies[i].indexOf('=');
+				if (index >= 0) {
+					var name = cookies[i].substring(0, index);
+					if (allowedCookies.indexOf(name) < 0) {
+						self.unsetCookie(cookies[i]);
+					}
+				}
+			}
+			// repeat periodically
+			setTimeout(this.synchronizeCookies, 30000);
 		}
 	},
 	watch: {

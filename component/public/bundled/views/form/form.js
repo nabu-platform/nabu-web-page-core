@@ -1513,12 +1513,14 @@ Vue.component("page-form-field", {
 			return provided ? provided.component : null;	
 		},
 		fieldClasses: function(field) {
+			var result = [];
+			result.push("p-" + field.type);
 			if (field.styles) {
 				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
-				return this.$services.page.getDynamicClasses(field.styles, this.state, this);
+				nabu.utils.arrays.merge(result, this.$services.page.getDynamicClasses(field.styles, this.state, this));
 			}
-			return [];
+			return result;
 		},
 		validate: function(soft) {
 			var messages = nabu.utils.vue.form.validateChildren(this, soft);
