@@ -1597,7 +1597,7 @@ nabu.services.VueService(Vue.extend({
 			feature = feature.replace("}", "");
 			return this.enabledFeatures.indexOf(feature) >= 0;
 		},
-		evalInContext: function(context, code) {
+		evalInContext: function(context, js) {
 			var value;
 			try {
 				// for expressions
