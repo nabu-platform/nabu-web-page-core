@@ -531,6 +531,34 @@ window.addEventListener("load", function() {
 			cellTag: "e-columns"
 		});
 		
+		// functions
+		nabu.page.provide("page-function", {
+			id: "page.setAcceptedCookies",
+			async: false,
+			implementation: function(input, $services, $value, resolve, reject) {
+				// we are expecting an object where each key is a boolean true or false
+				// alternatively an array is also good
+				// if true, the cookie is accepted, if not, it isn't
+				var object = input.cookieObject;
+				var accepted = [];
+				if (object instanceof Array) {
+					nabu.utils.arrays.merge(accepted, object);
+				}
+				else if (object) {
+					Object.keys(object).forEach(function(key) {
+						if (object[key]) {
+							accepted.push(key);
+						}
+					});
+				}
+				$services.page.acceptCookies(accepted);
+			},
+			inputs: [{
+				"name": "cookieObject",
+				"required": true
+			}]
+		});
+		
 		nabu.page.provide("page-icon", {
 			name: "Font Awesome",
 			html: function(icon, additionalCss) {
@@ -546,7 +574,7 @@ window.addEventListener("load", function() {
 		
 		// formatters
 		nabu.page.provide("page-format", {
-			format: function(id, fragment, page, cell) {
+			format: function(id, fragment, page, cell, record) {
 				var properties = null;
 				var self = this;
 				var pageInstance = $services.page.getPageInstance(page, this);
@@ -554,8 +582,14 @@ window.addEventListener("load", function() {
 					properties = {};
 					Object.keys(fragment.resolveOperationBinding).map(function(key) {
 						if (fragment.resolveOperationBinding[key]) {
-							var bindingValue = $services.page.getBindingValue(pageInstance, fragment.resolveOperationBinding[key]);
-							properties[key] = bindingValue;
+							// looking inside the current record
+							if (fragment.resolveOperationBinding[key].indexOf("record.") == 0) {
+								properties[key] = record ? $services.page.getValue(record, fragment.resolveOperationBinding[key].substring("record.".length)) : null;
+							}
+							else {
+								var bindingValue = $services.page.getBindingValue(pageInstance, fragment.resolveOperationBinding[key]);
+								properties[key] = bindingValue;
+							}
 						}
 					});
 				}

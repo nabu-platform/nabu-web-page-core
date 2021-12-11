@@ -25,9 +25,11 @@
 			<div v-if="!field.arbitrary">
 				<div class="list-item-actions">
 					<button @click="addFragment(field)"><span class="fa fa-plus"></span>Fragment</button>
+					<button v-if="$services.page.isCopied('page-field-fragment')" @click="field.fragments.push($services.page.pasteItem('page-field-fragment'))"><span class="fa fa-paste"></span>Paste Fragment</button>
 				</div>
 				<n-collapsible :title="fragment.key ? fragment.key : fragment.type" v-for="fragment in field.fragments" class="padded">
 					<div slot="buttons">
+						<button @click="$services.page.copyItem('page-field-fragment', fragment, true)"><span class="fa fa-copy"></span></button>
 						<button @click="up(field, fragment)"><span class="fa fa-chevron-circle-up"></span></button>
 						<button @click="down(field, fragment)"><span class="fa fa-chevron-circle-down"></span></button>
 						<button @click="field.fragments.splice(field.fragments.indexOf(fragment), 1)"><span class="fa fa-trash"></span></button>
@@ -84,6 +86,7 @@
 			:is="getConfiguration(fragment.format)"
 			:page="page" 
 			:cell="cell"
+			:keys="keys"
 			:fragment="fragment"/>
 	</div>
 </template>

@@ -601,6 +601,10 @@ Vue.component("page-formatted-configure", {
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		keys: {
+			type: Array,
+			required: false
 		}
 	},
 	created: function() {
@@ -765,7 +769,7 @@ Vue.component("page-formatted", {
 			else {
 				var self = this;
 				var result = nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0]
-					.format(this.value, this.fragment, this.page, this.cell);
+					.format(this.value, this.fragment, this.page, this.cell, this.state);
 				return result;
 			}
 		}

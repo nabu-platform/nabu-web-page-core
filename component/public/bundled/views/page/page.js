@@ -212,7 +212,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 								}
 								else {
 									self.subscribe(to, function() {
-										self.initializeDefaultParameters(true, [parameter.name]);
+										self.initializeDefaultParameters(true, [parameter.name], true);
 										if (nabu.page.event.getName(parameter, "updatedEvent")) {
 											self.emit(
 												nabu.page.event.getName(parameter, "updatedEvent"),
@@ -288,6 +288,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 				try {
 					// can throw hard errors
 					return self.$services.swagger.execute(state.operation, parameters).then(function(result) {
+						if (result != null) {
+							self.initialStateLoaded.push(state.name);
+						}
 						Vue.set(self.variables, state.name, result ? result : null);
 						self.updatedVariable(state.name);
 					});
@@ -392,7 +395,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		this.$services.page.rendering++;
 		this.$services.page.setPageInstance(this.page, this);
 		var self = this;
-		// backwards compatibility
+		// it could be possible that you use a parameter here (with default) in your initial state
 		this.initializeDefaultParameters(true);
 		if (this.editable) {
 			this.edit = true;
@@ -511,7 +514,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			postRender: [],
 			// whether or not we are ready to go
 			rendered: false,
-			oldBodyClasses: []
+			oldBodyClasses: [],
+			initialStateLoaded: []
 		}
 	},
 	methods: {
@@ -641,38 +645,46 @@ nabu.page.views.Page = Vue.component("n-page", {
 				self.timers.push(timer);
 			}
 		},
-		initializeDefaultParameters: function(isInitial, names) {
+		initializeDefaultParameters: function(isInitial, names, force) {
 			var self = this;
 			if (this.page.content.parameters) {
 				this.page.content.parameters.map(function(x) {
 					if (x.name != null && (!names || names.indexOf(x.name) >= 0)) {
-						// if it is not passed in as input, we set the default value
-						if (self.parameters[x.name] == null) {
-							// check if we have a content setting
-							var value = self.$services.page.getContent(x.global ? null : self.page.name, x.name);
-							if (value == null) {
-								if (x.complexDefault) {
-									value = self.calculateVariable(x.defaultScript);
+						// it is entirely possible that someone already set the state for this variable, for example through an initial state with the same name
+						// this "trick" is applied when you want to load initial state _and_ you want to modify it through listeners etc
+						// we then make two variables with the same name
+						// however, if the initial state in this case does not exist, you do want your default to kick in
+						// but not if the state already exists
+						// if we force it however (e.g. through reset), we do want to recompute every time
+						if (self.initialStateLoaded.indexOf(x.name) < 0 || force) {
+							// if it is not passed in as input, we set the default value
+							if (self.parameters[x.name] == null) {
+								// check if we have a content setting
+								var value = self.$services.page.getContent(x.global ? null : self.page.name, x.name);
+								if (value == null) {
+									if (x.complexDefault) {
+										value = self.calculateVariable(x.defaultScript);
+									}
+									else {
+										value = self.$services.page.interpret(x.default, self);
+									}
 								}
 								else {
-									value = self.$services.page.interpret(x.default, self);
+									value = value.content;
+								}
+								// inherit from global state (especially interesting for mails/pdfs...)
+								// basically you inject state in a global parameters application.state and it will be auto-bound
+								if (value == null && application.state && application.state[x.name] != null) {
+									value = application.state[x.name];
+								}
+								if (value != null || isInitial) {
+									Vue.set(self.variables, x.name, value == null ? null : value);
 								}
 							}
-							else {
-								value = value.content;
+							// but you can override the default with an input parameter (only during created, not activate)
+							else if (isInitial) {
+								Vue.set(self.variables, x.name, self.parameters[x.name]);
 							}
-							// inherit from global state (especially interesting for mails/pdfs...)
-							// basically you inject state in a global parameters application.state and it will be auto-bound
-							if (value == null && application.state && application.state[x.name] != null) {
-								value = application.state[x.name];
-							}
-							if (value != null || isInitial) {
-								Vue.set(self.variables, x.name, value == null ? null : value);
-							}
-						}
-						// but you can override the default with an input parameter (only during created, not activate)
-						else if (isInitial) {
-							Vue.set(self.variables, x.name, self.parameters[x.name]);
 						}
 					}
 				});
@@ -2043,7 +2055,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					else {
 						var parameters = {};
 						Object.keys(state.bindings).map(function(key) {
-							parameters[key] = self.get(state.bindings[key]);
+							parameters[key] = self.$services.page.getBindingValue(self, state.bindings[key]);
 						});
 						try {
 							// can throw hard errors

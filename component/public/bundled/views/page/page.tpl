@@ -8,7 +8,7 @@
 			<page-components-overview/>
 		</n-sidebar>
 		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit && !embedded && !$services.page.editing" 
-				:draggable="false" 
+				:draggable="true" 
 				@dragstart="dragMenu($event)"
 				:class="{'page-component': !page.content.path}"
 				:style="{'top': page.content.menuY ? page.content.menuY + 'px' : '0px', 'left': page.content.menuX ? page.content.menuX + 'px' : '0px'}">
@@ -313,7 +313,7 @@
 				<p class="subscript">Eventing allows the user to interact with the page, performing calls to backend, switching to another page...</p>
 				<n-collapsible title="Initial" class="list">
 					<div class="padded-content">
-						<p class="subscript">Initial events are run when the page is first loaded and can be periodically rerun. This allows for long polling or performing some initial checks.</p>
+						<p class="subscript">Initial events are run when the page is first loaded but <i>after</i> the initial state is guaranteed to be there. Initial events can be periodically rerun, this allows for long polling or performing some initial checks.</p>
 					</div>
 					<div class="list-actions">
 						<button @click="addInitialEvent"><span class="fa fa-plus"></span>Initial Event</button>

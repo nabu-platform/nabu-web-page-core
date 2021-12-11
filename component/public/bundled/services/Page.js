@@ -96,7 +96,11 @@ nabu.services.VueService(Vue.extend({
 			// we actually start with true, we are assuming you have a v-if bound to this boolean
 			// we don't want the cookie banner to temporarily visually appear until we can establish whether or not you accepted them
 			// due to the loading strategy this should not occur but still...
-			hasAcceptedCookies: true
+			hasAcceptedCookies: true,
+			// functions that are run whenever cookie settings change
+			cookieHooks: [],
+			// you can set a cookie provider, the key is the name of the cookie provider, the value is an array of regexes (or names) of the cookies that belong to this provider
+			cookieProviders: {}
 		}
 	},
 	activate: function(done) {
@@ -104,7 +108,7 @@ nabu.services.VueService(Vue.extend({
 		this.interceptCookies();
 		// make sure we fix the cookie stuff, this uses the cookies services
 		// we do this periodically to catch evil scripts!
-		this.synchronizeCookies();
+		this.synchronizeCookies(true);
 		
 		// check if we have already accepted the cookies
 		this.calculateAcceptedCookies();
@@ -196,6 +200,20 @@ nabu.services.VueService(Vue.extend({
 			// the cookie settings allow to store additional whitelisted cookies
 			var allowedCookies = ["JSESSION", "language", "Device-${environment('realm')}", "Realm-${environment('realm')}", "cookie-settings"];
 			// check if we have already whitelisted cookies
+			var cookieSettings = this.getCookieSettings();
+			// each allowed cookie setting is either a name of a cookie, a regex of a cookie or the name of a provider that _has_ regexes
+			// the provider is simply to bundle the regexes etc into a readable and reusable name
+			var self = this;
+			cookieSettings.forEach(function(x) {
+				allowedCookies.push(x);
+				if (self.cookieProviders[x] instanceof Array) {
+					nabu.utils.arrays.merge(allowedCookies, self.cookieProviders[x]);
+				}
+			});
+			return allowedCookies;
+		},
+		getCookieSettings: function() {
+			var allowedCookies = [];
 			var cookieSettings = this.$services.cookies.get("cookie-settings");
 			if (cookieSettings) {
 				try {
@@ -225,7 +243,7 @@ nabu.services.VueService(Vue.extend({
 			return this.copiedType == item;
 		},
 		// copy it to the clipboard
-		copyItem: function(item, content) {
+		copyItem: function(item, content, clone) {
 			nabu.utils.objects.copy({
 				type: item,
 				content: content
@@ -1509,7 +1527,7 @@ nabu.services.VueService(Vue.extend({
 			return styles.filter(function(style) {
 				return self.isCondition(style.condition, state, instance);
 			}).map(function(style) {
-				return self.$services.page.interpret(style.class, instance);
+				return self.$services.page.interpret(style.class, instance, state);
 			});
 		},
 		getRestrictedParameters: function() {
@@ -3180,7 +3198,7 @@ nabu.services.VueService(Vue.extend({
 			var name = index >= 0 ? cookie.substring(0, index) : cookie;
 			var path = null;
 			if (cookie.indexOf("path") >= 0) {
-				path = cookie.replace(/.*;[\s]*path[\s]*=[\s]*([^;]+).*/s, "$1");
+				path = cookie.replace(/[\n]+/, " ").replace(/.*;[\s]*path[\s]*=[\s]*([^;]+).*/, "$1");
 				if (path == cookie) {
 					path = null;
 				}
@@ -3193,7 +3211,7 @@ nabu.services.VueService(Vue.extend({
 			var value = "cleared"; 
 			var domain = null;
 			if (cookie.indexOf("domain") >= 0) {
-				domain = cookie.replace(/.*;[\s]*domain[\s]*=[\s]*([^;]+).*/s, "$1");
+				domain = cookie.replace(/[\n]+/, " ").replace(/.*;[\s]*domain[\s]*=[\s]*([^;]+).*/, "$1");
 				if (domain == cookie) {
 					domain = null;
 				}
@@ -3224,6 +3242,19 @@ nabu.services.VueService(Vue.extend({
 				document.cookie = fullCookie;
 			}
 		},
+		// check if the name is allowed
+		isAllowedCookie: function(name) {
+			var allowedCookies = this.getAllowedCookies();
+			if (allowedCookies.indexOf(name) >= 0) {
+				return true;
+			}
+			for (var i = 0; i < allowedCookies.length; i++) {
+				if (name.match(new RegExp(allowedCookies[i]))) {
+					return true;
+				}
+			}
+			return false;
+		},
 		// list all the cookies you want to accept, as an array
 		acceptCookies: function(cookies) {
 			if (!cookies) {
@@ -3235,44 +3266,53 @@ nabu.services.VueService(Vue.extend({
 			// remember _100_ years!
 			this.$services.cookies.set("cookie-settings", JSON.stringify(cookies), 365*100);
 			this.calculateAcceptedCookies();
+			// synchronize immediately
+			this.synchronizeCookies();
+			this.cookieHooks.forEach(function(x) { x(cookies) });
+		},
+		// you can add functions that are run everytime the cookie settings change
+		addCookieHook: function(func) {
+			this.cookieHooks.push(func);
+			// immediately trigger in case you accepted in a previous instance
+			func(this.getAllowedCookies());
 		},
 		interceptCookies: function() {
 			var self = this;
 			// now we write an intercept so any new cookies being written can not violate this
 			var originalCookie = "originalCookie";
-			// we redirect document.cookie to document.originalCookie
-			Object.defineProperty(
-				Document.prototype, 
-				originalCookie, 
-				Object.getOwnPropertyDescriptor(Document.prototype, 'cookie')
-			);
-			// we redefine document.cookie
-			Object.defineProperty(Document.prototype, 'cookie', {
-				enumerable: true,
-				configurable: true,
-				get: function() {
-					return this[originalCookie];
-				},
-				set: function(value) {
-					var allowedCookies = self.getAllowedCookies();
-					// we check if the cookie is allowed
-					var index = value.indexOf('=');
-					if (index >= 0) {
-						var cookieName = value.substring(0, index);
-						// if it's allowed, we let it pass
-						if (allowedCookies.indexOf(cookieName) >= 0) {
-							this[originalCookie] = value;
-						}
-						else {
-							self.unsetCookie(value);
+			if (!this.isSsr) {
+				// we redirect document.cookie to document.originalCookie
+				Object.defineProperty(
+					Document.prototype, 
+					originalCookie, 
+					Object.getOwnPropertyDescriptor(Document.prototype, 'cookie')
+				);
+				// we redefine document.cookie
+				Object.defineProperty(Document.prototype, 'cookie', {
+					enumerable: true,
+					configurable: true,
+					get: function() {
+						return this[originalCookie];
+					},
+					set: function(value) {
+						// we check if the cookie is allowed
+						var index = value.indexOf('=');
+						if (index >= 0) {
+							var cookieName = value.substring(0, index);
+							// if it's allowed, we let it pass
+							if (self.isAllowedCookie(cookieName)) {
+								this[originalCookie] = value;
+							}
+							else {
+								console.log("Blocking cookie", cookieName);
+								self.unsetCookie(value);
+							}
 						}
 					}
-				}
-			});
+				});
+			}
 		},
-		synchronizeCookies: function() {
-			var allowedCookies = this.getAllowedCookies();
-
+		synchronizeCookies: function(repeat) {
 			var self = this;
 			// first up: remove any cookies that should not be there
 			// the problem is load order, we can't fully guarantee to intercept all cookie setting, because that would require the javascript to be run before any includes are resolved
@@ -3282,13 +3322,18 @@ nabu.services.VueService(Vue.extend({
 				var index = cookies[i].indexOf('=');
 				if (index >= 0) {
 					var name = cookies[i].substring(0, index);
-					if (allowedCookies.indexOf(name) < 0) {
+					if (!self.isAllowedCookie(name)) {
+						console.log("Removing cookie", name);
 						self.unsetCookie(cookies[i]);
 					}
 				}
 			}
-			// repeat periodically
-			setTimeout(this.synchronizeCookies, 30000);
+			if (repeat) {
+				// repeat periodically
+				setTimeout(function() {
+					self.synchronizeCookies(repeat)
+				}, 30000);
+			}
 		}
 	},
 	watch: {
