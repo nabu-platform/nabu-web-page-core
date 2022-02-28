@@ -21,7 +21,7 @@ Vue.component("page-form-list-input-dynamic-configure", {
 
 Vue.component("page-form-list-input-dynamic", {
 	template: "<n-form-section ref='form' class='dynamic-input'>"
-					+ "		<template v-if='currentValue'>"
+					+ "		<div class='dynamic-input-contents' v-if='currentValue'>"
 					+ "			<div v-for='i in Object.keys(currentValue)' class='dynamic-input-iteration'>"
 					+ "				<template v-if='isSimpleList()'>"
 					+ "					<page-form-field :key=\"field.name + '_value' + i\" :field='getSimpleField()'"
@@ -60,8 +60,10 @@ Vue.component("page-form-list-input-dynamic", {
 					+ "				</template><span class='fa fa-times' @click='currentValue.splice(i, 1)'></span>"
 					+ "		<button v-if='false' :class=\"field.buttonRemoveClass ? field.buttonRemoveClass : 'secondary'\" @click='currentValue.splice(i, 1)'>%{Remove} {{field.label ? $services.page.translate(field.label) : field.name}}</button>"
 					+ "	</div>"
-					+ "</template>"
+					+ "</div>"
+					+ "<div class='dynamic-input-actions'>"
 					+ "		<button :class=\"field.buttonAddClass ? field.buttonAddClass : 'primary'\" @click='addInstanceOfField'>%{Add} {{field.label ? $services.page.translate(field.label) : field.name}}</button>"
+					+ "</div>"
 				+ "</n-form-section>",
 	props: {
 		cell: {

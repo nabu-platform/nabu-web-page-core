@@ -190,6 +190,27 @@ nabu.page.formComponentConstructer = function(name) {
 			});
 		},
 		methods: {
+			isPageActive: function(page) {
+				var result = this.createResult();
+				console.log("checking if page is active", page, result);
+				return (!page.enabledIf || this.$services.page.isCondition(page.enabledIf, result, this))
+					&& (!page.disabledIf || !this.$services.page.isCondition(page.disabledIf, result, this));	
+			},
+			hasNextActivePage: function(page) {
+				var index = this.cell.state.pages.indexOf(page);
+				// no next page at all
+				if (index >= this.cell.state.pages.length - 1) {
+					return false;
+				}
+				else {
+					for (var i = index + 1; i < this.cell.state.pages.length; i++) {
+						if (this.isPageActive(this.cell.state.pages[i])) {
+							return true;
+						}
+					}
+					return false;
+				}
+			},
 			// this works in conjunction with this.cell.state
 			// if you list it in this.cell.state, we can resolve it here
 			getCellValue: function(key) {
@@ -629,6 +650,10 @@ nabu.page.formComponentConstructer = function(name) {
 				this.cell.state.pages.push(nabu.utils.objects.deepClone(page));
 			},
 			configurator: function() {
+				// sneaky shit!
+				if (this.cell.state.autoclose == null) {
+					Vue.set(this.cell.state, "autoclose", true);
+				}
 				return "page-form-configure-all";
 			},
 			configure: function() {
@@ -667,16 +692,16 @@ nabu.page.formComponentConstructer = function(name) {
 					Vue.set(state, "class", null);
 				}
 				if (!state.hasOwnProperty("ok")) {
-					Vue.set(state, "ok", "Ok");
+					Vue.set(state, "ok", "%{Ok}");
 				}
 				if (!state.hasOwnProperty("edit")) {
-					Vue.set(state, "edit", "Edit");
+					Vue.set(state, "edit", "%{Edit}");
 				}
 				if (!state.hasOwnProperty("next")) {
-					Vue.set(state, "next", "Next");
+					Vue.set(state, "next", "%{Next}");
 				}
 				if (!state.hasOwnProperty("cancel")) {
-					Vue.set(state, "cancel", "Cancel");
+					Vue.set(state, "cancel", "%{Cancel}");
 				}
 				if (!state.hasOwnProperty("event")) {
 					Vue.set(state, "event", null);
@@ -1445,20 +1470,16 @@ Vue.component("page-form-field", {
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			this.field.listeners.forEach(function(x) {
 				self.subscriptions.push(pageInstance.subscribe(x.to.replace(/^([^.]+).*/, "$1"), function(value) {
-					// this was initially added to fill in filter fields in a data component
-					// for some reason, this bit was triggered with the correct value but then immediately retriggered with the incorrect value
-					// perhaps the event is triggering a load which in turn triggers an unset of some sort?
-					// it is not entirely clear but for the current purposes, it is enough to ignore null values
-					// perhaps in the future, if we want to unset values with a remote event (not sure how that would go though?) we could try to dig deeper
-					// perhaps a "reset" listener is better suited, as emitting null is not ideal anyway
+					// there was a circumstance where the event was emitted twice, once with data, once without
+					// for this reason, initially we did not allow setting to null
+					// however in a new usecase, null resets were actually needed so we disabled the requirement to have null
+					// in this new usecase I tested both with and without values and everything worked as expected
 					var result = value ? self.$services.page.getValue(value, x.to.replace(/^[^.]+[.](.*)/, "$1")) : null;
 					// it seems to immediately trigger to null?
-					if (result != null) {
-						self.$emit("input", result);
-						// currently we reuse this one, but maybe we should always validate at that point?
-						if (self.validateOnBlur) {
-							setTimeout(self.validate, 1);
-						}
+					self.$emit("input", result);
+					// currently we reuse this one, but maybe we should always validate at that point?
+					if (self.validateOnBlur) {
+						setTimeout(self.validate, 1);
 					}
 				}));
 			});
@@ -1631,6 +1652,11 @@ Vue.component("page-form-configure", {
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		allowPaste: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	methods: {
@@ -1661,6 +1687,15 @@ Vue.component("page-form-configure", {
 			var index = this.fields.indexOf(field);
 			if (index < this.fields.length - 1) {
 				this.fields.splice(index, 1, replacement);
+				this.fields.push(field);
+			}
+		},
+		pasteField: function(page) {
+			var field = this.$services.page.pasteItem("page-form-field");	
+			if (field) {
+				if (!this.fields) {
+					Vue.set(this, "fields", []);
+				}
 				this.fields.push(field);
 			}
 		},
@@ -1843,6 +1878,12 @@ Vue.component("page-configure-arbitrary", {
 		// we want to find the rendered instance
 		var pageInstance = this.$services.page.getPageInstance(this.page, this);
 		var components = pageInstance.components[this.cell.id];
+		// note for my future self:
+		// this only works if there is at least one page-arbitrary rendered on the page
+		// so for example suppose you have a page arbitrary in the fields of a table (e.g. to draw an inline graph)
+		// you need at least one record in that table to have an instance of the page arbitrary
+		// once you have an instance, we have the configuration parameters
+		// note that, if said field is behind a conditional that prevents rendering in certain cases, those cases must be met to make sure it is actually rendered
 		this.instance = null;
 		if (components) {
 			if (components.$$arbitraryCellId == this.cell.id) {

@@ -176,6 +176,7 @@ Vue.component("page-form-input-enumeration", {
 				return value;
 			}
 			else if (value) {
+				// probably not used because we already resolve interpretations in the enumerate (?)
 				if (value.value) {
 					return this.$services.page.interpret(this.$services.page.translate(value.value, this), this);
 				}
@@ -198,8 +199,23 @@ Vue.component("page-form-input-enumeration", {
 			}
 		},
 		enumerate: function(value) {
-			var result = this.field.enumerations.filter(function(x) {
-				return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+			var self = this;
+			var result = this.field.enumerations.map(function(x) {
+				if(typeof(x) == "string"){
+					return "" + (x && x.indexOf("=") == 0 ? self.$services.page.interpret(x, self) : x);
+				}
+				else {
+					x = nabu.utils.objects.clone(x);
+					x.value = "" + (x && x.value && x.value.indexOf("=") == 0 ? self.$services.page.interpret(x.value, self) : x.value);
+					return x;
+				}
+			}).filter(function(x) {
+				if(typeof(x) == "string"){
+					return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				}
+				else {
+					return !value || x.value.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				}
 			});
 			if (this.field.allowCustom && result.indexOf(value) < 0) {
 				result.unshift(value);

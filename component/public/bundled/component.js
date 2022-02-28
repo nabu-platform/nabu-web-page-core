@@ -201,6 +201,7 @@ window.addEventListener("load", function() {
 								}
 								// make sure we send out a created event once done
 								cell.state.event = "created" + (name ? name : "");
+								cell.state.ok = "%{Create}";
 								// trigger on this create
 								cell.on = "create" + (name ? name : "");
 								// push an action to the datacomponent
@@ -224,6 +225,7 @@ window.addEventListener("load", function() {
 								// make sure we synchronize changes so we don't need to refresh
 								cell.state.synchronize = true;
 								cell.state.event = "updated" + (name ? name : "");
+								cell.state.ok = "%{Update}";
 								// trigger on this create
 								cell.on = "update" + (name ? name : "");
 								// push an action to the datacomponent
@@ -290,6 +292,19 @@ window.addEventListener("load", function() {
 			name: "Checkbox",
 			description: "A checkbox that allows you to toggle boolean values",
 			icon: "page/core/images/form-checkbox.svg"
+		});
+		$services.router.register({
+			alias: "page-form-enumeration-operation",
+			enter: function(parameters) {
+				parameters.formComponent = "page-form-input-enumeration-operation";
+				parameters.configurationComponent = "page-form-input-enumeration-operation-configure";
+				return new nabu.page.views.FormComponent({propsData: parameters});
+			},
+			form: "enumerationOperation",
+			category: "Form",
+			name: "Enumeration (Operation)",
+			description: "An enumeration based on an operation",
+			icon: "page/core/images/enumeration.png"
 		});
 		$services.router.register({
 			alias: "page-form-date",

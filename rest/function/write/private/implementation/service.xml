@@ -1,10 +1,12 @@
 <sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		disabled="false"
-		id="e73897ab-c80d-47de-b7f9-61bbb123884c">
+		id="e73897ab-c80d-47de-b7f9-61bbb123884c"
+		lineNumber="1">
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			disabled="false"
 			comment="Get uri"
-			id="7647d120-4b02-4df4-a5a9-2d272e9f015f">
+			disabled="false"
+			id="7647d120-4b02-4df4-a5a9-2d272e9f015f"
+			lineNumber="2">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="6a314901-50f0-4950-a5cc-b4041c8d9a37"
@@ -14,7 +16,8 @@
 				x="24"
 				y="84"
 				invocationOrder="0"
-				asynchronous="false">
+				asynchronous="false"
+				recache="false">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="d50cce9e-0525-4228-98e1-3c7ab4e78730"
@@ -43,7 +46,8 @@
 				x="143"
 				y="171"
 				invocationOrder="1"
-				asynchronous="false">
+				asynchronous="false"
+				recache="false">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="c7bf275e-ce65-4a48-92dc-709e50a900eb"
@@ -66,13 +70,15 @@
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Throw"
 			disabled="false"
-			label="path !~ &quot;/public/artifacts/functions/.*&quot;"
 			id="8f636e1f-aa95-4a04-b184-172aa677b016"
+			label="path !~ &quot;/public/artifacts/functions/.*&quot;"
+			lineNumber="3"
 			message="=&quot;Invalid target: &quot; + path" xsi:nil="true"/>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"
+			id="15ffa55e-5156-49ee-ab64-fe05df87e603"
 			label="input/content/content = null"
-			id="15ffa55e-5156-49ee-ab64-fe05df87e603">
+			lineNumber="4">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 				disabled="false"
 				id="4cd20c56-629e-40dc-a64f-199df0307310"
@@ -85,7 +91,8 @@
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"
-			id="aff18870-5592-4bdd-975c-b072433bf60f">
+			id="aff18870-5592-4bdd-975c-b072433bf60f"
+			lineNumber="5">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="c259962c-0eca-4215-a2be-5c06826194bd"
@@ -95,7 +102,8 @@
 				x="132"
 				y="116"
 				invocationOrder="0"
-				asynchronous="false">
+				asynchronous="false"
+				recache="false">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="0e3f72d6-8e74-45e8-8ef3-3d22f2ffbc62"
@@ -113,6 +121,33 @@
 					fixedValue="true">
 				<from>="repository:" + uri</from>
 				<to>uri</to>
+			</steps>
+		</steps>
+	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			comment="Clear any cache regarding last modified"
+			disabled="false"
+			id="874f0100-66df-494e-8264-f944de82539b"
+			lineNumber="6">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="1d431a39-d8b6-4e7a-857a-1ce1d971df4a"
+				serviceId="nabu.utils.Cache.clear"
+				resultName="resulta22e39a1d0d946d996f421915d99920a"
+				temporaryMapping="true"
+				x="125"
+				y="57"
+				invocationOrder="0"
+				asynchronous="false"
+				recache="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="958dac00-9274-44c7-9800-c742ac1ffaee"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>nabu.web.page.core.services.getLastModifiedPage</from>
+				<to>cacheId</to>
 			</steps>
 		</steps>
 	</steps>

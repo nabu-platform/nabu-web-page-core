@@ -1,1 +1,12 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?><node artifactManager="be.nabu.eai.module.rest.provider.RESTServiceManager" created="2018-10-09T15:01:29.756+02:00" lastModified="2018-10-10T10:47:55.998+02:00" leaf="true" version="10"><environmentId>hyperion</environmentId><hidden>false</hidden><properties/><references>nabu.web.page.core.types.configuration</references><references>nabu.web.page.core.rest.configuration.contentList</references><references>nabu.web.application.Services.configuration</references><references>nabu.web.page.core.interfaces.setContent</references><references>java.lang.String</references></node>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<node artifactManager="be.nabu.eai.module.rest.provider.RESTServiceManager" created="2018-10-09T15:01:29.756+02:00" lastModified="2022-01-20T11:11:46.791+01:00" leaf="true" version="11">
+    <environmentId>apollo</environmentId>
+    <hidden>false</hidden>
+    <properties/>
+    <references>nabu.web.page.core.types.configuration</references>
+    <references>nabu.web.page.core.rest.configuration.contentList</references>
+    <references>nabu.web.application.Services.configuration</references>
+    <references>nabu.web.page.core.interfaces.setContent</references>
+    <references>java.lang.String</references>
+    <references>nabu.utils.Cache.clear</references>
+</node>

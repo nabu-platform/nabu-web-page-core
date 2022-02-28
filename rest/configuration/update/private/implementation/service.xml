@@ -1,10 +1,12 @@
 <sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		disabled="false"
-		id="8934bb80-9e09-4874-9880-3a0bb5ea720b">
+		id="8934bb80-9e09-4874-9880-3a0bb5ea720b"
+		lineNumber="1">
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			comment="Get configuration"
 			disabled="false"
-			id="ad49500f-79d6-49f2-a0d8-7ded8220b150">
+			id="ad49500f-79d6-49f2-a0d8-7ded8220b150"
+			lineNumber="2">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="bd6feb4c-b3e2-423a-9b68-68eedc7ffded"
@@ -87,7 +89,8 @@
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			comment="Map the updates"
 			disabled="false"
-			id="7516df2c-6100-43f0-81a8-af1b2d00af77">
+			id="7516df2c-6100-43f0-81a8-af1b2d00af77"
+			lineNumber="3">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 				disabled="false"
 				id="a5f928dd-6401-40e3-97da-43520d6fa5d4"
@@ -200,7 +203,8 @@
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			comment="Store main configuration"
 			disabled="false"
-			id="02c71238-7ef9-4d83-9d5e-fb63d014899e">
+			id="02c71238-7ef9-4d83-9d5e-fb63d014899e"
+			lineNumber="4">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="a6be598e-a226-4150-abda-db3a2ce051e5"
@@ -236,7 +240,8 @@
 			comment="Store environment specific configuration"
 			disabled="false"
 			id="0a58553cd26440099f3ee5f7ddd61852"
-			label="environmentSpecificConfiguration">
+			label="environmentSpecificConfiguration"
+			lineNumber="5">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="22b0f0bd3b9d4f66a737e32fa6b9efe9"
@@ -274,6 +279,32 @@
 					fixedValue="true">
 				<from>true</from>
 				<to>environmentSpecific</to>
+			</steps>
+		</steps>
+	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			disabled="false"
+			id="78f3c53e-0cac-41aa-906d-9004dce331aa"
+			lineNumber="6">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="16a85f43-b2d5-47d2-bc99-3edf416c06e0"
+				serviceId="nabu.utils.Cache.clear"
+				resultName="resulted15cf79755b447f9ca14c32062c39a2"
+				temporaryMapping="true"
+				x="206"
+				y="65"
+				invocationOrder="0"
+				asynchronous="false"
+				recache="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="933101f0-ebc0-4a52-a2f7-23a6f6aa49c4"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>nabu.web.page.core.services.getCommonConfiguration</from>
+				<to>cacheId</to>
 			</steps>
 		</steps>
 	</steps>

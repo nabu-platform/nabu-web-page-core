@@ -154,6 +154,18 @@ nabu.services.VueService(Vue.extend({
 				self.$services.router.route("offline");
 			}, 1);
 		}
+		// any cookies you have provided that are not set to auto accept will be added to the cookie providers
+		nabu.page.providers("page-cookies").filter(function(x) { return x.name && !x.accept }).forEach(function(x) {
+			var group = x.group ? x.group : x.name;
+			var name = x.name;
+			if (!self.cookieProviders[group]) {
+				Vue.set(self.cookieProviders, group, []);
+			}
+			if (self.cookieProviders[group].indexOf(x.name) < 0) {
+				self.cookieProviders[group].push(x.name);
+			}
+		});
+		
 		this.activate(done, true);
 	},
 	clear: function(done) {
@@ -210,6 +222,10 @@ nabu.services.VueService(Vue.extend({
 					nabu.utils.arrays.merge(allowedCookies, self.cookieProviders[x]);
 				}
 			});
+			// you can whitelist cookies this way without specific user acceptance (e.g. they are technical)
+			nabu.page.providers("page-cookies").filter(function(x) { return x.name && x.accept }).forEach(function(x) {
+				allowedCookies.push(x.name);
+			});
 			return allowedCookies;
 		},
 		getCookieSettings: function() {
@@ -244,6 +260,10 @@ nabu.services.VueService(Vue.extend({
 		},
 		// copy it to the clipboard
 		copyItem: function(item, content, clone) {
+			// if not specified, we set to true
+			if (clone == null) {
+				clone = true;
+			}
 			nabu.utils.objects.copy({
 				type: item,
 				content: content
@@ -1011,7 +1031,7 @@ nabu.services.VueService(Vue.extend({
 			}
 		},
 		destroyPageInstance: function(page, instance) {
-			if (instance.pageInstanceId) {
+			if (instance.pageInstanceId != null) {
 				delete nabu.page.instances[page.name + "." + instance.pageInstanceId];
 			}
 			if (nabu.page.instances[page.name] == instance) {
@@ -1598,13 +1618,27 @@ nabu.services.VueService(Vue.extend({
 			return this.enabledFeatures.indexOf(feature) >= 0;
 		},
 		evalInContext: function(context, js) {
+			if ((!js.match(/^[\s]*function\b.*/)) && (!js.match(/^[\s]*return[\s]+.*/))) {
+				js = "return " + js;
+			}
 			var value;
 			try {
-				// for expressions
-				value = eval('with(context) { ' + js + ' }');
+				// for statements
+				value = (new Function('with(this) { ' + js + ' }')).call(context);
 			}
 			catch (e) {
-				if (e instanceof SyntaxError) {
+				// do nothing
+			}
+			// during minification the variable "context" is renamed to something else
+			// that means the eval always fails at it expects a context variable to be available
+			//value = (new Function('with(this) { ' + js + ' }')).call(context);
+			//try {
+				// for expressions
+				//value = eval('with(context) { ' + js + ' }');
+			//	value = (new Function('with(this) { ' + js + ' }')).call(context);
+			//}
+			//catch (e) {
+				/*if (e instanceof SyntaxError) {
 					try {
 						// for statements
 						value = (new Function('with(this) { ' + js + ' }')).call(context);
@@ -1612,8 +1646,8 @@ nabu.services.VueService(Vue.extend({
 					catch (e) {
 						// do nothing
 					}
-				}
-			}
+				}*/
+			//}
 			return value;	
 		},
 		eval: function(condition, state, instance) {
@@ -3222,7 +3256,7 @@ nabu.services.VueService(Vue.extend({
 			var fullCookie = name + "=" + value + expires + "; path=" + path
 				+ (domain ? ";domain=" + domain : "");
 			// pre and post intercept
-			if (document.originalCookie) {
+			if (document.originalCookie != null) {
 				document.originalCookie = fullCookie;
 			}
 			else {
@@ -3235,7 +3269,7 @@ nabu.services.VueService(Vue.extend({
 			}
 			var fullCookie = name + "=" + value + expires + "; path=" + path
 				+ (domain ? ";domain=" + domain : "");
-			if (document.originalCookie) {
+			if (document.originalCookie != null) {
 				document.originalCookie = fullCookie;
 			}
 			else {

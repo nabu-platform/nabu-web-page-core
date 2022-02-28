@@ -21,4 +21,8 @@
     <source>false</source>
     <allowRaw>false</allowRaw>
     <domain>false</domain>
+    <ignoreOffline>false</ignoreOffline>
+    <allowRootArrays>false</allowRootArrays>
+    <captureErrors>false</captureErrors>
+    <captureSuccessful>false</captureSuccessful>
 </restInterface>

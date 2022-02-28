@@ -21,7 +21,7 @@ Vue.mixin({
 			runtimeId: null
 		}
 	},
-	// not ideal, can it be replaced everywhere with $services.page.getBindingValue() ?
+	// not ideal, can it be replaced everywhere liwith $services.page.getBindingValue() ?
 	beforeMount: function() {
 		var self = this;
 		// map any local state
@@ -744,8 +744,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 			this.page.content.initialEvents.push({condition:null, definition: {}});
 		},
 		listFields: function(type, value) {
-			var type = this.$services.swagger.resolve(type);
-			return this.$services.page.getSimpleKeysFor(type).filter(function(x) { return !value || (x && x.toLowerCase().indexOf(value.toLowerCase()) >= 0) });
+			// added try/catch in case the type is unknown
+			try {
+				var type = this.$services.swagger.resolve(type);
+				return this.$services.page.getSimpleKeysFor(type).filter(function(x) { return !value || (x && x.toLowerCase().indexOf(value.toLowerCase()) >= 0) });
+			}
+			catch (exception) {
+				console.warn("Could not list fields for", type, exception);
+				return [];
+			}
 		},
 		validateStateName: function(name) {
 			var blacklisted = ["page", "application", "record", "state", "localState"];
@@ -2078,7 +2085,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 										var resultKeys = Object.keys(result);
 										Object.keys(self.variables[state.name]).forEach(function(key) {
 											if (resultKeys.indexOf(key) < 0) {
-												self.variables[state.name] = null;
+												self.variables[state.name][key] = null;
 											}
 										});
 										// make sure we use vue.set to trigger other reactivity
@@ -2142,6 +2149,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			if (name == "page") {
 				return this.variables;
+			}
+			else if (name == "page.$this") {
+				return this;
 			}
 			else if (name == "parent") {
 				var parentInstance = this.page.content.pageParent ? this.$services.page.getPageInstanceByName(this.page.content.pageParent) : null;
@@ -2225,6 +2235,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 			else if (name.indexOf(".$all") >= 0) {
 				return this.variables[name.substring(0, name.indexOf(".$all"))];
 			}
+			// note: currently this is slightly out of sync with "page." logic
+			// the problem is if you simply do get("queryParameter"), it won't work
+			// because query paramters are not available in variables
+			// solution 1: copy all page parameters to variables (this is likely the best option though it may break reactivity of query parameters?)
+			// solution 2: add resolving here to also check the page parameters.
+			// workaround: use "page.queryParameter" syntax to resolve (currently used until decision is made) for example by page form components
+			// note that set() also suffers from the same problem it seems!
 			else {
 				var parts = name.split(".");
 				if (this.variables[parts[0]]) {
@@ -4147,15 +4164,15 @@ Vue.component("page-sidemenu", {
 });
 
 document.addEventListener("keydown", function(event) {
-	if (event.key == "s" && event.ctrlKey && application.services.page.editing) {
+	if (event.key == "s" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
 		application.services.page.editing.save(event);
 	}
-	else if (event.key == "d" && event.ctrlKey && application.services.page.editing) {
+	else if (event.key == "d" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
 		application.services.page.editing.viewComponents = true;
 		event.preventDefault();
 		event.stopPropagation();
 	}
-	else if (event.key == "e" && event.ctrlKey && application.services.page.editing) {
+	else if (event.key == "e" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
 		application.services.page.editing.stopEdit();
 		event.preventDefault();
 		event.stopPropagation();

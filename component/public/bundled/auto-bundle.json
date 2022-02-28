@@ -55,6 +55,9 @@
 					},
 					"page-fields.svg": {
 						"url": "images/page-fields.svg"
+					},
+					"enumeration.png": {
+						"url": "images/enumeration.png"
 					}
 				},
 				"components": {

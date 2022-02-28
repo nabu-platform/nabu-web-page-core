@@ -92,8 +92,8 @@
 						</div>
 						<div v-if="page.content.styles">
 							<n-form-section class="list-row" v-for="style in page.content.styles">
-								<n-form-text v-model="style.class" label="Class"/>
-								<n-form-text v-model="style.condition" label="Condition" class="vertical"/>
+								<n-form-text v-model="style.class" label="Class" :timeout="600"/>
+								<n-form-text v-model="style.condition" label="Condition" class="vertical" :timeout="600"/>
 								<span @click="page.content.styles.splice(page.content.styles.indexOf(style), 1)" class="fa fa-times"></span>
 							</n-form-section>
 						</div>
@@ -490,6 +490,7 @@
 				@mouseout="mouseOut($event, row)"
 				@mouseover="mouseOver($event, row)"
 				@click.ctrl="goto($event, row)"
+				@click.meta="goto($event, row)"
 				@click.alt="$emit('select', row) && $emit('viewComponents')"
 				v-bind="getRendererProperties(row)">
 			<div v-if="false && (edit || $services.page.wantEdit || row.wantVisibleName) && row.name && !row.collapsed" :style="getRowEditStyle(row)" class="row-edit-label"
@@ -513,6 +514,7 @@
 					:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
 					@click="clickOnCell(cell)"
 					@click.ctrl="goto($event, row, cell)"
+					@click.meta="goto($event, row, cell)"
 					@mouseout="mouseOut($event, row, cell)"
 					@mouseover="mouseOver($event, row, cell)"
 					v-bind="getRendererProperties(cell)">

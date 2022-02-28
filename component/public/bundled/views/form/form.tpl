@@ -104,6 +104,10 @@
 				:cell="cell"
 				root-tag="div"
 				:dark="true"/>
+			<div class="padded-content">
+				<n-form-text v-model="cellPage.disabledIf" label="Disabled if" v-if="!cellPage.enabledIf"/>
+				<n-form-text v-model="cellPage.enabledIf" label="Enabled if" v-if="!cellPage.disabledIf"/>
+			</div>
 			<div class="list-actions">
 				<span>Page Actions: </span>
 				<button v-if="$services.page.isCopied('page-form-field')" @click="function() { pasteField(cellPage) }"><span class="fa fa-paste"></span></button>
@@ -129,8 +133,8 @@
 			@dragexit="dragExit($event)">
 	
 		<div class="form-tabs" v-if="cell.state.pages.length >= 2 && (cell.state.pageTabs || edit)">
-			<button v-for="page in cell.state.pages" @click="setPage(page)"
-				:class="{'is-active': currentPage == page}">{{$services.page.interpret(page.name, self)}}</button>
+			<button v-for="page in cell.state.pages" :disabled="!isPageActive(page)" @click="setPage(page)"
+				:class="{'is-active': currentPage == page}"><span>{{$services.page.interpret($services.page.translate(page.name), self)}}</span></button>
 		</div>
 		<h2 v-if="cell.state.title">{{$services.page.translate($services.page.interpret(cell.state.title, $self))}}</h2>
 		<n-form class="p-form" :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}, {'form-error': !!error }]" ref="form" :id="cell.state.formId" :component-group="cell.state.componentGroup" 
@@ -189,7 +193,7 @@
 					<a class="p-link previous" :disabled="doingIt" href="javascript:void(0)" @click="previousPage" :id="cell.state.formId ? cell.state.formId + '_previous' : null" 
 						v-if="cell.state.previous && cell.state.pages.indexOf(currentPage) > 0">{{$services.page.translate($services.page.interpret(cell.state.previous, $self))}}</a>
 					<button class="p-button primary" :id="cell.state.formId ? cell.state.formId + '_next' : null" @click="nextPage" 
-						v-if="cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1">{{$services.page.translate($services.page.interpret(cell.state.next, $self))}}</button>
+						v-if="cell.state.next && hasNextActivePage(currentPage)">{{$services.page.translate($services.page.interpret(cell.state.next, $self))}}</button>
 					<button :disabled="doingIt" class="p-button primary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
 						v-else-if="cell.state.ok">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
 					<button class="p-button secondary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
@@ -265,6 +269,9 @@
 				<n-form-combo :filter="function(x) { return possibleFields }" v-model="field.resetOnUpdate" label="Reset on update"/>
 			</div>
 		</n-collapsible>
+		<div class="list-actions" v-if="allowPaste">
+			<button v-if="$services.page.isCopied('page-form-field')" @click="function() { pasteField(cellPage) }"><span class="fa fa-paste"></span></button>
+		</div>
 	</component>
 </template>
 
@@ -328,6 +335,7 @@
 			:from="availableParameters" 
 			v-model="target.bindings"/>
 		<n-form-ace v-model="target.hidden" label="Hide If"/>
+		<p class="subscript" v-if="instance == null">Not seeing your configuration options? Make sure at least one instance is rendered.</p>
 		<component v-if="hasConfigurator" :is="getCellConfigurator(cell)" v-bind="getCellConfiguratorInput(cell)"/>
 	</div>
 </template>
