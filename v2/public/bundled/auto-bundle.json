@@ -3,6 +3,11 @@
 	"name": "core", 
 	"resources": {
 		"images": {
+			"branding": {
+				"nabu-logo.svg": {
+					"url": "images/nabu-logo.svg"
+				}
+			},
 			"social": {
 				"facebook.svg": {
 					"url": "images/social/facebook.svg"

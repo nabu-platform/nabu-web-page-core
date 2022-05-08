@@ -1,0 +1,19 @@
+@path
+@operationId nabu.page.scss.compile
+@title Compile scss
+@output base64Binary
+@tags Nabu Page Builder
+
+@content
+nabu.web.page.core.types.rest.styleInput content ?= null
+
+if (!hasRole("editor") || !hasPermission("webApplication:" + environment("webApplicationId"), "style.write"))
+	response.code(404)
+	abort()
+	
+response.header("Content-Type", "text/css")
+sass = nabu.utils.css(allowGcss: false, allowSass: true, compileSass: false)/sass
+if (content != null && content/content != null)
+	sass = sass + "\n" + content/content
+
+sass.compile(sass)
