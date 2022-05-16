@@ -120,51 +120,65 @@
 							<li class="is-grid-column" v-if="hasTemplates"><button class="is-button is-size-small is-variant-primary-outline has-tooltip" @click="showTemplates = true"><icon name="plus"/><span class="is-text">Add template</span><span class="is-tooltip is-position-top is-width-medium">Add an existing template page to your application</span></button></li>
 						</ul>
 					</div>
-					<div v-for="category in categories" class="is-grid-column is-spacing-large is-border-shadow is-color-basic is-row-gap-medium">
-						<h2 class="is-h3" :key="category" :ref="'category_' + category">
+					<div v-for="category in categories" class="is-grid-column is-spacing-large is-border-shadow is-color-basic is-row-gap-large">
+						<h3 class="is-h3" :key="category" :ref="'category_' + category">
 							<span class="is-text">{{category}}</span>
 							<ul class="is-menu is-variant-toolbar">
 								<li class="is-grid-column"><button class="is-button is-variant-primary-outline is-size-small has-tooltip" @click="copyCategory(category)"><icon name="copy"/><span class="is-text">Copy category</span><span class="is-tooltip is-position-top is-width-medium">Copy all pages in this category</span></button></li>
 							</ul>
-						</h2>
+						</h3>
 						<div class="is-accordion">
-							<n-collapsible :title="page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')" v-for="page in getPagesFor(category)" class="is-grid-column" :key="page.id">
+							<n-collapsible :only-one-open="true" :title="page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')" v-for="page in getPagesFor(category)" class="is-grid-column" :key="page.id">
 								<div slot="text" class="is-text is-grid-row is-column-gap-small is-align-center">
 									<span>{{page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')}}</span>
 									<span class="is-badge is-variant-warning">Page</span>
 								</div>
-								<ul slot="buttons" class="is-menu is-variant-toolbar is-align-end">
+								<ul slot="buttons" class="is-menu is-variant-toolbar is-align-end ">
 									<li class="is-grid-column"><button class="is-button is-size-small is-variant-primary has-tooltip" @click="route(page)" title="Open this page"><icon name="search"/><span class="is-tooltip is-position-top">Open page</span></button></li>
 									<li class="is-grid-column"><button class="is-button is-size-small is-variant-primary-outline has-tooltip" @click="copy(page)"><icon name="copy"/><span class="is-tooltip is-position-top">Copy page</span></button></li>
-									<li class="is-grid-column"><button class="is-button is-size-small is-variant-danger-outline has-tooltip" @click="remove(page)"><icon name="trash"/><span class="is-tooltip is-position-top is-variant-danger">Delete page</span></button></li>
+									<li class="is-grid-column"><button class="is-button is-size-small is-variant-danger-outline has-tooltip" @click="remove(page)"><icon name="trash"/><span class="is-tooltip is-position-top is-color-danger">Delete page</span></button></li>
 								</ul>
-								<div class="panes">
-									<n-form-section class="pane">
-										<n-form-text :value="page.content.label ? page.content.label : page.name" label="Name" :required="true" :timeout="600" @input="function(newValue) { updatePageName(page, newValue) }" />
-										<n-form-text v-model="page.content.category" label="Category" :timeout="600" @input="save(page)"/>
-										<n-form-switch info="You can set this page as a default common root to all other pages that don't have any parent specified" 
-											v-if="!page.content.pageParent && !page.content.path" label="Is default parent page" v-model="page.content.initial" @input="save(page)"/>
-										<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow" @input="save(page)"/>
-										<n-form-text v-if="!page.content.initial" v-model="page.content.path" label="Path" :timeout="600" @input="save(page)" info="This should always start with a leading slash"/>
+								<div class="panes is-grid-row is-column-gap-large">
+									<n-form class="pane is-form is-size-grow is-color-background is-spacing-large">
+										<n-form-text :value="page.content.label ? page.content.label : page.name" label="Page name" :required="true" :timeout="600" @input="function(newValue) { updatePageName(page, newValue) }" 
+											after="The page name must be unique across the application"/>
+										<n-form-text v-if="!page.content.initial" v-model="page.content.path" label="Path" :timeout="600" @input="save(page)"
+											after="The path that this page can be reached on, it should always start with a leading slash"
+											placeholder="No path set, this page can not be browsed to"/>
+										<n-form-text v-model="page.content.category" label="Category" :timeout="600" @input="save(page)"
+											after="The category this page belongs to"/>
+										<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow" @input="save(page)"
+											after="When this page is slow, we can show a loading icon when the user wants to reach it"/>
 										<n-form-combo v-if="!page.content.initial" v-model="page.content.pageParent" label="Page Parent" :timeout="600" @input="save(page)"
-											:filter="getRoutes"/>
-										<n-form-text info="If this page is a parent to other pages, you can set a location where that child content should be routed in by default." v-model="page.content.defaultAnchor" label="Default Content Anchor" :timeout="600" @input="save(page)"/>
+											placeholder="No page parent"
+											empty-value="No pages available yet that have a content anchor"
+											after="Choose the parent page in which this page is nested by default when the user browses to it"
+											:filter="getParentRoutes"/>
+										<n-form-text
+											v-model="page.content.defaultAnchor" label="Default Content Anchor" :timeout="600" @input="save(page)" placeholder="No content anchor"
+											after="The content anchor is where child pages will automatically be routed as needed"/>
+										<n-form-switch after="Set this page as a default common root to all other pages that don't have any parent specified"
+											v-if="page.content.defaultAnchor" label="Is default parent page" v-model="page.content.initial" @input="save(page)"/>
 										<!-- support for pages with input values -->
-									</n-form-section>
-									<n-form-section class="pane">
-										<h2>Metadata</h2>
-										<p class="subscript">You can add custom metadata properties to your page.</p>
-										<div class="list-actions">
-											<button @click="page.content.properties ? page.content.properties.push({}) : $window.Vue.set(page.content, 'properties', [{}])"><span class="fa fa-plus"></span>Property</button>
+									</n-form>
+									<n-form class="pane is-form is-size-grow">
+										<h3 class="is-h3 has-toolbar">
+											<span class="is-text">Metadata</span>
+											<ul class="is-menu is-variant-toolbar">
+												<li class="is-grid-column"><button class="is-button is-variant-warning is-justify-end is-size-small" @click="page.content.properties ? page.content.properties.push({}) : $window.Vue.set(page.content, 'properties', [{}])"><span class="fa fa-plus"></span>Property</button></li>
+											</ul>
+										</h3>
+										<p class="is-p">You can add custom metadata properties to your page.</p>
+										<div v-if="page.content.properties" class="is-grid-column is-row-gap-medium">
+											<n-form v-for="property in page.content.properties" class="has-button-close is-spacing-large is-color-background">
+												<n-form-section class="is-row">
+													<n-form-text v-model="property.key" label="Key" :timeout="600" @input="save(page)"/>
+													<n-form-text v-model="property.value" label="Value":timeout="600" @input="save(page)"/>
+													<button @click="page.content.properties.splice(page.content.properties.indexOf(property), 1)" class="is-button is-variant-close"><icon name="times"/></button>
+												</n-form-section>
+											</n-form>
 										</div>
-										<div v-if="page.content.properties">
-											<div v-for="property in page.content.properties" class="list-row">
-												<n-form-text v-model="property.key" label="Key" :timeout="600" @input="save(page)"/>
-												<n-form-text v-model="property.value" label="Value":timeout="600" @input="save(page)"/>
-												<span @click="page.content.properties.splice(page.content.properties.indexOf(property), 1)" class="fa fa-times"></span>
-											</div>
-										</div>
-									</n-form-section>
+									</n-form>
 								</div>
 							</n-collapsible>
 						</div>
@@ -316,29 +330,30 @@
 </template>
 
 <template id="nabu-create-page">
-	<n-form class="nabu-create-page layout2" ref="form">
+	<n-form class="is-color-basic is-spacing-large is-border-shadow" ref="form">
+		<h3 class="is-h3">Add a new page</h3>
 		<n-form-section>
-			<n-form-switch label="Create a new category" v-model="newCategory" v-if="hasAnyCategories"/>
-			<n-form-combo v-if="!newCategory" v-model="category" label="Existing Category" :required="true" :filter="checkCategory"/>
-			<n-form-text v-else v-model="category" label="New Category" :required="true"/>
-			<n-form-text v-model="name" label="Name" :required="true" :validator="validator"/>
+			<n-form-text v-model="name" label="Page name" :required="true" :validator="validator" after="The name of your page should be unique within your application"/>
+			<n-form-switch :invert="true" label="Add to an existing category" v-model="newCategory" v-if="hasAnyCategories"/>
+			<n-form-combo v-if="!newCategory" v-model="category" label="Existing Category" :required="true" :filter="checkCategory" after="Choose an existing category"/>
+			<n-form-text v-else v-model="category" label="New Category" :required="true" after="Create a new category with this name"/>
 		</n-form-section>
-		<footer>
-			<a href="javascript:void(0)" @click="$reject">Cancel</a>
-			<button @click="$resolve({category:category, name:name})">Add</button>
+		<footer class="is-grid-row is-justify-space-between">
+			<button @click="$reject" class="is-button is-variant-link">Cancel</button>
+			<button @click="$resolve({category:category, name:name})" class="is-button is-variant-primary">Add</button>
 		</footer>
 	</n-form>
 </template>
 
 <template id="nabu-pages-paste">
-	<n-form class="nabu-pages-paste layout2" ref="form">
+	<n-form class="is-color-basic is-spacing-large is-border-shadow" ref="form">
 		<n-form-section>
 			<n-form-text v-model="category" label="Paste in category" :required="true"/>
 			<n-form-text v-model="name" label="Paste with name" :required="true"/>
 		</n-form-section>
-		<footer>
-			<a href="javascript:void(0)" @click="$reject">Cancel</a>
-			<button @click="$resolve({category:category, name:name})">Add</button>
+		<footer class="is-grid-row is-justify-space-between">
+			<button @click="$reject" class="is-button is-variant-link">Cancel</button>
+			<button @click="$resolve({category:category, name:name})" class="is-button is-variant-primary">Add</button>
 		</footer>
 	</n-form>
 </template>

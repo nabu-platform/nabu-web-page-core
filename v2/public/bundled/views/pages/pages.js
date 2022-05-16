@@ -71,7 +71,6 @@ nabu.page.views.Pages = Vue.extend({
 				var data = event.clipboardData.getData("text/plain");
 				if (data) {
 					var parsed = JSON.parse(data);
-					console.log("parsed is", parsed);
 					if (parsed && parsed.type == "page-category") {
 						self.$confirm({ 
 							message: "Are you sure you want to add the category '" + parsed.category + "' to this website?", 
@@ -218,6 +217,14 @@ nabu.page.views.Pages = Vue.extend({
 			console.log("page is", page);
 			nabu.utils.objects.copy(page.content);
 		},
+		getParentRoutes: function(newValue) {
+			var routes = this.$services.router.list().filter(function(x) { return !!x.alias && !!x.defaultAnchor }).map(function(x) { return x.alias });
+			if (newValue) {
+				routes = routes.filter(function(x) { return x.toLowerCase().indexOf(newValue.toLowerCase()) >= 0 });
+			}
+			routes.sort();
+			return routes;
+		},
 		getRoutes: function(newValue) {
 			var routes = this.$services.router.list().filter(function(x) { return !!x.alias }).map(function(x) { return x.alias });
 			if (newValue) {
@@ -244,7 +251,8 @@ nabu.page.views.Pages = Vue.extend({
 		remove: function(page) {
 			var self = this;
 			this.$confirm({
-				message: "Are you sure you want to delete page '" + page.name + "'?"
+				title: "Delete page",
+				message: "Are you sure you want to delete the page '" + page.name + "'?"
 			}).then(function() {
 				self.$services.page.remove(page);
 			});
