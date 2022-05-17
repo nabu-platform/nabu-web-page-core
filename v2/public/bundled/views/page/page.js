@@ -813,15 +813,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 			this.page.content.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
 			this.$services.page.copiedRow = null;
 		},
-		filterRoutes: function(value) {
-			var routes = this.$services.router.list().filter(function(x) {
-				return x.alias && (!value || x.alias.toLowerCase().indexOf(value.toLowerCase()) >= 0);
-			});
-			routes.sort(function(a, b) {
-				return a.alias.localeCompare(b.alias);
-			});
-			return routes.map(function(x) { return x.alias });
-		},
 		getStateOperations: function(value) {
 			return this.$services.page.getStateOperations(value);
 		},
@@ -3508,7 +3499,8 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		removeCell: function(cells, cell) {
 			var self = this;
 			this.$confirm({
-				message: "Are you sure you want to remove this cell?"
+				title: "Delete cell",
+				message: "Are you sure you want to delete this cell?"
 			}).then(function() {
 				self.$services.page.closeRight();
 				cells.splice(cells.indexOf(cell), 1);

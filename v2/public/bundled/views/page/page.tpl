@@ -7,51 +7,47 @@
 		<n-sidebar :inline="true" class="page-settings" v-if="viewComponents" @close="viewComponents = false" :autocloseable="false">
 			<page-components-overview/>
 		</n-sidebar>
-		<div class="page-edit" v-else-if="$services.page.canEdit() && $services.page.wantEdit && !embedded && !$services.page.editing" 
+		<div class="is-page-edit-menu" v-else-if="$services.page.canEdit() && $services.page.wantEdit && !embedded && !$services.page.editing" 
 				:draggable="true" 
 				@dragstart="dragMenu($event)"
-				:class="{'page-component': !page.content.path}"
+				:class="{'is-bookmarkable': !!page.content.path}"
 				:style="{'top': page.content.menuY ? page.content.menuY + 'px' : '0px', 'left': page.content.menuX ? page.content.menuX + 'px' : '0px'}">
 			<span>{{page.name}}</span>
-			<span class="fa fa-cog" v-if="page.content.path && hasConfigureListener()" @click="triggerConfiguration()"/>
-			<span class="fa fa-pencil-alt" @click="goIntoEdit"></span>
-			<span class="fa fa-copy" v-route:pages></span>
-			<span class="n-icon" :class="'n-icon-' + $services.page.cssStep" v-if="false && $services.page.cssStep"></span>
-			<span v-if="page.content.path && $services.language && $services.language.available.length" class="language-selector">
+			<button class="is-button is-variant-ghost is-size-xsmall" v-if="page.content.path && hasConfigureListener()" @click="triggerConfiguration()"><icon name="cog"/></button>
+			<button class="is-button is-variant-ghost is-size-xsmall" @click="goIntoEdit"><icon name="pencil-alt"/></button>
+			<button class="is-button is-variant-ghost is-size-xsmall" @click="$services.router.route('pages')"><icon name="copy"/></button>
+			<button v-if="page.content.path && $services.language && $services.language.available.length" class="is-button language-selector is-variant-ghost">
 				<span class="current">{{hasLanguageSet() ? $services.language.current.name : "none"}}</span>
 				<div class="options">
 					<span v-for="language in $services.language.available" @click="$services.language.current = language">{{language.name}}</span>
 					<span v-if="$services.language.current && ${environment('development')}" @click="$services.language.current = null">unset</span>
 				</div>
-			</span>
-			<span v-if="false && page.content.path" class="fa fa-sign-out-alt" v-route:logout></span>
-			<span class="fa fa-terminal" @click="$window.console.log('Page: ' + page.name, $self.variables, $self)"></span>
-			<span class="fa fa-sync" v-if="$services.page.disableReload" @click="$services.page.disableReload = false" title="Start css reload"></span>
-			<span class="fa fa-ban" v-else title="Stop css reload" @click="$services.page.disableReload = true"></span>
-		</div>
-		<div class="page-edit" v-else-if="false && !$services.page.canEdit() && !embedded && $services.page.wantEdit && $services.user && !$services.user.loggedIn"
-				:style="{'top': '0px', 'left': '0px'}">
-			<span>Login</span>
-			<span class="fa fa-sign-in-alt" v-route:login></span>
+			</button>
+			<button class="is-button is-variant-ghost is-size-xsmall" @click="$window.console.log('Page: ' + page.name, $self.variables, $self)"><icon name="terminal"/></button>
+			<button class="is-button is-variant-ghost is-size-xsmall" v-if="$services.page.disableReload" @click="$services.page.disableReload = false"><icon name="sync"/></button>
+			<button class="is-button is-variant-ghost is-size-xsmall" v-else @click="$services.page.disableReload = true"><icon name="ban"/></button>
 		</div>
 		
-		<n-sidebar v-if="edit && page.content.rows" position="left" class="page-settings sidemenu" :inline="true" :autocloseable="false" ref="sidemenu"
+		<n-sidebar v-if="edit && page.content.rows" position="left" class="is-size-medium" :inline="true" :autocloseable="false" ref="sidemenu"
 				@close="stopEdit">
-			<div class="sidebar-actions">
-				<button @click="viewComponents = true"><span class="fa fa-cubes" title="Add Components"></span></button>
-				<button @click="configuring = true"><span class="fa fa-cog" title="Configure"></span></button>
-				<button @click="addRow(page.content)"><span class="fa fa-plus" title="Add Row"></span></button>
-				<button v-if="!embedded" @click="save"><span class="fa fa-save" title="Save"></span></button>
-				<button @click="pasteRow" v-if="$services.page.copiedRow"><span class="fa fa-paste"></span></button>
-				<button v-if="!embedded && false" @click="stopEdit"><span class="fa fa-sign-out-alt" title="Stop Editing"></span></button>
+			<div class="is-grid-column is-spacing-medium is-justify-left" slot="header">
+				<h3 class="is-h3 is-color-neutral">{{page.content.label ? page.content.label : page.content.name}}</h3>
+				<p class="is-p is-color-light is-size-xsmall">Last saved: {{saved ? $services.formatter.date(saved, 'HH:mm:ss') : 'never' }}</p>
 			</div>
-			<div class="last-saved padded-content">
-				<label>Last saved:</label><span>{{saved ? $services.formatter.date(saved, 'HH:mm:ss') : 'never' }}</span>
+			<div>
+				<ul class="is-menu is-variant-toolbar is-justify-center is-spacing-medium">
+					<li class="is-grid-column"><button class="is-button is-variant-success is-size-small" @click="configuring = true"><icon name="cog"/><span class="is-text">Configure</span></button></li>
+					<li class="is-grid-column"><button class="is-button is-variant-success-outline is-size-small" @click="addRow(page.content)"><icon name="plus"/><span class="is-text">Row</span></button></li>
+					<li class="is-grid-column"><button class="is-button is-variant-warning is-size-small" @click="pasteRow" v-if="$services.page.copiedRow"><icon name="paste"/></button></li>
+					<li class="is-grid-column"><button class="is-button is-variant-secondary-outline is-size-small" @click="viewComponents = true"><icon name="cubes"/><span class="is-text">Components</span></button></li>
+					<li class="is-grid-column"><button class="is-button is-variant-primary is-size-small" v-if="!embedded" @click="save"><icon name="save"/><span class="is-text">Save</span></button></li>
+				</ul>
+				<page-sidemenu v-if="edit && page.content.rows" :rows="page.content.rows" :page="page"
+					class="is-spacing-medium "
+					:selected="selectedItem"
+					@select="selectItem"
+					@removeRow="function(row) { $confirm({title: 'Delete row', message:'Are you sure you want to delete this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
 			</div>
-			<page-sidemenu v-if="edit && page.content.rows" :rows="page.content.rows" :page="page"
-				:selected="selectedItem"
-				@select="selectItem"
-				@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
 		</n-sidebar>
 		
 		<n-page-rows v-if="page.content.rows" :rows="page.content.rows" :page="page" :edit="edit"
@@ -65,236 +61,201 @@
 			@select="selectItem"
 			@viewComponents="viewComponents = edit"
 			@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
-		<n-sidebar :autocloseable="false" v-if="configuring" @close="configuring = false" class="page-settings" :inline="true">
-			<n-form class="layout2">
-				<n-collapsible title="General Settings">
-					<div class="padded-content">
-						<h2>Router</h2>
-						<p class="subscript">These settings will determine how the page is routed throughout the application.</p>
-						<n-form-text v-model="page.content.category" label="Category" info="The category this page belongs to"/>
-						<n-form-text v-model="page.content.path" label="Path" info="The path this page can be found on, if you don't want to expose it via a dedicated path, leave this empty.<br/><br/> You can use the following syntax to define path variables:<br/>/path/to/{myVariable}/is"/>
-						<n-form-text v-model="page.content.title" label="Title"/>
-						<n-form-combo label="Page Parent" :filter="filterRoutes" v-model="page.content.pageParent"/>
-						<n-form-text v-model="page.content.defaultAnchor" label="Content Anchor"/>
-						<n-form-text v-model="page.content.autoRefresh" label="Auto-refresh"/>
-						<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow" info="Is a slow route"/>
-						<n-form-switch label="Route Error in Self" v-model="page.content.errorInSelf"/>
-						
-						<h2>Style</h2>
-						<p class="subscript">These settings will influence how the page is visualized.</p>
-						<n-form-combo label="Page Type" :filter="getPageTypes" v-model="page.content.pageType" info = "The page type determines how the page is rendered. For example an email requires different rendering from a webpage."/>
-						
-						<h4>Page Style</h4>
-						<p class="subscript">The styling that is set on the page.</p>
-						<n-form-text v-model="page.content.class" label="CSS Class" info = "The main css class for this page"/>
-						<div class="list-actions">
-							<button @click="page.content.styles == null ? $window.Vue.set(page.content, 'styles', [{class:null,condition:null}]) : page.content.styles.push({class:null,condition:null})"><span class="fa fa-plus"></span>Page Style</button>
-						</div>
-						<div v-if="page.content.styles">
-							<n-form-section class="list-row" v-for="style in page.content.styles">
-								<n-form-text v-model="style.class" label="Class" :timeout="600"/>
-								<n-form-text v-model="style.condition" label="Condition" class="vertical" :timeout="600"/>
-								<span @click="page.content.styles.splice(page.content.styles.indexOf(style), 1)" class="fa fa-times"></span>
-							</n-form-section>
-						</div>
-						
-						<h4>Body Style</h4>
-						<p class="subscript">You can add classes to the body when this page is rendered.</p>
-						
-						<div class="list-actions">
-							<button @click="page.content.bodyStyles == null ? $window.Vue.set(page.content, 'bodyStyles', [{class:null,condition:null}]) : page.content.bodyStyles.push({class:null,condition:null})"><span class="fa fa-plus"></span>Body Style</button>
-						</div>
-						<div v-if="page.content.bodyStyles">
-							<n-form-section class="list-row" v-for="style in page.content.bodyStyles">
-								<n-form-text v-model="style.class" label="Class"/>
-								<n-form-text v-model="style.condition" label="Condition" class="vertical"/>
-								<span @click="page.content.bodyStyles.splice(page.content.bodyStyles.indexOf(style), 1)" class="fa fa-times"></span>
-							</n-form-section>
-						</div>
-						
-						<h2>Security</h2>
-						<p class="subscript">You can configure additional security on a page to limit access. If nothing is configured, everyone is allowed. You can use pseudo roles like $user and $guest.</p>
-						
-						<div class="n-form-component n-form-actions">
-							<div class="list-actions">
-								<button @click="page.content.roles ? page.content.roles.push('') : $window.Vue.set(page.content, 'roles', [''])"><span class="fa fa-plus"></span>Role</button>
+			
+		<n-sidebar :autocloseable="false" v-if="configuring" @close="configuring = false" class="is-size-large" :inline="true">
+			<n-form class="is-variant-floating-labels">
+				<div class="is-grid-column is-row-gap-medium">
+					<h2 class="is-h3 is-spacing-large is-color-primary-outline is-border-underline">Page Settings</h2>
+					<div class="is-accordion is-highlight-left">
+						<n-collapsible :only-one-open="true" title="Routing" content-class="is-spacing-large is-row-gap-medium">
+							<p class="is-p is-size-small is-color-light">These settings will determine how the page is routed throughout the application.</p>
+							<n-form-text v-model="page.content.category" label="Category" info="The category this page belongs to"/>
+							<n-form-text v-model="page.content.path" label="Path" info="The path this page can be found on, if you don't want to expose it via a dedicated path, leave this empty.<br/><br/> You can use the following syntax to define path variables:<br/>/path/to/{myVariable}/is"/>
+							<n-form-text v-model="page.content.title" label="Title" info="You can fill in a custom application title that will appear when this page is routed"/>
+							<n-form-combo label="Page Parent" :filter="$services.page.getParentRoutes" v-model="page.content.pageParent"/>
+							<n-form-text v-model="page.content.defaultAnchor" label="Content Anchor"/>
+							<n-form-text v-model="page.content.autoRefresh" label="Auto-refresh"/>
+							<n-form-switch label="Is slow" v-if="!page.content.initial" v-model="page.content.slow" after="If the route is slow, we can render a loading icon"/>
+							<n-form-switch label="Route Error in Self" v-model="page.content.errorInSelf" after="If you check this, the error page will be routed in the element that this page appears in"/>
+						</n-collapsible>
+						<n-collapsible :only-one-open="true" title="Style" content-class="is-spacing-large is-row-gap-medium">
+							<h5 class="is-h5">Page style</h5>
+							<p class="is-p is-size-small is-color-light">These settings will influence how the page is rendered.</p>
+							<n-form-combo label="Page Type" :filter="getPageTypes" v-model="page.content.pageType" info = "The page type determines how the page is rendered. For example an email requires different rendering from a webpage."/>
+							<n-form-text v-model="page.content.class" label="CSS Class" info = "The main css class for this page" :timeout="600"/>
+							<div class="is-grid-row is-justify-end">
+								<button class="is-button is-variant-primary-outline is-size-xsmall" @click="page.content.styles == null ? $window.Vue.set(page.content, 'styles', [{class:null,condition:null}]) : page.content.styles.push({class:null,condition:null})"><icon name="plus"/>Page style</button>
 							</div>
-						</div>
-						<div class="list" v-if="page.content.roles">
-							<div v-for="i in Object.keys(page.content.roles)" class="list-row">
-								<n-form-text v-model="page.content.roles[i]" placeholder="Role e.g. $user, $guest, ..."/>
-								<span @click="page.content.roles.splice(i)" class="fa fa-times"></span>
-							</div>
-						</div>
-					</div>
-				</n-collapsible>
-				<n-collapsible title="Branding" class="main">
-					<div class="padded-content">
-						<div v-if="!page.content.branding" class="list-actions">
-							<button @click="$window.Vue.set(page.content, 'branding', {})">Enable Page Branding</button>
-						</div>
-						<div v-else>
-							<div class="list-actions">
-								<button @click="$window.Vue.set(page.content, 'branding', null)">Disable Page Branding</button>
-							</div>
-							<n-form-text v-model="page.content.branding.favicon" placeholder="/resources/images/logo.png" label="The location of the favicon" :timeout="600" @input="$services.page.saveConfiguration"/>
-							<n-form-text v-model="page.content.branding.title" :placeholder="$services.page.title" label="The meta title for your application" :timeout="600" @input="$services.page.saveConfiguration"/>
-							<n-form-text v-model="page.content.branding.description" label="The meta description for your application" :timeout="600" @input="$services.page.saveConfiguration"/>
-							<n-form-text v-model="page.content.branding.image" placeholder="/resources/images/hero.png" label="The meta image for your application" info="Minimum 1200×630 pixels, max 1mb" :timeout="600" @input="$services.page.saveConfiguration"/>
-							<n-form-text v-model="page.content.branding.imageAlt" label="Alternative text for your main image" :timeout="600" @input="$services.page.saveConfiguration"/>
-							<n-form-text v-model="page.content.branding.facebookAppId" label="Your facebook app id" info="Mostly interesting for analytics" placeholder="your_app_id" :timeout="600" @input="$services.page.saveConfiguration"/>
-							<n-form-text v-model="page.content.branding.twitterUserName" placeholder="@website-username" info="Mostly interesting for analytics" label="Your facebook app id" :timeout="600" @input="$services.page.saveConfiguration"/>
-						</div>
-					</div>
-				</n-collapsible>
-				
-				
-				<h1>Variables</h1>
-				<p class="subscript">Variables allow you to use dynamic content in your page. All variable names must follow the Nabu Naming Conventions.</p>
-				<n-collapsible title="Path" class="list">
-					<div class="padded-content">
-						<p class="subscript">Path variables can be defined in the 'path' under 'General Settings'. Use {} syntax to denote variable parts. Path variables are bookmarkable.</p>
-						<p class="message" v-if="!$services.page.pathParameters(page.content.path).length">No variables found in the current path.</p>
-						<p class="message" v-else>Found the following path variables: {{$services.page.pathParameters(page.content.path).join(", ")}}</p>
-					</div>
-				</n-collapsible>
-				<n-collapsible title="Query" class="list">
-					<div class="padded-content">
-						<p class="subscript">You can use query variables to feed input values to your page from another page or another application. Query variables are bookmarkable.</p>
-					</div>
-					<div class="list-actions">
-						<button @click="page.content.query.push('unnamed')"><span class="fa fa-plus"></span>Query</button>
-					</div>
-					<div class="padded-content" v-if="page.content.query && page.content.query.length">
-						<div class="list-row" v-for="i in Object.keys(page.content.query)">
-							<n-form-text v-model="page.content.query[i]" :timeout="600"/>
-							<span @click="removeQuery(i)" class="fa fa-times"></span>
-						</div>
-					</div>
-				</n-collapsible>
-				<n-collapsible title="Internal" class="list">
-					<div class="padded-content">
-						<p class="subscript">You can use internal variables to store data that you capture.</p>
-					</div>
-					<div class="list-actions">
-						<button @click="addPageParameter"><span class="fa fa-plus"></span>Internal</button>
-					</div>
-					<n-collapsible class="list-item" v-for="parameter in page.content.parameters" :title="parameter.name" :after="parameter.name ? null : 'Unnamed Variable'">
-						<div slot="buttons">
-							<button @click="moveInternalUp(parameter)"><span class="fa fa-chevron-circle-up"></span></button>
-							<button @click="moveInternalDown(parameter)"><span class="fa fa-chevron-circle-down"></span></button>
-							<button @click="page.content.parameters.splice(page.content.parameters.indexOf(parameter), 1)"><span class="fa fa-trash"></span></button>	
-						</div>
-						<n-form-text v-model="parameter.name" :required="true" label="Name" :timeout="600"/>
-						<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :filter="getParameterTypes"/>
-						<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
-						<n-form-text v-model="parameter.default" label="Default Value" v-if="!parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
-						<n-form-ace v-model="parameter.defaultScript" label="Default Value" v-if="parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
-						<n-form-switch v-model="parameter.complexDefault" label="Use script for default value"/>
-						
-						<div v-if="parameter.type && parameter.type.indexOf('.') > 0 && !parameter.default">
-							<h4>Default Values</h4>
-							<p class="subscript">You can set separate default values for particular fields.</p>
-							<div class="list-actions">
-								<button @click="parameter.defaults ? parameter.defaults.push({query:null,value:null}) : $window.Vue.set(parameter, 'defaults', [{query:null,value:null}])"><span class="fa fa-plus"></span>Default Value</button>
-							</div>
-							<div v-if="parameter.defaults">
-								<n-form-section class="list-row" v-for="defaultValue in parameter.defaults">
-									<n-form-combo v-model="defaultValue.query" placeholder="Query" :filter="listFields.bind($self, parameter.type)"/>
-									<n-form-text v-model="defaultValue.value" placeholder='Value'/>
-									<span class="fa fa-times" @click="parameter.defaults.splice(parameter.defaults.indexOf(defaultValue), 1)"></span>
+							<div v-if="page.content.styles">
+								<n-form-section class="list-row" v-for="style in page.content.styles">
+									<n-form-text v-model="style.class" label="Class" :timeout="600"/>
+									<n-form-text v-model="style.condition" label="Condition" class="vertical" :timeout="600"/>
+									<span @click="page.content.styles.splice(page.content.styles.indexOf(style), 1)" class="fa fa-times"></span>
 								</n-form-section>
 							</div>
-						</div>
-						<n-form-switch v-if="false" v-model="parameter.global" label="Is translation global?"/>
-						<h4>Update Listener</h4>
-						<p class="subscript">Whenever an event is emitted, you can capture a value from it by configuring an update listener.</p>
-						<div class="list-item-actions">
-							<button @click="parameter.listeners.push({to:null, field: null})"><span class="fa fa-plus"></span>Update Listener</button>
-						</div>
-						<div class="list-row" v-for="i in Object.keys(parameter.listeners)">
-							<n-form-combo v-model="parameter.listeners[i].to" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
-							<n-form-combo v-model="parameter.listeners[i].field" v-if="parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($self, parameter.type)" />
-							<span @click="parameter.listeners.splice(i, 1)" class="fa fa-times"></span>
-						</div>
-						<div v-if="(!parameter.complexDefault && parameter.default) || (parameter.complexDefault && parameter.defaultScript)">
-							<h4>Reset Listener</h4>
-							<p class="subscript">Whenever an event is emitted, you can recalculate the default value and set it.</p>
-							<div class="list-item-actions">
-								<button @click="parameter.resetListeners ? parameter.resetListeners.push({to:null, field: null}) : $window.Vue.set(parameter, 'resetListeners', [{to:null,field:null}])"><span class="fa fa-plus"></span>Reset Listener</button>
+							
+							<h5 class="is-h5">Body style</h5>
+							<p class="is-p is-size-small is-color-light">You can add classes to the body when this page is rendered.</p>
+							
+							<div class="is-grid-row is-justify-end">
+								<button class="is-button is-variant-primary-outline is-size-xsmall" @click="page.content.bodyStyles == null ? $window.Vue.set(page.content, 'bodyStyles', [{class:null,condition:null}]) : page.content.bodyStyles.push({class:null,condition:null})"><icon name="plus"/>Body style</button>
 							</div>
-							<div v-if="parameter.resetListeners">
-								<div class="list-row" v-for="i in Object.keys(parameter.resetListeners)">
-									<n-form-combo v-model="parameter.resetListeners[i].to" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
-									<n-form-combo v-model="parameter.resetListeners[i].field" v-if="false && parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($self, parameter.type)" description="Not yet"  />
-									<span @click="parameter.resetListeners.splice(i, 1)" class="fa fa-times"></span>
+							<div v-if="page.content.bodyStyles">
+								<n-form-section class="list-row" v-for="style in page.content.bodyStyles">
+									<n-form-text v-model="style.class" label="Class"/>
+									<n-form-text v-model="style.condition" label="Condition" class="vertical"/>
+									<span @click="page.content.bodyStyles.splice(page.content.bodyStyles.indexOf(style), 1)" class="fa fa-times"></span>
+								</n-form-section>
+							</div>
+						</n-collapsible>
+						<n-collapsible :only-one-open="true" title="Security" content-class="is-spacing-large">
+							<p class="is-p is-size-small is-color-light">You can configure additional security on a page to limit access. If nothing is configured, everyone is allowed. You can use pseudo roles like $user and $guest.</p>
+							
+							<div class="is-grid-row is-justify-end">
+								<button class="is-button is-variant-primary-outline is-size-xsmall" @click="page.content.roles ? page.content.roles.push('') : $window.Vue.set(page.content, 'roles', [''])"><icon name="plus"/>Role</button>
+							</div>
+							<div v-if="page.content.roles">
+								<div v-for="i in Object.keys(page.content.roles)" class="has-button-close">
+									<n-form-text v-model="page.content.roles[i]" placeholder="Role e.g. $user, $guest, ..."/>
+									<button class="is-button is-variant-close is-size-small" @click="page.content.roles.splice(i, -1)"><icon name="times"/></button>
 								</div>
 							</div>
-							<page-event-value :page="page" :container="parameter" title="State reset event" name="updatedEvent" @resetEvents="resetEvents" :inline="true"/>
-						</div>
-					</n-collapsible>
-				</n-collapsible>
-				<n-collapsible title="External" class="list">
-					<div class="padded-content">
-						<p class="subscript">You can add additional data from the backend or the application to this page. For example when building a detail view of an item, you can retrieve all the necessary information based on an id that you get from the path.</p>
-					</div>
-					<div class="list-actions">
-						<button @click="addState"><span class="fa fa-plus"></span>Backend<n-info>Load initial state from the backend</n-info></button>
-						<button @click="addApplicationState"><span class="fa fa-plus"></span>Application<n-info>Use state available at the application level</n-info></button>
-						<button @click="function() { if (page.content.stateErrors) page.content.stateErrors.push({}); else $window.Vue.set(page.content, 'stateErrors', [{}]) }"><span class="fa fa-plus"></span>Error<n-info>In case of state errors when loading, where should the user be routed?</n-info></button>
-					</div>
-					<n-collapsible class="list-item" :title="state.name" v-for="state in page.content.states" :after="state.inherited ? 'Application' : 'Backend'">
-						<div slot="buttons">
-							<button @click="page.content.states.splice(page.content.states.indexOf(state), 1)"><span class="fa fa-trash"></span></button>
-						</div>
-						<n-form-text :value="state.name" @input="function(newValue) { if (!validateStateName(newValue).length) state.name = newValue; }" label="Name" :required="true" :validator="validateStateName" :timeout="600"/>
-						<div v-if="state.inherited">
-							<n-form-combo v-model="state.applicationName" :filter="$services.page.getApplicationStateNames" label="Application State" />
-						</div>
-						<div v-else>
-							<n-form-combo :value="state.operation" :filter="getStateOperations" label="Operation" @input="function(newValue) { setStateOperation(state, newValue) }"/>
-							<n-page-mapper v-if="state.operation && Object.keys($services.page.getPageParameters(page)).length" :to="getOperationParameters(state.operation)"
-								:from="{page:$services.page.getPageParameters(page)}" 
-								v-model="state.bindings"/>
-						</div>
-						<page-event-value :page="page" :container="state" title="Successful Update Event" name="updateEvent" @resetEvents="resetEvents" :inline="true"/>
-						<n-form-ace v-model="state.condition" label="Condition" info="If left empty it will always run. If filled in, it will only run if the condition returns true." :timeout="600"/>
-						<h4>Refresh Events</h4>
-						<p class="subscript">You can refresh this state when a particular event occurs.</p>
-						<div class="list" v-if="state.refreshOn">
-							<div v-for="i in Object.keys(state.refreshOn)" class="list-row">
-								<n-form-combo v-model="state.refreshOn[i]" :filter="getAvailableEvents" placeholder="event"/>
-								<span @click="state.refreshOn.splice(i)" class="fa fa-times"></span>
+							
+						</n-collapsible>
+						<n-collapsible :only-one-open="true" title="Branding" class="main">
+							<div class="padded-content">
+								<div v-if="!page.content.branding" class="list-actions">
+									<button @click="$window.Vue.set(page.content, 'branding', {})">Enable Page Branding</button>
+								</div>
+								<div v-else>
+									<div class="list-actions">
+										<button @click="$window.Vue.set(page.content, 'branding', null)">Disable Page Branding</button>
+									</div>
+									<n-form-text v-model="page.content.branding.favicon" placeholder="/resources/images/logo.png" label="The location of the favicon" :timeout="600" @input="$services.page.saveConfiguration"/>
+									<n-form-text v-model="page.content.branding.title" :placeholder="$services.page.title" label="The meta title for your application" :timeout="600" @input="$services.page.saveConfiguration"/>
+									<n-form-text v-model="page.content.branding.description" label="The meta description for your application" :timeout="600" @input="$services.page.saveConfiguration"/>
+									<n-form-text v-model="page.content.branding.image" placeholder="/resources/images/hero.png" label="The meta image for your application" info="Minimum 1200×630 pixels, max 1mb" :timeout="600" @input="$services.page.saveConfiguration"/>
+									<n-form-text v-model="page.content.branding.imageAlt" label="Alternative text for your main image" :timeout="600" @input="$services.page.saveConfiguration"/>
+									<n-form-text v-model="page.content.branding.facebookAppId" label="Your facebook app id" info="Mostly interesting for analytics" placeholder="your_app_id" :timeout="600" @input="$services.page.saveConfiguration"/>
+									<n-form-text v-model="page.content.branding.twitterUserName" placeholder="@website-username" info="Mostly interesting for analytics" label="Your facebook app id" :timeout="600" @input="$services.page.saveConfiguration"/>
+								</div>
 							</div>
-						</div>
-						<div class="list-actions">
-							<button @click="state.refreshOn ? state.refreshOn.push('') : $window.Vue.set(state, 'refreshOn', [''])"><span class="fa fa-plus"></span>Refresh Event</button>
-						</div>
-					</n-collapsible>
-					<div v-if="page.content.stateErrors" class="list">
-						<n-collapsible class="list-item" :title="stateError.code" v-for="stateError in page.content.stateErrors" after="Error">
-							<div slot="buttons">
-								<button @click="page.content.stateErrors.splice(page.content.stateErrors.indexOf(stateError), 1)"><span class="fa fa-trash"></span></button>
-							</div>
-							<n-form-text v-model="stateError.code" label="Error Code"/>
-							<n-form-combo label="Error Page" :filter="filterRoutes" v-model="stateError.route"/>
 						</n-collapsible>
 					</div>
-				</n-collapsible>
-				<n-collapsible title="Computed" class="list" v-if="false">
-					<div class="padded-content">
-						<p class="subscript">You can compute new values based on existing state. This is especially interesting if the calculation is non trivial and you don't want to embed it into the page.</p>
-						<div class="list-actions">
-							<button @click="addComputed"><span class="fa fa-plus"></span>Computed State</button>
-						</div>
-					</div>
-						<div v-if="page.content.computed">
-							<n-collapsible class="list-item" :title="state.name" v-for="state in page.content.computed">
-								<n-form-text :value="state.name" @input="function(newValue) { if (!validateStateName(newValue).length) state.name = newValue; }" label="Name" :required="true" :validator="validateStateName"/>
-								<n-page-mapper v-if="false && state.name" :to="[state.name]"
-									:from="availableParameters" 
-									v-model="state.bindings"/>
-								<n-form-ace v-model="state.script"/>
+					
+					<h2 class="is-h3 is-spacing-large is-color-primary-outline is-border-underline">Variables</h2>
+					<p class="is-p is-size-small is-color-light is-spacing-large">Variables allow you to use dynamic content in your page. All variable names must follow the Nabu naming conventions.</p>
+					<div class="is-accordion">
+						<n-collapsible title="Path" class="list">
+							<div class="padded-content">
+								<p class="subscript">Path variables can be defined in the 'path' under 'General Settings'. Use {} syntax to denote variable parts. Path variables are bookmarkable.</p>
+								<p class="message" v-if="!$services.page.pathParameters(page.content.path).length">No variables found in the current path.</p>
+								<p class="message" v-else>Found the following path variables: {{$services.page.pathParameters(page.content.path).join(", ")}}</p>
+							</div>
+						</n-collapsible>
+						<n-collapsible title="Query" class="list">
+							<div class="padded-content">
+								<p class="subscript">You can use query variables to feed input values to your page from another page or another application. Query variables are bookmarkable.</p>
+							</div>
+							<div class="list-actions">
+								<button @click="page.content.query.push('unnamed')"><span class="fa fa-plus"></span>Query</button>
+							</div>
+							<div class="padded-content" v-if="page.content.query && page.content.query.length">
+								<div class="list-row" v-for="i in Object.keys(page.content.query)">
+									<n-form-text v-model="page.content.query[i]" :timeout="600"/>
+									<span @click="removeQuery(i)" class="fa fa-times"></span>
+								</div>
+							</div>
+						</n-collapsible>
+						<n-collapsible title="Internal" class="list">
+							<div class="padded-content">
+								<p class="subscript">You can use internal variables to store data that you capture.</p>
+							</div>
+							<div class="list-actions">
+								<button @click="addPageParameter"><span class="fa fa-plus"></span>Internal</button>
+							</div>
+							<n-collapsible class="list-item" v-for="parameter in page.content.parameters" :title="parameter.name" :after="parameter.name ? null : 'Unnamed Variable'">
+								<div slot="buttons">
+									<button @click="moveInternalUp(parameter)"><span class="fa fa-chevron-circle-up"></span></button>
+									<button @click="moveInternalDown(parameter)"><span class="fa fa-chevron-circle-down"></span></button>
+									<button @click="page.content.parameters.splice(page.content.parameters.indexOf(parameter), 1)"><span class="fa fa-trash"></span></button>	
+								</div>
+								<n-form-text v-model="parameter.name" :required="true" label="Name" :timeout="600"/>
+								<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :filter="getParameterTypes"/>
+								<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
+								<n-form-text v-model="parameter.default" label="Default Value" v-if="!parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
+								<n-form-ace v-model="parameter.defaultScript" label="Default Value" v-if="parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
+								<n-form-switch v-model="parameter.complexDefault" label="Use script for default value"/>
+								
+								<div v-if="parameter.type && parameter.type.indexOf('.') > 0 && !parameter.default">
+									<h4>Default Values</h4>
+									<p class="subscript">You can set separate default values for particular fields.</p>
+									<div class="list-actions">
+										<button @click="parameter.defaults ? parameter.defaults.push({query:null,value:null}) : $window.Vue.set(parameter, 'defaults', [{query:null,value:null}])"><span class="fa fa-plus"></span>Default Value</button>
+									</div>
+									<div v-if="parameter.defaults">
+										<n-form-section class="list-row" v-for="defaultValue in parameter.defaults">
+											<n-form-combo v-model="defaultValue.query" placeholder="Query" :filter="listFields.bind($self, parameter.type)"/>
+											<n-form-text v-model="defaultValue.value" placeholder='Value'/>
+											<span class="fa fa-times" @click="parameter.defaults.splice(parameter.defaults.indexOf(defaultValue), 1)"></span>
+										</n-form-section>
+									</div>
+								</div>
+								<n-form-switch v-if="false" v-model="parameter.global" label="Is translation global?"/>
+								<h4>Update Listener</h4>
+								<p class="subscript">Whenever an event is emitted, you can capture a value from it by configuring an update listener.</p>
+								<div class="list-item-actions">
+									<button @click="parameter.listeners.push({to:null, field: null})"><span class="fa fa-plus"></span>Update Listener</button>
+								</div>
+								<div class="list-row" v-for="i in Object.keys(parameter.listeners)">
+									<n-form-combo v-model="parameter.listeners[i].to" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
+									<n-form-combo v-model="parameter.listeners[i].field" v-if="parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($self, parameter.type)" />
+									<span @click="parameter.listeners.splice(i, 1)" class="fa fa-times"></span>
+								</div>
+								<div v-if="(!parameter.complexDefault && parameter.default) || (parameter.complexDefault && parameter.defaultScript)">
+									<h4>Reset Listener</h4>
+									<p class="subscript">Whenever an event is emitted, you can recalculate the default value and set it.</p>
+									<div class="list-item-actions">
+										<button @click="parameter.resetListeners ? parameter.resetListeners.push({to:null, field: null}) : $window.Vue.set(parameter, 'resetListeners', [{to:null,field:null}])"><span class="fa fa-plus"></span>Reset Listener</button>
+									</div>
+									<div v-if="parameter.resetListeners">
+										<div class="list-row" v-for="i in Object.keys(parameter.resetListeners)">
+											<n-form-combo v-model="parameter.resetListeners[i].to" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
+											<n-form-combo v-model="parameter.resetListeners[i].field" v-if="false && parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($self, parameter.type)" description="Not yet"  />
+											<span @click="parameter.resetListeners.splice(i, 1)" class="fa fa-times"></span>
+										</div>
+									</div>
+									<page-event-value :page="page" :container="parameter" title="State reset event" name="updatedEvent" @resetEvents="resetEvents" :inline="true"/>
+								</div>
+							</n-collapsible>
+						</n-collapsible>
+						<n-collapsible title="External" class="list">
+							<div class="padded-content">
+								<p class="subscript">You can add additional data from the backend or the application to this page. For example when building a detail view of an item, you can retrieve all the necessary information based on an id that you get from the path.</p>
+							</div>
+							<div class="list-actions">
+								<button @click="addState"><span class="fa fa-plus"></span>Backend<n-info>Load initial state from the backend</n-info></button>
+								<button @click="addApplicationState"><span class="fa fa-plus"></span>Application<n-info>Use state available at the application level</n-info></button>
+								<button @click="function() { if (page.content.stateErrors) page.content.stateErrors.push({}); else $window.Vue.set(page.content, 'stateErrors', [{}]) }"><span class="fa fa-plus"></span>Error<n-info>In case of state errors when loading, where should the user be routed?</n-info></button>
+							</div>
+							<n-collapsible class="list-item" :title="state.name" v-for="state in page.content.states" :after="state.inherited ? 'Application' : 'Backend'">
+								<div slot="buttons">
+									<button @click="page.content.states.splice(page.content.states.indexOf(state), 1)"><span class="fa fa-trash"></span></button>
+								</div>
+								<n-form-text :value="state.name" @input="function(newValue) { if (!validateStateName(newValue).length) state.name = newValue; }" label="Name" :required="true" :validator="validateStateName" :timeout="600"/>
+								<div v-if="state.inherited">
+									<n-form-combo v-model="state.applicationName" :filter="$services.page.getApplicationStateNames" label="Application State" />
+								</div>
+								<div v-else>
+									<n-form-combo :value="state.operation" :filter="getStateOperations" label="Operation" @input="function(newValue) { setStateOperation(state, newValue) }"/>
+									<n-page-mapper v-if="state.operation && Object.keys($services.page.getPageParameters(page)).length" :to="getOperationParameters(state.operation)"
+										:from="{page:$services.page.getPageParameters(page)}" 
+										v-model="state.bindings"/>
+								</div>
+								<page-event-value :page="page" :container="state" title="Successful Update Event" name="updateEvent" @resetEvents="resetEvents" :inline="true"/>
+								<n-form-ace v-model="state.condition" label="Condition" info="If left empty it will always run. If filled in, it will only run if the condition returns true." :timeout="600"/>
+								<h4>Refresh Events</h4>
+								<p class="subscript">You can refresh this state when a particular event occurs.</p>
 								<div class="list" v-if="state.refreshOn">
 									<div v-for="i in Object.keys(state.refreshOn)" class="list-row">
 										<n-form-combo v-model="state.refreshOn[i]" :filter="getAvailableEvents" placeholder="event"/>
@@ -305,168 +266,205 @@
 									<button @click="state.refreshOn ? state.refreshOn.push('') : $window.Vue.set(state, 'refreshOn', [''])"><span class="fa fa-plus"></span>Refresh Event</button>
 								</div>
 							</n-collapsible>
-						</div>
-					</div>
-				</n-collapsible>
-				
-				<h1>Eventing</h1>
-				<p class="subscript">Eventing allows the user to interact with the page, performing calls to backend, switching to another page...</p>
-				<n-collapsible title="Initial" class="list">
-					<div class="padded-content">
-						<p class="subscript">Initial events are run when the page is first loaded but <i>after</i> the initial state is guaranteed to be there. Initial events can be periodically rerun, this allows for long polling or performing some initial checks.</p>
-					</div>
-					<div class="list-actions">
-						<button @click="addInitialEvent"><span class="fa fa-plus"></span>Initial Event</button>
-					</div>
-					<n-collapsible class="list-item" :title="$window.nabu.page.event.getName(event, 'definition') ? $window.nabu.page.event.getName(event, 'definition') : 'Unnamed Event'" v-for="event in page.content.initialEvents">
-						<div slot="buttons">
-							<button @click="page.content.initialEvents.splice(page.content.initialEvents.indexOf(event), 1)"><span class="fa fa-trash"></span></button>
-						</div>
-						<n-form-text v-model="event.condition" label="Condition" :timeout="600"/>
-						<n-form-text v-model="event.timeout" label="Repeat Interval (ms)" info="Every interval, the condition of this event will be checked, if true, the event is emitted, otherwise it will recheck at the next interval" :timeout="600"/>
-						<page-event-value :page="page" :container="event" title="Initial Event" name="definition" @resetEvents="resetEvents" :inline="true"/>
-					</n-collapsible>
-				</n-collapsible>
-				<n-collapsible title="Triggers" class="list">
-					<p class="padded-content subscript">Triggers can be used to react to events as they occur. User interaction with this page will usually trigger events which can lead to actions defined here.</p>
-					<div class="list-actions">
-						<button @click="addAction"><span class="fa fa-plus"></span>Trigger</button>
-					</div>
-					<n-collapsible class="list-item" :title="action.name ? action.name : 'Unnamed Trigger'" :after="action.on ? 'on ' + action.on : null" v-for="action in page.content.actions">
-						<div slot="buttons">
-							<button @click="moveTriggerUp(action)"><span class="fa fa-chevron-circle-up"></span></button>
-							<button @click="moveTriggerDown(action)"><span class="fa fa-chevron-circle-down"></span></button>
-							<button @click="page.content.actions.splice(page.content.actions.indexOf(action), 1)"><span class="fa fa-trash"></span></button>
-						</div>
-						<n-form-text v-model="action.name" label="Name" :required="true" :timeout="600"/>
-						<n-form-text v-model="action.confirmation" label="Confirmation Message" :timeout="600"/>
-						<n-form-combo v-model="action.on" label="Trigger On" :filter="getAvailableEvents"/>
-						<n-form-text v-model="action.condition" label="Condition" v-if="action.on" :timeout="600"/>
-						<n-form-text v-model="action.scroll" label="Scroll to" v-if="!action.operation && !action.function" :timeout="600"/>
-						<n-form-combo v-model="action.route" v-if="!action.operation && !action.url && !action.function" label="Redirect" :filter="filterRoutes"/>
-						<n-form-combo v-model="action.anchor" v-if="action.url || action.route || (action.operation && isGet(action.operation))" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
-						<n-form-combo :key="'operation' + page.content.actions.indexOf(action)" v-model="action.operation" v-if="!action.route && !action.scroll && !action.url && !action.function" label="Operation" :filter="getOperations" />
-						<page-event-value class="no-more-padding" :inline="true" v-if="action.operation && isBinaryDownload(action.operation)" :page="page" :container="action" title="Download Failed Event" name="downloadFailedEvent" @resetEvents="resetEvents"/>
-						<n-form-text v-model="action.timeout" v-if="action.operation" label="Action Timeout" info="You can emit an event if the action takes too long" :timeout="600"/>
-						<page-event-value class="no-more-padding"  v-if="action.operation && action.timeout" :page="page" :container="action" title="Timeout Event" name="timeoutEvent" @resetEvents="resetEvents"/>
-						<n-form-combo v-model="action.function" v-if="!action.route && !action.scroll && !action.url && !action.operation" label="Function" :filter="$services.page.listFunctions" />
-						<n-form-text v-if="action.function && $services.page.hasFunctionOutput(action.function)" v-model="action.functionOutputEvent" label="Function Output Event" info="Emit the output of the function as event"/>
-						<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function" :timeout="600"/>
-						<page-event-value class="no-more-padding" :page="page" :container="action" title="Chain Event" name="chainEvent" @resetEvents="resetEvents" :inline="true"/>
-						<n-form-text v-model="action.chainTimeout" v-if="$window.nabu.page.event.getName(action, 'chainEvent') != null" label="Timeout for chain event" :timeout="600"/>
-						<n-form-switch v-if="action.operation || action.function" v-model="action.isSlow" label="Is slow operation?"/>
-						<n-form-text v-if="action.operation && !isBinaryDownload(action.operation)" v-model="action.event" label="Success Event" @input="resetEvents()" :timeout="600"/>
-						<n-form-text v-if="action.operation && !isBinaryDownload(action.operation)" v-model="action.errorEvent" label="Error Event" @input="resetEvents()" :timeout="600"/>
-						<n-form-combo v-if="action.operation && action.event && getOperationArrays(action.operation).length > 0" v-model="action.singlify" label="Limit to array element" info="If you have an array, you can scope the event to only the first element of it"
-							:filter="getOperationArrays.bind($self, action.operation)"/>
-						<n-form-switch v-if="action.operation" v-model="action.expandBindings" label="Field level bindings"/>
-						<div class="simple-row" v-if="action.operation && !action.route && action.expandBindings">
-							<n-form-combo 
-								:items="Object.keys(availableParameters)" v-model="autoMapFrom"/>
-							<button @click="automap(action)" :disabled="!autoMapFrom">Automap</button>
-						</div>
-						<n-page-mapper v-if="action.operation && !action.route && !action.expandBindings" :to="getOperationParameters(action.operation)"
-							:from="availableParameters" 
-							v-model="action.bindings"/>
-						<n-page-mapper v-else-if="action.operation && !action.route && action.expandBindings" :to="getOperationParameters(action.operation, true)"
-							:from="availableParameters" 
-							v-model="action.bindings"/>
-						<n-page-mapper v-if="action.route" :to="$services.page.getRouteParameters($services.router.get(action.route))"
-							:from="availableParameters" 
-							v-model="action.bindings"/>
-						<n-page-mapper v-if="action.function && !action.operation && !action.route" :to="$services.page.getFunctionInput(action.function)"
-							:from="availableParameters" 
-							v-model="action.bindings"/>
-							
-						<div class="list-item-actions">
-							<button @click="moveActionTop(action)"><span class="fa fa-chevron-left"></span></button>
-							<button @click="moveAction(action, -1)"><span class="fa fa-chevron-up"></span></button>
-							<button @click="moveAction(action, 1)"><span class="fa fa-chevron-down"></span></button>
-							<button @click="moveActionBottom(action)"><span class="fa fa-chevron-right"></span></button>
-						</div>
-						
-						<n-form-ace v-model="action.script" label="Execute Script"/>
-						
-						<h4>Reset Events</h4>
-						<p class="subscript">If this trigger executes, we can reset other events.</p>
-						<div class="list-item-actions">
-							<button @click="addEventReset(action)"><span class="fa fa-plus"></span>Event To Reset</button>
-						</div>
-						<div v-if="action.eventResets">
-							<div class="list-row" v-for="i in Object.keys(action.eventResets)">
-								<n-form-combo v-model="action.eventResets[i]" :filter="getAvailableEvents"/>
-								<span @click="action.eventResets.splice(i, 1)" class="fa fa-times"></span>
+							<div v-if="page.content.stateErrors" class="list">
+								<n-collapsible class="list-item" :title="stateError.code" v-for="stateError in page.content.stateErrors" after="Error">
+									<div slot="buttons">
+										<button @click="page.content.stateErrors.splice(page.content.stateErrors.indexOf(stateError), 1)"><span class="fa fa-trash"></span></button>
+									</div>
+									<n-form-text v-model="stateError.code" label="Error Code"/>
+									<n-form-combo label="Error Page" :filter="$services.page.getRoutes" v-model="stateError.route"/>
+								</n-collapsible>
 							</div>
-						</div>
-					</n-collapsible>
-				</n-collapsible>	
-				<n-collapsible title="Notifications" class="list">
-					<div class="list-actions">
-						<button @click="addNotification"><span class="fa fa-plus"></span>Notification</button>
-					</div>
-					<div v-if="page.content.notifications">
-						<n-collapsible class="list-item" :title="(notification.name ? notification.name : 'unnamed')" :after="notification.on ? 'on ' + notification.on : null" v-for="notification in page.content.notifications">
-							<n-form-text v-model="notification.name" label="Name" :timeout="600" info="Allows you to target this notification at a later point if needed"/>
-							<n-form-text v-model="notification.duration" label="Duration" :timeout="600" info="How long the notification should stay up (in ms)"/>
-							<n-form-combo v-model="notification.on" label="Trigger On" :filter="getAvailableEvents"/>	
-							<n-form-text v-model="notification.condition" label="Condition" v-if="notification.on" :timeout="600"/>
-							<n-form-text v-model="notification.title" label="Title" :timeout="600" info="An optional title for this notification, it can include variables from the originating event using the {{}} syntax"/>
-							<n-form-text v-model="notification.message" label="Message" :timeout="600" info="An optional title for this notification, it can include variables from the originating event using the {{}} syntax"/>
-							<n-form-combo v-model="notification.severity" label="Severity" :timeout="600" :items="['info', 'warning', 'error']"/>
-							<n-form-switch v-model="notification.closeable" label="Closeable" info="Can the user explicitly close the notification?"/>
-							<n-form-text v-model="notification.icon" label="Icon" :timeout="600" info="The correct value for this depends on your icon provider and the notification provider"/>
-							<page-event-value :inline="true" class="no-more-padding" :page="page" :container="notification" title="Notification Event" name="chainEvent" :name-modifiable="false"/>
+						</n-collapsible>
+						<n-collapsible title="Computed" class="list" v-if="false">
+							<div class="padded-content">
+								<p class="subscript">You can compute new values based on existing state. This is especially interesting if the calculation is non trivial and you don't want to embed it into the page.</p>
+								<div class="list-actions">
+									<button @click="addComputed"><span class="fa fa-plus"></span>Computed State</button>
+								</div>
+							</div>
+							<div v-if="page.content.computed">
+								<n-collapsible class="list-item" :title="state.name" v-for="state in page.content.computed">
+									<n-form-text :value="state.name" @input="function(newValue) { if (!validateStateName(newValue).length) state.name = newValue; }" label="Name" :required="true" :validator="validateStateName"/>
+									<n-page-mapper v-if="false && state.name" :to="[state.name]"
+										:from="availableParameters" 
+										v-model="state.bindings"/>
+									<n-form-ace v-model="state.script"/>
+									<div class="list" v-if="state.refreshOn">
+										<div v-for="i in Object.keys(state.refreshOn)" class="list-row">
+											<n-form-combo v-model="state.refreshOn[i]" :filter="getAvailableEvents" placeholder="event"/>
+											<span @click="state.refreshOn.splice(i)" class="fa fa-times"></span>
+										</div>
+									</div>
+									<div class="list-actions">
+										<button @click="state.refreshOn ? state.refreshOn.push('') : $window.Vue.set(state, 'refreshOn', [''])"><span class="fa fa-plus"></span>Refresh Event</button>
+									</div>
+								</n-collapsible>
+							</div>
 						</n-collapsible>
 					</div>
-				</n-collapsible>
-				<n-collapsible title="Analysis" class="list">
-					<div class="list-actions">
-						<button @click="addAnalysis"><span class="fa fa-plus"></span>Analysis</button>
+					
+					<h2 class="is-h3 is-spacing-large is-color-primary-outline is-border-underline">Eventing</h2>
+					<p class="is-p is-size-small is-color-light is-spacing-large">Eventing allows the user to interact with the page, performing calls to backend, switching to another page...</p>
+					<div class="is-accordion">
+						<n-collapsible title="Initial" class="list">
+							<div class="padded-content">
+								<p class="subscript">Initial events are run when the page is first loaded but <i>after</i> the initial state is guaranteed to be there. Initial events can be periodically rerun, this allows for long polling or performing some initial checks.</p>
+							</div>
+							<div class="list-actions">
+								<button @click="addInitialEvent"><span class="fa fa-plus"></span>Initial Event</button>
+							</div>
+							<n-collapsible class="list-item" :title="$window.nabu.page.event.getName(event, 'definition') ? $window.nabu.page.event.getName(event, 'definition') : 'Unnamed Event'" v-for="event in page.content.initialEvents">
+								<div slot="buttons">
+									<button @click="page.content.initialEvents.splice(page.content.initialEvents.indexOf(event), 1)"><span class="fa fa-trash"></span></button>
+								</div>
+								<n-form-text v-model="event.condition" label="Condition" :timeout="600"/>
+								<n-form-text v-model="event.timeout" label="Repeat Interval (ms)" info="Every interval, the condition of this event will be checked, if true, the event is emitted, otherwise it will recheck at the next interval" :timeout="600"/>
+								<page-event-value :page="page" :container="event" title="Initial Event" name="definition" @resetEvents="resetEvents" :inline="true"/>
+							</n-collapsible>
+						</n-collapsible>
+						<n-collapsible title="Triggers" class="list">
+							<p class="padded-content subscript">Triggers can be used to react to events as they occur. User interaction with this page will usually trigger events which can lead to actions defined here.</p>
+							<div class="list-actions">
+								<button @click="addAction"><span class="fa fa-plus"></span>Trigger</button>
+							</div>
+							<n-collapsible class="list-item" :title="action.name ? action.name : 'Unnamed Trigger'" :after="action.on ? 'on ' + action.on : null" v-for="action in page.content.actions">
+								<div slot="buttons">
+									<button @click="moveTriggerUp(action)"><span class="fa fa-chevron-circle-up"></span></button>
+									<button @click="moveTriggerDown(action)"><span class="fa fa-chevron-circle-down"></span></button>
+									<button @click="page.content.actions.splice(page.content.actions.indexOf(action), 1)"><span class="fa fa-trash"></span></button>
+								</div>
+								<n-form-text v-model="action.name" label="Name" :required="true" :timeout="600"/>
+								<n-form-text v-model="action.confirmation" label="Confirmation Message" :timeout="600"/>
+								<n-form-combo v-model="action.on" label="Trigger On" :filter="getAvailableEvents"/>
+								<n-form-text v-model="action.condition" label="Condition" v-if="action.on" :timeout="600"/>
+								<n-form-text v-model="action.scroll" label="Scroll to" v-if="!action.operation && !action.function" :timeout="600"/>
+								<n-form-combo v-model="action.route" v-if="!action.operation && !action.url && !action.function" label="Redirect" :filter="$services.page.getRoutes"/>
+								<n-form-combo v-model="action.anchor" v-if="action.url || action.route || (action.operation && isGet(action.operation))" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
+								<n-form-combo :key="'operation' + page.content.actions.indexOf(action)" v-model="action.operation" v-if="!action.route && !action.scroll && !action.url && !action.function" label="Operation" :filter="getOperations" />
+								<page-event-value class="no-more-padding" :inline="true" v-if="action.operation && isBinaryDownload(action.operation)" :page="page" :container="action" title="Download Failed Event" name="downloadFailedEvent" @resetEvents="resetEvents"/>
+								<n-form-text v-model="action.timeout" v-if="action.operation" label="Action Timeout" info="You can emit an event if the action takes too long" :timeout="600"/>
+								<page-event-value class="no-more-padding"  v-if="action.operation && action.timeout" :page="page" :container="action" title="Timeout Event" name="timeoutEvent" @resetEvents="resetEvents"/>
+								<n-form-combo v-model="action.function" v-if="!action.route && !action.scroll && !action.url && !action.operation" label="Function" :filter="$services.page.listFunctions" />
+								<n-form-text v-if="action.function && $services.page.hasFunctionOutput(action.function)" v-model="action.functionOutputEvent" label="Function Output Event" info="Emit the output of the function as event"/>
+								<n-form-text v-model="action.url" label="URL" v-if="!action.route && !action.operation && !action.scroll && !action.function" :timeout="600"/>
+								<page-event-value class="no-more-padding" :page="page" :container="action" title="Chain Event" name="chainEvent" @resetEvents="resetEvents" :inline="true"/>
+								<n-form-text v-model="action.chainTimeout" v-if="$window.nabu.page.event.getName(action, 'chainEvent') != null" label="Timeout for chain event" :timeout="600"/>
+								<n-form-switch v-if="action.operation || action.function" v-model="action.isSlow" label="Is slow operation?"/>
+								<n-form-text v-if="action.operation && !isBinaryDownload(action.operation)" v-model="action.event" label="Success Event" @input="resetEvents()" :timeout="600"/>
+								<n-form-text v-if="action.operation && !isBinaryDownload(action.operation)" v-model="action.errorEvent" label="Error Event" @input="resetEvents()" :timeout="600"/>
+								<n-form-combo v-if="action.operation && action.event && getOperationArrays(action.operation).length > 0" v-model="action.singlify" label="Limit to array element" info="If you have an array, you can scope the event to only the first element of it"
+									:filter="getOperationArrays.bind($self, action.operation)"/>
+								<n-form-switch v-if="action.operation" v-model="action.expandBindings" label="Field level bindings"/>
+								<div class="simple-row" v-if="action.operation && !action.route && action.expandBindings">
+									<n-form-combo 
+										:items="Object.keys(availableParameters)" v-model="autoMapFrom"/>
+									<button @click="automap(action)" :disabled="!autoMapFrom">Automap</button>
+								</div>
+								<n-page-mapper v-if="action.operation && !action.route && !action.expandBindings" :to="getOperationParameters(action.operation)"
+									:from="availableParameters" 
+									v-model="action.bindings"/>
+								<n-page-mapper v-else-if="action.operation && !action.route && action.expandBindings" :to="getOperationParameters(action.operation, true)"
+									:from="availableParameters" 
+									v-model="action.bindings"/>
+								<n-page-mapper v-if="action.route" :to="$services.page.getRouteParameters($services.router.get(action.route))"
+									:from="availableParameters" 
+									v-model="action.bindings"/>
+								<n-page-mapper v-if="action.function && !action.operation && !action.route" :to="$services.page.getFunctionInput(action.function)"
+									:from="availableParameters" 
+									v-model="action.bindings"/>
+									
+								<div class="list-item-actions">
+									<button @click="moveActionTop(action)"><span class="fa fa-chevron-left"></span></button>
+									<button @click="moveAction(action, -1)"><span class="fa fa-chevron-up"></span></button>
+									<button @click="moveAction(action, 1)"><span class="fa fa-chevron-down"></span></button>
+									<button @click="moveActionBottom(action)"><span class="fa fa-chevron-right"></span></button>
+								</div>
+								
+								<n-form-ace v-model="action.script" label="Execute Script"/>
+								
+								<h4>Reset Events</h4>
+								<p class="subscript">If this trigger executes, we can reset other events.</p>
+								<div class="list-item-actions">
+									<button @click="addEventReset(action)"><span class="fa fa-plus"></span>Event To Reset</button>
+								</div>
+								<div v-if="action.eventResets">
+									<div class="list-row" v-for="i in Object.keys(action.eventResets)">
+										<n-form-combo v-model="action.eventResets[i]" :filter="getAvailableEvents"/>
+										<span @click="action.eventResets.splice(i, 1)" class="fa fa-times"></span>
+									</div>
+								</div>
+							</n-collapsible>
+						</n-collapsible>	
+						<n-collapsible title="Notifications" class="list">
+							<div class="list-actions">
+								<button @click="addNotification"><span class="fa fa-plus"></span>Notification</button>
+							</div>
+							<div v-if="page.content.notifications">
+								<n-collapsible class="list-item" :title="(notification.name ? notification.name : 'unnamed')" :after="notification.on ? 'on ' + notification.on : null" v-for="notification in page.content.notifications">
+									<n-form-text v-model="notification.name" label="Name" :timeout="600" info="Allows you to target this notification at a later point if needed"/>
+									<n-form-text v-model="notification.duration" label="Duration" :timeout="600" info="How long the notification should stay up (in ms)"/>
+									<n-form-combo v-model="notification.on" label="Trigger On" :filter="getAvailableEvents"/>	
+									<n-form-text v-model="notification.condition" label="Condition" v-if="notification.on" :timeout="600"/>
+									<n-form-text v-model="notification.title" label="Title" :timeout="600" info="An optional title for this notification, it can include variables from the originating event using the {{}} syntax"/>
+									<n-form-text v-model="notification.message" label="Message" :timeout="600" info="An optional title for this notification, it can include variables from the originating event using the {{}} syntax"/>
+									<n-form-combo v-model="notification.severity" label="Severity" :timeout="600" :items="['info', 'warning', 'error']"/>
+									<n-form-switch v-model="notification.closeable" label="Closeable" info="Can the user explicitly close the notification?"/>
+									<n-form-text v-model="notification.icon" label="Icon" :timeout="600" info="The correct value for this depends on your icon provider and the notification provider"/>
+									<page-event-value :inline="true" class="no-more-padding" :page="page" :container="notification" title="Notification Event" name="chainEvent" :name-modifiable="false"/>
+								</n-collapsible>
+							</div>
+						</n-collapsible>
+						<n-collapsible title="Analysis" class="list">
+							<div class="list-actions">
+								<button @click="addAnalysis"><span class="fa fa-plus"></span>Analysis</button>
+							</div>
+							<n-collapsible class="list-item" :title="(analysis.chainEvent && analysis.chainEvent.name ? analysis.chainEvent.name : 'unnamed')" :after="analysis.on ? 'on ' + analysis.on : null" v-for="analysis in page.content.analysis">
+								<div slot="buttons">
+									<button @click="page.content.analysis.splice(page.content.analysis.indexOf(analysis), 1)"><span class="fa fa-trash"></span></button>
+								</div>
+								<n-form-combo v-model="analysis.on" label="Trigger On" :filter="getAvailableEvents"/>
+								<n-form-text v-model="analysis.condition" label="Condition" v-if="analysis.on" :timeout="600"/>
+								<page-event-value :inline="true" class="no-more-padding" :page="page" :container="analysis" title="Analysis Event" name="chainEvent" @resetEvents="resetEvents"/>
+							</n-collapsible>
+						</n-collapsible>
+						<n-collapsible title="Publish Global Events" class="list">
+							<div class="list-actions">
+								<button @click="addGlobalEvent"><span class="fa fa-plus"></span>Global Event</button>
+							</div>
+							<div class="padded-content" v-if="page.content.globalEvents">
+								<n-form-section class="list-row" v-for="i in Object.keys(page.content.globalEvents)">
+									<n-form-combo v-model="page.content.globalEvents[i].localName"
+										label="Local Name"
+										:filter="getAvailableEvents"/>
+									<n-form-text v-model="page.content.globalEvents[i].globalName" 
+										label="Global Name"
+										:placeholder="page.content.globalEvents[i].localName"/>
+									<span @click="page.content.globalEvents.splice(i, 1)" class="fa fa-times"></span>
+								</n-form-section>
+							</div>
+						</n-collapsible>
+						<n-collapsible title="Subscribe Global Events" class="list">
+							<div class="list-actions">
+								<button @click="addGlobalEventSubscription"><span class="fa fa-plus"></span>Global Event</button>
+							</div>
+							<div class="padded-content" v-if="page.content.globalEventSubscriptions">
+								<n-form-section class="list-row" v-for="i in Object.keys(page.content.globalEventSubscriptions)">
+									<n-form-combo v-model="page.content.globalEventSubscriptions[i].globalName"
+										label="Global Name"
+										:items="$window.Object.keys($services.page.getGlobalEvents())"/>
+									<n-form-text v-model="page.content.globalEventSubscriptions[i].localName" 
+										label="Local Name"
+										:placeholder="page.content.globalEventSubscriptions[i].globalName"/>
+									<span @click="page.content.globalEventSubscriptions.splice(i, 1)" class="fa fa-times"></span>
+								</n-form-section>
+							</div>
+						</n-collapsible>
 					</div>
-					<n-collapsible class="list-item" :title="(analysis.chainEvent && analysis.chainEvent.name ? analysis.chainEvent.name : 'unnamed')" :after="analysis.on ? 'on ' + analysis.on : null" v-for="analysis in page.content.analysis">
-						<div slot="buttons">
-							<button @click="page.content.analysis.splice(page.content.analysis.indexOf(analysis), 1)"><span class="fa fa-trash"></span></button>
-						</div>
-						<n-form-combo v-model="analysis.on" label="Trigger On" :filter="getAvailableEvents"/>
-						<n-form-text v-model="analysis.condition" label="Condition" v-if="analysis.on" :timeout="600"/>
-						<page-event-value :inline="true" class="no-more-padding" :page="page" :container="analysis" title="Analysis Event" name="chainEvent" @resetEvents="resetEvents"/>
-					</n-collapsible>
-				</n-collapsible>
-				<n-collapsible title="Publish Global Events" class="list">
-					<div class="list-actions">
-						<button @click="addGlobalEvent"><span class="fa fa-plus"></span>Global Event</button>
-					</div>
-					<div class="padded-content" v-if="page.content.globalEvents">
-						<n-form-section class="list-row" v-for="i in Object.keys(page.content.globalEvents)">
-							<n-form-combo v-model="page.content.globalEvents[i].localName"
-								label="Local Name"
-								:filter="getAvailableEvents"/>
-							<n-form-text v-model="page.content.globalEvents[i].globalName" 
-								label="Global Name"
-								:placeholder="page.content.globalEvents[i].localName"/>
-							<span @click="page.content.globalEvents.splice(i, 1)" class="fa fa-times"></span>
-						</n-form-section>
-					</div>
-				</n-collapsible>
-				<n-collapsible title="Subscribe Global Events" class="list">
-					<div class="list-actions">
-						<button @click="addGlobalEventSubscription"><span class="fa fa-plus"></span>Global Event</button>
-					</div>
-					<div class="padded-content" v-if="page.content.globalEventSubscriptions">
-						<n-form-section class="list-row" v-for="i in Object.keys(page.content.globalEventSubscriptions)">
-							<n-form-combo v-model="page.content.globalEventSubscriptions[i].globalName"
-								label="Global Name"
-								:items="$window.Object.keys($services.page.getGlobalEvents())"/>
-							<n-form-text v-model="page.content.globalEventSubscriptions[i].localName" 
-								label="Local Name"
-								:placeholder="page.content.globalEventSubscriptions[i].globalName"/>
-							<span @click="page.content.globalEventSubscriptions.splice(i, 1)" class="fa fa-times"></span>
-						</n-form-section>
-					</div>
-				</n-collapsible>
-				<component v-for="plugin in plugins" :is="plugin.configure" 
-					:page="page" 
-					:edit="edit"/>
+					<component v-for="plugin in plugins" :is="plugin.configure" 
+						:page="page" 
+						:edit="edit"/>
+				</div>
 			</n-form>
 		</n-sidebar>
 		<div class="page-menu n-page-menu" v-if="edit && false">
@@ -476,8 +474,8 @@
 </template>
 
 <template id="page-rows">
-	<component :is="rowsTag()" class="page-rows">
-		<component :is="rowTagFor(row)" v-for="row in getCalculatedRows()" class="page-row" :id="page.name + '_' + row.id" 
+	<component :is="rowsTag()" class="is-grid">
+		<component :is="rowTagFor(row)" v-for="row in getCalculatedRows()" class="is-grid-row" :id="page.name + '_' + row.id" 
 				:class="$window.nabu.utils.arrays.merge(['page-row-' + row.cells.length, row.class ? row.class : null, {'collapsed': row.collapsed}, {'empty': !row.cells || !row.cells.length } ], rowClasses(row))"                    
 				:key="'page_' + pageInstanceId + '_row_' + row.id"
 				:row-key="'page_' + pageInstanceId + '_row_' + row.id"
@@ -541,7 +539,7 @@
 								<div class="padded-content">
 									<h2>Content</h2>
 									<p class="subscript">Choose the content you want to add to your cell</p>
-									<n-form-combo label="Content Type" :filter="filterRoutes" v-model="cell.alias"
+									<n-form-combo label="Content Type" :filter="$services.page.getRoutes" v-model="cell.alias"
 										:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
 										:required="true"
 										info="The type of content that should be displayed in this cell"/>
@@ -811,62 +809,49 @@
 </template>
 
 <template id="page-sidemenu">
-	<div class="page-sidemenu">
-		<div v-for="row in rows" class="row">
-			<div class="page-sideentry" @mouseout="mouseOut($event, row)" :class="{'selected': selected && selected.id == row.id}"
-					@dragover="acceptDragRow($event, row)"
-					@dragend="$services.page.clearDrag($event)"
-					@drop="dropRow($event, row)"
-					@mouseover="mouseOver($event, row)">
-				<span class="fa opener" @click="toggleRow(row)" :class="{'fa-chevron-down': opened.indexOf(row.id) >= 0, 'fa-chevron-right': opened.indexOf(row.id) < 0}"></span>
-				<span class="name" @click="selectRow(row)" 
-					@dragstart="dragRow($event, row)"
-					:draggable="true" 
-					@click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
-				<div class="collapser">
-					<span class="fa" :class="{'fa-eye': !row.collapsed, 'fa-eye-slash': row.collapsed}" @click="row.collapsed = !row.collapsed"></span>
-					<span class="fa fa-code" @click="showHtml(row)"></span>
-					<span class="fa fa-times" @click="$emit('removeRow', row)"></span>
+	<div class="is-grid-column is-color-basic-alternating">
+		<div v-for="row in rows" class="is-grid-column is-spacing-small is-spacing-right-none is-row-gap-small" :class="{'is-selected': selected && selected.id == row.id}">
+			<div class="is-grid-row">
+				<div @mouseout="mouseOut($event, row)"
+						@dragover="acceptDragRow($event, row)"
+						@dragend="$services.page.clearDrag($event)"
+						@drop="dropRow($event, row)"
+						@mouseover="mouseOver($event, row)" 
+						class="is-grid-row is-grow-fill">
+					<button class="is-button is-variant-ghost is-size-xsmall" @click="toggleRow(row)"><icon :name="opened.indexOf(row.id) >= 0 ? 'chevron-down' : 'chevron-right'"/></button>
+					<span class="is-content is-size-xsmall is-grow-fill is-align-self-center" @click="selectRow(row)" 
+						@dragstart="dragRow($event, row)"
+						:draggable="true" 
+						@click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
 				</div>
-				<div class="page-sideentry-menu" v-if="false">
-					<button @click="configureRow(row)"><span class="fa fa-magic"></span></button
-					><button @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button
-					><button @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button
-					><button @click="addCell(row)"><span class="fa fa-plus" title="Add Cell"></span></button
-					><button @click="copyRow(row)"><span class="fa fa-copy" title="Copy Row"></span></button
-					><button v-if="$services.page.copiedCell" @click="pasteCell(row)"><span class="fa fa-paste" title="Paste Cell"></span></button
-					><button @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
-				</div>
+				<ul class="is-menu is-variant-toolbar is-justify-self-right">
+					<li class="is-grid-column"><button class="is-button is-size-xsmall is-color-primary-outline" @click="row.collapsed = !row.collapsed"><icon :name="row.collapsed ? 'eye-slash': 'eye'"/></button></li>
+					<li class="is-grid-column"><button class="is-button is-size-xsmall is-color-secondary-outline" @click="showHtml(row)"><icon name="code" /></button></li>
+					<li class="is-grid-column"><button class="is-button is-size-xsmall is-color-danger-outline" @click="$emit('removeRow', row)"><icon name="times"></span></button></li>
+				</ul>
 			</div>
-			<div v-show="row.cells && opened.indexOf(row.id) >= 0" class="cells">
-				<div v-for="cell in row.cells" class="cell">
-					<div class="page-sideentry" @mouseout="mouseOut($event, row, cell)" :class="{'selected': selected && selected.id == cell.id}"
-							@dragend="$services.page.clearDrag($event)"
-							@dragover="acceptDragCell($event, row, cell)"
-							@drop="dropCell($event, row, cell)"
-							@mouseover="mouseOver($event, row, cell)">
-						<span class="cell-icon fa" :class="['component-' + cell.alias, {'is-empty': !cell.alias }]"></span>
-						<span class="name" @click="selectCell(row, cell)" 
-							@dragstart="dragCell($event, row, cell)"
-							:draggable="true" 
-							@click.ctrl="scrollIntoView(row, cell)">{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
-						<div class="configurer">
-							<span class="fa fa-cog" v-if="hasConfigure(cell)" @click="configure(cell)"></span>
-							<span class="fa fa-code" @click="showHtml(row, cell)"></span>
-							<span class="fa fa-times" @click="removeCell(row.cells, cell)"></span>
+			<div v-show="row.cells && row.cells.length && opened.indexOf(row.id) >= 0" class="is-grid-column is-color-basic-alternating">
+				<div v-for="cell in row.cells" class="is-grid-column is-spacing-small is-sidemenu-cell is-spacing-right-none" :class="{'is-selected': selected && selected.id == cell.id}">
+					<div class="is-grid-row">
+						<div class="page-sideentry" @mouseout="mouseOut($event, row, cell)" 
+								@dragend="$services.page.clearDrag($event)"
+								@dragover="acceptDragCell($event, row, cell)"
+								@drop="dropCell($event, row, cell)"
+								@mouseover="mouseOver($event, row, cell)"
+								class="is-grid-row is-grow-fill is-column-gap-small">
+							<icon name="cube" class="is-size-xsmall is-align-self-center"/>
+							<span class="is-content is-size-xsmall is-grow-fill is-align-self-center" @click="selectCell(row, cell)" 
+								@dragstart="dragCell($event, row, cell)"
+								:draggable="true" 
+								@click.ctrl="scrollIntoView(row, cell)">{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
 						</div>
-						<div class="page-sideentry-menu" v-if="false">
-							<button @click="configureCell(row, cell);"><span class="fa fa-magic" title="Set Cell Content"></span></button
-							><button @click="configure(cell)" v-if="cell.alias"><span class="fa fa-cog" title="Configure Cell Content"></span></button    
-							><button @click="left(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-left"></span></button
-							><button @click="right(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-right"></span></button
-							><button @click="addRow(cell)"><span class="fa fa-plus" title="Add Row"></span></button
-							><button @click="removeCell(row.cells, cell)"><span class="fa fa-times" title="Remove Cell"></span></button
-							><button @click="copyCell(cell)"><span class="fa fa-copy" title="Copy Cell"></span></button
-							><button @click="pasteRow(cell)" v-if="$services.page.copiedRow"><span class="fa fa-paste" title="Paste Row"></span></button>   
-						</div>
+						<ul class="is-menu is-variant-toolbar is-justify-self-right">
+							<li class="is-grid-column" v-if="hasConfigure(cell)"><button class="is-button is-color-primary-outline is-size-xsmall" @click="configure(cell)"><icon name="cog"/></button></li>
+							<li class="is-grid-column"><button class="is-button is-color-secondary-outline is-size-xsmall" @click="showHtml(row, cell)"><icon name="code"/></button></li>
+							<li class="is-grid-column"><button class="is-button is-color-danger-outline is-size-xsmall" @click="removeCell(row.cells, cell)"><icon name="times"/></button></li>
+						</ul>
 					</div>
-					<page-sidemenu v-show="cell.rows" :rows="cell.rows" :page="page" v-bubble:select :selected="selected"
+					<page-sidemenu v-show="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" v-bubble:select :selected="selected"
 						@open="function() { if (opened.indexOf(row) < 0) opened.push(row.id) }"
 						v-bubble:open
 						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>

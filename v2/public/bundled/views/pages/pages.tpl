@@ -11,7 +11,7 @@
 		</ul>
 		<div class="is-grid-column is-width-medium">
 			<n-form class="settings pages page-settings" v-if="$services.page.canEdit()" mode="component" ref="form">
-				<n-prompt v-if="showing">
+				<n-prompt v-if="showing" class="is-modal">
 					<n-form class="layout2">
 						<n-form-section>
 							<n-form-text v-for="key in Object.keys(parameters)" v-model="parameters[key]" :label="key"/>
@@ -33,8 +33,8 @@
 							<h4 class="category">Basic</h4>
 							<div class="padded-content">
 								<n-form-text v-model="$services.page.title" label="The website title as shown in the top bar" :timeout="600" @input="$services.page.saveConfiguration"/>
-								<n-form-combo v-model="$services.page.home" label="Guest Home Page" :filter="getRoutes" @input="$services.page.saveConfiguration"/>
-								<n-form-combo v-model="$services.page.homeUser" label="User Home Page" :filter="getRoutes" @input="$services.page.saveConfiguration"/>
+								<n-form-combo v-model="$services.page.home" label="Guest Home Page" :filter="$services.page.getRoutes" @input="$services.page.saveConfiguration"/>
+								<n-form-combo v-model="$services.page.homeUser" label="User Home Page" :filter="$services.page.getRoutes" @input="$services.page.saveConfiguration"/>
 								<n-form-text v-model="$services.page.googleSiteVerification" label="Google site verification code" :timeout="600" @input="$services.page.saveConfiguration" v-if="false"/>
 								<n-form-text v-model="$services.page.geoRefusalTimeout" label="Timeout (in hours) that a geo refusal is stored" info="No timeout means we have no geo enabled" type="number" :timeout="600" @input="$services.page.saveConfiguration"/>
 							</div>
@@ -139,9 +139,10 @@
 									<li class="is-grid-column"><button class="is-button is-size-small is-variant-danger-outline has-tooltip" @click="remove(page)"><icon name="trash"/><span class="is-tooltip is-position-top is-color-danger">Delete page</span></button></li>
 								</ul>
 								<div class="panes is-grid-row is-column-gap-large">
-									<n-form class="pane is-form is-size-grow is-color-background is-spacing-large">
+									<n-form class="pane is-form is-grow-fill is-color-background is-spacing-large is-variant-vertical">
 										<n-form-text :value="page.content.label ? page.content.label : page.name" label="Page name" :required="true" :timeout="600" @input="function(newValue) { updatePageName(page, newValue) }" 
-											after="The page name must be unique across the application"/>
+											after="The page name must be unique across the application"
+											:suffix="page.content.name"/>
 										<n-form-text v-if="!page.content.initial" v-model="page.content.path" label="Path" :timeout="600" @input="save(page)"
 											after="The path that this page can be reached on, it should always start with a leading slash"
 											placeholder="No path set, this page can not be browsed to"/>
@@ -153,7 +154,7 @@
 											placeholder="No page parent"
 											empty-value="No pages available yet that have a content anchor"
 											after="Choose the parent page in which this page is nested by default when the user browses to it"
-											:filter="getParentRoutes"/>
+											:filter="$services.page.getParentRoutes"/>
 										<n-form-text
 											v-model="page.content.defaultAnchor" label="Default Content Anchor" :timeout="600" @input="save(page)" placeholder="No content anchor"
 											after="The content anchor is where child pages will automatically be routed as needed"/>
@@ -161,7 +162,7 @@
 											v-if="page.content.defaultAnchor" label="Is default parent page" v-model="page.content.initial" @input="save(page)"/>
 										<!-- support for pages with input values -->
 									</n-form>
-									<n-form class="pane is-form is-size-grow">
+									<div class="is-grid-column is-row-gap-medium is-grow-fill">
 										<h3 class="is-h3 has-toolbar">
 											<span class="is-text">Metadata</span>
 											<ul class="is-menu is-variant-toolbar">
@@ -178,7 +179,7 @@
 												</n-form-section>
 											</n-form>
 										</div>
-									</n-form>
+									</div>
 								</div>
 							</n-collapsible>
 						</div>
