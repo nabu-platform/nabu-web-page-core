@@ -10,18 +10,19 @@
 			<li v-for="entry in getAdditionalSettings()" class="is-grid-column" @click="selectedTab = entry.route"><button :class="[{'is-active': selectedTab == entry.route }, 'setting-' + entry.name]" class="is-button is-variant-ghost-light is-size-small"><icon v-if="entry.icon" :name="entry.icon"/><span class="is-text">{{entry.title}}</span></button></li>
 		</ul>
 		<div class="is-grid-column is-width-medium">
+			<n-prompt v-if="showing" class="is-modal">
+				<n-form class="is-color-basic is-spacing-large is-border-shadow is-variant-vertical">
+					<h3 class="is-h3">Page properties</h3>
+					<n-form-section>
+						<n-form-text v-for="key in Object.keys(parameters)" v-model="parameters[key]" :label="key"/>
+					</n-form-section>
+					<footer class="is-grid-row is-justify-space-between">
+						<button @click="showing=false" class="is-button is-variant-link">Cancel</button>
+						<button @click="doRoute" class="is-button is-variant-primary">Open page</button>
+					</footer>
+				</n-form>
+			</n-prompt>
 			<n-form class="settings pages page-settings" v-if="$services.page.canEdit()" mode="component" ref="form">
-				<n-prompt v-if="showing" class="is-modal">
-					<n-form class="layout2">
-						<n-form-section>
-							<n-form-text v-for="key in Object.keys(parameters)" v-model="parameters[key]" :label="key"/>
-						</n-form-section>
-						<footer class="global-actions">
-							<a href="javascript:void(0)" @click="showing=false">Cancel</a>
-							<button @click="doRoute">Open Page</button>
-						</footer>
-					</n-form>
-				</n-prompt>
 				<div v-if="selectedTab == 'settings'">
 					<h1 class="is-h1">General Settings</h1>
 					<div class="divider">
@@ -171,12 +172,12 @@
 										</h3>
 										<p class="is-p">You can add custom metadata properties to your page.</p>
 										<div v-if="page.content.properties" class="is-grid-column is-row-gap-medium">
-											<n-form v-for="property in page.content.properties" class="has-button-close is-spacing-large is-color-background">
-												<n-form-section class="is-row">
-													<n-form-text v-model="property.key" label="Key" :timeout="600" @input="save(page)"/>
-													<n-form-text v-model="property.value" label="Value":timeout="600" @input="save(page)"/>
+											<n-form v-for="property in page.content.properties" class="has-button-close is-spacing-large is-color-background is-variant-vertical">
+												<div class="is-grid-row is-column-gap-medium">
+													<n-form-text v-model="property.key" label="Key" :timeout="600" @input="save(page)" class="is-grow-fill"/>
+													<n-form-text v-model="property.value" label="Value":timeout="600" @input="save(page)" class="is-grow-fill"/>
 													<button @click="page.content.properties.splice(page.content.properties.indexOf(property), 1)" class="is-button is-variant-close"><icon name="times"/></button>
-												</n-form-section>
+												</div>
 											</n-form>
 										</div>
 									</div>
@@ -331,7 +332,7 @@
 </template>
 
 <template id="nabu-create-page">
-	<n-form class="is-color-basic is-spacing-large is-border-shadow" ref="form">
+	<n-form class="is-color-basic is-spacing-large is-border-shadow is-variant-vertical" ref="form">
 		<h3 class="is-h3">Add a new page</h3>
 		<n-form-section>
 			<n-form-text v-model="name" label="Page name" :required="true" :validator="validator" after="The name of your page should be unique within your application"/>
@@ -347,7 +348,7 @@
 </template>
 
 <template id="nabu-pages-paste">
-	<n-form class="is-color-basic is-spacing-large is-border-shadow" ref="form">
+	<n-form class="is-color-basic is-spacing-large is-border-shadow is-variant-vertical" ref="form">
 		<n-form-section>
 			<n-form-text v-model="category" label="Paste in category" :required="true"/>
 			<n-form-text v-model="name" label="Paste with name" :required="true"/>

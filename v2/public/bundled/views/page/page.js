@@ -505,6 +505,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 			savePageTimer: null,
 			// the selected item in the side menu
 			selectedItem: null,
+			// either "cell" or "row"
+			selectedType: null,
+			// for backwards compatibility we map the selected item to the cell or row it embodies
+			cell: null,
+			row: null,
 			viewComponents: false,
 			closing: false,
 			saved: null,
@@ -515,7 +520,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			// whether or not we are ready to go
 			rendered: false,
 			oldBodyClasses: [],
-			initialStateLoaded: []
+			initialStateLoaded: [],
+			activeTab: "layout"
 		}
 	},
 	methods: {
@@ -690,8 +696,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 				});
 			}
 		},
-		selectItem: function(item) {
-			Vue.set(this, 'selectedItem', item);	
+		selectItem: function(row, cell, type) {
+			Vue.set(this, 'row', row);
+			Vue.set(this, 'cell', cell);
+			Vue.set(this, 'selectedType', type);
 		},
 		stopEdit: function() {
 			if (this.edit && !this.closing) {
@@ -2481,6 +2489,164 @@ nabu.page.views.Page = Vue.component("n-page", {
 				items = items.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
 			}
 			return items;
+		},
+		// ported from page-rows
+		hasConfigure: function(cell) {
+			var self = this;
+			var pageInstance = this;
+			var cellInstance = pageInstance.getComponentForCell(cell.id);
+			return cellInstance && cellInstance.configure;
+		},
+		getRendererPropertyKeys: function(container) {
+			if (!container.renderer) {
+				return {};
+			}
+			if (!container.rendererProperties) {
+				Vue.set(container, "rendererProperties", {});
+			}
+			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == container.renderer })[0];
+			if (renderer == null) {
+				return {};
+			}
+			return renderer.properties ? renderer.properties : [];
+		},
+		// type is cell or row (currently)
+		getRenderers: function(type) {
+			return nabu.page.providers("page-renderer").filter(function(x) { return x.type == null || x.type == type || (x.type instanceof Array && x.type.indexOf(type) >= 0) });
+		},
+		getRouteParameters: function(cell) {
+			var route = this.$services.router.get(cell.alias);
+			return route ? this.$services.page.getRouteParameters(route) : {};
+		},
+		getAvailableParameters: function(cell) {
+			return this.$services.page.getAvailableParameters(this.page, cell, true);
+		},
+		getAvailableEvents: function(event) {
+			var available = this.getEvents();
+			var result = Object.keys(available);
+			if (event) {
+				result = result.filter(function(x) {
+					return x.toLowerCase().indexOf(event.toLowerCase()) >= 0;
+				});
+			}
+			result.sort();
+			return result;
+		},
+		canConfigureInline: function(cell) {
+			var pageInstance = this;
+			var component = pageInstance.getComponentForCell(cell.id);
+			return component && component.configurator;
+		},
+		getCellConfigurator: function(cell) {
+			var pageInstance = this;
+			var component = pageInstance.getComponentForCell(cell.id);
+			return component && component.configurator();
+		},
+		getCellConfiguratorInput: function(cell) {
+			var pageInstance = this;
+			var cellInstance = pageInstance.getComponentForCell(cell.id);
+			var result = {};
+			if (cellInstance.$options.props) {
+				Object.keys(cellInstance.$options.props).forEach(function(prop) {
+					result[prop] = cellInstance[prop];
+				});
+			}
+			return result;
+		},
+		addDevice: function(cell) {
+			if (!cell.devices) {
+				Vue.set(cell, "devices", []);
+			}
+			cell.devices.push({name: null, operator: '>'});
+		},
+		suggestDevices: function(value) {
+			var devices = this.$services.page.devices.map(function(x) { return x.name }); 
+			if (value && value.match(/[0-9]+/)) { 
+				devices.unshift(value) 
+			}
+			return devices;
+		},
+		addInstance: function(target) {
+			if (!target.instances) {
+				Vue.set(target, "instances", {});
+			}
+			Vue.set(target.instances, "unnamed", null);
+		},
+		removeCell: function(cells, cell) {
+			var self = this;
+			this.$confirm({
+				title: "Delete cell",
+				message: "Are you sure you want to delete this cell?"
+			}).then(function() {
+				self.$services.page.closeRight();
+				cells.splice(cells.indexOf(cell), 1);
+			});
+		},
+		removeRow: function(cell, row) { 
+			cell.rows.splice(cell.rows(indexOf(row), 1));
+		},
+		removeInstance: function(target, name) {
+			// currently just reset the instances thing, we currently only allow one
+			Vue.set(target, "instances", {});	
+		},
+		renameInstance: function(target, oldName, newName) {
+			Vue.set(target.instances, newName, target.instances[oldName]);
+			Vue.delete(target.instances, oldName);
+		},
+		setContent: function(cell) {
+			var self = this;
+			this.$prompt(function() {
+				return new nabu.page.views.PageAddCell({propsData: {
+					page: self.page
+				}});
+			}).then(function(content) {
+				nabu.utils.objects.merge(cell, content);
+			});
+		},
+		copyCell: function(cell) {
+			nabu.utils.objects.copy({
+				type: "page-cell",
+				content: cell
+			});
+		},
+		copyRow: function(row) {
+			nabu.utils.objects.copy({
+				type: "page-row",
+				content: row
+			});
+		},
+		pasteCell: function(row) {
+			row.cells.push(this.$services.page.renumber(this.page, this.$services.page.copiedCell));
+			this.$services.page.copiedCell = null;
+		},
+		pasteRow: function(cell) {
+			cell.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
+			this.$services.page.copiedRow = null;
+		},
+		goto: function(event, row, cell) {
+			if (this.edit) {
+				this.$emit("select", row, cell, !cell ? "row" : "cell");
+				var doDefault = true;
+				// if we have a cell target with a configuration, show that, otherwise, we do the generic configuration
+				if (cell != null) {
+					if (this.canConfigureInline(cell)) {
+						this.configuring = cell.id;
+					}
+					else {
+						var self = this;
+						var pageInstance = self;
+						var cellInstance = pageInstance.getComponentForCell(cell.id);
+						if (cellInstance && cellInstance.configure) {
+							cellInstance.configure();
+							doDefault = false;
+						}
+					}
+				}
+				if (doDefault) {
+					this.configuring = cell ? cell.id : row.id;
+				}
+				event.stopPropagation();
+			}
 		}
 	},
 	watch: {
@@ -2720,34 +2886,11 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			$event.preventDefault();
 			$event.stopPropagation();
 		},
-		hasConfigure: function(cell) {
-			var self = this;
-			var pageInstance = self.$services.page.getPageInstance(self.page, self);
-			var cellInstance = pageInstance.getComponentForCell(cell.id);
-			return cellInstance && cellInstance.configure;
-		},
-		setRowConfiguring: function(id) {
-			this.configuring = id;	
-		},
 		getRendererProperties: function(container) {
 			return container.rendererProperties != null ? container.rendererProperties : {};	
 		},
-		getRendererPropertyKeys: function(container) {
-			if (!container.renderer) {
-				return {};
-			}
-			if (!container.rendererProperties) {
-				Vue.set(container, "rendererProperties", {});
-			}
-			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == container.renderer })[0];
-			if (renderer == null) {
-				return {};
-			}
-			return renderer.properties ? renderer.properties : [];
-		},
-		// type is cell or row (currently)
-		getRenderers: function(type) {
-			return nabu.page.providers("page-renderer").filter(function(x) { return x.type == null || x.type == type || (x.type instanceof Array && x.type.indexOf(type) >= 0) });
+		setRowConfiguring: function(id) {
+			this.configuring = id;	
 		},
 		rowsTag: function() {
 			if (this.depth > 0 || !this.page.content.pageType || this.page.content.pageType == "page") {
@@ -3013,33 +3156,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				row.cells.splice(index, 1, replacement);
 			}
 		},
-		filterRoutes: function(value) {
-			var routes = this.$services.router.list().filter(function(x) {
-				return x.alias && (!value || x.alias.toLowerCase().indexOf(value.toLowerCase()) >= 0);
-			});
-			routes.sort(function(a, b) {
-				return a.alias.localeCompare(b.alias);
-			});
-			return routes.map(function(x) { return x.alias });
-		},
-		getRouteParameters: function(cell) {
-			var route = this.$services.router.get(cell.alias);
-			return route ? this.$services.page.getRouteParameters(route) : {};
-		},
-		getAvailableParameters: function(cell) {
-			return this.$services.page.getAvailableParameters(this.page, cell, true);
-		},
-		getAvailableEvents: function(event) {
-			var available = this.$services.page.getPageInstance(this.page, this).getEvents();
-			var result = Object.keys(available);
-			if (event) {
-				result = result.filter(function(x) {
-					return x.toLowerCase().indexOf(event.toLowerCase()) >= 0;
-				});
-			}
-			result.sort();
-			return result;
-		},
 		canConfigure: function(cell) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			var component = pageInstance.getComponentForCell(cell.id);
@@ -3049,22 +3165,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			var component = pageInstance.getComponentForCell(cell.id);
 			return component && component.configurator;
-		},
-		getCellConfigurator: function(cell) {
-			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			var component = pageInstance.getComponentForCell(cell.id);
-			return component && component.configurator();
-		},
-		getCellConfiguratorInput: function(cell) {
-			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			var cellInstance = pageInstance.getComponentForCell(cell.id);
-			var result = {};
-			if (cellInstance.$options.props) {
-				Object.keys(cellInstance.$options.props).forEach(function(prop) {
-					result[prop] = cellInstance[prop];
-				});
-			}
-			return result;
 		},
 		configure: function(cell) {
 			if (this.canConfigure(cell)) {
@@ -3305,34 +3405,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		getMountedFor: function(cell, row) {
 			return this.mounted.bind(this, cell, row, this.getLocalState(row, cell));
 		},
-	/*	renderAll: function(changedValues) {
-			var self = this;
-			var mount = function(cell) {
-				self.$services.router.route(cell.alias, self.getParameters(cell), self.page.name + "_" + cell.id, true).then(function(component) {
-					self.$services.page.instances[self.page.name].mounted(cell, component);
-				})
-			}
-			for (var i = 0; i < this.rows.length; i++) {
-				if (this.rows[i].cells) {
-					for (var j = 0; j < this.rows[i].cells.length; j++) {
-						var cell = this.rows[i].cells[j];
-						if (this.shouldRenderCell(cell)) {
-							// if it is not the first render, check that we need to rerender it
-							if (!self.$services.page.instances[self.page.name].components[cell.id] || this.shouldRerenderCell(cell, changedValues)) {
-								mount(cell);
-							}
-						}
-						// if we past in changed values, we are doing a rerender it, trigger all child rows as well
-						if (changedValues && changedValues.length) {
-							this.$refs[this.page.name + '_' + cell.id + '_rows'].renderAll(changedValues);
-						}
-					}
-				}
-			}
-		},
-		render: function(id) {
-			// TODO
-		},*/
 		getCell: function(id) {
 			for (var i = 0; i < this.rows.length; i++) {
 				if (this.rows[i].cells) {
@@ -3394,19 +3466,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			});
 			return result;
 		},
-		addDevice: function(cell) {
-			if (!cell.devices) {
-				Vue.set(cell, "devices", []);
-			}
-			cell.devices.push({name: null, operator: '>'});
-		},
-		suggestDevices: function(value) {
-			var devices = this.$services.page.devices.map(function(x) { return x.name }); 
-			if (value && value.match(/[0-9]+/)) { 
-				devices.unshift(value) 
-			}
-			return devices;
-		},
 		resetEvents: function() {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			pageInstance.resetEvents();	
@@ -3420,6 +3479,8 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				);
 			}
 		},
+		
+		
 		addCell: function(target) {
 			var self = this;
 			var cell = {
@@ -3456,20 +3517,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			target.cells.push(cell);
 			return cell;
 		},
-		addInstance: function(target) {
-			if (!target.instances) {
-				Vue.set(target, "instances", {});
-			}
-			Vue.set(target.instances, "unnamed", null);
-		},
-		removeInstance: function(target, name) {
-			// currently just reset the instances thing, we currently only allow one
-			Vue.set(target, "instances", {});	
-		},
-		renameInstance: function(target, oldName, newName) {
-			Vue.set(target.instances, newName, target.instances[oldName]);
-			Vue.delete(target.instances, oldName);
-		},
 		addRow: function(target, skipInject) {
 			if (!target.rows) {
 				Vue.set(target, "rows", []);
@@ -3496,29 +3543,8 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 			return row;
 		},
-		removeCell: function(cells, cell) {
-			var self = this;
-			this.$confirm({
-				title: "Delete cell",
-				message: "Are you sure you want to delete this cell?"
-			}).then(function() {
-				self.$services.page.closeRight();
-				cells.splice(cells.indexOf(cell), 1);
-			});
-		},
-		removeRow: function(cell, row) { 
-			cell.rows.splice(cell.rows(indexOf(row), 1));
-		},
-		setContent: function(cell) {
-			var self = this;
-			this.$prompt(function() {
-				return new nabu.page.views.PageAddCell({propsData: {
-					page: self.page
-				}});
-			}).then(function(content) {
-				nabu.utils.objects.merge(cell, content);
-			});
-		},
+		
+		
 		rowStyles: function(row) {
 			var styles = [];
 			if (row.direction == "horizontal") {
@@ -3545,51 +3571,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 			return styles;
 		},
-		copyCell: function(cell) {
-			nabu.utils.objects.copy({
-				type: "page-cell",
-				content: cell
-			});
-		},
-		copyRow: function(row) {
-			nabu.utils.objects.copy({
-				type: "page-row",
-				content: row
-			});
-		},
-		pasteCell: function(row) {
-			row.cells.push(this.$services.page.renumber(this.page, this.$services.page.copiedCell));
-			this.$services.page.copiedCell = null;
-		},
-		pasteRow: function(cell) {
-			cell.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
-			this.$services.page.copiedRow = null;
-		},
-		goto: function(event, row, cell) {
-			if (this.edit) {
-				this.$emit("select", cell ? cell : row);
-				var doDefault = true;
-				// if we have a cell target with a configuration, show that, otherwise, we do the generic configuration
-				if (cell != null) {
-					if (this.canConfigureInline(cell)) {
-						this.configuring = cell.id;
-					}
-					else {
-						var self = this;
-						var pageInstance = self.$services.page.getPageInstance(self.page, self);
-						var cellInstance = pageInstance.getComponentForCell(cell.id);
-						if (cellInstance && cellInstance.configure) {
-							cellInstance.configure();
-							doDefault = false;
-						}
-					}
-				}
-				if (doDefault) {
-					this.configuring = cell ? cell.id : row.id;
-				}
-				event.stopPropagation();
-			}
-		},
+		
 		mouseOut: function(event, row, cell) {
 			var self = this;
 			if (self.edit) {
@@ -3868,7 +3850,7 @@ Vue.component("page-sidemenu", {
 		},
 		selectRow: function(row) {
 			var wasSelected = this.selected == row;
-			this.$emit("select", row);
+			this.$emit("select", row, null, "row");
 			var index = this.opened.indexOf(row.id);
 			if (index < 0) {
 				this.configureRow(row);
@@ -3894,7 +3876,7 @@ Vue.component("page-sidemenu", {
 		},
 		selectCell: function(row, cell) {
 			var wasSelected = this.selected == cell;
-			this.$emit("select", cell);
+			this.$emit("select", row, cell, "cell");
 			this.configureCell(row, cell);
 		},
 		configureCell: function(row, cell) {
@@ -4207,8 +4189,13 @@ document.addEventListener("keydown", function(event) {
 	if (event.key == "s" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
 		application.services.page.editing.save(event);
 	}
+	else if (event.key == "b" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
+		application.services.page.editing.activeTab = 'components';
+		event.preventDefault();
+		event.stopPropagation();
+	}
 	else if (event.key == "d" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
-		application.services.page.editing.viewComponents = true;
+		application.services.page.editing.activeTab = 'layout';
 		event.preventDefault();
 		event.stopPropagation();
 	}
