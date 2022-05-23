@@ -1,22 +1,22 @@
 <template id="nabu-pages">
 	<div class="nabu-pages has-menu-toolbar-sticky">
-		<ul class="is-grid-row is-menu is-variant-toolbar is-dark is-main-top is-sticky is-primary-highlight is-content-width-medium">
-			<li class="is-grid-column"><button @click="selectedTab = 'pages'" class="is-button is-variant-ghost-light is-size-small"><img class="is-icon" src="${server.root()}resources/images/branding/nabu-logo.svg"/><span class="is-text">Page Builder</span></button></li>
-			<li class="is-grid-column is-after-gap" @click="selectedTab = 'pages'"><button :class="{'is-active': selectedTab == 'pages' }"class="is-button is-variant-ghost-light is-size-small"><icon name="file-alt"/><span class="is-text">Pages</span></li>
-			<li class="is-grid-column" @click="selectedTab = 'settings'"><button :class="{'is-active': selectedTab == 'settings' }" class="is-button is-variant-ghost-light is-size-small"><icon name="cogs"/><span class="is-text">Settings</span></button></li>
-			<li class="is-grid-column" @click="selectedTab = 'styles'"><button :class="{'is-active': selectedTab == 'styles' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-image"/><span class="is-text">Style</span></li>
-			<li class="is-grid-column" @click="selectedTab = 'functions'"><button :class="{'is-active': selectedTab == 'functions' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-code"/><span class="is-text">Script</span></li>
-			<li v-if="false" class="is-grid-column" @click="selectedTab = 'bundles'"><button :class="{'is-active': selectedTab == 'bundles' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-cube"/><span class="is-text">Bundles</span></li>
-			<li v-for="entry in getAdditionalSettings()" class="is-grid-column" @click="selectedTab = entry.route"><button :class="[{'is-active': selectedTab == entry.route }, 'setting-' + entry.name]" class="is-button is-variant-ghost-light is-size-small"><icon v-if="entry.icon" :name="entry.icon"/><span class="is-text">{{entry.title}}</span></button></li>
+		<ul class="is-row is-menu is-variant-toolbar is-dark is-main-top is-sticky is-primary-highlight is-content-width-medium">
+			<li class="is-column"><button @click="selectedTab = 'pages'" class="is-button is-variant-ghost-light is-size-small"><img class="is-icon" src="${server.root()}resources/images/branding/nabu-logo.svg"/><span class="is-text">Page Builder</span></button></li>
+			<li class="is-column is-after-gap" @click="selectedTab = 'pages'"><button :class="{'is-active': selectedTab == 'pages' }"class="is-button is-variant-ghost-light is-size-small"><icon name="file-alt"/><span class="is-text">Pages</span></li>
+			<li class="is-column" @click="selectedTab = 'settings'"><button :class="{'is-active': selectedTab == 'settings' }" class="is-button is-variant-ghost-light is-size-small"><icon name="cogs"/><span class="is-text">Settings</span></button></li>
+			<li class="is-column" @click="selectedTab = 'styles'"><button :class="{'is-active': selectedTab == 'styles' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-image"/><span class="is-text">Style</span></li>
+			<li class="is-column" @click="selectedTab = 'functions'"><button :class="{'is-active': selectedTab == 'functions' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-code"/><span class="is-text">Script</span></li>
+			<li v-if="false" class="is-column" @click="selectedTab = 'bundles'"><button :class="{'is-active': selectedTab == 'bundles' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-cube"/><span class="is-text">Bundles</span></li>
+			<li v-for="entry in getAdditionalSettings()" class="is-column" @click="selectedTab = entry.route"><button :class="[{'is-active': selectedTab == entry.route }, 'setting-' + entry.name]" class="is-button is-variant-ghost-light is-size-small"><icon v-if="entry.icon" :name="entry.icon"/><span class="is-text">{{entry.title}}</span></button></li>
 		</ul>
-		<div class="is-grid-column is-width-medium">
+		<div class="is-column is-width-medium">
 			<n-prompt v-if="showing" class="is-modal">
 				<n-form class="is-color-basic is-spacing-large is-border-shadow is-variant-vertical">
 					<h3 class="is-h3">Page properties</h3>
 					<n-form-section>
 						<n-form-text v-for="key in Object.keys(parameters)" v-model="parameters[key]" :label="key"/>
 					</n-form-section>
-					<footer class="is-grid-row is-justify-space-between">
+					<footer class="is-row is-align-space-between">
 						<button @click="showing=false" class="is-button is-variant-link">Cancel</button>
 						<button @click="doRoute" class="is-button is-variant-primary">Open page</button>
 					</footer>
@@ -111,36 +111,36 @@
 					</div>
 				</div>
 				
-				<div v-else-if="selectedTab == 'pages'" @drop="dropOnPages($event)" @dragover="dragOverPages($event)" class="is-grid-column is-variant-cards">
-					<div class="is-grid-column is-variant-card">
+				<div v-else-if="selectedTab == 'pages'" @drop="dropOnPages($event)" @dragover="dragOverPages($event)" class="is-column is-variant-cards">
+					<div class="is-column is-variant-card">
 						<h1 class="is-h1">Pages</h1>
 						<p class="is-p">In this section you can manage all the pages available in your application.</p>
 						<p class="is-p">Pages are divided into categories allowing you to group them together in whatever way you see fit.</p>
-						<ul class="is-menu is-variant-toolbar is-grid-row is-justify-end">
-							<li class="is-grid-column"><button class="is-button is-size-small is-variant-primary has-tooltip" @click="create"><icon name="plus"/><span class="is-text">Add page</span><span class="is-tooltip is-position-top is-width-medium">Add a new page to your application</span></button></li>
-							<li class="is-grid-column" v-if="hasTemplates"><button class="is-button is-size-small is-variant-primary-outline has-tooltip" @click="showTemplates = true"><icon name="plus"/><span class="is-text">Add template</span><span class="is-tooltip is-position-top is-width-medium">Add an existing template page to your application</span></button></li>
+						<ul class="is-menu is-variant-toolbar is-row is-align-end">
+							<li class="is-column"><button class="is-button is-size-small is-variant-primary has-tooltip" @click="create"><icon name="plus"/><span class="is-text">Add page</span><span class="is-tooltip is-position-top is-width-medium">Add a new page to your application</span></button></li>
+							<li class="is-column" v-if="hasTemplates"><button class="is-button is-size-small is-variant-primary-outline has-tooltip" @click="showTemplates = true"><icon name="plus"/><span class="is-text">Add template</span><span class="is-tooltip is-position-top is-width-medium">Add an existing template page to your application</span></button></li>
 						</ul>
 					</div>
-					<div v-for="category in categories" class="is-grid-column is-spacing-large is-border-shadow is-color-basic is-row-gap-large">
+					<div v-for="category in categories" class="is-column is-variant-card is-spacing-large">
 						<h3 class="is-h3" :key="category" :ref="'category_' + category">
 							<span class="is-text">{{category}}</span>
 							<ul class="is-menu is-variant-toolbar">
-								<li class="is-grid-column"><button class="is-button is-variant-primary-outline is-size-small has-tooltip" @click="copyCategory(category)"><icon name="copy"/><span class="is-text">Copy category</span><span class="is-tooltip is-position-top is-width-medium">Copy all pages in this category</span></button></li>
+								<li class="is-column"><button class="is-button is-variant-primary-outline is-size-small has-tooltip" @click="copyCategory(category)"><icon name="copy"/><span class="is-text">Copy category</span><span class="is-tooltip is-position-top is-width-medium">Copy all pages in this category</span></button></li>
 							</ul>
 						</h3>
 						<div class="is-accordion">
-							<n-collapsible :only-one-open="true" :title="page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')" v-for="page in getPagesFor(category)" class="is-grid-column" :key="page.id">
-								<div slot="text" class="is-text is-grid-row is-column-gap-small is-align-center">
+							<n-collapsible :only-one-open="true" :title="page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')" v-for="page in getPagesFor(category)" class="is-column" :key="page.id">
+								<div slot="text" class="is-text is-row is-align-cross-center">
 									<span>{{page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')}}</span>
 									<span class="is-badge is-variant-warning">Page</span>
 								</div>
 								<ul slot="buttons" class="is-menu is-variant-toolbar is-align-end ">
-									<li class="is-grid-column"><button class="is-button is-size-small is-variant-primary has-tooltip" @click="route(page)" title="Open this page"><icon name="search"/><span class="is-tooltip is-position-top">Open page</span></button></li>
-									<li class="is-grid-column"><button class="is-button is-size-small is-variant-primary-outline has-tooltip" @click="copy(page)"><icon name="copy"/><span class="is-tooltip is-position-top">Copy page</span></button></li>
-									<li class="is-grid-column"><button class="is-button is-size-small is-variant-danger-outline has-tooltip" @click="remove(page)"><icon name="trash"/><span class="is-tooltip is-position-top is-color-danger">Delete page</span></button></li>
+									<li class="is-column"><button class="is-button is-size-small is-variant-primary has-tooltip" @click="route(page)" title="Open this page"><icon name="search"/><span class="is-tooltip is-position-top">Open page</span></button></li>
+									<li class="is-column"><button class="is-button is-size-small is-variant-primary-outline has-tooltip" @click="copy(page)"><icon name="copy"/><span class="is-tooltip is-position-top">Copy page</span></button></li>
+									<li class="is-column"><button class="is-button is-size-small is-variant-danger-outline has-tooltip" @click="remove(page)"><icon name="trash"/><span class="is-tooltip is-position-top is-color-danger">Delete page</span></button></li>
 								</ul>
-								<div class="panes is-grid-row is-column-gap-large">
-									<n-form class="pane is-form is-grow-fill is-color-background is-spacing-large is-variant-vertical">
+								<div class="panes is-row is-column-gap-large">
+									<n-form class="pane is-form is-position-grow is-color-background is-spacing-large is-variant-vertical">
 										<n-form-text :value="page.content.label ? page.content.label : page.name" label="Page name" :required="true" :timeout="600" @input="function(newValue) { updatePageName(page, newValue) }" 
 											after="The page name must be unique across the application"
 											:suffix="page.content.name"/>
@@ -163,19 +163,19 @@
 											v-if="page.content.defaultAnchor" label="Is default parent page" v-model="page.content.initial" @input="save(page)"/>
 										<!-- support for pages with input values -->
 									</n-form>
-									<div class="is-grid-column is-row-gap-medium is-grow-fill">
+									<div class="is-column is-row-gap-medium is-position-grow">
 										<h3 class="is-h3 has-toolbar">
 											<span class="is-text">Metadata</span>
 											<ul class="is-menu is-variant-toolbar">
-												<li class="is-grid-column"><button class="is-button is-variant-warning is-justify-end is-size-small" @click="page.content.properties ? page.content.properties.push({}) : $window.Vue.set(page.content, 'properties', [{}])"><span class="fa fa-plus"></span>Property</button></li>
+												<li class="is-column"><button class="is-button is-variant-warning is-align-end is-size-small" @click="page.content.properties ? page.content.properties.push({}) : $window.Vue.set(page.content, 'properties', [{}])"><span class="fa fa-plus"></span>Property</button></li>
 											</ul>
 										</h3>
 										<p class="is-p">You can add custom metadata properties to your page.</p>
-										<div v-if="page.content.properties" class="is-grid-column is-row-gap-medium">
+										<div v-if="page.content.properties" class="is-column is-row-gap-medium">
 											<n-form v-for="property in page.content.properties" class="has-button-close is-spacing-large is-color-background is-variant-vertical">
-												<div class="is-grid-row is-column-gap-medium">
-													<n-form-text v-model="property.key" label="Key" :timeout="600" @input="save(page)" class="is-grow-fill"/>
-													<n-form-text v-model="property.value" label="Value":timeout="600" @input="save(page)" class="is-grow-fill"/>
+												<div class="is-row is-column-gap-medium">
+													<n-form-text v-model="property.key" label="Key" :timeout="600" @input="save(page)" class="is-position-grow"/>
+													<n-form-text v-model="property.value" label="Value":timeout="600" @input="save(page)" class="is-position-grow"/>
 													<button @click="page.content.properties.splice(page.content.properties.indexOf(property), 1)" class="is-button is-variant-close"><icon name="times"/></button>
 												</div>
 											</n-form>
@@ -340,7 +340,7 @@
 			<n-form-combo v-if="!newCategory" v-model="category" label="Existing Category" :required="true" :filter="checkCategory" after="Choose an existing category"/>
 			<n-form-text v-else v-model="category" label="New Category" :required="true" after="Create a new category with this name"/>
 		</n-form-section>
-		<footer class="is-grid-row is-justify-space-between">
+		<footer class="is-row is-align-space-between">
 			<button @click="$reject" class="is-button is-variant-link">Cancel</button>
 			<button @click="$resolve({category:category, name:name})" class="is-button is-variant-primary">Add</button>
 		</footer>
@@ -353,7 +353,7 @@
 			<n-form-text v-model="category" label="Paste in category" :required="true"/>
 			<n-form-text v-model="name" label="Paste with name" :required="true"/>
 		</n-form-section>
-		<footer class="is-grid-row is-justify-space-between">
+		<footer class="is-row is-align-space-between">
 			<button @click="$reject" class="is-button is-variant-link">Cancel</button>
 			<button @click="$resolve({category:category, name:name})" class="is-button is-variant-primary">Add</button>
 		</footer>

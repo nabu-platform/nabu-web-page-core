@@ -27,21 +27,21 @@
 		
 		<n-sidebar v-if="edit && page.content.rows" position="left" class="is-size-large" :inline="true" :autocloseable="false" ref="sidemenu"
 				@close="stopEdit">
-			<div class="is-grid-column is-spacing-medium is-justify-left is-row-gap-small" slot="header">
+			<div class="is-column is-spacing-medium is-align-left is-row-gap-small" slot="header">
 				<h3 class="is-h3 is-color-neutral">
-					<div class="is-grid-row is-column-gap-medium">
+					<div class="is-row is-column-gap-medium">
 						{{page.content.label ? page.content.label : page.content.name}}
 						<ul class="is-menu is-variant-toolbar">
-							<li class="is-grid-column"><button class="is-button is-variant-primary-outline is-size-xsmall" @click="save"><span class="is-text">Save</span></button></li>
+							<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall" @click="save"><span class="is-text">Save</span></button></li>
 						</ul>
 					</div>
 				</h3>
 				<p class="is-p is-color-light is-size-xsmall">Last saved: {{saved ? $services.formatter.date(saved, 'HH:mm:ss') : 'never' }}</p>
 				<ul class="is-menu is-variant-toolbar">
-					<li class="is-grid-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'layout'" :class="{'is-active': activeTab == 'layout'}"><icon name="align-left"/><span class="is-text">Layout</span></button></li>
-					<li class="is-grid-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'settings'" :class="{'is-active': activeTab == 'settings'}"><icon name="cog"/><span class="is-text">Settings</span></button></li>
-					<li class="is-grid-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'components'" :class="{'is-active': activeTab == 'components'}"><icon name="cubes"/><span class="is-text">Components</span></button></li>
-					<li class="is-grid-column" v-if="cell || row"><button class="is-button is-variant-primary-outline is-size-small is-border-underline" @click="activeTab = 'selected'" :class="{'is-active': activeTab == 'selected'}"><icon name="cube"/>
+					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'layout'" :class="{'is-active': activeTab == 'layout'}"><icon name="align-left"/><span class="is-text">Layout</span></button></li>
+					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'settings'" :class="{'is-active': activeTab == 'settings'}"><icon name="cog"/><span class="is-text">Settings</span></button></li>
+					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'components'" :class="{'is-active': activeTab == 'components'}"><icon name="cubes"/><span class="is-text">Components</span></button></li>
+					<li class="is-column" v-if="cell || row"><button class="is-button is-variant-primary-outline is-size-small is-border-underline" @click="activeTab = 'selected'" :class="{'is-active': activeTab == 'selected'}"><icon name="cube"/>
 						<span class="is-text" v-if="selectedType == 'cell' && cell && cell.name">{{cell.name}}</span>
 						<span class="is-text" v-else-if="selectedType == 'row' && row && row.name">{{cell.name}}</span>
 						<span class="is-text" v-else>Selected {{selectedType == 'cell' ? "cell" : "row"}}</span></button>
@@ -49,12 +49,12 @@
 				</ul>
 			</div>
 			<div>
-				<ul class="is-menu is-variant-toolbar is-justify-center is-spacing-medium" v-if="false">
-					<li class="is-grid-column"><button class="is-button is-variant-success is-size-small" @click="configuring = true"><icon name="cog"/><span class="is-text">Configure</span></button></li>
-					<li class="is-grid-column"><button class="is-button is-variant-success-outline is-size-small" @click="addRow(page.content)"><icon name="plus"/><span class="is-text">Row</span></button></li>
-					<li class="is-grid-column"><button class="is-button is-variant-warning is-size-small" @click="pasteRow" v-if="$services.page.copiedRow"><icon name="paste"/></button></li>
-					<li class="is-grid-column"><button class="is-button is-variant-secondary-outline is-size-small" @click="viewComponents = true"><icon name="cubes"/><span class="is-text">Components</span></button></li>
-					<li class="is-grid-column"><button class="is-button is-variant-primary is-size-small" v-if="!embedded" @click="save"><icon name="save"/><span class="is-text">Save</span></button></li>
+				<ul class="is-menu is-variant-toolbar is-align-center is-spacing-medium" v-if="false">
+					<li class="is-column"><button class="is-button is-variant-success is-size-small" @click="configuring = true"><icon name="cog"/><span class="is-text">Configure</span></button></li>
+					<li class="is-column"><button class="is-button is-variant-success-outline is-size-small" @click="addRow(page.content)"><icon name="plus"/><span class="is-text">Row</span></button></li>
+					<li class="is-column"><button class="is-button is-variant-warning is-size-small" @click="pasteRow" v-if="$services.page.copiedRow"><icon name="paste"/></button></li>
+					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-small" @click="viewComponents = true"><icon name="cubes"/><span class="is-text">Components</span></button></li>
+					<li class="is-column"><button class="is-button is-variant-primary is-size-small" v-if="!embedded" @click="save"><icon name="save"/><span class="is-text">Save</span></button></li>
 				</ul>
 				
 				<div v-show="edit && page.content.rows && activeTab  == 'layout'">
@@ -63,14 +63,14 @@
 						:selected="cell ? cell : row"
 						@select="selectItem"
 						@removeRow="function(row) { $confirm({title: 'Delete row', message:'Are you sure you want to delete this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
-					<ul class="is-menu is-variant-toolbar is-justify-end is-spacing-medium">
-						<li class="is-grid-column" v-if="$services.page.copiedRow"><button class="is-button is-variant-primary-outline is-size-xsmall" @click="pasteRow"><icon name="paste"/><span class="is-text">Paste copied row</span></button></li>
-						<li class="is-grid-column"><button class="is-button is-variant-primary is-size-xsmall" @click="addRow(page.content)"><icon name="plus"/><span class="is-text">New row</span></button></li>
+					<ul class="is-menu is-variant-toolbar is-align-end is-spacing-medium">
+						<li class="is-column" v-if="$services.page.copiedRow"><button class="is-button is-variant-primary-outline is-size-xsmall" @click="pasteRow"><icon name="paste"/><span class="is-text">Paste copied row</span></button></li>
+						<li class="is-column"><button class="is-button is-variant-primary is-size-xsmall" @click="addRow(page.content)"><icon name="plus"/><span class="is-text">New row</span></button></li>
 					</ul>
 				</div>
 				<div v-if="activeTab == 'settings'">
 					<n-form class="is-variant-floating-labels">
-						<div class="is-grid-column is-row-gap-medium">
+						<div class="is-column is-row-gap-medium">
 							<hr class="is-line is-size-large is-color-primary-light"/>
 							<h2 class="is-h4 is-spacing-medium is-color-primary-outline">Page Settings</h2>
 							<div class="is-accordion is-highlight-left">
@@ -91,13 +91,13 @@
 									<p class="is-p is-size-small is-color-light">These settings will influence how the page is rendered.</p>
 									<n-form-combo label="Page Type" :filter="getPageTypes" v-model="page.content.pageType" info = "The page type determines how the page is rendered. For example an email requires different rendering from a webpage."/>
 									<n-form-text v-model="page.content.class" label="CSS Class" info = "The main css class for this page" :timeout="600"/>
-									<div class="is-grid-row is-justify-end">
+									<div class="is-row is-align-end">
 										<button class="is-button is-variant-primary-outline is-size-xsmall" @click="page.content.styles == null ? $window.Vue.set(page.content, 'styles', [{class:null,condition:null}]) : page.content.styles.push({class:null,condition:null})"><icon name="plus"/>Page style</button>
 									</div>
 									
-									<div v-if="page.content.styles" class="is-grid-column is-row-gap-medium">
+									<div v-if="page.content.styles" class="is-column is-row-gap-medium">
 										<n-form v-for="style in page.content.styles" class="has-button-close is-spacing-large is-color-background">
-											<n-form-section class="is-grid-column is-row-gap-small">
+											<n-form-section class="is-column is-row-gap-small">
 												<n-form-text v-model="style.class" label="CSS Class" :timeout="600" class="is-size-small"/>
 												<n-form-text v-model="style.condition" label="Condition" :timeout="600" class="is-size-small"/>
 												<button @click="page.content.styles.splice(page.content.styles.indexOf(style), 1)" class="is-button is-variant-close"><icon name="times"/></button>
@@ -108,13 +108,13 @@
 									<h5 class="is-h5">Body style</h5>
 									<p class="is-p is-size-small is-color-light">You can add classes to the body when this page is rendered.</p>
 									
-									<div class="is-grid-row is-justify-end">
+									<div class="is-row is-align-end">
 										<button class="is-button is-variant-primary-outline is-size-xsmall" @click="page.content.bodyStyles == null ? $window.Vue.set(page.content, 'bodyStyles', [{class:null,condition:null}]) : page.content.bodyStyles.push({class:null,condition:null})"><icon name="plus"/>Body style</button>
 									</div>
 									
-									<div v-if="page.content.bodyStyles" class="is-grid-column is-row-gap-medium">
+									<div v-if="page.content.bodyStyles" class="is-column is-row-gap-medium">
 										<n-form v-for="style in page.content.bodyStyles" class="has-button-close is-spacing-large is-color-background">
-											<n-form-section class="is-grid-column is-row-gap-small">
+											<n-form-section class="is-column is-row-gap-small">
 												<n-form-text v-model="style.class" label="CSS Class" class="is-size-small"/>
 												<n-form-text v-model="style.condition" label="Condition" class="is-size-small"/>
 												<button @click="page.content.bodyStyles.splice(page.content.bodyStyles.indexOf(style), 1)" class="is-button is-variant-close"><icon name="times"/></button>
@@ -125,7 +125,7 @@
 								<n-collapsible :only-one-open="true" title="Security" content-class="is-spacing-large">
 									<p class="is-p is-size-small is-color-light">You can configure additional security on a page to limit access. If nothing is configured, everyone is allowed. You can use pseudo roles like $user and $guest.</p>
 									
-									<div class="is-grid-row is-justify-end">
+									<div class="is-row is-align-end">
 										<button class="is-button is-variant-primary-outline is-size-xsmall" @click="page.content.roles ? page.content.roles.push('') : $window.Vue.set(page.content, 'roles', [''])"><icon name="plus"/>Role</button>
 									</div>
 									<div v-if="page.content.roles">
@@ -137,11 +137,11 @@
 									
 								</n-collapsible>
 								<n-collapsible :only-one-open="true" title="Branding" content-class="is-spacing-large">
-									<div class="is-grid-row is-justify-end" v-if="!page.content.branding">
+									<div class="is-row is-align-end" v-if="!page.content.branding">
 										<button class="is-button is-variant-primary-outline is-size-xsmall" @click="$window.Vue.set(page.content, 'branding', {})">Enable Page Branding</button>
 									</div>
-									<div v-else class="is-grid-column is-row-gap-medium">
-										<div class="is-grid-row is-justify-end">
+									<div v-else class="is-column is-row-gap-medium">
+										<div class="is-row is-align-end">
 											<button class="is-button is-variant-danger-outline is-size-xsmall" @click="$window.Vue.set(page.content, 'branding', null)">Disable Page Branding</button>
 										</div>
 										<n-form-text v-model="page.content.branding.favicon" placeholder="/resources/images/logo.png" label="The location of the favicon" :timeout="600" @input="$services.page.saveConfiguration"/>
@@ -166,7 +166,7 @@
 								</n-collapsible>
 								<n-collapsible :only-one-open="true" title="Query" content-class="is-spacing-large is-row-gap-medium">
 									<p class="is-p is-size-small is-color-light">You can use query variables to feed input values to your page from another page or another application. Query variables are bookmarkable.</p>
-									<div class="is-grid-row is-justify-end">
+									<div class="is-row is-align-end">
 										<button class="is-button is-color-primary-outline is-size-xsmall" @click="page.content.query.push(null)"><icon name="plus"/>New query parameter</button>
 									</div>
 									<div v-if="page.content.query && page.content.query.length">
@@ -177,18 +177,18 @@
 									</div>
 								</n-collapsible>
 								<n-collapsible :only-one-open="true" title="Internal">
-									<div class="is-grid-column is-spacing-large is-row-gap-medium">
+									<div class="is-column is-spacing-large is-row-gap-medium">
 										<p class="is-p is-size-small is-color-light">You can use internal variables to store data that you capture.</p>
-										<div class="is-grid-row is-justify-end">
+										<div class="is-row is-align-end">
 											<button class="is-button is-color-primary-outline is-size-xsmall" @click="addPageParameter"><icon name="plus"/>New internal parameter</button>
 										</div>
 									</div>
 									<div class="is-accordion" v-if="page.content.parameters">
 										<n-collapsible :only-one-open="true" class="is-color-neutral-light" v-for="parameter in page.content.parameters" :title="parameter.name ? parameter.name : 'unnamed'" content-class="is-spacing-medium is-row-gap-medium">
 											<ul slot="buttons" class="is-menu is-variant-toolbar is-align-end is-spacing-horizontal-medium">
-												<li class="is-grid-column"><button class="is-button is-size-small is-variant-primary-outline" @click="moveInternalUp(parameter)"><icon name="chevron-circle-up"/></button></li>
-												<li class="is-grid-column"><button class="is-button is-size-small is-variant-primary-outline" @click="moveInternalDown(parameter)"><icon name="chevron-circle-down"/></button></li>
-												<li class="is-grid-column"><button class="is-button is-size-small is-variant-danger-outline" @click="page.content.parameters.splice(page.content.parameters.indexOf(parameter), 1)"><icon name="times"/></button></li>
+												<li class="is-column"><button class="is-button is-size-small is-variant-primary-outline" @click="moveInternalUp(parameter)"><icon name="chevron-circle-up"/></button></li>
+												<li class="is-column"><button class="is-button is-size-small is-variant-primary-outline" @click="moveInternalDown(parameter)"><icon name="chevron-circle-down"/></button></li>
+												<li class="is-column"><button class="is-button is-size-small is-variant-danger-outline" @click="page.content.parameters.splice(page.content.parameters.indexOf(parameter), 1)"><icon name="times"/></button></li>
 											</ul>
 											<n-form-text v-model="parameter.name" :required="true" label="Name" :timeout="600"/>
 											<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :filter="getParameterTypes"/>
@@ -200,7 +200,7 @@
 											<div v-if="parameter.type && parameter.type.indexOf('.') > 0 && !parameter.default">
 												<h4>Default Values</h4>
 												<p class="subscript">You can set separate default values for particular fields.</p>
-												<div class="is-grid-row is-justify-end">
+												<div class="is-row is-align-end">
 													<button @click="parameter.defaults ? parameter.defaults.push({query:null,value:null}) : $window.Vue.set(parameter, 'defaults', [{query:null,value:null}])"><span class="fa fa-plus"></span>Default Value</button>
 												</div>
 												<div v-if="parameter.defaults">
@@ -244,7 +244,7 @@
 									<div class="padded-content">
 										<p class="subscript">You can add additional data from the backend or the application to this page. For example when building a detail view of an item, you can retrieve all the necessary information based on an id that you get from the path.</p>
 									</div>
-									<div class="is-grid-row is-justify-end">
+									<div class="is-row is-align-end">
 										<button @click="addState"><span class="fa fa-plus"></span>Backend<n-info>Load initial state from the backend</n-info></button>
 										<button @click="addApplicationState"><span class="fa fa-plus"></span>Application<n-info>Use state available at the application level</n-info></button>
 										<button @click="function() { if (page.content.stateErrors) page.content.stateErrors.push({}); else $window.Vue.set(page.content, 'stateErrors', [{}]) }"><span class="fa fa-plus"></span>Error<n-info>In case of state errors when loading, where should the user be routed?</n-info></button>
@@ -273,7 +273,7 @@
 												<span @click="state.refreshOn.splice(i)" class="fa fa-times"></span>
 											</div>
 										</div>
-										<div class="is-grid-row is-justify-end">
+										<div class="is-row is-align-end">
 											<button @click="state.refreshOn ? state.refreshOn.push('') : $window.Vue.set(state, 'refreshOn', [''])"><span class="fa fa-plus"></span>Refresh Event</button>
 										</div>
 									</n-collapsible>
@@ -290,7 +290,7 @@
 								<n-collapsible title="Computed" class="list" v-if="false">
 									<div class="padded-content">
 										<p class="subscript">You can compute new values based on existing state. This is especially interesting if the calculation is non trivial and you don't want to embed it into the page.</p>
-										<div class="is-grid-row is-justify-end">
+										<div class="is-row is-align-end">
 											<button @click="addComputed"><span class="fa fa-plus"></span>Computed State</button>
 										</div>
 									</div>
@@ -307,7 +307,7 @@
 													<span @click="state.refreshOn.splice(i)" class="fa fa-times"></span>
 												</div>
 											</div>
-											<div class="is-grid-row is-justify-end">
+											<div class="is-row is-align-end">
 												<button @click="state.refreshOn ? state.refreshOn.push('') : $window.Vue.set(state, 'refreshOn', [''])"><span class="fa fa-plus"></span>Refresh Event</button>
 											</div>
 										</n-collapsible>
@@ -322,7 +322,7 @@
 									<div class="padded-content">
 										<p class="subscript">Initial events are run when the page is first loaded but <i>after</i> the initial state is guaranteed to be there. Initial events can be periodically rerun, this allows for long polling or performing some initial checks.</p>
 									</div>
-									<div class="is-grid-row is-justify-end">
+									<div class="is-row is-align-end">
 										<button @click="addInitialEvent"><span class="fa fa-plus"></span>Initial Event</button>
 									</div>
 									<n-collapsible class="list-item" :title="$window.nabu.page.event.getName(event, 'definition') ? $window.nabu.page.event.getName(event, 'definition') : 'Unnamed Event'" v-for="event in page.content.initialEvents">
@@ -336,7 +336,7 @@
 								</n-collapsible>
 								<n-collapsible title="Triggers" class="list">
 									<p class="padded-content subscript">Triggers can be used to react to events as they occur. User interaction with this page will usually trigger events which can lead to actions defined here.</p>
-									<div class="is-grid-row is-justify-end">
+									<div class="is-row is-align-end">
 										<button @click="addAction"><span class="fa fa-plus"></span>Trigger</button>
 									</div>
 									<n-collapsible class="list-item" :title="action.name ? action.name : 'Unnamed Trigger'" :after="action.on ? 'on ' + action.on : null" v-for="action in page.content.actions">
@@ -408,7 +408,7 @@
 									</n-collapsible>
 								</n-collapsible>	
 								<n-collapsible title="Notifications" class="list">
-									<div class="is-grid-row is-justify-end">
+									<div class="is-row is-align-end">
 										<button @click="addNotification"><span class="fa fa-plus"></span>Notification</button>
 									</div>
 									<div v-if="page.content.notifications">
@@ -427,7 +427,7 @@
 									</div>
 								</n-collapsible>
 								<n-collapsible title="Analysis" class="list">
-									<div class="is-grid-row is-justify-end">
+									<div class="is-row is-align-end">
 										<button @click="addAnalysis"><span class="fa fa-plus"></span>Analysis</button>
 									</div>
 									<n-collapsible class="list-item" :title="(analysis.chainEvent && analysis.chainEvent.name ? analysis.chainEvent.name : 'unnamed')" :after="analysis.on ? 'on ' + analysis.on : null" v-for="analysis in page.content.analysis">
@@ -440,7 +440,7 @@
 									</n-collapsible>
 								</n-collapsible>
 								<n-collapsible title="Publish Global Events" class="list">
-									<div class="is-grid-row is-justify-end">
+									<div class="is-row is-align-end">
 										<button @click="addGlobalEvent"><span class="fa fa-plus"></span>Global Event</button>
 									</div>
 									<div class="padded-content" v-if="page.content.globalEvents">
@@ -456,7 +456,7 @@
 									</div>
 								</n-collapsible>
 								<n-collapsible title="Subscribe Global Events" class="list">
-									<div class="is-grid-row is-justify-end">
+									<div class="is-row is-align-end">
 										<button @click="addGlobalEventSubscription"><span class="fa fa-plus"></span>Global Event</button>
 									</div>
 									<div class="padded-content" v-if="page.content.globalEventSubscriptions">
@@ -482,7 +482,7 @@
 				<page-components-overview v-else-if="activeTab == 'components'"/>
 				
 				<div v-else-if="activeTab == 'selected' && cell && selectedType == 'cell'">
-					<ul class="is-menu is-variant-toolbar is-justify-center is-spacing-medium">
+					<ul class="is-menu is-variant-toolbar is-align-center is-spacing-medium">
 						<button @click="configure(cell)" v-if="cell.alias && hasConfigure(cell) && !canConfigureInline(cell)"><span class="fa fa-cog" title="Configure Cell Content"></span></button
 						><button @click="left(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-left"></span></button
 						><button @click="right(row, cell)" v-if="row.cells.length >= 2"><span class="fa fa-chevron-circle-right"></span></button
@@ -524,7 +524,7 @@
 								</n-form-section>
 								<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
 								<div v-if="$services.page.devices.length">
-									<div class="is-grid-row is-justify-end">
+									<div class="is-row is-align-end">
 										<button @click="addDevice(cell)">Add device rule</button>
 									</div>
 									<div v-if="cell.devices">
@@ -570,7 +570,7 @@
 								<div class="padded-content">
 									<n-form-text label="Cell Class" v-model="cell.class" :timeout="600"/>
 								</div>
-								<div class="is-grid-row is-justify-end">
+								<div class="is-row is-align-end">
 									<button @click="cell.styles == null ? $window.Vue.set(cell, 'styles', [{class:null,condition:null}]) : cell.styles.push({class:null,condition:null})"><span class="fa fa-plus"></span>Cell Style</button>
 								</div>
 								<div class="padded-content" v-if="cell.styles">
@@ -618,7 +618,7 @@
 									<n-form-text v-for="property in getRendererPropertyKeys(row)" :label="property" v-model="row.rendererProperties[property]"/>
 								</n-form-section>
 								<div v-if="$services.page.devices.length">
-									<div class="is-grid-row is-justify-end">
+									<div class="is-row is-align-end">
 										<button @click="addDevice(row)">Add device rule</button>
 									</div>
 									<div v-if="row.devices">
@@ -654,7 +654,7 @@
 								<n-form-text label="Class" v-model="row.class" v-if="false"/>
 								<n-form-combo label="Class" v-model="row.class" :filter="suggesPageRowClasses" :timeout="600"/>
 							</div>
-							<div class="is-grid-row is-justify-end">
+							<div class="is-row is-align-end">
 								<button @click="row.styles == null ? $window.Vue.set(row, 'styles', [{class:null,condition:null}]) : row.styles.push({class:null,condition:null})">Add Style</button>
 							</div>
 							<div class="padded-content" v-if="row.styles">
@@ -690,7 +690,7 @@
 
 <template id="page-rows">
 	<component :is="rowsTag()" class="is-grid">
-		<component :is="rowTagFor(row)" v-for="row in getCalculatedRows()" class="is-grid-row" :id="page.name + '_' + row.id" 
+		<component :is="rowTagFor(row)" v-for="row in getCalculatedRows()" class="is-row" :id="page.name + '_' + row.id" 
 				:class="$window.nabu.utils.arrays.merge(['page-row-' + row.cells.length, row.class ? row.class : null, {'collapsed': row.collapsed}, {'empty': !row.cells || !row.cells.length } ], rowClasses(row))"                    
 				:key="'page_' + pageInstanceId + '_row_' + row.id"
 				:row-key="'page_' + pageInstanceId + '_row_' + row.id"
@@ -838,46 +838,46 @@
 </template>
 
 <template id="page-sidemenu">
-	<div class="is-grid-column is-color-basic-alternating">
-		<div v-for="row in rows" class="is-grid-column is-spacing-small is-spacing-right-none is-row-gap-small" :class="{'is-selected': selected && selected.id == row.id}">
-			<div class="is-grid-row">
+	<div class="is-column is-color-basic-alternating">
+		<div v-for="row in rows" class="is-column is-spacing-small is-spacing-right-none is-row-gap-small" :class="{'is-selected': selected && selected.id == row.id}">
+			<div class="is-row">
 				<div @mouseout="mouseOut($event, row)"
 						@dragover="acceptDragRow($event, row)"
 						@dragend="$services.page.clearDrag($event)"
 						@drop="dropRow($event, row)"
 						@mouseover="mouseOver($event, row)" 
-						class="is-grid-row is-grow-fill">
+						class="is-row is-position-grow">
 					<button class="is-button is-variant-ghost is-size-xsmall" @click="toggleRow(row)"><icon :name="opened.indexOf(row.id) >= 0 ? 'chevron-down' : 'chevron-right'"/></button>
-					<span class="is-content is-size-xsmall is-grow-fill is-align-self-center" @click="selectRow(row)" 
+					<span class="is-content is-size-xsmall is-position-grow is-position-center" @click="selectRow(row)" 
 						@dragstart="dragRow($event, row)"
 						:draggable="true" 
 						@click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
 				</div>
-				<ul class="is-menu is-variant-toolbar is-justify-self-right">
-					<li class="is-grid-column"><button class="is-button is-size-xsmall is-color-primary-outline" @click="row.collapsed = !row.collapsed"><icon :name="row.collapsed ? 'eye-slash': 'eye'"/></button></li>
-					<li class="is-grid-column"><button class="is-button is-size-xsmall is-color-secondary-outline" @click="showHtml(row)"><icon name="code" /></button></li>
-					<li class="is-grid-column"><button class="is-button is-size-xsmall is-color-danger-outline" @click="$emit('removeRow', row)"><icon name="times"></span></button></li>
+				<ul class="is-menu is-variant-toolbar is-position-right">
+					<li class="is-column"><button class="is-button is-size-xsmall is-color-primary-outline" @click="row.collapsed = !row.collapsed"><icon :name="row.collapsed ? 'eye-slash': 'eye'"/></button></li>
+					<li class="is-column"><button class="is-button is-size-xsmall is-color-secondary-outline" @click="showHtml(row)"><icon name="code" /></button></li>
+					<li class="is-column"><button class="is-button is-size-xsmall is-color-danger-outline" @click="$emit('removeRow', row)"><icon name="times"></span></button></li>
 				</ul>
 			</div>
-			<div v-show="row.cells && row.cells.length && opened.indexOf(row.id) >= 0" class="is-grid-column is-color-basic-alternating">
-				<div v-for="cell in row.cells" class="is-grid-column is-spacing-small is-sidemenu-cell is-spacing-right-none" :class="{'is-selected': selected && selected.id == cell.id}">
-					<div class="is-grid-row">
+			<div v-show="row.cells && row.cells.length && opened.indexOf(row.id) >= 0" class="is-column is-color-basic-alternating">
+				<div v-for="cell in row.cells" class="is-column is-spacing-small is-sidemenu-cell is-spacing-right-none" :class="{'is-selected': selected && selected.id == cell.id}">
+					<div class="is-row">
 						<div class="page-sideentry" @mouseout="mouseOut($event, row, cell)" 
 								@dragend="$services.page.clearDrag($event)"
 								@dragover="acceptDragCell($event, row, cell)"
 								@drop="dropCell($event, row, cell)"
 								@mouseover="mouseOver($event, row, cell)"
-								class="is-grid-row is-grow-fill is-column-gap-small">
-							<icon name="cube" class="is-size-xsmall is-align-self-center"/>
-							<span class="is-content is-size-xsmall is-grow-fill is-align-self-center" @click="selectCell(row, cell)" 
+								class="is-row is-position-grow is-column-gap-small">
+							<icon name="cube" class="is-size-xsmall is-position-center"/>
+							<span class="is-content is-size-xsmall is-position-grow is-position-center" @click="selectCell(row, cell)" 
 								@dragstart="dragCell($event, row, cell)"
 								:draggable="true" 
 								@click.ctrl="scrollIntoView(row, cell)">{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
 						</div>
-						<ul class="is-menu is-variant-toolbar is-justify-self-right">
-							<li class="is-grid-column" v-if="hasConfigure(cell)"><button class="is-button is-color-primary-outline is-size-xsmall" @click="configure(cell)"><icon name="cog"/></button></li>
-							<li class="is-grid-column"><button class="is-button is-color-secondary-outline is-size-xsmall" @click="showHtml(row, cell)"><icon name="code"/></button></li>
-							<li class="is-grid-column"><button class="is-button is-color-danger-outline is-size-xsmall" @click="removeCell(row.cells, cell)"><icon name="times"/></button></li>
+						<ul class="is-menu is-variant-toolbar is-position-right">
+							<li class="is-column" v-if="hasConfigure(cell)"><button class="is-button is-color-primary-outline is-size-xsmall" @click="configure(cell)"><icon name="cog"/></button></li>
+							<li class="is-column"><button class="is-button is-color-secondary-outline is-size-xsmall" @click="showHtml(row, cell)"><icon name="code"/></button></li>
+							<li class="is-column"><button class="is-button is-color-danger-outline is-size-xsmall" @click="removeCell(row.cells, cell)"><icon name="times"/></button></li>
 						</ul>
 					</div>
 					<page-sidemenu v-show="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" v-bubble:select :selected="selected"
