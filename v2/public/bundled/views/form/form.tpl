@@ -1,6 +1,6 @@
 <template id="page-form-configure-all">
-	<n-form class="layout2">
-		<n-collapsible title="Form Settings" class="padded">
+	<n-form class="is-variant-floating-labels">
+		<n-collapsible title="Form Settings" content-class="is-spacing-medium">
 			<n-form-combo label="Operation" :value="operation" :filter="getOperations"
 				@input="updateOperation"
 				:formatter="function(x) { return x.id }"
@@ -68,7 +68,7 @@
 				</div>
 			</div>
 		</n-collapsible>
-		<n-collapsible title="Value Binding" v-if="!cell.state.pageForm">
+		<n-collapsible title="Value Binding" v-if="!cell.state.pageForm" content-class="is-spacing-medium">
 			<div class="list-row">
 				<n-form-combo :items="Object.keys(availableParameters)" v-model="autoMapFrom"/>
 				<button @click="automap" :disabled="!autoMapFrom">Automap</button>
@@ -78,7 +78,7 @@
 					v-model="cell.bindings"/>
 			</div>
 		</n-collapsible>
-		<n-collapsible title="Validation Codes">
+		<n-collapsible title="Validation Codes" content-class="is-spacing-medium">
 			<div v-if="cell.state.codes">
 				<div class="list-row" v-for="code in cell.state.codes">
 					<n-form-text v-model="code.code" label="Code" :timeout='600'/>
@@ -90,35 +90,35 @@
 				<button @click="cell.state.codes ? cell.state.codes.push({code:null,title:null}) : $window.Vue.set(cell.state, 'codes', [{code:null,title:null}])">Add code</button>
 			</div>
 		</n-collapsible>
-		<div v-for="cellPage in cell.state.pages">
+		<div class="is-column is-pattern-basic-alternating">
 			<page-form-configure :title="cellPage.name"
-				:allow-read-only="cell.state.allowReadOnly"
-				:schema-resolver="getSchemaFor"
-				:groupable="true"
-				:edit-name="true"
-				:fields="cellPage.fields" 
-				:is-list="isList"
-				:possible-fields="fieldsToAdd"
-				:page="page"
-				@input="function(newValue) { cellPage.name = newValue }"
-				:cell="cell"
-				root-tag="div"
-				:dark="true"/>
-			<div class="padded-content">
-				<n-form-text v-model="cellPage.disabledIf" label="Disabled if" v-if="!cellPage.enabledIf"/>
-				<n-form-text v-model="cellPage.enabledIf" label="Enabled if" v-if="!cellPage.disabledIf"/>
-			</div>
-			<div class="list-actions">
-				<span>Page Actions: </span>
-				<button v-if="$services.page.isCopied('page-form-field')" @click="function() { pasteField(cellPage) }"><span class="fa fa-paste"></span></button>
-				<button @click="$services.page.copyItem('page-form-page', cellPage, true)"><span class="fa fa-copy"></span></button>
-				<button v-if="cell.state.pages.length > 1" @click="upAllPage(cellPage)"><span class="fa fa-chevron-circle-left"></span></button>
-				<button v-if="cell.state.pages.length > 1" @click="upPage(cellPage)"><span class="fa fa-chevron-circle-up"></span></button>
-				<button v-if="cell.state.pages.length > 1" @click="downPage(cellPage)"><span class="fa fa-chevron-circle-down"></span></button>
-				<button v-if="cell.state.pages.length > 1" @click="downAllPage(cellPage)"><span class="fa fa-chevron-circle-right"></span></button>
-				<button v-if="false" @click="copyPage(cellPage)"><span class="fa fa-copy"></span></button>
-				<button v-if="cell.state.pages.length > 1" @click="deletePage(cellPage)">Delete Page '{{cellPage.name}}'</button>
-			</div>
+					v-for="cellPage in cell.state.pages"
+					:allow-read-only="cell.state.allowReadOnly"
+					:schema-resolver="getSchemaFor"
+					:groupable="true"
+					:edit-name="true"
+					:fields="cellPage.fields" 
+					:is-list="isList"
+					:possible-fields="fieldsToAdd"
+					:page="page"
+					@input="function(newValue) { cellPage.name = newValue }"
+					:cell="cell"
+					root-tag="div"
+					:dark="true">
+				<div class="is-column is-spacing-vertical-gap-medium" slot="configuration">
+					<n-form-text v-model="cellPage.disabledIf" label="Disabled if" v-if="!cellPage.enabledIf"/>
+					<n-form-text v-model="cellPage.enabledIf" label="Enabled if" v-if="!cellPage.disabledIf"/>
+				</div>
+				<template slot="actions">
+					<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="upAllPage(cellPage)"><icon name="chevron-circle-left"/></button></li>
+					<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="upPage(cellPage)"><icon name="chevron-circle-up"/></button></li>
+					<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="downPage(cellPage)"><icon name="chevron-circle-down"/></button></li>
+					<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="downAllPage(cellPage)"><icon name="chevron-circle-right"/></button></li>
+					<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="$services.page.copyItem('page-form-page', cellPage, true)"><icon name="copy"/>Copy page</button></li>
+					<li class="is-column" v-if="$services.page.isCopied('page-form-field')"><button class="is-button is-size-xsmall is-variant-warning"  @click="function() { pasteField(cellPage) }"><icon name="paste"/>Paste page</button></li>
+					<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="deletePage(cellPage)"><icon name="times"/></button></li>
+				</template>
+			</page-form-configure>
 		</div>
 		<div class="list-actions">
 			<button v-if="$services.page.isCopied('page-form-page')" @click="pastePage"><span class="fa fa-paste"></span></button>
@@ -235,14 +235,16 @@
 
 <template id="page-form-configure">
 	<component :is="rootTag" class="list" :title="title">
-		<div class="root-configuration">
+		<div class="is-column is-spacing-medium">
+			<ul class="is-menu is-variant-toolbar is-align-end">
+				<li class="is-column"><button class="is-button is-variant-primary is-size-xsmall" @click="addField(false)"><icon name="plus"/>Field</button></li>
+				<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall" @click="addField(true)"><icon name="plus"/>Content</button></li>
+				<slot name="actions"></slot>
+			</ul>
 			<n-form-text :value="title" label="Form Page Name" v-if="editName" v-bubble:input/>
+			<slot name="configuration"></slot>
 		</div>
-		<div class="list-actions">
-			<button @click="addField(false)"><span class="fa fa-plus"></span>Field</button>
-			<button @click="addField(true)"><span class="fa fa-plus"></span>Content</button>
-		</div>
-		<n-collapsible v-for="field in fields" :title="field.label ? field.label : field.name" :class="{'dark': dark}">
+		<n-collapsible v-for="field in fields" :title="field.label ? field.label : (field.name ? field.name : 'unnamed')" :class="{'dark': dark}" class="is-color-primary-light" :after="field.arbitrary ? 'Content' : 'Field'">
 			<div slot="buttons">
 				<button @click="$services.page.copyItem('page-form-field', field, true)"><span class="fa fa-copy"></span></button>
 				<button @click="upAll(field)" v-if="false"><span class="fa fa-chevron-circle-left"></span></button>
@@ -270,8 +272,8 @@
 				<n-form-combo :filter="function(x) { return possibleFields }" v-model="field.resetOnUpdate" label="Reset on update"/>
 			</div>
 		</n-collapsible>
-		<div class="list-actions" v-if="allowPaste">
-			<button v-if="$services.page.isCopied('page-form-field')" @click="function() { pasteField(cellPage) }"><span class="fa fa-paste"></span></button>
+		<div class="is-row is-spacing-medium is-align-end" v-if="allowPaste">
+			<button class="is-button is-variant-warning is-size-xsmall has-tooltip" v-if="$services.page.isCopied('page-form-field')" @click="function() { pasteField(cellPage) }"><icon name="paste"/><span class="is-tooltip">Paste field</span></button>
 		</div>
 	</component>
 </template>

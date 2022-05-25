@@ -1,6 +1,13 @@
 Vue.component("n-form-ace", {
-	template: "<div class='n-form-component'><div class='n-form-label-wrapper' v-if='label'><label>{{label}}</label></div><n-ace :mode='mode'"
-		+ " :timeout='timeout' :value='value' v-bubble:input/></div>",
+	template: "<div class='is-form-ace'>"
+		+ "	<div class='is-label-wrapper' v-if='label'><label class='is-label' v-html='label'></label></div>"
+		+ "	<div class='is-content-before' v-if='before' v-html='before'></div>"
+		+ "	<div class='is-content-wrapper'>"
+		+ "		<n-ace :mode='mode' :timeout='timeout' :value='value' v-bubble:input/>"
+		+ "	</div>"
+		+ "	<n-messages :messages='messages' v-if='messages && messages.length'/>"
+		+ "	<div class='is-content-after' v-if='after' v-html='after'></div>"
+		+ "</div>",
 	props: {
 		value: {
 			required: true
@@ -18,6 +25,19 @@ Vue.component("n-form-ace", {
 			type: Number,
 			required: false,
 			default: 300
+		},
+		before: {
+			type: String,
+			required: false
+		},
+		after: {
+			type: String,
+			required: false
+		}
+	},
+	data: function() {
+		return {
+			messages: []
 		}
 	}
 });

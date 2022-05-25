@@ -474,7 +474,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		clearDrag: function() {
 			this.dragItems.splice(0).forEach(function(x) {
-				x.classList.remove("hover-bottom", "hover-top", "hovering", "hover-left", "hover-right");
+				x.classList.remove("is-hover-bottom", "is-hover-top", "is-hovering", "is-hover-left", "is-hover-right");
 			});
 		},
 		// this should work both in regular browers and javafx webview where the drag events are more or less messed up
@@ -2171,7 +2171,8 @@ nabu.services.VueService(Vue.extend({
 				page.content = self.normalize({});
 			}
 			page.content.name = page.name;
-			page.marshalled = JSON.stringify(page.content, null, "\t");
+			//page.marshalled = JSON.stringify(page.content, null, "\t");
+			page.marshalled = JSON.stringify(page.content);
 			return this.$services.swagger.execute("nabu.web.page.core.rest.page.update", { body: page }).then(function() {
 				// add it to the pages if it isn't there yet (e.g. create)
 				var index = self.pages.indexOf(page);
@@ -2361,10 +2362,13 @@ nabu.services.VueService(Vue.extend({
 			}
 			return content;
 		},
-		getParentRoutes: function(newValue) {
+		getParentRoutes: function(newValue, not) {
 			var routes = this.$services.router.list().filter(function(x) { return !!x.alias && !!x.defaultAnchor }).map(function(x) { return x.alias });
 			if (newValue) {
 				routes = routes.filter(function(x) { return x.toLowerCase().indexOf(newValue.toLowerCase()) >= 0 });
+			}
+			if (not) {
+				routes = routes.filter(function(x) { return not.indexOf(x) < 0 });
 			}
 			routes.sort();
 			return routes;

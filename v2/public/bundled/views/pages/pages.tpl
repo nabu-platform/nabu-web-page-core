@@ -11,7 +11,7 @@
 		</ul>
 		<div class="is-column is-width-medium">
 			<n-prompt v-if="showing" class="is-modal">
-				<n-form class="is-color-basic is-spacing-large is-border-shadow is-variant-vertical">
+				<n-form class="is-color-background is-spacing-large is-border-shadow is-variant-vertical">
 					<h3 class="is-h3">Page properties</h3>
 					<n-form-section>
 						<n-form-text v-for="key in Object.keys(parameters)" v-model="parameters[key]" :label="key"/>
@@ -139,8 +139,8 @@
 									<li class="is-column"><button class="is-button is-size-small is-variant-primary-outline has-tooltip" @click="copy(page)"><icon name="copy"/><span class="is-tooltip is-position-top">Copy page</span></button></li>
 									<li class="is-column"><button class="is-button is-size-small is-variant-danger-outline has-tooltip" @click="remove(page)"><icon name="trash"/><span class="is-tooltip is-position-top is-color-danger">Delete page</span></button></li>
 								</ul>
-								<div class="panes is-row is-column-gap-large">
-									<n-form class="pane is-form is-position-grow is-color-background is-spacing-large is-variant-vertical">
+								<div class="is-row">
+									<n-form class="is-form is-position-grow is-color-body is-spacing-large is-variant-vertical">
 										<n-form-text :value="page.content.label ? page.content.label : page.name" label="Page name" :required="true" :timeout="600" @input="function(newValue) { updatePageName(page, newValue) }" 
 											after="The page name must be unique across the application"
 											:suffix="page.content.name"/>
@@ -153,9 +153,9 @@
 											after="When this page is slow, we can show a loading icon when the user wants to reach it"/>
 										<n-form-combo v-if="!page.content.initial" v-model="page.content.pageParent" label="Page Parent" :timeout="600" @input="save(page)"
 											placeholder="No page parent"
-											empty-value="No pages available yet that have a content anchor"
+											empty-value="No available parents"
 											after="Choose the parent page in which this page is nested by default when the user browses to it"
-											:filter="$services.page.getParentRoutes"/>
+											:filter="function(value) { return $services.page.getParentRoutes(value, [page.content.name]) }"/>
 										<n-form-text
 											v-model="page.content.defaultAnchor" label="Default Content Anchor" :timeout="600" @input="save(page)" placeholder="No content anchor"
 											after="The content anchor is where child pages will automatically be routed as needed"/>
@@ -163,7 +163,7 @@
 											v-if="page.content.defaultAnchor" label="Is default parent page" v-model="page.content.initial" @input="save(page)"/>
 										<!-- support for pages with input values -->
 									</n-form>
-									<div class="is-column is-row-gap-medium is-position-grow">
+									<div class="is-column is-spacing-vertical-gap-medium is-position-grow">
 										<h3 class="is-h3 has-toolbar">
 											<span class="is-text">Metadata</span>
 											<ul class="is-menu is-variant-toolbar">
@@ -171,8 +171,8 @@
 											</ul>
 										</h3>
 										<p class="is-p">You can add custom metadata properties to your page.</p>
-										<div v-if="page.content.properties" class="is-column is-row-gap-medium">
-											<n-form v-for="property in page.content.properties" class="has-button-close is-spacing-large is-color-background is-variant-vertical">
+										<div v-if="page.content.properties" class="is-column is-spacing-vertical-gap-medium">
+											<n-form v-for="property in page.content.properties" class="has-button-close is-spacing-large is-color-body is-variant-vertical">
 												<div class="is-row is-column-gap-medium">
 													<n-form-text v-model="property.key" label="Key" :timeout="600" @input="save(page)" class="is-position-grow"/>
 													<n-form-text v-model="property.value" label="Value":timeout="600" @input="save(page)" class="is-position-grow"/>
@@ -332,7 +332,7 @@
 </template>
 
 <template id="nabu-create-page">
-	<n-form class="is-color-basic is-spacing-large is-border-shadow is-variant-vertical" ref="form">
+	<n-form class="is-color-background is-spacing-large is-border-shadow is-variant-vertical" ref="form">
 		<h3 class="is-h3">Add a new page</h3>
 		<n-form-section>
 			<n-form-text v-model="name" label="Page name" :required="true" :validator="validator" after="The name of your page should be unique within your application"/>
@@ -348,7 +348,7 @@
 </template>
 
 <template id="nabu-pages-paste">
-	<n-form class="is-color-basic is-spacing-large is-border-shadow is-variant-vertical" ref="form">
+	<n-form class="is-color-background is-spacing-large is-border-shadow is-variant-vertical" ref="form">
 		<n-form-section>
 			<n-form-text v-model="category" label="Paste in category" :required="true"/>
 			<n-form-text v-model="name" label="Paste with name" :required="true"/>

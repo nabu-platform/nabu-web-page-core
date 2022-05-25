@@ -817,9 +817,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 			});
 		},
-		pasteRow: function() {
-			this.page.content.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
-			this.$services.page.copiedRow = null;
+		pasteRow: function(cell) {
+			if (cell) {
+				cell.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
+				this.$services.page.copiedRow = null;
+			}
+			// pushing to page!
+			else {
+				this.page.content.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
+				this.$services.page.copiedRow = null;
+			}
 		},
 		getStateOperations: function(value) {
 			return this.$services.page.getStateOperations(value);
@@ -2618,36 +2625,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 		pasteCell: function(row) {
 			row.cells.push(this.$services.page.renumber(this.page, this.$services.page.copiedCell));
 			this.$services.page.copiedCell = null;
-		},
-		pasteRow: function(cell) {
-			cell.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
-			this.$services.page.copiedRow = null;
-		},
-		goto: function(event, row, cell) {
-			if (this.edit) {
-				this.$emit("select", row, cell, !cell ? "row" : "cell");
-				var doDefault = true;
-				// if we have a cell target with a configuration, show that, otherwise, we do the generic configuration
-				if (cell != null) {
-					if (this.canConfigureInline(cell)) {
-						this.configuring = cell.id;
-					}
-					else {
-						var self = this;
-						var pageInstance = self;
-						var cellInstance = pageInstance.getComponentForCell(cell.id);
-						if (cellInstance && cellInstance.configure) {
-							cellInstance.configure();
-							doDefault = false;
-						}
-					}
-				}
-				if (doDefault) {
-					this.configuring = cell ? cell.id : row.id;
-				}
-				event.stopPropagation();
-			}
 		}
+		
 	},
 	watch: {
 		/*parameters: function(newValue) {
@@ -2739,9 +2718,34 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		});
 	},
 	methods: {
+		goto: function(event, row, cell) {
+			if (this.edit) {
+				this.$emit("select", row, cell, cell ? "cell" : "row");
+				var doDefault = true;
+				// if we have a cell target with a configuration, show that, otherwise, we do the generic configuration
+				if (cell != null) {
+					if (this.canConfigureInline(cell)) {
+						this.configuring = cell.id;
+					}
+					else {
+						var self = this;
+						var pageInstance = self.$services.page.getPageInstance(self.page, self);
+						var cellInstance = pageInstance.getComponentForCell(cell.id);
+						if (cellInstance && cellInstance.configure) {
+							cellInstance.configure();
+							doDefault = false;
+						}
+					}
+				}
+				if (doDefault) {
+					this.configuring = cell ? cell.id : row.id;
+				}
+				event.stopPropagation();
+			}
+		},
 		suggesPageRowClasses: function(value) {
 			return this.$services.page.classes("page-row", value).filter(function(x) {
-				return ["empty", "hover-top", "hover-bottom", "hover-left", "hover-right", "hovering"].indexOf(x) < 0;
+				return ["is-empty", "is-hover-top", "is-hover-bottom", "is-hover-left", "is-hover-right", "is-hovering"].indexOf(x) < 0;
 			});
 		},
 		drop: function(event, row) {
@@ -2850,28 +2854,28 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				var rowTarget = document.getElementById(self.page.name + '_' + row.id);
 				this.$services.page.pushDragItem(rowTarget);
 				var rect = rowTarget.getBoundingClientRect();
-				rowTarget.classList.remove("hovering", "hover-top", "hover-bottom", "hover-left", "hover-right");
+				rowTarget.classList.remove("is-hovering", "is-hover-top", "is-hover-bottom", "is-hover-left", "is-hover-right");
 				// bottom 15%, highlight bottom
 				if (Math.abs(event.clientY - rect.top) >= rect.height - (rect.height / 6)) {
-					rowTarget.classList.add("hover-bottom");
+					rowTarget.classList.add("is-hover-bottom");
 				}
 				// top 15%, highlight top
 				else if (Math.abs(event.clientY - rect.top) <= rect.height / 6) {
-					rowTarget.classList.add("hover-top");
+					rowTarget.classList.add("is-hover-top");
 				}
 				// not yet sure what this would entail
 				/*
 				// left 15%
 				else if (Math.abs(event.clientX - rect.left) <= rect.width / 6) {
-					rowTarget.classList.add("hover-left");
+					rowTarget.classList.add("is-hover-left");
 				}
 				// right 15%
 				else if (Math.abs(event.clientX - rect.left) >= rect.width - (rect.width / 6)) {
-					rowTarget.classList.add("hover-right");
+					rowTarget.classList.add("is-hover-right");
 				}
 				*/
 				else {
-					rowTarget.classList.add("hovering");
+					rowTarget.classList.add("is-hovering");
 				}
 				$event.preventDefault();
 				$event.stopPropagation();
@@ -2881,7 +2885,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			var self = this;
 			var rowTarget = document.getElementById(self.page.name + '_' + row.id);
 			if (rowTarget) {
-				rowTarget.classList.remove("hovering");
+				rowTarget.classList.remove("is-hovering");
 			}
 			$event.preventDefault();
 			$event.stopPropagation();
@@ -3166,12 +3170,16 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			var component = pageInstance.getComponentForCell(cell.id);
 			return component && component.configurator;
 		},
-		configure: function(cell) {
-			if (this.canConfigure(cell)) {
-				var self = this;
-				var pageInstance = self.$services.page.getPageInstance(self.page, self);
-				var cellInstance = pageInstance.getComponentForCell(cell.id);
-				cellInstance.configure();
+		configureCell: function(event, row, cell) {
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			var component = pageInstance.getComponentForCell(cell.id);
+			if (component && component.configurator) {
+				this.goto(event, row, cell, "cell");
+			}
+			// backwards compatible
+			else if (component.configure) {
+				component.configure();
 			}
 		},
 		close: function(cell) {
@@ -3577,12 +3585,12 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			if (self.edit) {
 				var rowTarget = document.getElementById(self.page.name + '_' + row.id);
 				if (rowTarget) {
-					rowTarget.classList.remove("hovering");
+					rowTarget.classList.remove("is-hovering");
 				}
 				if (cell) {
 					var cellTarget = document.getElementById(self.page.name + '_' + row.id + '_' + cell.id);
 					if (cellTarget) {
-						cellTarget.classList.remove("hovering");
+						cellTarget.classList.remove("is-hovering");
 					}
 				}
 			}
@@ -3591,12 +3599,12 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			if (this.edit) {
 				var rowTarget = document.getElementById(this.page.name + '_' + row.id);
 				if (rowTarget) {
-					rowTarget.classList.add("hovering");
+					rowTarget.classList.add("is-hovering");
 				}
 				if (cell) {
 					var cellTarget = document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
 					if (cellTarget) {
-						cellTarget.classList.add("hovering");
+						cellTarget.classList.add("is-hovering");
 					}
 					if (!event.shiftKey) {
 						event.stopPropagation();
@@ -3611,14 +3619,14 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 					clearTimeout($event.target.$unhover);
 					$event.target.$unhover = null;
 				}
-				$event.target.classList.add("menu-hovering");
+				$event.target.classList.add("is-menu-hovering");
 			}
 		},
 		menuUnhover: function($event) {
 			if (this.edit) {
 				var self = this;
 				$event.target.$unhover = setTimeout(function() {
-					$event.target.classList.remove("menu-hovering");
+					$event.target.classList.remove("is-menu-hovering");
 					$event.target.$unhover = null;
 				}, 500);
 			}
@@ -3730,7 +3738,9 @@ Vue.component("page-sidemenu", {
 	},
 	data: function() {
 		return {
-			opened: []
+			opened: [],
+			editing: null,
+			aliasing: null
 		}	
 	},
 	methods: {
@@ -3786,24 +3796,24 @@ Vue.component("page-sidemenu", {
 			var self = this;
 			var rowTarget = document.getElementById(self.page.name + '_' + row.id);
 			if (rowTarget) {
-				rowTarget.classList.remove("hovering");
+				rowTarget.classList.remove("is-hovering");
 			}
 			if (cell) {
 				var cellTarget = document.getElementById(self.page.name + '_' + row.id + '_' + cell.id);
 				if (cellTarget) {
-					cellTarget.classList.remove("hovering");
+					cellTarget.classList.remove("is-hovering");
 				}
 			}
 		},
 		mouseOver: function(event, row, cell) {
 			var rowTarget = document.getElementById(this.page.name + '_' + row.id);
 			if (rowTarget) {
-				rowTarget.classList.add("hovering");
+				rowTarget.classList.add("is-hovering");
 			}
 			if (cell) {
 				var cellTarget = document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
 				if (cellTarget) {
-					cellTarget.classList.add("hovering");
+					cellTarget.classList.add("is-hovering");
 				}
 				if (!event.shiftKey) {
 					event.stopPropagation();
@@ -3977,6 +3987,9 @@ Vue.component("page-sidemenu", {
 			this.$services.page.copiedCell = null;
 		},
 		pasteRow: function(cell) {
+			if (!cell.rows) {
+				Vue.set(cell, "rows", []);
+			}
 			cell.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
 			this.$services.page.copiedRow = null;
 		},
@@ -4000,12 +4013,12 @@ Vue.component("page-sidemenu", {
 				this.$services.page.pushDragItem(event.target);
 				var rect = event.target.getBoundingClientRect();
 				if (Math.abs(event.clientY - rect.top) >= rect.height / 2) {
-					event.target.classList.remove("hover-top");
-					event.target.classList.add("hover-bottom");
+					event.target.classList.remove("is-hover-top");
+					event.target.classList.add("is-hover-bottom");
 				}
 				else {
-					event.target.classList.remove("hover-bottom");
-					event.target.classList.add("hover-top");
+					event.target.classList.remove("is-hover-bottom");
+					event.target.classList.add("is-hover-top");
 				}
 				event.preventDefault();
 			}
@@ -4018,12 +4031,12 @@ Vue.component("page-sidemenu", {
 				this.$services.page.pushDragItem(event.target);
 				var rect = event.target.getBoundingClientRect();
 				if (Math.abs(event.clientY - rect.top) >= rect.height / 2) {
-					event.target.classList.remove("hover-top");
-					event.target.classList.add("hover-bottom");
+					event.target.classList.remove("is-hover-top");
+					event.target.classList.add("is-hover-bottom");
 				}
 				else {
-					event.target.classList.remove("hover-bottom");
-					event.target.classList.add("hover-top");
+					event.target.classList.remove("is-hover-bottom");
+					event.target.classList.add("is-hover-top");
 				}
 				event.preventDefault();
 			}
@@ -4180,6 +4193,18 @@ Vue.component("page-sidemenu", {
 						self.$emit("open");
 					}
 				});
+			}
+		},
+		rows: {
+			deep: true,
+			handler: function() {
+				if (this.selected && this.$refs["cell_" + this.selected.id] && this.$refs["cell_" + this.selected.id].length) {
+					var self = this;
+					console.log("selecting", self.$refs["cell_" + this.selected.id][0]);
+					setTimeout(function() {
+						self.$refs["cell_" + self.selected.id][0].focus();
+					}, 0);
+				}
 			}
 		}
 	}
