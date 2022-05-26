@@ -31,11 +31,11 @@ nabu.page.formComponentConstructer = function(name) {
 				type: Object,
 				required: false
 			},
-			// a list of child components with a name and the applied classes
+			// child components with a name and the applied classes
 			// in the future we might add other configuration options
-			// [{name: 'form-button-ok', classes: ["test1", "test2"]}]
+			// {'form-button-ok': { classes: ["test1", "test2"]} }
 			childComponents: {
-				type: Array,
+				type: Object,
 				required: false
 			},
 			cell: {
@@ -206,10 +206,10 @@ nabu.page.formComponentConstructer = function(name) {
 					name: "form-button-container",
 					// the type of component
 					component: "row",
-					// the defaults that are applied if nothing is configured
+					// the default classes applied when nothing is set
 					default: ["layout_align_space-between"]
 				}, {
-					title: "OK Button",
+					title: "Ok Button",
 					name: "form-button-ok",
 					component: "button",
 					default: ["button_variant_primary"]
@@ -218,6 +218,16 @@ nabu.page.formComponentConstructer = function(name) {
 					name: "form-button-cancel",
 					component: "button",
 					default: ["button_variant_link"]
+				}, {
+					title: "Next Button",
+					name: "form-button-next",
+					component: "button",
+					default: ["button_variant_primary"]
+				}, {
+					title: "Previous Button",
+					name: "form-button-previous",
+					component: "button",
+					default: ["button_variant_primary"]
 				}]	
 			},
 			

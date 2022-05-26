@@ -525,26 +525,116 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		normalizeAris: function(cell) {
+			if (cell.aris == null) {
+				Vue.set(cell, "aris", {
+					components: {}
+				});
+			}
+			this.getChildComponents(cell).forEach(function(x) {
+				if (!cell.aris.components[x.name]) {
+					Vue.set(cell.aris.components, x.name, {
+						variant: null,
+						// applied modifiers (by name)
+						modifiers: [],
+						// applied options, this is written as "dimension_option"
+						options: []
+					})
+				}
+			})
+			return cell.aris != null;
+		},
 		getChildComponents: function(cell) {
 			var pageInstance = this;
 			var component = pageInstance.getComponentForCell(cell.id);
-			if (component && component.configurator) {
-				var configurator = Vue.component(component.configurator());
-				configurator = new configurator();
-				if (configurator.getChildComponents) {
-					return configurator.getChildComponents();
+			if (component != null) {
+				if (component.getChildComponents) {
+					return component.getChildComponents();
+				}
+				var self = this;
+				if (component && component.configurator) {
+					var configurator = Vue.component(component.configurator());
+					configurator = new configurator({propsData: {
+						page: self.page,
+						cell: cell
+					}});
+					// destroy cleanly
+					configurator.$destroy();
+					if (configurator.getChildComponents) {
+						return configurator.getChildComponents();
+					}
 				}
 			}
 			return [];
 		},
-		getDefaultVariant: function(childComponent) {
-			
-		},
 		getAvailableDimensions: function(childComponent) {
-			
+			var hierarchy = this.$services.page.getArisComponentHierarchy(childComponent.component);
+			var dimensions = [];
+			hierarchy.forEach(function(component) {
+				if (component.dimensions) {
+					component.dimensions.forEach(function(x) {
+						var current = dimensions.filter(function(y) { return y.name == x.name })[0];
+						if (!current) {
+							current = {name: x.name };
+							dimensions.push(current);
+						}
+						if (!current.options) {
+							current.options = [];
+						}
+						// only add options that we don't know about yet
+						if (current.options.length > 0) {
+							x.options.forEach(function(y) {
+								var option = current.options.filter(function(z) { return z == y })[0];
+								if (option == null) {
+									current.options.push(y);
+								}
+							});
+						}
+						else {
+							nabu.utils.arrays.merge(current.options, x.options);
+						}
+					})
+				}
+			});
+			// sort the dimensions alphabetically
+			dimensions.sort(function(a, b) { return a.name.localeCompare(b.name) });
+			return dimensions;
+		},
+		getAvailableVariants: function(childComponent, value) {
+			var variants = [];
+			this.$services.page.getArisComponentHierarchy(childComponent.component).forEach(function(component) {
+				if (component.variants != null) {
+					component.variants.forEach(function(variant) {
+						if (variants.indexOf(variant.name) < 0) {
+							variants.push(variant.name);
+						}	
+					});
+				}
+			});
+			if (value) {
+				variants = variants.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+			}
+			variants.sort();
+			return variants;
 		},
 		getAvailableOptions: function(childComponent, dimension) {
-			
+			var current = this.getAvailableDimensions(childComponent).filter(function(x) { return x.name == dimension.name });
+			return current ? current.options : [];
+		},
+		toggleOption: function(childComponent, dimension, option) {
+			var index = this.cell.aris.components[childComponent.name].options.indexOf(dimension.name + "_" + option);
+			if (index >= 0) {
+				this.cell.aris.components[childComponent.name].options.splice(index, 1);
+			}
+			else {
+				this.cell.aris.components[childComponent.name].options.push(dimension.name + "_" + option);
+			}
+		},
+		isActiveOption: function(childComponent, dimension, option) {
+			return this.cell.aris.components[childComponent.name].options.indexOf(dimension.name + "_" + option) >= 0;
+		},
+		prettifyOption: function(option) {
+			return option;
 		},
 		
 		
@@ -2682,6 +2772,20 @@ nabu.page.views.Page = Vue.component("n-page", {
 			document.body.classList.remove.apply(document.body.classList, self.oldBodyClasses.splice(0));
 			document.body.classList.add.apply(document.body.classList, newVal);
 			nabu.utils.arrays.merge(self.oldBodyClasses, newVal);
+		},
+		'cell.aris': {
+			deep: true,
+			handler: function(newValue) {
+				if (newValue && !newValue.hasOwnProperty("rerender")) {
+					Object.defineProperty(newValue, "rerender", {
+						value: true,
+						enumerable: false
+					});
+				}
+				else {
+					newValue.rerender = true;
+				}
+			}
 		}
 	}
 });
@@ -3479,6 +3583,30 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				pageInstanceId: this.pageInstanceId,
 				stopRerender: this.edit
 			};
+			// if we have an aris aware component, add a childComponents parameter
+			if (this.$services.page.useAris && cell && cell.aris && cell.aris.components) {
+				var childComponents = {};
+				Object.keys(cell.aris.components).forEach(function(key) {
+					childComponents[key] = {
+						classes: []
+					};
+					if (cell.aris.components[key].variant != null) {
+						childComponents[key].classes.push("is-variant-" + cell.aris.components[key].variant);
+					}
+					if (cell.aris.components[key].options != null && cell.aris.components[key].options.length > 0) {
+						cell.aris.components[key].options.forEach(function(option) {
+							childComponents[key].classes.push("is-" + option.replace("_", "-"));
+						});
+					}
+					// TODO: modifiers
+					
+					// if no classes are set, set the default name as variant so themes can target this
+					if (childComponents[key].classes.length == 0) {
+						childComponents[key].classes.push("is-variant-" + key);
+					}
+				});
+				result.childComponents = childComponents;
+			}
 			// if we have a trigger event, add it explicitly to trigger a redraw if needed
 			if (cell.on) {
 				result[cell.on] = pageInstance.variables[cell.on];

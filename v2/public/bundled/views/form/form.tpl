@@ -98,7 +98,7 @@
 			</ul>
 		</h2>
 		<n-collapsible v-for="(cellPage, index) in cell.state.pages" :only-one-open="true" :title="cellPage.name ? cellPage.name : 'Unnamed'" class="is-highlight-left" :start-open="index == 0" after="Page">
-			<ul class="is-menu is-variant-toolbar is-align-end" slot="buttons">
+			<ul class="is-menu is-variant-toolbar is-align-end is-spacing-horizontal-right-medium" slot="buttons">
 				<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="upAllPage(cellPage)"><icon name="chevron-circle-left"/></button></li>
 				<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="upPage(cellPage)"><icon name="chevron-circle-up"/></button></li>
 				<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="downPage(cellPage)"><icon name="chevron-circle-down"/></button></li>
@@ -193,16 +193,24 @@
 						<span>{{$services.page.translate($services.page.interpret(cell.state.edit, $self))}}</span>
 					</button>
 				</footer>
-				<footer class="global-actions footer-standard" v-else-if="!cell.state.immediate">
-					<a class="p-link cancel" :disabled="doingIt" href="javascript:void(0)" @click="cancel" :id="cell.state.formId ? cell.state.formId + '_cancel' : null" 
-						v-if="cell.state.cancel && (!cell.state.previous || cell.state.pages.indexOf(currentPage) == 0)">{{$services.page.translate($services.page.interpret(cell.state.cancel, $self))}}</a>
-					<a class="p-link previous" :disabled="doingIt" href="javascript:void(0)" @click="previousPage" :id="cell.state.formId ? cell.state.formId + '_previous' : null" 
-						v-if="cell.state.previous && cell.state.pages.indexOf(currentPage) > 0">{{$services.page.translate($services.page.interpret(cell.state.previous, $self))}}</a>
-					<button class="p-button primary" :id="cell.state.formId ? cell.state.formId + '_next' : null" @click="nextPage" 
+				<footer class="is-row" :class="childComponents['form-button-container'].classes" v-else-if="!cell.state.immediate">
+					<button class="is-button" 
+						:class="childComponents['form-button-cancel'].classes"
+						:disabled="doingIt" href="javascript:void(0)" @click="cancel" :id="cell.state.formId ? cell.state.formId + '_cancel' : null" 
+						v-if="cell.state.cancel && (!cell.state.previous || cell.state.pages.indexOf(currentPage) == 0)">{{$services.page.translate($services.page.interpret(cell.state.cancel, $self))}}</button>
+					<button class="is-button" 
+						:class="childComponents['form-button-previous'].classes"
+						:disabled="doingIt" href="javascript:void(0)" @click="previousPage" :id="cell.state.formId ? cell.state.formId + '_previous' : null" 
+						v-if="cell.state.previous && cell.state.pages.indexOf(currentPage) > 0">{{$services.page.translate($services.page.interpret(cell.state.previous, $self))}}</button>
+					<button class="is-button"
+						:class="childComponents['form-button-next'].classes"
+						:id="cell.state.formId ? cell.state.formId + '_next' : null" @click="nextPage" 
 						v-if="cell.state.next && hasNextActivePage(currentPage)">{{$services.page.translate($services.page.interpret(cell.state.next, $self))}}</button>
-					<button :disabled="doingIt" class="p-button primary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
+					<button :disabled="doingIt" class="is-button" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt"
+						:class="childComponents['form-button-ok'].classes"
 						v-else-if="cell.state.ok">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
-					<button class="p-button secondary" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
+					<button class="is-button" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
+						:class="childComponents['form-button-ok'].classes"
 						:disabled="doingIt"
 						v-if="cell.state.pages.length >= 2 && cell.state.partialSubmit && cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1 && cell.state.ok">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
 				</footer>
@@ -250,7 +258,7 @@
 			</ul>
 		</div>
 		<n-collapsible v-for="field in fields" :title="field.label ? field.label : (field.name ? field.name : 'unnamed')" :class="{'dark': dark}" class="is-color-primary-light" :after="field.arbitrary ? 'Content' : 'Field'" content-class="is-spacing-medium">
-			<ul class="is-menu is-variant-toolbar" slot="buttons">
+			<ul class="is-menu is-variant-toolbar is-spacing-horizontal-right-medium" slot="buttons">
 				<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="upAll(field)"><icon name="chevron-circle-left"/></button></li>
 				<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="up(field)"><icon name="chevron-circle-up"/></button></li>
 				<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="down(field)"><icon name="chevron-circle-down"/></button></li>

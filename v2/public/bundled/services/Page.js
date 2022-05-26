@@ -102,7 +102,8 @@ nabu.services.VueService(Vue.extend({
 			// you can set a cookie provider, the key is the name of the cookie provider, the value is an array of regexes (or names) of the cookies that belong to this provider
 			cookieProviders: {},
 			// whether or not to use aris
-			useAris: true
+			useAris: true,
+			aris: null
 		}
 	},
 	activate: function(done) {
@@ -574,6 +575,21 @@ nabu.services.VueService(Vue.extend({
 				
 			}
 		},
+		// this returns all the parent components as well
+		getArisComponentHierarchy: function(component) {
+			var components = this.getArisComponents();
+			var hierarchy = [];
+			var last = components[component];
+			while (last) {
+				hierarchy.push(last);
+				last = last.extends ? components[last.extends] : null;
+			}
+			return hierarchy;
+		},
+		// we hide this behind a function so we can refactor the layout later
+		getArisComponents: function() {
+			return this.aris;
+		},
 		activate: function(done, initial) {
 			var self = this;
 		
@@ -753,6 +769,14 @@ nabu.services.VueService(Vue.extend({
 				}
 				var promises = [];
 				if (self.canEdit()) {
+					if (self.useAris) {
+						promises.push(nabu.utils.ajax({url: "${server.root()}page/v1/api/aris-definitions"}).then(function(response) {
+							self.aris = {};
+							JSON.parse(response.responseText).forEach(function(component) {
+								self.aris[component.name] = component;
+							});
+						}));
+					}
 					promises.push(injectJavascript());
 					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.style.list").then(function(list) {
 						if (list && list.styles) {

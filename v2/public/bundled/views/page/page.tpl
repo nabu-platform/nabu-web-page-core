@@ -59,7 +59,6 @@
 				
 				<div v-show="edit && page.content.rows && activeTab  == 'layout'">
 					<page-sidemenu :rows="page.content.rows" :page="page"
-						class="is-spacing-horizontal-sides-small"
 						:selected="cell ? cell : row"
 						@select="selectItem"
 						@removeRow="function(row) { $confirm({title: 'Delete row', message:'Are you sure you want to delete this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
@@ -186,7 +185,7 @@
 									</div>
 									<div class="is-accordion" v-if="page.content.parameters">
 										<n-collapsible :only-one-open="true" class="is-color-primary-light" v-for="parameter in page.content.parameters" :title="parameter.name ? parameter.name : 'unnamed'" content-class="is-spacing-medium" after="Internal">
-											<ul slot="buttons" class="is-menu is-variant-toolbar">
+											<ul slot="buttons" class="is-menu is-variant-toolbar is-spacing-horizontal-right-small">
 												<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="moveInternalUp(parameter)"><icon name="chevron-circle-up"/></button></li>
 												<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="moveInternalDown(parameter)"><icon name="chevron-circle-down"/></button></li>
 												<li class="is-column"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="page.content.parameters.splice(page.content.parameters.indexOf(parameter), 1)"><icon name="times"/></button></li>
@@ -252,7 +251,7 @@
 									</div>
 									<div class="is-accordion is-highlight-left">
 										<n-collapsible :only-one-open="true" :title="state.name ? state.name : 'unnamed'" v-for="state in page.content.states" :after="state.inherited ? 'Application' : 'Backend'" class="is-color-primary-light" content-class="is-spacing-medium">
-											<div slot="buttons">
+											<div slot="buttons" class="is-row is-spacing-horizontal-right-small">
 												<button class="is-button is-variant-danger-outline is-size-xsmall" @click="page.content.states.splice(page.content.states.indexOf(state), 1)"><icon name="times"/></button>
 											</div>
 											<n-form-text :value="state.name" @input="function(newValue) { if (!validateStateName(newValue).length) state.name = newValue; }" label="Name" :required="true" :validator="validateStateName" :timeout="600"/>
@@ -282,7 +281,7 @@
 									</div>
 									<div v-if="page.content.stateErrors" class="is-accordion is-highlight-left">
 										<n-collapsible :only-one-open="true" class="is-color-primary-light" :title="stateError.code ? stateError.code : 'no code'" v-for="stateError in page.content.stateErrors" after="Error" content-class="is-spacing-medium">
-											<div slot="buttons">
+											<div slot="buttons" class="is-row is-spacing-horizontal-right-small">
 												<button class="is-button is-variant-danger-outline is-size-xsmall" @click="page.content.stateErrors.splice(page.content.stateErrors.indexOf(stateError), 1)"><icon name="times"/></button>
 											</div>
 											<n-form-text v-model="stateError.code" label="Error Code" :timeout="600"/>
@@ -329,7 +328,7 @@
 										</div>
 									</div>
 									<n-collapsible :only-one-open="true" class="is-color-primary-light" :title="$window.nabu.page.event.getName(event, 'definition') ? $window.nabu.page.event.getName(event, 'definition') : 'Unnamed Event'" v-for="event in page.content.initialEvents" content-class="is-spacing-medium" after="Initial Event">
-										<div slot="buttons">
+										<div slot="buttons" class="is-row is-spacing-horizontal-right-small">
 											<button class="is-button is-variant-danger-outline is-size-xsmall" @click="page.content.initialEvents.splice(page.content.initialEvents.indexOf(event), 1)"><icon name="times"/></button>
 										</div>
 										<n-form-text v-model="event.condition" label="Condition" :timeout="600"/>
@@ -345,7 +344,7 @@
 										</div>
 									</div>
 									<n-collapsible :only-one-open="true" v-for="action in page.content.actions" class="is-color-primary-light" :title="action.name ? action.name : 'Unnamed Trigger'" :after="action.on ? 'on ' + action.on : null" content-class="is-spacing-medium" after="Trigger">
-										<ul slot="buttons" class="is-menu is-variant-toolbar">
+										<ul slot="buttons" class="is-menu is-variant-toolbar is-spacing-horizontal-right-small">
 											<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="moveActionTop(action)"><span class="fa fa-chevron-circle-left"></span></button></li>
 											<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall" @click="moveTriggerUp(action)"><span class="fa fa-chevron-circle-up"></span></button></li>
 											<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall" @click="moveTriggerDown(action)"><span class="fa fa-chevron-circle-down"></span></button></li>
@@ -431,7 +430,7 @@
 										<button class="is-button is-variant-primary-outline is-size-xsmall" @click="addAnalysis"><icon name="plus"/>Analysis</button>
 									</div>
 									<n-collapsible :only-one-open="true" class="is-color-primary-light" :title="(analysis.chainEvent && analysis.chainEvent.name ? analysis.chainEvent.name : 'unnamed')" :after="analysis.on ? 'on ' + analysis.on : 'no trigger yet'" v-for="analysis in page.content.analysis" content-class="is-spacing-medium">
-										<div slot="buttons">
+										<div slot="buttons" class="is-row is-spacing-horizontal-right-small">
 											<button @click="page.content.analysis.splice(page.content.analysis.indexOf(analysis), 1)"><icon name="times"/></button>
 										</div>
 										<n-form-combo v-model="analysis.on" label="Trigger On" :filter="getAvailableEvents"/>
@@ -570,9 +569,17 @@
 									</n-form-section>
 								</div>
 							</div>
-							<div v-if="$services.page.useAris">
+							<div v-if="$services.page.useAris && normalizeAris(cell)">
 								<n-collapsible v-for="childComponent in getChildComponents(cell)" :only-one-open="true" title="Styling" class="is-highlight-left is-color-primary-light" :title="childComponent.title">
-									
+									<div class="is-column is-spacing-medium">
+										<n-form-combo v-model="cell.aris.components[childComponent.name].variant" label="Variant" :filter="getAvailableVariants.bind($self, childComponent)" after="Choose the main variant of this component"
+											empty-value="No variants available"
+											@input="cell.aris.components[childComponent.name].modifiers.splice(0)"/>
+									</div>
+									<n-collapsible v-for="dimension in getAvailableDimensions(childComponent)" :only-one-open="true" :title="dimension.name" class="is-highlight-left is-color-secondary-light" content-class="is-spacing-medium is-spacing-vertical-gap-none">
+										<n-form-checkbox :value="isActiveOption(childComponent, dimension, option)" @input="function() { toggleOption(childComponent, dimension, option) }" v-for="option in dimension.options" 
+											:label="prettifyOption(option)"/>
+									</n-collapsible>
 								</n-collapsible>
 							</div>
 						</n-collapsible>
@@ -704,7 +711,10 @@
 				<button class="is-button is-variant-primary is-size-xsmall has-tooltip" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-tooltip">Configure row</span></button>
 			</div>
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-			<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" v-for="cell in getCalculatedCells(row)" v-if="shouldRenderCell(row, cell)" v-show="!edit || !row.collapsed"
+			<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+					v-for="cell in getCalculatedCells(row)" 
+					v-if="shouldRenderCell(row, cell)" 
+					v-show="!edit || !row.collapsed"
 					:id="page.name + '_' + row.id + '_' + cell.id" 
 					:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 					:key="cellId(cell)"
@@ -724,7 +734,7 @@
 				</div>
 				
 				<div v-if="edit">
-					<div v-if="cell.alias" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return false }, created: getCreatedComponent(row, cell) }"></div>
+					<div v-if="cell.alias" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
 					<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 						:depth="depth + 1"
 						:parameters="parameters"
@@ -824,7 +834,7 @@
 						:draggable="true" 
 						@click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
 				</div>
-				<ul class="is-menu is-variant-toolbar is-position-right">
+				<ul class="is-menu is-variant-toolbar is-position-right is-spacing-horizontal-right-small">
 					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="up(row)"><icon name="chevron-circle-up"/></button></li>
 					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="down(row)"><icon name="chevron-circle-down"/></button></li>
 					<li class="is-column"><button class="is-button is-size-xsmall is-color-primary-outline" @click="row.collapsed = !row.collapsed"><icon :name="row.collapsed ? 'eye-slash': 'eye'"/></button></li>
@@ -869,7 +879,7 @@
 								>{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
 							<button class="is-button is-size-xxsmall is-variant-ghost is-position-center" @click="function() { aliasing = null; editing = cell.id }" v-if="false && aliasing != cell.id && editing != cell.id"><icon name="pencil-alt"/></button>
 						</div>
-						<ul class="is-menu is-variant-toolbar is-position-right">
+						<ul class="is-menu is-variant-toolbar is-position-right is-spacing-horizontal-right-small">
 							<li class="is-column"><button class="is-button is-color-secondary-outline is-size-xsmall has-tooltip" @click="left(row, cell)" v-if="row.cells.length >= 2"><icon name="chevron-circle-up"/></button></li>
 							<li class="is-column"><button class="is-button is-color-secondary-outline is-size-xsmall has-tooltip" @click="right(row, cell)" v-if="row.cells.length >= 2"><icon name="chevron-circle-down"/></button></li>
 							<li class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall has-tooltip" @click="addRow(cell)"><icon name="plus"/><span class="is-tooltip">Add Row</span></button></li>
