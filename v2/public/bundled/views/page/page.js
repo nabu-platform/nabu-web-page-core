@@ -525,13 +525,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
-		normalizeAris: function(cell) {
+		normalizeAris: function(cell, type) {
 			if (cell.aris == null) {
 				Vue.set(cell, "aris", {
 					components: {}
 				});
 			}
-			this.getChildComponents(cell).forEach(function(x) {
+			var components = type == "row" ? this.getRowComponents(cell) : this.getCellComponents(cell);
+			components.forEach(function(x) {
 				if (!cell.aris.components[x.name]) {
 					Vue.set(cell.aris.components, x.name, {
 						variant: null,
@@ -544,154 +545,48 @@ nabu.page.views.Page = Vue.component("n-page", {
 			})
 			return cell.aris != null;
 		},
-		getChildComponents: function(cell) {
+		getCellComponents: function(cell) {
 			var pageInstance = this;
+			var components = [];
+			// push the cell itself
+			components.push({
+				title: "Cell",
+				name: "page-column",
+				component: "page-column"
+			});
 			var component = pageInstance.getComponentForCell(cell.id);
 			if (component != null) {
 				if (component.getChildComponents) {
-					return component.getChildComponents();
+					nabu.utils.arrays.merge(components, component.getChildComponents());
 				}
-				var self = this;
-				if (component && component.configurator) {
-					var configurator = Vue.component(component.configurator());
-					configurator = new configurator({propsData: {
-						page: self.page,
-						cell: cell
-					}});
-					// destroy cleanly
-					configurator.$destroy();
-					if (configurator.getChildComponents) {
-						return configurator.getChildComponents();
+				else {
+					var self = this;
+					if (component && component.configurator) {
+						var configurator = Vue.component(component.configurator());
+						configurator = new configurator({propsData: {
+							page: self.page,
+							cell: cell
+						}});
+						// destroy cleanly
+						configurator.$destroy();
+						if (configurator.getChildComponents) {
+							nabu.utils.arrays.merge(components, configurator.getChildComponents());
+						}
 					}
 				}
 			}
-			return [];
+			return components;
 		},
-		getAvailableDimensions: function(childComponent) {
-			var hierarchy = this.$services.page.getArisComponentHierarchy(childComponent.component);
-			var dimensions = [];
-			hierarchy.forEach(function(component) {
-				if (component.dimensions) {
-					component.dimensions.forEach(function(x) {
-						var current = dimensions.filter(function(y) { return y.name == x.name })[0];
-						if (!current) {
-							current = {name: x.name };
-							dimensions.push(current);
-						}
-						if (!current.options) {
-							current.options = [];
-						}
-						// only add options that we don't know about yet
-						if (current.options.length > 0) {
-							x.options.forEach(function(y) {
-								var option = current.options.filter(function(z) { return z == y })[0];
-								if (option == null) {
-									current.options.push(y);
-								}
-							});
-						}
-						else {
-							nabu.utils.arrays.merge(current.options, x.options);
-						}
-					})
-				}
+		getRowComponents: function(row) {
+			var components = [];
+			// push the cell itself
+			components.push({
+				title: "Row",
+				name: "page-row",
+				component: "page-row"
 			});
-			// sort the dimensions alphabetically
-			dimensions.sort(function(a, b) { return a.name.localeCompare(b.name) });
-			return dimensions;
+			return components;
 		},
-		getAvailableVariants: function(childComponent) {
-			var variants = [];
-			this.$services.page.getArisComponentHierarchy(childComponent.component).forEach(function(component) {
-				if (component.variants != null) {
-					component.variants.forEach(function(variant) {
-						if (variants.indexOf(variant) < 0) {
-							variants.push(variant);
-						}	
-					});
-				}
-			});
-			return variants;
-		},
-		getAvailableVariantNames: function(childComponent, value) {
-			var variants = [];
-			this.getAvailableVariants(childComponent).forEach(function(x) { 
-				if (variants.indexOf(x.name) < 0) {
-					variants.push(x.name);
-				}
-			});
-			if (value) {
-				variants = variants.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
-			}
-			variants.sort();
-			return variants;
-		},
-		isActiveModifier: function(childComponent, modifier) {
-			return this.cell.aris.components[childComponent.name].modifiers.indexOf(modifier) >= 0;
-		},
-		toggleModifier: function(childComponent, modifier) {
-			var index = this.cell.aris.components[childComponent.name].modifiers.indexOf(modifier);
-			if (index >= 0) {
-				this.cell.aris.components[childComponent.name].modifiers.splice(index, 1);
-			}
-			else {
-				this.cell.aris.components[childComponent.name].modifiers.push(modifier);
-			}
-		},
-		getAvailableModifiers: function(childComponent) {
-			var current = this.cell.aris.components[childComponent.name].variant;
-			var available = [];
-			this.getAvailableVariants(childComponent).filter(function(x) {
-				return x.name == "default" || x.name == current;
-			}).forEach(function(x) { 
-				if (x.modifiers) {
-					x.modifiers.forEach(function(y) {
-						if (available.indexOf(y) < 0) {
-							available.push(y);
-						}
-					})
-				} 
-			});
-			available.sort();
-			return available;
-		},
-		getAvailableOptions: function(childComponent, dimension) {
-			var current = this.getAvailableDimensions(childComponent).filter(function(x) { return x.name == dimension.name });
-			return current ? current.options : [];
-		},
-		toggleOption: function(childComponent, dimension, option) {
-			var index = this.cell.aris.components[childComponent.name].options.indexOf(dimension.name + "_" + option);
-			if (index >= 0) {
-				this.cell.aris.components[childComponent.name].options.splice(index, 1);
-			}
-			else {
-				this.cell.aris.components[childComponent.name].options.push(dimension.name + "_" + option);
-			}
-		},
-		isActiveOption: function(childComponent, dimension, option) {
-			return this.cell.aris.components[childComponent.name].options.indexOf(dimension.name + "_" + option) >= 0;
-		},
-		listActiveOptions: function(childComponent, dimension) {
-			var active = this.cell.aris.components[childComponent.name].options.filter(function(x) {
-				return x.indexOf(dimension.name + "_") == 0;
-			}).map(function(x) {
-				return x.substring((dimension.name + "_").length);
-			});
-			return active.length == 0 ? null : active.join(", ");
-		},
-		listActiveModifiers: function(childComponent) {
-			var active = this.cell.aris.components[childComponent.name].modifiers;
-			return active.length == 0 ? null : active.join(", ");
-		},
-		clearOptions: function(childComponent) {
-			this.cell.aris.components[childComponent.name].variant = null;
-			this.cell.aris.components[childComponent.name].options.splice(0);
-			this.cell.aris.components[childComponent.name].modifiers.splice(0);
-		},
-		prettifyOption: function(option) {
-			return option;
-		},
-		
 		
 		addNotification: function() {
 			if (!this.page.content.notifications) {
@@ -3451,26 +3346,40 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			return cellId;
 		},
 		cellClasses: function(cell) {
+			var classes = [];
+			if (this.$services.page.useAris && cell.aris && cell.aris.components) {
+				var children = this.$services.page.calculateArisComponents(cell.aris);
+				if (children["page-column"] && children["page-column"].classes) {
+					nabu.utils.arrays.merge(classes, children["page-column"] && children["page-column"].classes);
+				}
+			}
 			if (cell.styles) {
 				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				// if we use state here, it does not get modified as we send out new events
 				// so let's watch the variables instead
 				//return this.$services.page.getDynamicClasses(cell.styles, this.state, this);
-				return this.$services.page.getDynamicClasses(cell.styles, pageInstance.variables, this);
+				nabu.utils.arrays.merge(classes, this.$services.page.getDynamicClasses(cell.styles, pageInstance.variables, this));
 			}
-			return [];
+			return classes;
 		},
 		rowClasses: function(row) {
+			var classes = [];
+			if (this.$services.page.useAris && row.aris && row.aris.components) {
+				var children = this.$services.page.calculateArisComponents(row.aris);
+				if (children["page-row"] && children["page-row"].classes) {
+					nabu.utils.arrays.merge(classes, children["page-row"] && children["page-row"].classes);
+				}
+			}
 			if (row.styles) {
 				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				// if we use state here, it does not get modified as we send out new events
 				// so let's watch the variables instead
 				//return this.$services.page.getDynamicClasses(row.styles, this.state, this);
-				return this.$services.page.getDynamicClasses(row.styles, pageInstance.variables, this);
+				nabu.utils.arrays.merge(classes, this.$services.page.getDynamicClasses(row.styles, pageInstance.variables, this));
 			}
-			return [];
+			return classes;
 		},
 		hasCellClickEvent: function(cell) {
 			if (!cell.clickEvent) {
@@ -3640,30 +3549,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			};
 			// if we have an aris aware component, add a childComponents parameter
 			if (this.$services.page.useAris && cell && cell.aris && cell.aris.components) {
-				var childComponents = {};
-				Object.keys(cell.aris.components).forEach(function(key) {
-					childComponents[key] = {
-						classes: []
-					};
-					if (cell.aris.components[key].variant != null) {
-						childComponents[key].classes.push("is-variant-" + cell.aris.components[key].variant);
-					}
-					if (cell.aris.components[key].options != null && cell.aris.components[key].options.length > 0) {
-						cell.aris.components[key].options.forEach(function(option) {
-							childComponents[key].classes.push("is-" + option.replace("_", "-"));
-						});
-					}
-					if (cell.aris.components[key].modifiers != null && cell.aris.components[key].modifiers.length > 0) {
-						cell.aris.components[key].modifiers.forEach(function(modifier) {
-							childComponents[key].classes.push("is-" + modifier);
-						});
-					}
-					// if no classes are set, set the default name as variant so themes can target this
-					if (childComponents[key].classes.length == 0) {
-						childComponents[key].classes.push("is-variant-" + key);
-					}
-				});
-				result.childComponents = childComponents;
+				result.childComponents = this.$services.page.calculateArisComponents(cell.aris);
 			}
 			// if we have a trigger event, add it explicitly to trigger a redraw if needed
 			if (cell.on) {

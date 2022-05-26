@@ -575,6 +575,32 @@ nabu.services.VueService(Vue.extend({
 				
 			}
 		},
+		calculateArisComponents: function(container) {
+			var childComponents = {};
+			Object.keys(container.components).forEach(function(key) {
+				childComponents[key] = {
+					classes: []
+				};
+				if (container.components[key].variant != null) {
+					childComponents[key].classes.push("is-variant-" + container.components[key].variant);
+				}
+				if (container.components[key].options != null && container.components[key].options.length > 0) {
+					container.components[key].options.forEach(function(option) {
+						childComponents[key].classes.push("is-" + option.replace("_", "-"));
+					});
+				}
+				if (container.components[key].modifiers != null && container.components[key].modifiers.length > 0) {
+					container.components[key].modifiers.forEach(function(modifier) {
+						childComponents[key].classes.push("is-" + modifier);
+					});
+				}
+				// if no classes are set, set the default name as variant so themes can target this
+				if (childComponents[key].classes.length == 0) {
+					childComponents[key].classes.push("is-variant-" + key);
+				}
+			});
+			return childComponents;
+		},
 		// this returns all the parent components as well
 		getArisComponentHierarchy: function(component) {
 			var components = this.getArisComponents();

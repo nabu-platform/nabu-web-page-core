@@ -569,32 +569,7 @@
 									</n-form-section>
 								</div>
 							</div>
-							<aris-editor v-if="$services.page.useAris && normalizeAris(cell)" :child-components="getChildComponents(cell)" :container="cell.aris"/>
-							<div v-if="$services.page.useAris && normalizeAris(cell)">
-								<n-collapsible v-for="childComponent in getChildComponents(cell)" :only-one-open="true" class="is-highlight-left is-color-primary-light" :title="childComponent.title" :after="childComponent.component">
-									<div class="is-row is-align-end is-spacing-horizontal-right-small" slot="buttons">
-										<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall has-tooltip" @click="clearOptions(childComponent)"><icon name="undo"/><span class="is-tooltip">Clear settings</span></button></li>
-									</div>
-									<div class="is-column is-spacing-medium">
-										<n-form-combo v-model="cell.aris.components[childComponent.name].variant" label="Variant" :filter="getAvailableVariantNames.bind($self, childComponent)" after="Choose the main variant of this component"
-											:placeholder="childComponent.name"
-											empty-value="No variants available"
-											@input="cell.aris.components[childComponent.name].modifiers.splice(0)"/>
-									</div>
-									<n-collapsible v-if="getAvailableModifiers(childComponent).length > 0" title="modifier" class="is-highlight-left is-color-secondary-light" 
-											content-class="is-spacing-medium is-spacing-vertical-gap-none"
-											:after="listActiveModifiers(childComponent)">
-										<n-form-checkbox v-for="modifier in getAvailableModifiers(childComponent)" :value="isActiveModifier(childComponent, modifier)" :label="modifier"
-											@input="function() { toggleModifier(childComponent, modifier) }"/>
-									</n-collapsible>
-									<n-collapsible v-for="dimension in getAvailableDimensions(childComponent)" :only-one-open="true" :title="dimension.name" class="is-highlight-left is-color-secondary-light" 
-											content-class="is-spacing-medium is-spacing-vertical-gap-none"
-											:after="listActiveOptions(childComponent, dimension)">
-										<n-form-checkbox :value="isActiveOption(childComponent, dimension, option)" @input="function() { toggleOption(childComponent, dimension, option) }" v-for="option in dimension.options" 
-											:label="prettifyOption(option)"/>
-									</n-collapsible>
-								</n-collapsible>
-							</div>
+							<aris-editor v-if="$services.page.useAris && normalizeAris(cell)" :child-components="getCellComponents(cell)" :container="cell.aris"/>
 						</n-collapsible>
 						<div v-if="canConfigureInline(cell)" class="is-column is-spacing-vertical-top-large">
 							<h2 class="is-h4 is-spacing-medium is-color-primary-outline">Content Configuration</h2>
@@ -665,6 +640,7 @@
 									<span @click="row.styles.splice(row.styles.indexOf(style), 1)" class="fa fa-times"></span>
 								</n-form-section>
 							</div>
+							<aris-editor v-if="$services.page.useAris && normalizeAris(row, 'row')" :child-components="getRowComponents(row)" :container="row.aris"/>
 						</n-collapsible>
 					</n-form>
 				</n-sidebar>
