@@ -556,17 +556,24 @@
 							<n-form-switch label="Autoclose" v-model="cell.autoclose" v-if="cell.target == 'absolute' || cell.target == 'prompt'"/>
 							<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" @resetEvents="resetEvents" :inline="true"/>
 						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Styling" class="is-highlight-left" content-class="is-spacing-medium">
-							<n-form-text label="Cell Class" v-model="cell.class" :timeout="600"/>
-							<div class="is-row is-align-end">
-								<button class="is-button is-variant-primary-outline is-size-xsmall" @click="cell.styles == null ? $window.Vue.set(cell, 'styles', [{class:null,condition:null}]) : cell.styles.push({class:null,condition:null})"><icon name="plus"/>Cell Style</button>
+						<n-collapsible :only-one-open="true" title="Styling" class="is-highlight-left">
+							<div class="is-column is-spacing-medium">
+								<n-form-text label="Cell Class" v-model="cell.class" :timeout="600"/>
+								<div class="is-row is-align-end">
+									<button class="is-button is-variant-primary-outline is-size-xsmall" @click="cell.styles == null ? $window.Vue.set(cell, 'styles', [{class:null,condition:null}]) : cell.styles.push({class:null,condition:null})"><icon name="plus"/>Cell Style</button>
+								</div>
+								<div class="is-column is-spacing-vertical-gap-medium" v-if="cell.styles">
+									<n-form-section class="is-column is-color-body is-spacing-medium has-button-close" v-for="style in cell.styles">
+										<n-form-text v-model="style.class" label="Class"/>
+										<n-form-text v-model="style.condition" label="Condition" class="vertical"/>
+										<button class="is-button is-variant-close" @click="cell.styles.splice(cell.styles.indexOf(style), 1)"><icon name="times"/></button>
+									</n-form-section>
+								</div>
 							</div>
-							<div class="is-column is-spacing-vertical-gap-medium" v-if="cell.styles">
-								<n-form-section class="is-column is-color-body is-spacing-medium has-button-close" v-for="style in cell.styles">
-									<n-form-text v-model="style.class" label="Class"/>
-									<n-form-text v-model="style.condition" label="Condition" class="vertical"/>
-									<button class="is-button is-variant-close" @click="cell.styles.splice(cell.styles.indexOf(style), 1)"><icon name="times"/></button>
-								</n-form-section>
+							<div v-if="$services.page.useAris">
+								<n-collapsible v-for="childComponent in getChildComponents(cell)" :only-one-open="true" title="Styling" class="is-highlight-left is-color-primary-light" :title="childComponent.title">
+									
+								</n-collapsible>
 							</div>
 						</n-collapsible>
 						<div v-if="canConfigureInline(cell)" class="is-column is-spacing-vertical-top-large">

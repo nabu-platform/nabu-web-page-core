@@ -1,0 +1,18 @@
+aris = cssWithAris(compile: false)/result
+
+components = series()
+# we want to bundle the components
+for (component : aris/components)
+	dimensions = aris/dimensions[component == /component/name]
+	groupedDimensions = group(lambda(x, x/dimension), dimensions)
+	dimensions = derive(lambda(key, structure(name: key, options: dimensions[dimension == /key]/option)), keys(groupedDimensions))
+	
+	variants = derive(lambda(x, structure(name: x/option, modifiers: aris/modifiers[component == /x/component && variant == /x/option]/option)), aris/variants[component == /component/name])
+	
+	components = merge(components, structure(
+		name: component/name,
+		extends: component/component,
+		dimensions: dimensions,
+		variants: variants))
+	
+echo(json.stringify(components, pretty:true))

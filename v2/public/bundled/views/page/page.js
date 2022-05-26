@@ -525,6 +525,29 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		getChildComponents: function(cell) {
+			var pageInstance = this;
+			var component = pageInstance.getComponentForCell(cell.id);
+			if (component && component.configurator) {
+				var configurator = Vue.component(component.configurator());
+				configurator = new configurator();
+				if (configurator.getChildComponents) {
+					return configurator.getChildComponents();
+				}
+			}
+			return [];
+		},
+		getDefaultVariant: function(childComponent) {
+			
+		},
+		getAvailableDimensions: function(childComponent) {
+			
+		},
+		getAvailableOptions: function(childComponent, dimension) {
+			
+		},
+		
+		
 		addNotification: function() {
 			if (!this.page.content.notifications) {
 				Vue.set(this.page.content, "notifications", []);

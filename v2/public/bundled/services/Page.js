@@ -100,7 +100,9 @@ nabu.services.VueService(Vue.extend({
 			// functions that are run whenever cookie settings change
 			cookieHooks: [],
 			// you can set a cookie provider, the key is the name of the cookie provider, the value is an array of regexes (or names) of the cookies that belong to this provider
-			cookieProviders: {}
+			cookieProviders: {},
+			// whether or not to use aris
+			useAris: true
 		}
 	},
 	activate: function(done) {
