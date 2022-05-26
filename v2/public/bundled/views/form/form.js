@@ -200,6 +200,18 @@ nabu.page.formComponentConstructer = function(name) {
 			// method for the configurator!
 			getChildComponents: function() {
 				return [{
+					title: "Form",
+					name: "form-main",
+					component: "form"
+				}, {
+					title: "Form Container",
+					name: "form-container",
+					component: "form-section"
+				}, {
+					title: "Form Title",
+					name: "form-title",
+					component: "h2"
+				}, {
 					// human readable
 					title: "Button Container",
 					// structural so we can save defaults

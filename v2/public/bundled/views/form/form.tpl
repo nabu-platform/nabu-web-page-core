@@ -141,13 +141,13 @@
 			<button v-for="page in cell.state.pages" :disabled="!isPageActive(page)" @click="setPage(page)"
 				:class="{'is-active': currentPage == page}"><span>{{$services.page.interpret($services.page.translate(page.name), self)}}</span></button>
 		</div>
-		<h2 v-if="cell.state.title">{{$services.page.translate($services.page.interpret(cell.state.title, $self))}}</h2>
-		<n-form class="p-form" :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}, {'form-error': !!error }]" ref="form" :id="cell.state.formId" :component-group="cell.state.componentGroup ? cell.state.componentGroup : 'default'" 
+		<h2 class="is-h2" v-if="cell.state.title" :class="getChildComponentClasses('form-title')">{{$services.page.translate($services.page.interpret(cell.state.title, $self))}}</h2>
+		<n-form :class="[cell.state.class, {'form-read-only': readOnly, 'form-edit': !readOnly}, {'form-error': !!error }, getChildComponentClasses('form-main')]" ref="form" :id="cell.state.formId" :component-group="cell.state.componentGroup ? cell.state.componentGroup : 'default'" 
 				:mode="cell.state.mode">
 			<header class="p-form-header" slot="header" v-if="cell.state.dynamicHeader"><component :is="cell.state.dynamicHeader" :form="$self" :page="page" :cell="cell"/></header>
-			<n-form-section class="p-form-section" :key="'form_page_' + cell.state.pages.indexOf(currentPage)">
-				<n-form-section class="p-form-section" v-for="group in getGroupedFields(currentPage)" :class="group.group">
-					<n-form-section class="p-form-section" v-for="field in group.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name) && !isHidden(field) && (!readOnly || !field.hideInReadOnly)">
+			<n-form-section :key="'form_page_' + cell.state.pages.indexOf(currentPage)" :class="getChildComponentClasses('form-container')">
+				<n-form-section v-for="group in getGroupedFields(currentPage)" :class="group.group">
+					<n-form-section v-for="field in group.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name) && !isHidden(field) && (!readOnly || !field.hideInReadOnly)">
 						<component v-if="isList(field.name)"
 							:read-only="readOnly"
 							:is="getProvidedListComponent(field.type)"
@@ -193,29 +193,29 @@
 						<span>{{$services.page.translate($services.page.interpret(cell.state.edit, $self))}}</span>
 					</button>
 				</footer>
-				<ul class="is-menu" :class="childComponents['form-button-container'].classes" v-else-if="!cell.state.immediate">
+				<ul class="is-menu" :class="getChildComponentClasses('form-button-container')" v-else-if="!cell.state.immediate">
 					<li class="is-column" v-if="cell.state.cancel && (!cell.state.previous || cell.state.pages.indexOf(currentPage) == 0)">
 						<button class="is-button" 
-							:class="childComponents['form-button-cancel'].classes"
+							:class="getChildComponentClasses('form-button-cancel')"
 							:disabled="doingIt" href="javascript:void(0)" @click="cancel" :id="cell.state.formId ? cell.state.formId + '_cancel' : null">{{$services.page.translate($services.page.interpret(cell.state.cancel, $self))}}</button>
 					</li>
 					<li class="is-column" v-if="cell.state.previous && cell.state.pages.indexOf(currentPage) > 0">
 						<button class="is-button" 
-							:class="childComponents['form-button-previous'].classes"
+							:class="getChildComponentClasses('form-button-previous')"
 							:disabled="doingIt" href="javascript:void(0)" @click="previousPage" :id="cell.state.formId ? cell.state.formId + '_previous' : null">{{$services.page.translate($services.page.interpret(cell.state.previous, $self))}}</button>
 					</li>
 					<li class="is-column" v-if="cell.state.next && hasNextActivePage(currentPage)">
 						<button class="is-button"
-							:class="childComponents['form-button-next'].classes"
+							:class="getChildComponentClasses('form-button-next')"
 							:id="cell.state.formId ? cell.state.formId + '_next' : null" @click="nextPage">{{$services.page.translate($services.page.interpret(cell.state.next, $self))}}</button>
 					</li>
 					<li class="is-column" v-else-if="cell.state.ok">
 						<button :disabled="doingIt" class="is-button" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt"
-							:class="childComponents['form-button-ok'].classes">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
+							:class="getChildComponentClasses('form-button-ok')">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
 					</li>
 					<li class="is-column" v-if="cell.state.pages.length >= 2 && cell.state.partialSubmit && cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1 && cell.state.ok">
 						<button class="is-button" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
-							:class="childComponents['form-button-ok'].classes"
+							:class="getChildComponentClasses('form-button-ok')"
 							:disabled="doingIt">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
 					</li>
 				</ul>

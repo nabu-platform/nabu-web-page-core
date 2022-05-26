@@ -64,6 +64,13 @@ Vue.mixin({
 		}	
 	},
 	methods: {
+		// expects a prop with name "childComponents"
+		getChildComponentClasses: function(name) {
+			if (this.childComponents && this.childComponents[name] && this.childComponents[name].classes) {
+				return this.childComponents[name].classes;
+			}
+			return [];
+		},
 		// recalculate events on the page instance (if applicable)
 		$updateEvents: function() {
 			if (this.page) {
