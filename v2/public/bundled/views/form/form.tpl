@@ -90,9 +90,23 @@
 				<button @click="cell.state.codes ? cell.state.codes.push({code:null,title:null}) : $window.Vue.set(cell.state, 'codes', [{code:null,title:null}])">Add code</button>
 			</div>
 		</n-collapsible>
-		<div class="is-column is-pattern-basic-alternating">
+		<h2 class="is-h4 is-spacing-medium is-color-primary-outline is-spacing-vertical-top-large">
+			<span class="is-text">Form Pages</span>
+			<ul class="is-menu is-variant-toolbar is-align-end is-spacing-vertical-medium">
+				<li class="is-column" v-if="$services.page.isCopied('page-form-page')"><button class="is-button is-variant-warning is-size-xsmall" @click="pastePage"><icon name="paste"/>Paste page</button></li>
+				<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall" @click="addPage"><icon name="plus"/>Form Page</button></li>
+			</ul>
+		</h2>
+		<n-collapsible v-for="(cellPage, index) in cell.state.pages" :only-one-open="true" :title="cellPage.name ? cellPage.name : 'Unnamed'" class="is-highlight-left" :start-open="index == 0" after="Page">
+			<ul class="is-menu is-variant-toolbar is-align-end" slot="buttons">
+				<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="upAllPage(cellPage)"><icon name="chevron-circle-left"/></button></li>
+				<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="upPage(cellPage)"><icon name="chevron-circle-up"/></button></li>
+				<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="downPage(cellPage)"><icon name="chevron-circle-down"/></button></li>
+				<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="downAllPage(cellPage)"><icon name="chevron-circle-right"/></button></li>
+				<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline has-tooltip" @click="$services.page.copyItem('page-form-page', cellPage, true)"><icon name="copy"/><span class="is-tooltip">Copy page</span></button></li>
+				<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="deletePage(cellPage)"><icon name="times"/></button></li>
+			</ul>
 			<page-form-configure :title="cellPage.name"
-					v-for="cellPage in cell.state.pages"
 					:allow-read-only="cell.state.allowReadOnly"
 					:schema-resolver="getSchemaFor"
 					:groupable="true"
@@ -105,25 +119,16 @@
 					:cell="cell"
 					root-tag="div"
 					:dark="true">
+				<template slot="buttons">
+					<li class="is-column" v-if="$services.page.isCopied('page-form-field')"><button class="is-button is-size-xsmall is-variant-warning"  @click="function() { pasteField(cellPage) }"><icon name="paste"/>Paste field</button></li>
+				</template>
 				<div class="is-column is-spacing-vertical-gap-medium" slot="configuration">
 					<n-form-text v-model="cellPage.disabledIf" label="Disabled if" v-if="!cellPage.enabledIf"/>
 					<n-form-text v-model="cellPage.enabledIf" label="Enabled if" v-if="!cellPage.disabledIf"/>
 				</div>
-				<template slot="actions">
-					<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="upAllPage(cellPage)"><icon name="chevron-circle-left"/></button></li>
-					<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="upPage(cellPage)"><icon name="chevron-circle-up"/></button></li>
-					<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="downPage(cellPage)"><icon name="chevron-circle-down"/></button></li>
-					<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="downAllPage(cellPage)"><icon name="chevron-circle-right"/></button></li>
-					<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="$services.page.copyItem('page-form-page', cellPage, true)"><icon name="copy"/>Copy page</button></li>
-					<li class="is-column" v-if="$services.page.isCopied('page-form-field')"><button class="is-button is-size-xsmall is-variant-warning"  @click="function() { pasteField(cellPage) }"><icon name="paste"/>Paste page</button></li>
-					<li class="is-column" v-if="cell.state.pages.length > 1"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="deletePage(cellPage)"><icon name="times"/></button></li>
-				</template>
 			</page-form-configure>
-		</div>
-		<div class="list-actions">
-			<button v-if="$services.page.isCopied('page-form-page')" @click="pastePage"><span class="fa fa-paste"></span></button>
-			<button @click="addPage"><span class="fa fa-plus"></span>Form Page</button>
-		</div>
+		</n-collapsible>
+		
 	</n-form>
 </template>
 <template id="page-form">
@@ -236,41 +241,39 @@
 <template id="page-form-configure">
 	<component :is="rootTag" class="list" :title="title">
 		<div class="is-column is-spacing-medium">
+			<n-form-text :value="title" label="Form Page Name" v-if="editName" v-bubble:input/>
+			<slot name="configuration"></slot>
 			<ul class="is-menu is-variant-toolbar is-align-end">
 				<li class="is-column"><button class="is-button is-variant-primary is-size-xsmall" @click="addField(false)"><icon name="plus"/>Field</button></li>
 				<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall" @click="addField(true)"><icon name="plus"/>Content</button></li>
-				<slot name="actions"></slot>
+				<slot name="buttons"></slot>
 			</ul>
-			<n-form-text :value="title" label="Form Page Name" v-if="editName" v-bubble:input/>
-			<slot name="configuration"></slot>
 		</div>
-		<n-collapsible v-for="field in fields" :title="field.label ? field.label : (field.name ? field.name : 'unnamed')" :class="{'dark': dark}" class="is-color-primary-light" :after="field.arbitrary ? 'Content' : 'Field'">
-			<div slot="buttons">
-				<button @click="$services.page.copyItem('page-form-field', field, true)"><span class="fa fa-copy"></span></button>
-				<button @click="upAll(field)" v-if="false"><span class="fa fa-chevron-circle-left"></span></button>
-				<button @click="up(field)"><span class="fa fa-chevron-circle-up"></span></button>
-				<button @click="down(field)"><span class="fa fa-chevron-circle-down"></span></button>
-				<button @click="downAll(field)" v-if="false"><span class="fa fa-chevron-circle-right"></span></button>
-				<button @click="fields.splice(fields.indexOf(field), 1)"><span class="fa fa-trash"></span></button>
-			</div>
-			<div class="padded-content">
-				<page-configure-arbitrary v-if="field.arbitrary" 
-					:page="page"
-					:cell="cell"
-					:target="field"
-					:keys="possibleFields"/>
-					
-				<page-form-configure-single v-else :field="field" :possible-fields="possibleFields"
-					:groupable="groupable"
-					:hidable="true"
-					:is-list="isList"
-					:page="page"
-					:schema="schemaResolver(field.name)"
-					:cell="cell"/>
-					
-				<n-form-switch v-model="field.hideInReadOnly" v-if="allowReadOnly" label="Hide In Read Only Mode"/>
-				<n-form-combo :filter="function(x) { return possibleFields }" v-model="field.resetOnUpdate" label="Reset on update"/>
-			</div>
+		<n-collapsible v-for="field in fields" :title="field.label ? field.label : (field.name ? field.name : 'unnamed')" :class="{'dark': dark}" class="is-color-primary-light" :after="field.arbitrary ? 'Content' : 'Field'" content-class="is-spacing-medium">
+			<ul class="is-menu is-variant-toolbar" slot="buttons">
+				<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="upAll(field)"><icon name="chevron-circle-left"/></button></li>
+				<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="up(field)"><icon name="chevron-circle-up"/></button></li>
+				<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="down(field)"><icon name="chevron-circle-down"/></button></li>
+				<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="downAll(field)"><icon name="chevron-circle-right"/></button></li>
+				<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall has-tooltip" @click="$services.page.copyItem('page-form-field', field, true)"><icon name="copy"/><span class="is-tooltip">Copy field</span></button></li>
+				<li class="is-column"><button class="is-button is-variant-danger-outline is-size-xsmall has-tooltip" @click="fields.splice(fields.indexOf(field), 1)"><icon name="times"/></button></li>
+			</ul>
+			<page-configure-arbitrary v-if="field.arbitrary" 
+				:page="page"
+				:cell="cell"
+				:target="field"
+				:keys="possibleFields"/>
+				
+			<page-form-configure-single v-else :field="field" :possible-fields="possibleFields"
+				:groupable="groupable"
+				:hidable="true"
+				:is-list="isList"
+				:page="page"
+				:schema="schemaResolver(field.name)"
+				:cell="cell"/>
+				
+			<n-form-switch v-model="field.hideInReadOnly" v-if="allowReadOnly" label="Hide In Read Only Mode"/>
+			<n-form-combo :filter="function(x) { return possibleFields }" v-model="field.resetOnUpdate" label="Reset on update" after="You can reset a field if this particular field is updated"/>
 		</n-collapsible>
 		<div class="is-row is-spacing-medium is-align-end" v-if="allowPaste">
 			<button class="is-button is-variant-warning is-size-xsmall has-tooltip" v-if="$services.page.isCopied('page-form-field')" @click="function() { pasteField(cellPage) }"><icon name="paste"/><span class="is-tooltip">Paste field</span></button>
@@ -279,7 +282,7 @@
 </template>
 
 <template id="page-form-configure-single">
-	<div class="page-form-single-field">
+	<div class="is-column is-spacing-vertical-gap-medium">
 		<n-form-combo v-model="field.name" label="Field Name" :filter="filterFieldNames" v-if="!usesMultipleFields(field.type)"/>
 		<n-form-text v-model="field.label" label="Label" v-if="allowLabel" />
 		<n-form-text v-model="field.placeholder" label="Placeholder" />
@@ -303,27 +306,29 @@
 			
 		<page-event-value class="no-more-padding" :page="page" :container="field" title="Validation Success Event" name="validationSuccessEvent" @resetEvents="$updateEvents()" :inline="true"/>
 		
-		<div class="list-actions">
-			<button @click="field.styles == null ? $window.Vue.set(field, 'styles', [{class:null,condition:null}]) : field.styles.push({class:null,condition:null})"><span class="fa fa-plus"></span>Style</button>
-		</div>
-		<div v-if="field.styles">
-			<n-form-section class="list-row" v-for="style in field.styles">
-				<n-form-text v-model="style.class" label="Class"/>
-				<n-form-text v-model="style.condition" label="Condition"/>
-				<button @click="field.styles.splice(field.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
-			</n-form-section>
+		<h4 class="is-h4">Field Styling</h4>
+		<div class="is-row is-align-end">
+			<button class="is-button is-variant-primary-outline is-size-xsmall" @click="field.styles == null ? $window.Vue.set(field, 'styles', [{class:null,condition:null}]) : field.styles.push({class:null,condition:null})"><icon name="plus"/>Style</button>
 		</div>
 		
-		<h4>Update Listener</h4>
-		<p class="subscript">Whenever an event is emitted, you can capture a value from it by configuring an update listener.</p>
-		<div class="list-item-actions">
-			<button @click="field.listeners ? field.listeners.push({to:null, field: null}) : $window.Vue.set(field, 'listeners', [{}])"><span class="fa fa-plus"></span>Update Listener</button>
+		<div v-if="field.styles">
+			<div class="is-column is-spacing-medium is-color-body has-button-close" v-for="style in field.styles">
+				<n-form-text v-model="style.class" label="Class" timeout="600"/>
+				<n-form-text v-model="style.condition" label="Condition" timeout="600"/>
+				<button class="is-button is-variant-close" @click="field.styles.splice(field.styles.indexOf(style), 1)"><icon name="times"/></button>
+			</div>
+		</div>
+		
+		<h4 class="is-h4">Update Listener</h4>
+		<p class="is-p is-size-small is-color-light">Whenever an event is emitted, you can capture a value from it by configuring an update listener.</p>
+		<div class="is-row is-align-end">
+			<button class="is-button is-variant-primary-outline is-size-xsmall" @click="field.listeners ? field.listeners.push({to:null, field: null}) : $window.Vue.set(field, 'listeners', [{}])"><icon name="plus"/>Update Listener</button>
 		</div>
 		<div v-if="field.listeners">
-			<div class="list-row" v-for="i in Object.keys(field.listeners)">
+			<div class="is-column is-spacing-medium is-color-body has-button-close" v-for="i in Object.keys(field.listeners)">
 				<n-form-combo v-model="field.listeners[i].to" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
 				<n-form-combo v-model="field.listeners[i].field" v-if="field.type && field.type.indexOf('.') >= 0" :filter="listFields.bind($self, field.type)" />
-				<span @click="field.listeners.splice(i, 1)" class="fa fa-times"></span>
+				<button class="is-button is-variant-close" @click="field.listeners.splice(i, 1)"><icon name="times"/></button>
 			</div>
 		</div>
 	</div>

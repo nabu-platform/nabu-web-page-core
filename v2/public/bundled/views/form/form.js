@@ -31,6 +31,13 @@ nabu.page.formComponentConstructer = function(name) {
 				type: Object,
 				required: false
 			},
+			// a list of child components with a name and the applied classes
+			// in the future we might add other configuration options
+			// [{name: 'form-button-ok', classes: ["test1", "test2"]}]
+			childComponents: {
+				type: Array,
+				required: false
+			},
 			cell: {
 				type: Object,
 				required: true
@@ -190,6 +197,30 @@ nabu.page.formComponentConstructer = function(name) {
 			});
 		},
 		methods: {
+			// method for the configurator!
+			getChildComponents: function() {
+				return [{
+					// human readable
+					title: "Button Container",
+					// structural so we can save defaults
+					name: "form-button-container",
+					// the type of component
+					component: "row",
+					// the defaults that are applied if nothing is configured
+					default: ["layout_align_space-between"]
+				}, {
+					title: "OK Button",
+					name: "form-button-ok",
+					component: "button",
+					default: ["button_variant_primary"]
+				}, {
+					title: "Cancel Button",
+					name: "form-button-cancel",
+					component: "button",
+					default: ["button_variant_link"]
+				}]	
+			},
+			
 			isPageActive: function(page) {
 				var result = this.createResult();
 				console.log("checking if page is active", page, result);
