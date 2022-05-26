@@ -193,27 +193,32 @@
 						<span>{{$services.page.translate($services.page.interpret(cell.state.edit, $self))}}</span>
 					</button>
 				</footer>
-				<footer class="is-row" :class="childComponents['form-button-container'].classes" v-else-if="!cell.state.immediate">
-					<button class="is-button" 
-						:class="childComponents['form-button-cancel'].classes"
-						:disabled="doingIt" href="javascript:void(0)" @click="cancel" :id="cell.state.formId ? cell.state.formId + '_cancel' : null" 
-						v-if="cell.state.cancel && (!cell.state.previous || cell.state.pages.indexOf(currentPage) == 0)">{{$services.page.translate($services.page.interpret(cell.state.cancel, $self))}}</button>
-					<button class="is-button" 
-						:class="childComponents['form-button-previous'].classes"
-						:disabled="doingIt" href="javascript:void(0)" @click="previousPage" :id="cell.state.formId ? cell.state.formId + '_previous' : null" 
-						v-if="cell.state.previous && cell.state.pages.indexOf(currentPage) > 0">{{$services.page.translate($services.page.interpret(cell.state.previous, $self))}}</button>
-					<button class="is-button"
-						:class="childComponents['form-button-next'].classes"
-						:id="cell.state.formId ? cell.state.formId + '_next' : null" @click="nextPage" 
-						v-if="cell.state.next && hasNextActivePage(currentPage)">{{$services.page.translate($services.page.interpret(cell.state.next, $self))}}</button>
-					<button :disabled="doingIt" class="is-button" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt"
-						:class="childComponents['form-button-ok'].classes"
-						v-else-if="cell.state.ok">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
-					<button class="is-button" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
-						:class="childComponents['form-button-ok'].classes"
-						:disabled="doingIt"
-						v-if="cell.state.pages.length >= 2 && cell.state.partialSubmit && cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1 && cell.state.ok">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
-				</footer>
+				<ul class="is-menu" :class="childComponents['form-button-container'].classes" v-else-if="!cell.state.immediate">
+					<li class="is-column" v-if="cell.state.cancel && (!cell.state.previous || cell.state.pages.indexOf(currentPage) == 0)">
+						<button class="is-button" 
+							:class="childComponents['form-button-cancel'].classes"
+							:disabled="doingIt" href="javascript:void(0)" @click="cancel" :id="cell.state.formId ? cell.state.formId + '_cancel' : null">{{$services.page.translate($services.page.interpret(cell.state.cancel, $self))}}</button>
+					</li>
+					<li class="is-column" v-if="cell.state.previous && cell.state.pages.indexOf(currentPage) > 0">
+						<button class="is-button" 
+							:class="childComponents['form-button-previous'].classes"
+							:disabled="doingIt" href="javascript:void(0)" @click="previousPage" :id="cell.state.formId ? cell.state.formId + '_previous' : null">{{$services.page.translate($services.page.interpret(cell.state.previous, $self))}}</button>
+					</li>
+					<li class="is-column" v-if="cell.state.next && hasNextActivePage(currentPage)">
+						<button class="is-button"
+							:class="childComponents['form-button-next'].classes"
+							:id="cell.state.formId ? cell.state.formId + '_next' : null" @click="nextPage">{{$services.page.translate($services.page.interpret(cell.state.next, $self))}}</button>
+					</li>
+					<li class="is-column" v-else-if="cell.state.ok">
+						<button :disabled="doingIt" class="is-button" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt"
+							:class="childComponents['form-button-ok'].classes">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
+					</li>
+					<li class="is-column" v-if="cell.state.pages.length >= 2 && cell.state.partialSubmit && cell.state.next && cell.state.pages.indexOf(currentPage) < cell.state.pages.length - 1 && cell.state.ok">
+						<button class="is-button" :id="cell.state.formId ? cell.state.formId + '_submit' : null" @click="doIt" 
+							:class="childComponents['form-button-ok'].classes"
+							:disabled="doingIt">{{$services.page.translate($services.page.interpret(cell.state.ok, $self))}}</button>
+					</li>
+				</ul>
 				<footer class="footer-messages">
 					<n-messages :messages="messages"/>
 				</footer>

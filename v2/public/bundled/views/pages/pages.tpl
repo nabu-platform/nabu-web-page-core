@@ -129,17 +129,13 @@
 							</ul>
 						</h3>
 						<div class="is-accordion">
-							<n-collapsible :only-one-open="true" :title="page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')" v-for="page in getPagesFor(category)" class="is-column" :key="page.id">
-								<div slot="text" class="is-text is-row is-align-cross-center">
-									<span>{{page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')}}</span>
-									<span class="is-badge is-variant-warning">Page</span>
-								</div>
+							<n-collapsible :only-one-open="true" :title="page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')" v-for="page in getPagesFor(category)" :key="page.id" after="Page">
 								<ul slot="buttons" class="is-menu is-variant-toolbar is-align-end ">
 									<li class="is-column"><button class="is-button is-size-small is-variant-primary has-tooltip" @click="route(page)" title="Open this page"><icon name="search"/><span class="is-tooltip is-position-top">Open page</span></button></li>
 									<li class="is-column"><button class="is-button is-size-small is-variant-primary-outline has-tooltip" @click="copy(page)"><icon name="copy"/><span class="is-tooltip is-position-top">Copy page</span></button></li>
 									<li class="is-column"><button class="is-button is-size-small is-variant-danger-outline has-tooltip" @click="remove(page)"><icon name="trash"/><span class="is-tooltip is-position-top is-color-danger">Delete page</span></button></li>
 								</ul>
-								<div class="is-row">
+								<div class="is-row is-spacing-horizontal-gap-large">
 									<n-form class="is-form is-position-grow is-color-body is-spacing-large is-variant-vertical">
 										<n-form-text :value="page.content.label ? page.content.label : page.name" label="Page name" :required="true" :timeout="600" @input="function(newValue) { updatePageName(page, newValue) }" 
 											after="The page name must be unique across the application"

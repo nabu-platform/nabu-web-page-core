@@ -600,15 +600,24 @@ nabu.page.views.Page = Vue.component("n-page", {
 			dimensions.sort(function(a, b) { return a.name.localeCompare(b.name) });
 			return dimensions;
 		},
-		getAvailableVariants: function(childComponent, value) {
+		getAvailableVariants: function(childComponent) {
 			var variants = [];
 			this.$services.page.getArisComponentHierarchy(childComponent.component).forEach(function(component) {
 				if (component.variants != null) {
 					component.variants.forEach(function(variant) {
-						if (variants.indexOf(variant.name) < 0) {
-							variants.push(variant.name);
+						if (variants.indexOf(variant) < 0) {
+							variants.push(variant);
 						}	
 					});
+				}
+			});
+			return variants;
+		},
+		getAvailableVariantNames: function(childComponent, value) {
+			var variants = [];
+			this.getAvailableVariants(childComponent).forEach(function(x) { 
+				if (variants.indexOf(x.name) < 0) {
+					variants.push(x.name);
 				}
 			});
 			if (value) {
@@ -616,6 +625,35 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			variants.sort();
 			return variants;
+		},
+		isActiveModifier: function(childComponent, modifier) {
+			return this.cell.aris.components[childComponent.name].modifiers.indexOf(modifier) >= 0;
+		},
+		toggleModifier: function(childComponent, modifier) {
+			var index = this.cell.aris.components[childComponent.name].modifiers.indexOf(modifier);
+			if (index >= 0) {
+				this.cell.aris.components[childComponent.name].modifiers.splice(index, 1);
+			}
+			else {
+				this.cell.aris.components[childComponent.name].modifiers.push(modifier);
+			}
+		},
+		getAvailableModifiers: function(childComponent) {
+			var current = this.cell.aris.components[childComponent.name].variant;
+			var available = [];
+			this.getAvailableVariants(childComponent).filter(function(x) {
+				return x.name == "default" || x.name == current;
+			}).forEach(function(x) { 
+				if (x.modifiers) {
+					x.modifiers.forEach(function(y) {
+						if (available.indexOf(y) < 0) {
+							available.push(y);
+						}
+					})
+				} 
+			});
+			available.sort();
+			return available;
 		},
 		getAvailableOptions: function(childComponent, dimension) {
 			var current = this.getAvailableDimensions(childComponent).filter(function(x) { return x.name == dimension.name });
@@ -632,6 +670,23 @@ nabu.page.views.Page = Vue.component("n-page", {
 		},
 		isActiveOption: function(childComponent, dimension, option) {
 			return this.cell.aris.components[childComponent.name].options.indexOf(dimension.name + "_" + option) >= 0;
+		},
+		listActiveOptions: function(childComponent, dimension) {
+			var active = this.cell.aris.components[childComponent.name].options.filter(function(x) {
+				return x.indexOf(dimension.name + "_") == 0;
+			}).map(function(x) {
+				return x.substring((dimension.name + "_").length);
+			});
+			return active.length == 0 ? null : active.join(", ");
+		},
+		listActiveModifiers: function(childComponent) {
+			var active = this.cell.aris.components[childComponent.name].modifiers;
+			return active.length == 0 ? null : active.join(", ");
+		},
+		clearOptions: function(childComponent) {
+			this.cell.aris.components[childComponent.name].variant = null;
+			this.cell.aris.components[childComponent.name].options.splice(0);
+			this.cell.aris.components[childComponent.name].modifiers.splice(0);
 		},
 		prettifyOption: function(option) {
 			return option;
@@ -3598,8 +3653,11 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 							childComponents[key].classes.push("is-" + option.replace("_", "-"));
 						});
 					}
-					// TODO: modifiers
-					
+					if (cell.aris.components[key].modifiers != null && cell.aris.components[key].modifiers.length > 0) {
+						cell.aris.components[key].modifiers.forEach(function(modifier) {
+							childComponents[key].classes.push("is-" + modifier);
+						});
+					}
 					// if no classes are set, set the default name as variant so themes can target this
 					if (childComponents[key].classes.length == 0) {
 						childComponents[key].classes.push("is-variant-" + key);
@@ -4360,6 +4418,164 @@ Vue.component("page-sidemenu", {
 		}
 	}
 });
+
+Vue.component("aris-editor", {
+	template: "#aris-editor",
+	props: {
+		childComponents: {
+			type: Array,
+			required: true
+		},
+		// where to store the changes
+		container: {
+			type: Object,
+			required: true
+		}
+	},
+	methods: {
+		getAvailableDimensions: function(childComponent) {
+			var hierarchy = this.$services.page.getArisComponentHierarchy(childComponent.component);
+			var dimensions = [];
+			hierarchy.forEach(function(component) {
+				if (component.dimensions) {
+					component.dimensions.forEach(function(x) {
+						var current = dimensions.filter(function(y) { return y.name == x.name })[0];
+						if (!current) {
+							current = {name: x.name };
+							dimensions.push(current);
+						}
+						if (!current.options) {
+							current.options = [];
+						}
+						// only add options that we don't know about yet
+						if (current.options.length > 0) {
+							x.options.forEach(function(y) {
+								var option = current.options.filter(function(z) { return z == y })[0];
+								if (option == null) {
+									current.options.push(y);
+								}
+							});
+						}
+						else {
+							nabu.utils.arrays.merge(current.options, x.options);
+						}
+					})
+				}
+			});
+			// sort the dimensions alphabetically
+			dimensions.sort(function(a, b) { return a.name.localeCompare(b.name) });
+			return dimensions;
+		},
+		getAvailableVariants: function(childComponent) {
+			var variants = [];
+			this.$services.page.getArisComponentHierarchy(childComponent.component).forEach(function(component) {
+				if (component.variants != null) {
+					component.variants.forEach(function(variant) {
+						if (variants.indexOf(variant) < 0) {
+							variants.push(variant);
+						}	
+					});
+				}
+			});
+			return variants;
+		},
+		getAvailableVariantNames: function(childComponent, value) {
+			var variants = [];
+			this.getAvailableVariants(childComponent).forEach(function(x) { 
+				if (variants.indexOf(x.name) < 0) {
+					variants.push(x.name);
+				}
+			});
+			if (value) {
+				variants = variants.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+			}
+			variants.sort();
+			return variants;
+		},
+		isActiveModifier: function(childComponent, modifier) {
+			return this.container.components[childComponent.name].modifiers.indexOf(modifier) >= 0;
+		},
+		toggleModifier: function(childComponent, modifier) {
+			var index = this.container.components[childComponent.name].modifiers.indexOf(modifier);
+			if (index >= 0) {
+				this.container.components[childComponent.name].modifiers.splice(index, 1);
+			}
+			else {
+				this.container.components[childComponent.name].modifiers.push(modifier);
+			}
+		},
+		getAvailableModifiers: function(childComponent) {
+			var current = this.container.components[childComponent.name].variant;
+			var available = [];
+			this.getAvailableVariants(childComponent).filter(function(x) {
+				return x.name == "default" || x.name == current;
+			}).forEach(function(x) { 
+				if (x.modifiers) {
+					x.modifiers.forEach(function(y) {
+						if (available.indexOf(y) < 0) {
+							available.push(y);
+						}
+					})
+				} 
+			});
+			available.sort();
+			return available;
+		},
+		getAvailableOptions: function(childComponent, dimension) {
+			var current = this.getAvailableDimensions(childComponent).filter(function(x) { return x.name == dimension.name });
+			return current ? current.options : [];
+		},
+		toggleOption: function(childComponent, dimension, option) {
+			var index = this.container.components[childComponent.name].options.indexOf(dimension.name + "_" + option);
+			if (index >= 0) {
+				this.container.components[childComponent.name].options.splice(index, 1);
+			}
+			else {
+				this.container.components[childComponent.name].options.push(dimension.name + "_" + option);
+			}
+		},
+		isActiveOption: function(childComponent, dimension, option) {
+			return this.container.components[childComponent.name].options.indexOf(dimension.name + "_" + option) >= 0;
+		},
+		listActiveOptions: function(childComponent, dimension) {
+			var active = this.container.components[childComponent.name].options.filter(function(x) {
+				return x.indexOf(dimension.name + "_") == 0;
+			}).map(function(x) {
+				return x.substring((dimension.name + "_").length);
+			});
+			return active.length == 0 ? null : active.join(", ");
+		},
+		listActiveModifiers: function(childComponent) {
+			var active = this.container.components[childComponent.name].modifiers;
+			return active.length == 0 ? null : active.join(", ");
+		},
+		clearOptions: function(childComponent) {
+			this.container.components[childComponent.name].variant = null;
+			this.container.components[childComponent.name].options.splice(0);
+			this.container.components[childComponent.name].modifiers.splice(0);
+		},
+		prettifyOption: function(option) {
+			return option;
+		}
+	},
+	watch: {
+		// used for force rerendering of cell in edit mode
+		container: {
+			deep: true,
+			handler: function(newValue) {
+				if (newValue && !newValue.hasOwnProperty("rerender")) {
+					Object.defineProperty(newValue, "rerender", {
+						value: true,
+						enumerable: false
+					});
+				}
+				else {
+					newValue.rerender = true;
+				}
+			}
+		}
+	}
+})
 
 document.addEventListener("keydown", function(event) {
 	if (event.key == "s" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {

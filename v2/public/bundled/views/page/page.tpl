@@ -569,14 +569,27 @@
 									</n-form-section>
 								</div>
 							</div>
+							<aris-editor v-if="$services.page.useAris && normalizeAris(cell)" :child-components="getChildComponents(cell)" :container="cell.aris"/>
 							<div v-if="$services.page.useAris && normalizeAris(cell)">
-								<n-collapsible v-for="childComponent in getChildComponents(cell)" :only-one-open="true" title="Styling" class="is-highlight-left is-color-primary-light" :title="childComponent.title">
+								<n-collapsible v-for="childComponent in getChildComponents(cell)" :only-one-open="true" class="is-highlight-left is-color-primary-light" :title="childComponent.title" :after="childComponent.component">
+									<div class="is-row is-align-end is-spacing-horizontal-right-small" slot="buttons">
+										<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall has-tooltip" @click="clearOptions(childComponent)"><icon name="undo"/><span class="is-tooltip">Clear settings</span></button></li>
+									</div>
 									<div class="is-column is-spacing-medium">
-										<n-form-combo v-model="cell.aris.components[childComponent.name].variant" label="Variant" :filter="getAvailableVariants.bind($self, childComponent)" after="Choose the main variant of this component"
+										<n-form-combo v-model="cell.aris.components[childComponent.name].variant" label="Variant" :filter="getAvailableVariantNames.bind($self, childComponent)" after="Choose the main variant of this component"
+											:placeholder="childComponent.name"
 											empty-value="No variants available"
 											@input="cell.aris.components[childComponent.name].modifiers.splice(0)"/>
 									</div>
-									<n-collapsible v-for="dimension in getAvailableDimensions(childComponent)" :only-one-open="true" :title="dimension.name" class="is-highlight-left is-color-secondary-light" content-class="is-spacing-medium is-spacing-vertical-gap-none">
+									<n-collapsible v-if="getAvailableModifiers(childComponent).length > 0" title="modifier" class="is-highlight-left is-color-secondary-light" 
+											content-class="is-spacing-medium is-spacing-vertical-gap-none"
+											:after="listActiveModifiers(childComponent)">
+										<n-form-checkbox v-for="modifier in getAvailableModifiers(childComponent)" :value="isActiveModifier(childComponent, modifier)" :label="modifier"
+											@input="function() { toggleModifier(childComponent, modifier) }"/>
+									</n-collapsible>
+									<n-collapsible v-for="dimension in getAvailableDimensions(childComponent)" :only-one-open="true" :title="dimension.name" class="is-highlight-left is-color-secondary-light" 
+											content-class="is-spacing-medium is-spacing-vertical-gap-none"
+											:after="listActiveOptions(childComponent, dimension)">
 										<n-form-checkbox :value="isActiveOption(childComponent, dimension, option)" @input="function() { toggleOption(childComponent, dimension, option) }" v-for="option in dimension.options" 
 											:label="prettifyOption(option)"/>
 									</n-collapsible>
@@ -592,43 +605,32 @@
 				</div>
 				
 				<div v-else-if="activeTab == 'selected' && row && selectedType == 'row'">
-					<div class="sidebar-actions">
-						<button @click="up(row)"><span class="fa fa-chevron-circle-up"></span></button
-						><button @click="down(row)"><span class="fa fa-chevron-circle-down"></span></button
-						><button @click="addCell(row)"><span class="fa fa-plus" title="Add Cell"></span></button
-						><button @click="copyRow(row)"><span class="fa fa-copy" title="Copy Row"></span></button
-						><button v-if="$services.page.copiedCell" @click="pasteCell(row)"><span class="fa fa-paste" title="Paste Cell"></span></button
-						><button @click="$emit('removeRow', row)"><span class="fa fa-times" title="Remove Row"></span></button>
-					</div>
-					<n-form class="layout2">
-						<div class="padded-content">
+					<n-form class="is-variant-floating-labels" key="cell-form">
+						<h2 class="is-h4 is-color-primary-outline is-spacing-medium">Row Configuration</h2>
+						<n-collapsible title="Row Settings" content-class="is-spacing-medium">
 							<n-form-text label="Row Name" v-model="row.name" info="A descriptive name" :timeout="600"/>
-						</div>
-						<n-collapsible title="Row Settings">
-							<div class="padded-content">
-								<h2>Rendering<span class="subscript">Choose how this row will be rendered</span></h2>
-								<n-form-combo label="Direction" v-model="row.direction" :items="['horizontal', 'vertical']"/>
-								<n-form-combo label="Alignment" v-model="row.align" :items="['center', 'flex-start', 'flex-end', 'stretch', 'baseline']"/>
-								<n-form-combo label="Justification" v-model="row.justify" :items="['center', 'flex-start', 'flex-end', 'space-between', 'space-around', 'space-evenly']"/>
-								<n-form-ace mode="javascript" label="Condition" v-model="row.condition" class="vertical"/>
-								
-								<h2>Additional<span class="subscript">Configure some additional settings for this row</span></h2>
-								<n-form-text label="Row Id" v-model="row.customId" info="If you set a custom id for this row, a container will be rendered in this row with that id. This can be used for targeting with specific content."/>
-								<n-form-combo label="Row Renderer" v-model="row.renderer" :items="getRenderers('row')"  :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
-								<n-form-section v-if="row.renderer">
-									<n-form-text v-for="property in getRendererPropertyKeys(row)" :label="property" v-model="row.rendererProperties[property]"/>
-								</n-form-section>
-								<div v-if="$services.page.devices.length">
-									<div class="is-row is-align-end">
-										<button class="is-button is-variant-primary-outline is-size-xsmall" @click="addDevice(row)"><icon name="plus"/>Device rule</button>
-									</div>
-									<div v-if="row.devices" class="is-column is-spacing-vertical-gap-medium">
-										<div class="is-column is-spacing-medium is-color-body has-button-close" v-for="device in row.devices">
-											<n-form-combo v-model="device.operator" :items="['>', '>=', '<', '<=', '==']"/>
-											<n-form-combo v-model="device.name" 
-												:filter="suggestDevices"/>
-											<button class="is-button is-variant-close" @click="row.devices.splice(row.devices.indexOf(device), 1)"><icon name="times"/></button>
-										</div>
+							<h2>Rendering<span class="subscript">Choose how this row will be rendered</span></h2>
+							<n-form-combo label="Direction" v-model="row.direction" :items="['horizontal', 'vertical']"/>
+							<n-form-combo label="Alignment" v-model="row.align" :items="['center', 'flex-start', 'flex-end', 'stretch', 'baseline']"/>
+							<n-form-combo label="Justification" v-model="row.justify" :items="['center', 'flex-start', 'flex-end', 'space-between', 'space-around', 'space-evenly']"/>
+							<n-form-ace mode="javascript" label="Condition" v-model="row.condition" class="vertical"/>
+							
+							<h2>Additional<span class="subscript">Configure some additional settings for this row</span></h2>
+							<n-form-text label="Row Id" v-model="row.customId" info="If you set a custom id for this row, a container will be rendered in this row with that id. This can be used for targeting with specific content."/>
+							<n-form-combo label="Row Renderer" v-model="row.renderer" :items="getRenderers('row')"  :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
+							<n-form-section v-if="row.renderer">
+								<n-form-text v-for="property in getRendererPropertyKeys(row)" :label="property" v-model="row.rendererProperties[property]"/>
+							</n-form-section>
+							<div v-if="$services.page.devices.length">
+								<div class="is-row is-align-end">
+									<button class="is-button is-variant-primary-outline is-size-xsmall" @click="addDevice(row)"><icon name="plus"/>Device rule</button>
+								</div>
+								<div v-if="row.devices" class="is-column is-spacing-vertical-gap-medium">
+									<div class="is-column is-spacing-medium is-color-body has-button-close" v-for="device in row.devices">
+										<n-form-combo v-model="device.operator" :items="['>', '>=', '<', '<=', '==']"/>
+										<n-form-combo v-model="device.name" 
+											:filter="suggestDevices"/>
+										<button class="is-button is-variant-close" @click="row.devices.splice(row.devices.indexOf(device), 1)"><icon name="times"/></button>
 									</div>
 								</div>
 							</div>
@@ -707,7 +709,7 @@
 				v-bind="getRendererProperties(row)">
 			<div v-if="false && (edit || $services.page.wantEdit || row.wantVisibleName) && row.name && !row.collapsed" :style="getRowEditStyle(row)" class="row-edit-label"
 				:class="'direction-' + (row.direction ? row.direction : 'horizontal')"><span>{{row.name}}</span></div>
-			<div class="is-row-menu is-row is-align-main-center is-align-cross-bottom is-spacing-vertical-bottom-small" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
+			<div class="is-row-menu is-row is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
 				<button class="is-button is-variant-primary is-size-xsmall has-tooltip" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-tooltip">Configure row</span></button>
 			</div>
 			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
@@ -728,7 +730,7 @@
 				<div v-if="false && (edit || $services.page.wantEdit) && cell.name" :style="getCellEditStyle(cell)" class="cell-edit-label"><span>{{cell.name}}</span></div>
 				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				
-				<div class="is-column-menu is-row is-align-main-center is-spacing-vertical-top-small" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
+				<div class="is-column-menu is-row is-align-main-center is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
 					<button v-if="cell.alias" class="is-button is-variant-secondary is-size-xsmall has-tooltip" @click="configureCell($event, row, cell)"><icon name="cog"/><span class="is-tooltip">Configure Cell</span></button>
 					<button v-else class="is-button is-variant-secondary is-size-xsmall has-tooltip" @click="goto($event, row, cell)"><icon name="magic"/><span class="is-tooltip">Configure Cell</span></button>
 				</div>
@@ -818,6 +820,33 @@
 	</div>
 </template>
 
+<template id="aris-editor">
+	<div class="aris-editor">
+		<n-collapsible v-for="childComponent in childComponents" :only-one-open="true" class="is-highlight-left is-color-primary-light" :title="childComponent.title" :after="childComponent.component">
+			<div class="is-row is-align-end is-spacing-horizontal-right-small" slot="buttons">
+				<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall has-tooltip" @click="clearOptions(childComponent)"><icon name="undo"/><span class="is-tooltip">Clear settings</span></button></li>
+			</div>
+			<div class="is-column is-spacing-medium">
+				<n-form-combo v-model="container.components[childComponent.name].variant" label="Variant" :filter="getAvailableVariantNames.bind($self, childComponent)" after="Choose the main variant of this component"
+					:placeholder="childComponent.name"
+					empty-value="No variants available"
+					@input="container.components[childComponent.name].modifiers.splice(0)"/>
+			</div>
+			<n-collapsible v-if="getAvailableModifiers(childComponent).length > 0" title="modifier" class="is-highlight-left is-color-secondary-light" 
+					content-class="is-spacing-medium is-spacing-vertical-gap-none"
+					:after="listActiveModifiers(childComponent)">
+				<n-form-checkbox v-for="modifier in getAvailableModifiers(childComponent)" :value="isActiveModifier(childComponent, modifier)" :label="modifier"
+					@input="function() { toggleModifier(childComponent, modifier) }"/>
+			</n-collapsible>
+			<n-collapsible v-for="dimension in getAvailableDimensions(childComponent)" :only-one-open="true" :title="dimension.name" class="is-highlight-left is-color-secondary-light" 
+					content-class="is-spacing-medium is-spacing-vertical-gap-none"
+					:after="listActiveOptions(childComponent, dimension)">
+				<n-form-checkbox :value="isActiveOption(childComponent, dimension, option)" @input="function() { toggleOption(childComponent, dimension, option) }" v-for="option in dimension.options" 
+					:label="prettifyOption(option)"/>
+			</n-collapsible>
+		</n-collapsible>
+	</div>
+</template>
 <template id="page-sidemenu">
 	<div class="is-column is-pattern-basic-alternating">
 		<div v-for="row in rows" class="is-column is-spacing-small is-spacing-horizontal-right-none is-spacing-vertical-gap-small" :class="{'is-selected': selected && selected.id == row.id}">

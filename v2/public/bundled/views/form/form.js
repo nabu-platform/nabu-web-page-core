@@ -205,7 +205,7 @@ nabu.page.formComponentConstructer = function(name) {
 					// structural so we can save defaults
 					name: "form-button-container",
 					// the type of component
-					component: "row",
+					component: "menu",
 					// the default classes applied when nothing is set
 					default: ["layout_align_space-between"]
 				}, {
