@@ -4505,6 +4505,8 @@ Vue.component("aris-editor", {
 					}
 				});
 			}
+			// clear the options, it is now the default!
+			this.clearOptions(childComponent);
 		},
 		prettifyOption: function(option) {
 			return option;
