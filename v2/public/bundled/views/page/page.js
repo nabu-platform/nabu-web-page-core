@@ -712,7 +712,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			if (this.edit && !this.closing) {
 				this.closing = true;
 				//var right = document.querySelector("#n-sidebar-right-instance");
-				var right = document.querySelector(".n-sidebar.right");
+				var right = document.querySelector(".is-sidebar.right");
 				if (right && right.__vue__ && right.__vue__.close) {
 					right.__vue__.close();
 				}
@@ -720,7 +720,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					right.$$close();
 				}
 				//var left = document.querySelector("#n-sidebar-left-instance");
-				var left = document.querySelector(".n-sidebar.left");
+				var left = document.querySelector(".is-sidebar.left");
 				if (left && left.__vue__ && left.__vue__.close) {
 					left.__vue__.close();
 				}
@@ -736,6 +736,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 				this.closing = false;
 				this.edit = false;
+				document.querySelectorAll(".is-hovering").forEach(function(element) {
+					element.classList.remove("is-hovering", "is-hover-top", "is-hover-bottom", "is-hover-left", "is-hover-right");
+				});
 			}
 		},
 		goIntoEdit: function() {
