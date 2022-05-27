@@ -984,6 +984,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 				cell.alias = route.alias;
 				event.preventDefault();
 				event.stopPropagation();
+				self.$services.page.slowNormalizeAris(self.page, row, "row");
+				self.$services.page.slowNormalizeAris(self.page, cell);
 			};
 			// if there is only one, execute it immediately
 			if (acceptedRoutes.length == 1) {
@@ -2672,15 +2674,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		'cell.aris': {
 			deep: true,
 			handler: function(newValue) {
-				if (newValue && !newValue.hasOwnProperty("rerender")) {
-					Object.defineProperty(newValue, "rerender", {
-						value: true,
-						enumerable: false
-					});
-				}
-				else if (newValue) {
-					newValue.rerender = true;
-				}
+				this.$services.page.setRerender(newValue);
 			}
 		}
 	}
@@ -3258,7 +3252,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		cellClasses: function(cell) {
 			var classes = [];
 			if (this.$services.page.useAris && cell.aris && cell.aris.components) {
-				var children = this.$services.page.calculateArisComponents(cell.aris);
+				var children = this.$services.page.calculateArisComponents(cell.aris, cell.alias);
 				if (children["page-column"] && children["page-column"].classes) {
 					nabu.utils.arrays.merge(classes, children["page-column"].classes);
 				}
@@ -4229,6 +4223,10 @@ Vue.component("aris-editor", {
 		container: {
 			type: Object,
 			required: true
+		},
+		specific: {
+			type: String,
+			required: false
 		}
 	},
 	methods: {
@@ -4370,7 +4368,8 @@ Vue.component("aris-editor", {
 			var settings = this.container.components[childComponent.name];
 			if (settings) {
 				var result = "";
-				if (settings.variant != null) {
+				// default variants don't need to be explicitly included!
+				if (settings.variant != null && settings.variant != "default") {
 					// we need to know which component in the hierarchy the variant is from
 					var variants = this.getAvailableVariants(childComponent);
 					var applicable = variants.filter(function(x) {
@@ -4404,7 +4403,7 @@ Vue.component("aris-editor", {
 					}
 				});
 				this.$services.swagger.execute("nabu.web.page.core.rest.aris.variant.update", {
-					variant: childComponent.component + "_variant_" + childComponent.name,
+					variant: childComponent.component + "_variant_" + childComponent.name + (this.specific && childComponent.name == "page-column" ? "-" + this.specific : ""),
 					body: {
 						// we want to skip the trailing linefeed
 						content: result.length == 0 ? null : result.substring(0, result.length - 1)

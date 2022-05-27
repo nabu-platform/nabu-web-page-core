@@ -488,7 +488,8 @@
 							<n-form-combo label="Route" :filter="$services.page.getRoutes" v-model="cell.alias"
 								:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
 								:required="true"
-								after="The component that should be routed into this cell"/>
+								after="The component that should be routed into this cell"
+								@input="$services.page.normalizeAris(page, cell)"/>
 							<n-form-text label="Cell Name" v-model="cell.name" after="A descriptive name for this cell" :timeout="600"/>
 							<n-form-text label="Cell Id" v-model="cell.customId" after="Add a named container to render child content in." :timeout="600"/>
 							<n-page-mapper v-if="cell.alias" 
@@ -570,7 +571,8 @@
 									</n-form-section>
 								</div>
 							</div>
-							<aris-editor v-if="$services.page.useAris && $services.page.normalizeAris(page, cell)" :child-components="$services.page.getCellComponents(page, cell)" :container="cell.aris"/>
+							<aris-editor v-if="$services.page.useAris && $services.page.normalizeAris(page, cell)" :child-components="$services.page.getCellComponents(page, cell)" :container="cell.aris"
+									:specific="cell.alias"/>
 						</n-collapsible>
 						<div v-if="canConfigureInline(cell)" class="is-column is-spacing-vertical-top-large">
 							<h2 class="is-h4 is-spacing-medium is-color-primary-outline">Content Configuration</h2>
@@ -881,7 +883,8 @@
 								@keydown.escape="function() { editing = null }"/>
 							<n-form-combo v-else-if="aliasing == cell.id" class="is-variant-inline is-size-xsmall" :filter="$services.page.getRoutes" v-model="cell.alias"
 								:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'" 
-								@keydown.escape="function() { aliasing = null }" />
+								@keydown.escape="function() { aliasing = null }" 
+								@input="$services.page.slowNormalizeAris(page, cell)"/>
 							<span v-else class="is-content is-size-xsmall is-position-center" @click="selectCell(row, cell)" 
 								>{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
 							<button class="is-button is-size-xxsmall is-variant-ghost is-position-center" @click="function() { aliasing = null; editing = cell.id }" v-if="false && aliasing != cell.id && editing != cell.id"><icon name="pencil-alt"/></button>

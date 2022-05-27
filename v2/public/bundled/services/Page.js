@@ -619,6 +619,27 @@ nabu.services.VueService(Vue.extend({
 			});
 			return components;
 		},
+		slowNormalizeAris: function(page, container, type) {
+			var self = this;
+			// sometimes we need to wait until it is all rendered (like when switching alias)
+			// not sure why, but waiting twice seems to work for now....
+			Vue.nextTick(function() {
+				Vue.nextTick(function() {
+					self.normalizeAris(page, container, type);
+				});
+			});
+		},
+		setRerender: function(cell) {
+			if (cell && !cell.hasOwnProperty("rerender")) {
+				Object.defineProperty(cell, "rerender", {
+					value: true,
+					enumerable: false
+				});
+			}
+			else if (cell) {
+				cell.rerender = true;
+			}
+		},
 		normalizeAris: function(page, container, type) {
 			if (this.useAris) {
 				if (container.aris == null) {
@@ -628,28 +649,38 @@ nabu.services.VueService(Vue.extend({
 				}
 				var components = type == "row" ? this.getRowComponents(page, container) : this.getCellComponents(page, container);
 				components.forEach(function(x) {
-					if (!container.aris.components[x.name]) {
+					if (container.aris.components[x.name] == null) {
 						Vue.set(container.aris.components, x.name, {
 							variant: null,
 							// applied modifiers (by name)
 							modifiers: [],
 							// applied options, this is written as "dimension_option"
 							options: []
-						})
+						});
 					}
 				});
+				// set this explicitly, in some cases the watcher is not triggered
+				this.setRerender(container.aris);
 			}
 			return true;
 		},
 		
-		calculateArisComponents: function(container) {
+		calculateArisComponents: function(container, specific) {
 			var childComponents = {};
 			Object.keys(container.components).forEach(function(key) {
 				childComponents[key] = {
 					classes: []
 				};
 				if (container.components[key].variant != null) {
-					childComponents[key].classes.push("is-variant-" + container.components[key].variant);
+					// you can explicitly set it to default to override the other default
+					// however, we don't need to include that in the css classes
+					if (container.components[key].variant != "default") {
+						childComponents[key].classes.push("is-variant-" + container.components[key].variant);
+					}
+				}
+				// we can have specific subvariants, for example for cells which have an alias
+				else if (specific) {
+					childComponents[key].classes.push("is-variant-" + key + "-" + specific);
 				}
 				// we always add the default now, you can always actively choose another variant to start from (the default for instance)
 				else {
