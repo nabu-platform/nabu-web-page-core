@@ -7,8 +7,8 @@ nabu.services.VueService(Vue.extend({
 		}
 	},
 	created: function() {
-		this.update();
 		var self = this;
+		this.update();
 		window.addEventListener("resize", function(event) {
 			if (this.timer) {
 				window.clearTimeout(this.timer);

@@ -374,7 +374,7 @@
 											:filter="getOperationArrays.bind($self, action.operation)"/>
 										<n-form-switch v-if="action.operation" v-model="action.expandBindings" label="Field level bindings"/>
 										<div class="is-row" v-if="action.operation && !action.route && action.expandBindings">
-											<n-form-combo class="is-position-grow"
+											<n-form-combo class="is-fill-normal"
 												:items="Object.keys(availableParameters)" v-model="autoMapFrom"/>
 											<button class="is-button is-variant-primary-outline is-size-xsmall" @click="automap(action)" :disabled="!autoMapFrom">Automap</button>
 										</div>
@@ -514,6 +514,7 @@
 							<n-form-text label="Cell Reference" v-model="cell.ref" info="A reference you can use to retrieve this cell programmatically" :timeout="600"/>
 							<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
 							<div v-if="$services.page.devices.length">
+								<p class="is-p is-size-small is-color-light is-spacing-vertical-bottom-small">You can choose to render the cell only if a set of device rules is met.</p>
 								<div class="is-row is-align-end is-spacing-vertical-bottom-small">
 									<button class="is-button is-variant-primary-outline is-size-xsmall" @click="addDevice(cell)"><icon name="plus"/>Device rule</button>
 								</div>
@@ -569,7 +570,7 @@
 									</n-form-section>
 								</div>
 							</div>
-							<aris-editor v-if="$services.page.useAris && normalizeAris(cell)" :child-components="getCellComponents(cell)" :container="cell.aris"/>
+							<aris-editor v-if="$services.page.useAris && $services.page.normalizeAris(page, cell)" :child-components="$services.page.getCellComponents(page, cell)" :container="cell.aris"/>
 						</n-collapsible>
 						<div v-if="canConfigureInline(cell)" class="is-column is-spacing-vertical-top-large">
 							<h2 class="is-h4 is-spacing-medium is-color-primary-outline">Content Configuration</h2>
@@ -640,7 +641,7 @@
 									<span @click="row.styles.splice(row.styles.indexOf(style), 1)" class="fa fa-times"></span>
 								</n-form-section>
 							</div>
-							<aris-editor v-if="$services.page.useAris && normalizeAris(row, 'row')" :child-components="getRowComponents(row)" :container="row.aris"/>
+							<aris-editor v-if="$services.page.useAris && $services.page.normalizeAris(page, row, 'row')" :child-components="$services.page.getRowComponents(page, row)" :container="row.aris"/>
 						</n-collapsible>
 					</n-form>
 				</n-sidebar>
@@ -833,9 +834,9 @@
 						@dragend="$services.page.clearDrag($event)"
 						@drop="dropRow($event, row)"
 						@mouseover="mouseOver($event, row)" 
-						class="is-row is-position-grow">
+						class="is-row is-fill-normal">
 					<button class="is-button is-variant-ghost is-size-xsmall" @click="toggleRow(row)"><icon :name="opened.indexOf(row.id) >= 0 ? 'chevron-down' : 'chevron-right'"/></button>
-					<span class="is-content is-size-xsmall is-position-grow is-position-center" @click="selectRow(row)" 
+					<span class="is-content is-size-xsmall is-fill-normal is-position-center" @click="selectRow(row)" 
 						@dragstart="dragRow($event, row)"
 						:draggable="true" 
 						@click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
@@ -860,7 +861,7 @@
 								@dragover="acceptDragCell($event, row, cell)"
 								@drop="dropCell($event, row, cell)"
 								@mouseover="mouseOver($event, row, cell)"
-								class="is-row is-position-grow is-spacing-horizontal-gap-small is-no-outline"
+								class="is-row is-fill-normal is-spacing-horizontal-gap-small is-no-outline"
 								@click.ctrl="scrollIntoView(row, cell)"
 								@click="selectCell(row, cell)"
 								@dragstart="dragCell($event, row, cell)"

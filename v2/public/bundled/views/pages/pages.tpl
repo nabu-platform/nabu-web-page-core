@@ -136,7 +136,7 @@
 									<li class="is-column"><button class="is-button is-size-small is-variant-danger-outline has-tooltip" @click="remove(page)"><icon name="trash"/><span class="is-tooltip is-position-top is-color-danger">Delete page</span></button></li>
 								</ul>
 								<div class="is-row is-spacing-horizontal-gap-large">
-									<n-form class="is-form is-position-grow is-color-body is-spacing-large is-variant-vertical">
+									<n-form class="is-form is-fill-normal is-color-body is-spacing-large is-variant-vertical">
 										<n-form-text :value="page.content.label ? page.content.label : page.name" label="Page name" :required="true" :timeout="600" @input="function(newValue) { updatePageName(page, newValue) }" 
 											after="The page name must be unique across the application"
 											:suffix="page.content.name"/>
@@ -159,7 +159,7 @@
 											v-if="page.content.defaultAnchor" label="Is default parent page" v-model="page.content.initial" @input="save(page)"/>
 										<!-- support for pages with input values -->
 									</n-form>
-									<div class="is-column is-spacing-vertical-gap-medium is-position-grow">
+									<div class="is-column is-spacing-vertical-gap-medium is-fill-normal">
 										<h3 class="is-h3 has-toolbar">
 											<span class="is-text">Metadata</span>
 											<ul class="is-menu is-variant-toolbar">
@@ -170,8 +170,8 @@
 										<div v-if="page.content.properties" class="is-column is-spacing-vertical-gap-medium">
 											<n-form v-for="property in page.content.properties" class="has-button-close is-spacing-large is-color-body is-variant-vertical">
 												<div class="is-row is-column-gap-medium">
-													<n-form-text v-model="property.key" label="Key" :timeout="600" @input="save(page)" class="is-position-grow"/>
-													<n-form-text v-model="property.value" label="Value":timeout="600" @input="save(page)" class="is-position-grow"/>
+													<n-form-text v-model="property.key" label="Key" :timeout="600" @input="save(page)" class="is-fill-normal"/>
+													<n-form-text v-model="property.value" label="Value":timeout="600" @input="save(page)" class="is-fill-normal"/>
 													<button @click="page.content.properties.splice(page.content.properties.indexOf(property), 1)" class="is-button is-variant-close"><icon name="times"/></button>
 												</div>
 											</n-form>

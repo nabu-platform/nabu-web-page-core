@@ -306,6 +306,7 @@ nabu.services.VueService(Vue.extend({
 							width = 512;
 						}
 					}
+					console.log("checking", actual, operator, width);
 					// infinitely big, so matches any query requesting larger
 					if (width == 0) {
 						if (operator != ">" && operator != ">=") {
@@ -575,6 +576,72 @@ nabu.services.VueService(Vue.extend({
 				
 			}
 		},
+		
+		getCellComponents: function(page, cell) {
+			var components = [];
+			// push the cell itself
+			components.push({
+				title: "Cell",
+				name: "page-column",
+				component: "page-column"
+			});
+			var pageInstance = this.getPageInstance(page);
+			var component = pageInstance.getComponentForCell(cell.id);
+			if (component != null) {
+				if (component.getChildComponents) {
+					nabu.utils.arrays.merge(components, component.getChildComponents());
+				}
+				else {
+					var self = this;
+					if (component && component.configurator) {
+						var configurator = Vue.component(component.configurator());
+						configurator = new configurator({propsData: {
+							page: self.page,
+							cell: cell
+						}});
+						// destroy cleanly
+						configurator.$destroy();
+						if (configurator.getChildComponents) {
+							nabu.utils.arrays.merge(components, configurator.getChildComponents());
+						}
+					}
+				}
+			}
+			return components;
+		},
+		getRowComponents: function(page, row) {
+			var components = [];
+			// push the cell itself
+			components.push({
+				title: "Row",
+				name: "page-row",
+				component: "page-row"
+			});
+			return components;
+		},
+		normalizeAris: function(page, container, type) {
+			if (this.useAris) {
+				if (container.aris == null) {
+					Vue.set(container, "aris", {
+						components: {}
+					});
+				}
+				var components = type == "row" ? this.getRowComponents(page, container) : this.getCellComponents(page, container);
+				components.forEach(function(x) {
+					if (!container.aris.components[x.name]) {
+						Vue.set(container.aris.components, x.name, {
+							variant: null,
+							// applied modifiers (by name)
+							modifiers: [],
+							// applied options, this is written as "dimension_option"
+							options: []
+						})
+					}
+				});
+			}
+			return true;
+		},
+		
 		calculateArisComponents: function(container) {
 			var childComponents = {};
 			Object.keys(container.components).forEach(function(key) {
@@ -583,6 +650,10 @@ nabu.services.VueService(Vue.extend({
 				};
 				if (container.components[key].variant != null) {
 					childComponents[key].classes.push("is-variant-" + container.components[key].variant);
+				}
+				// we always add the default now, you can always actively choose another variant to start from (the default for instance)
+				else {
+					childComponents[key].classes.push("is-variant-" + key);
 				}
 				if (container.components[key].options != null && container.components[key].options.length > 0) {
 					container.components[key].options.forEach(function(option) {
@@ -595,9 +666,9 @@ nabu.services.VueService(Vue.extend({
 					});
 				}
 				// if no classes are set, set the default name as variant so themes can target this
-				if (childComponents[key].classes.length == 0) {
-					childComponents[key].classes.push("is-variant-" + key);
-				}
+//				if (childComponents[key].classes.length == 0) {
+//					childComponents[key].classes.push("is-variant-" + key);
+//				}
 			});
 			return childComponents;
 		},
