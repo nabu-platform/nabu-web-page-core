@@ -17,4 +17,5 @@
     <webFragments>nabu.web.page.core.rest.function.compiled</webFragments>
     <webFragments>nabu.web.page.core.rest.feature.get</webFragments>
     <webFragments>nabu.web.page.core.rest.templates.list</webFragments>
+    <webFragments>nabu.web.page.core.rest.aris.variant.update</webFragments>
 </webModule>

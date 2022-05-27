@@ -1,0 +1,3 @@
+<structure name="path">
+    <field name="variant" type="java.lang.String"/>
+</structure>

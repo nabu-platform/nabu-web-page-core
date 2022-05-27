@@ -1,0 +1,7 @@
+<structure interface="nabu.web.page.core.rest.aris.variant.update:api" name="pipeline">
+    <structure name="input"/>
+    <structure name="output"/>
+    <field name="uri" type="java.net.URI"/>
+    <field name="current" type="java.lang.String"/>
+    <structure definition="be.nabu.libs.resources.api.ResourceProperties" minOccurs="0" name="properties"/>
+</structure>

@@ -4340,6 +4340,11 @@ Vue.component("aris-editor", {
 						if (!current.options) {
 							current.options = [];
 						}
+						// a dimension can exist across multiple components (being more specific in a certain extension)
+						if (!current.components) {
+							current.components = [];
+						}
+						current.components.push(component.name);
 						// only add options that we don't know about yet
 						if (current.options.length > 0) {
 							x.options.forEach(function(y) {
@@ -4364,9 +4369,9 @@ Vue.component("aris-editor", {
 			this.$services.page.getArisComponentHierarchy(childComponent.component).forEach(function(component) {
 				if (component.variants != null) {
 					component.variants.forEach(function(variant) {
-						if (variants.indexOf(variant) < 0) {
-							variants.push(variant);
-						}	
+						var clone = JSON.parse(JSON.stringify(variant));
+						clone.component = component.name;
+						variants.push(clone);
 					});
 				}
 			});
@@ -4399,18 +4404,26 @@ Vue.component("aris-editor", {
 		},
 		getAvailableModifiers: function(childComponent) {
 			var current = this.container.components[childComponent.name].variant;
-			var available = [];
+			var available = {};
 			this.getAvailableVariants(childComponent).filter(function(x) {
 				return x.name == "default" || x.name == current;
 			}).forEach(function(x) { 
 				if (x.modifiers) {
 					x.modifiers.forEach(function(y) {
-						if (available.indexOf(y) < 0) {
-							available.push(y);
+						if (available[y] == null) {
+							available[y] = [];
 						}
+						available[y].push({
+							variant: x.name,
+							component: x.component
+						});
 					})
 				} 
 			});
+			return available;
+		},
+		getAvailableModifierNames: function(childComponent) {
+			var available = Object.keys(this.getAvailableModifiers(childComponent));
 			available.sort();
 			return available;
 		},
@@ -4446,6 +4459,52 @@ Vue.component("aris-editor", {
 			this.container.components[childComponent.name].variant = null;
 			this.container.components[childComponent.name].options.splice(0);
 			this.container.components[childComponent.name].modifiers.splice(0);
+		},
+		saveAsDefaultAris: function(childComponent) {
+			var settings = this.container.components[childComponent.name];
+			if (settings) {
+				var result = "";
+				if (settings.variant != null) {
+					// we need to know which component in the hierarchy the variant is from
+					var variants = this.getAvailableVariants(childComponent);
+					var applicable = variants.filter(function(x) {
+						return x.name == settings.variant;
+					})
+					applicable.forEach(function(x) {
+						// include the variant itself
+						result += "\t@include " + x.component + "_variant_" + settings.variant + ";\n";
+					});
+				}
+				var dimensions = this.getAvailableDimensions(childComponent);
+				settings.options.forEach(function(x) {
+					var parts = x.split("_");
+					var dimension = parts[0];
+					var option = parts[1];
+					var found = dimensions.filter(function(x) {
+						return x.name == dimension;
+					})[0];
+					if (found) {
+						found.components.forEach(function(component) {
+							result += "\t@include " + component + "_" + dimension + "_" + option + ";\n";
+						});
+					}
+				});
+				var modifiers = this.getAvailableModifiers(childComponent);
+				settings.modifiers.forEach(function(x) {
+					if (modifiers[x] != null) {
+						modifiers[x].forEach(function(variant) {
+							result += "\t@include " + variant.component + "-" + variant.variant + "_modifier_" + x + ";\n";
+						});
+					}
+				});
+				this.$services.swagger.execute("nabu.web.page.core.rest.aris.variant.update", {
+					variant: childComponent.component + "_variant_" + childComponent.name,
+					body: {
+						// we want to skip the trailing linefeed
+						content: result.length == 0 ? null : result.substring(0, result.length - 1)
+					}
+				});
+			}
 		},
 		prettifyOption: function(option) {
 			return option;

@@ -799,19 +799,20 @@
 <template id="aris-editor">
 	<div class="aris-editor">
 		<n-collapsible v-for="childComponent in childComponents" :only-one-open="true" class="is-highlight-left is-color-primary-light" :title="childComponent.title" :after="childComponent.component">
-			<div class="is-row is-align-end is-spacing-horizontal-right-small" slot="buttons">
-				<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall has-tooltip" @click="clearOptions(childComponent)"><icon name="undo"/><span class="is-tooltip">Clear settings</span></button></li>
-			</div>
+			<ul class="is-menu is-variant-toolbar is-align-end is-spacing-horizontal-right-small" slot="buttons">
+				<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall has-tooltip" @click="saveAsDefaultAris(childComponent)"><icon name="save"/><span class="is-tooltip is-position-left">Save as default</span></button></li>
+				<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall has-tooltip" @click="clearOptions(childComponent)"><icon name="undo"/><span class="is-tooltip is-position-left">Clear settings</span></button></li>
+			</ul>
 			<div class="is-column is-spacing-medium">
 				<n-form-combo v-model="container.components[childComponent.name].variant" label="Variant" :filter="getAvailableVariantNames.bind($self, childComponent)" after="Choose the main variant of this component"
 					:placeholder="childComponent.name"
 					empty-value="No variants available"
 					@input="container.components[childComponent.name].modifiers.splice(0)"/>
 			</div>
-			<n-collapsible v-if="getAvailableModifiers(childComponent).length > 0" title="modifier" class="is-highlight-left is-color-secondary-light" 
+			<n-collapsible v-if="getAvailableModifierNames(childComponent).length > 0" title="modifier" class="is-highlight-left is-color-secondary-light" 
 					content-class="is-spacing-medium is-spacing-vertical-gap-none"
 					:after="listActiveModifiers(childComponent)">
-				<n-form-checkbox v-for="modifier in getAvailableModifiers(childComponent)" :value="isActiveModifier(childComponent, modifier)" :label="modifier"
+				<n-form-checkbox v-for="modifier in getAvailableModifierNames(childComponent)" :value="isActiveModifier(childComponent, modifier)" :label="modifier"
 					@input="function() { toggleModifier(childComponent, modifier) }"/>
 			</n-collapsible>
 			<n-collapsible v-for="dimension in getAvailableDimensions(childComponent)" :only-one-open="true" :title="dimension.name" class="is-highlight-left is-color-secondary-light" 
