@@ -295,6 +295,9 @@ nabu.services.VueService(Vue.extend({
 						if (device && device.width) {
 							width = parseInt(device.width);
 						}
+						else if (device && !device.width && device.name == "wide") {
+							width = 2560;
+						}
 						// the default devices!
 						else if (device && !device.width && device.name == "desktop") {
 							width = 1280;

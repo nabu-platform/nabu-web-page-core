@@ -54,10 +54,13 @@
 						<n-form-switch v-model="action.compileLabel" label="Compile"/>
 						<n-form-text v-model="action.id" label="Id" :timeout="600"/>
 						<n-form-text v-model="action.icon" label="Icon" :timeout="600"/>
+						<n-form-text v-model="action.badge" label="Badge" :timeout="600" info="Use the = syntax to interpret the badge dynamically"/>
+						<n-form-combo v-model="action.badgeVariant" v-if="action.badge" label="Badge Variant" :filter="getAvailableBadgeVariants"/>
+						<n-form-switch v-model="action.iconReverse" label="Reverse icon order" v-if="action.icon"/>
 					</n-form-section>
 	
-					<n-form-combo v-model="action.class" label="Class" :filter="$services.page.classes.bind($self, 'page-action')" :timeout="600" />
-					<n-form-combo v-model="action.buttonClass" label="Button Class" :filter="$services.page.getSimpleClasses" :timeout="600"/>
+					<n-form-combo v-model="action.class" label="Menu Entry Variant" :filter="$services.page.classes.bind($self, 'page-action')" :timeout="600" />
+					<n-form-combo v-model="action.buttonClass" label="Button Variant" :filter="getAvailableButtonVariants" :timeout="600"/>
 					
 					<n-form-combo v-model="action.event" v-if="false && !action.route && !action.url" label="Event" :filter="function(value) { return value ? [value, '$close'] : ['$close'] }"
 						 @input="$updateEvents()" :timeout="600"/>
@@ -129,10 +132,11 @@
 </template>
 
 <template id="page-actions">
-	<ul class="page-actions" :class="[cell.state.class, {'page-actions-root': actions == null }, {'page-actions-child': actions != null }]" v-auto-close.actions="autoclose"
+	<ul :class="[cell.state.class, {'page-actions-root': actions == null }, {'page-actions-child': actions != null }, getAdditionalClasses()]" 
+			v-auto-close.actions="autoclose"
 			v-fixed-header="cell.state.isFixedHeader != null && cell.state.isFixedHeader == true">
 		<li v-for="action in (isAutoCalculated ? autoActions : (edit ? getActions() : resolvedActions.filter(function(x) { return !x.dynamic})))" v-if="isVisible(action)"
-				class="page-action"
+				class="is-column"
 				:class="[{ 'has-children': action.actions != null && action.actions.length }, action.class, {'click-based': cell.state.clickBased}, {'is-open': showing.indexOf(action) >= 0}]"
 				@mouseover="show(action)" @mouseout="hide(action)"
 				:sequence="(isAutoCalculated ? autoActions : (edit ? getActions() : resolvedActions)).indexOf(action) + 1">
@@ -150,7 +154,7 @@
 			
 			<template v-else>
 				<span v-if="edit && !action.dynamic" class="fa fa-cog" @click="configureAction(action)"></span>
-				<a auto-close-actions class="p-link page-action-link page-action-entry" :href="getActionHref(action)"
+				<a auto-close-actions class="is-button" :href="getActionHref(action)"
 					:data-event="action.name"
 					:target="action.anchor == '$blank' && (action.url || action.route) ? '_blank' : null"
 					:class="getDynamicClasses(action)"
@@ -159,9 +163,9 @@
 					:id="$services.page.interpret(action.id, $self)"
 					@click="handle(action)"
 					v-if="!cell.state.useButtons && (action.route || hasEvent(action) || action.url || action.close)"
-						><html-fragment v-if="action.icon" :html="$services.page.getIconHtml(action.icon)"></html-fragment
-						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></a>
-				<button auto-close-actions class="p-button page-action-button page-action-entry"
+						><icon v-if="action.icon" :name="action.icon"
+						/><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></a>
+				<button auto-close-actions class="is-button"
 					:data-event="action.name"
 					:class="getDynamicClasses(action)"
 					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
@@ -169,16 +173,18 @@
 					:id="$services.page.interpret(action.id, $self)"
 					@click="handle(action)" 
 					v-else-if="cell.state.useButtons && (action.route || hasEvent(action) || action.url || action.close)"
-						><html-fragment v-if="action.icon" :html="$services.page.getIconHtml(action.icon)"></html-fragment
-						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></button>
+						><icon v-if="action.icon" :name="action.icon"
+						/><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span
+						><span v-if="action.badge" v-html="$services.page.translate($services.page.interpret(action.badge, $self))" class="is-badge" :class="action.badgeVariant ? 'is-variant-' + action.badgeVariant : null"></span></button>
 				<span class="page-action-label page-action-entry" 
 					@click="toggle(action)"
 					v-else
 					:class="getDynamicClasses(action)"
 					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
-						><html-fragment v-if="action.icon" :html="$services.page.getIconHtml(action.icon)"></html-fragment
-						><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></span>
+						><icon v-if="action.icon" :name="action.icon"
+						/><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></span>
 				<page-actions :ref="'action_' + (edit ? getActions() : resolvedActions).indexOf(action)"
+					:root="false"
 					v-if="(action.actions && action.actions.length) || configuringAction == action"
 					:cell="cell"
 					:page="page"

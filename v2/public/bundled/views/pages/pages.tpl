@@ -2,7 +2,7 @@
 	<div class="nabu-pages has-menu-toolbar-sticky">
 		<ul class="is-row is-menu is-variant-toolbar is-dark is-main-top is-sticky is-primary-highlight is-content-width-medium">
 			<li class="is-column"><button @click="selectedTab = 'pages'" class="is-button is-variant-ghost-light is-size-small"><img class="is-icon" src="${server.root()}resources/images/branding/nabu-logo.svg"/><span class="is-text">Page Builder</span></button></li>
-			<li class="is-column is-after-gap" @click="selectedTab = 'pages'"><button :class="{'is-active': selectedTab == 'pages' }"class="is-button is-variant-ghost-light is-size-small"><icon name="file-alt"/><span class="is-text">Pages</span></li>
+			<li class="is-column is-position-right" @click="selectedTab = 'pages'"><button :class="{'is-active': selectedTab == 'pages' }"class="is-button is-variant-ghost-light is-size-small"><icon name="file-alt"/><span class="is-text">Pages</span></li>
 			<li class="is-column" @click="selectedTab = 'settings'"><button :class="{'is-active': selectedTab == 'settings' }" class="is-button is-variant-ghost-light is-size-small"><icon name="cogs"/><span class="is-text">Settings</span></button></li>
 			<li class="is-column" @click="selectedTab = 'styles'"><button :class="{'is-active': selectedTab == 'styles' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-image"/><span class="is-text">Style</span></li>
 			<li class="is-column" @click="selectedTab = 'functions'"><button :class="{'is-active': selectedTab == 'functions' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-code"/><span class="is-text">Script</span></li>
@@ -160,7 +160,7 @@
 										<!-- support for pages with input values -->
 									</n-form>
 									<div class="is-column is-spacing-vertical-gap-medium is-fill-normal">
-										<h3 class="is-h3 has-toolbar">
+										<h3 class="is-h3">
 											<span class="is-text">Metadata</span>
 											<ul class="is-menu is-variant-toolbar">
 												<li class="is-column"><button class="is-button is-variant-warning is-align-end is-size-small" @click="page.content.properties ? page.content.properties.push({}) : $window.Vue.set(page.content, 'properties', [{}])"><span class="fa fa-plus"></span>Property</button></li>

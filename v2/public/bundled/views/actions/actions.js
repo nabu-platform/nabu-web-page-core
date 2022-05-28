@@ -39,6 +39,14 @@ nabu.page.views.PageActionsGenerator = function(name) {
 			active: {
 				type: String,
 				required: false
+			},
+			root: {
+				type: Boolean,
+				default: true
+			},
+			childComponents: {
+				type: Object,
+				required: false
 			}
 		},
 		created: function() {
@@ -148,6 +156,49 @@ nabu.page.views.PageActionsGenerator = function(name) {
 			});
 		},
 		methods: {
+			getAvailableVariants: function(component, value) {
+				var variants = [];
+				this.$services.page.getArisComponentHierarchy(component).forEach(function(component) {
+					if (component.variants != null) {
+						component.variants.forEach(function(variant) {
+							if (variants.indexOf(variant.name) < 0) {
+								variants.push(variant.name);
+							}
+						});
+					}
+				});
+				if (value != null) {
+					variants = variants.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+				}
+				variants.sort();
+				return variants;
+			},
+			getAvailableButtonVariants: function(value) {
+				return this.getAvailableVariants("button", value);
+			},
+			getAvailableBadgeVariants: function(value) {
+				return this.getAvailableVariants("badge", value);
+			},
+			getChildComponents: function() {
+				var components = [{
+					title: "Menu",
+					name: "actions-menu",
+					component: "menu"
+				}];
+				return components;
+			},
+			getAdditionalClasses: function() {
+				var classes = [];
+				if (this.root) {
+					classes.push("is-menu");
+					nabu.utils.arrays.merge(classes, this.getChildComponentClasses("actions-menu"));
+				}
+				else {
+					classes.push("is-row");
+				}
+				console.log("menu classes are", classes, this.cell.aris);
+				return classes;
+			},
 			paste: function() {
 				var action = this.$services.page.pasteItem("page-action");	
 				if (action) {
@@ -333,8 +384,8 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				if (!state.defaultAction) {
 					Vue.set(state, "defaultAction", null);
 				}
-				if (!state.useButtons) {
-					Vue.set(state, "useButtons", false);	
+				if (state.useButtons == null) {
+					Vue.set(state, "useButtons", true);
 				}
 				state.actions.map(function(action) {
 					if (!action.activeRoutes) {
@@ -361,7 +412,10 @@ nabu.page.views.PageActionsGenerator = function(name) {
 					nabu.utils.arrays.merge(classes, this.$services.page.getDynamicClasses(action.styles, this.state, this));
 				}
 				if (action.buttonClass) {
-					classes.push(action.buttonClass);
+					classes.push("is-variant-" + action.buttonClass);
+				}
+				if (action.iconReverse) {
+					classes.push("is-direction-reverse");
 				}
 				// set the active class if applicable
 				var activeClass = this.cell.state.activeClass ? this.cell.state.activeClass : "is-active";
