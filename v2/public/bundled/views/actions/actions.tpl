@@ -180,7 +180,7 @@
 						><icon v-if="action.icon" :name="action.icon"
 						/><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span
 						><span v-if="action.badge" v-html="$services.page.translate($services.page.interpret(action.badge, $self))" class="is-badge" :class="action.badgeVariant ? 'is-variant-' + action.badgeVariant : null"></span></button>
-				<span class="page-action-label page-action-entry" 
+				<span class="is-label page-action-entry" 
 					@click="toggle(action)"
 					v-else
 					:class="getDynamicClasses(action)"
@@ -195,6 +195,7 @@
 					:parameters="parameters"
 					:edit="edit"
 					:local-state="localState"
+					:child-components="childComponents"
 					:actions="action.actions"
 					@close="$emit('close')"
 					v-show="(edit && false) || showing.indexOf(action) >= 0"/>

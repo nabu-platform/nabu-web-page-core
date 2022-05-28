@@ -191,6 +191,10 @@ nabu.page.views.PageActionsGenerator = function(name) {
 					title: "Title",
 					name: "actions-title",
 					component: "h2"
+				}, {
+					title: "Default button",
+					name: "actions-button-default",
+					component: "button"
 				}];
 				return components;
 			},
@@ -203,7 +207,6 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				else {
 					classes.push("is-row");
 				}
-				console.log("menu classes are", classes, this.cell.aris);
 				return classes;
 			},
 			paste: function() {
@@ -431,11 +434,16 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				if (action.buttonClass) {
 					classes.push("is-variant-" + action.buttonClass);
 				}
+				var hasSpecificAris = false;
 				if (this.$services.page.useAris && action.aris) {
 					var components = this.$services.page.calculateArisComponents(action.aris);
-					if (components && components["action-entry-button"] && components["action-entry-button"].classes) {
+					if (components && components["action-entry-button"] && components["action-entry-button"].classes && components["action-entry-button"].classes.length > 0) {
 						nabu.utils.arrays.merge(classes, components["action-entry-button"].classes);
+						hasSpecificAris = true;
 					}
+				}
+				if (!hasSpecificAris) {
+					nabu.utils.arrays.merge(classes, this.getChildComponentClasses("actions-button-default"));
 				}
 				if (action.iconReverse) {
 					classes.push("is-direction-reverse");
