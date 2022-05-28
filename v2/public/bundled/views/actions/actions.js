@@ -156,6 +156,9 @@ nabu.page.views.PageActionsGenerator = function(name) {
 			});
 		},
 		methods: {
+			getActionComponents: function(action) {
+				return [{title: 'Button Styling', name: 'action-entry-button', component: 'button'}, {title: 'Wrapper Styling', name: 'action-entry-wrapper', component: 'column'}];
+			},
 			getAvailableVariants: function(component, value) {
 				var variants = [];
 				this.$services.page.getArisComponentHierarchy(component).forEach(function(component) {
@@ -407,6 +410,16 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				var activeClass = this.cell.state.activeClass ? this.cell.state.activeClass : "is-active";
 				return this.getDynamicClasses(action).indexOf(activeClass) >= 0;
 			},
+			getDynamicWrapperClasses: function(action) {
+				var classes = [];
+				if (this.$services.page.useAris && action.aris) {
+					var components = this.$services.page.calculateArisComponents(action.aris);
+					if (components && components["action-entry-wrapper"] && components["action-entry-wrapper"].classes) {
+						nabu.utils.arrays.merge(classes, components["action-entry-wrapper"].classes);
+					}
+				}
+				return classes;
+			},
 			getDynamicClasses: function(action) {
 				var classes = [];
 				if (this.running.indexOf(action) >= 0) {
@@ -417,6 +430,12 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				}
 				if (action.buttonClass) {
 					classes.push("is-variant-" + action.buttonClass);
+				}
+				if (this.$services.page.useAris && action.aris) {
+					var components = this.$services.page.calculateArisComponents(action.aris);
+					if (components && components["action-entry-button"] && components["action-entry-button"].classes) {
+						nabu.utils.arrays.merge(classes, components["action-entry-button"].classes);
+					}
 				}
 				if (action.iconReverse) {
 					classes.push("is-direction-reverse");

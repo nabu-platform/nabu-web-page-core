@@ -643,14 +643,16 @@ nabu.services.VueService(Vue.extend({
 				cell.rerender = true;
 			}
 		},
-		normalizeAris: function(page, container, type) {
+		normalizeAris: function(page, container, type, components) {
 			if (this.useAris) {
 				if (container.aris == null) {
 					Vue.set(container, "aris", {
 						components: {}
 					});
 				}
-				var components = type == "row" ? this.getRowComponents(page, container) : this.getCellComponents(page, container);
+				if (components == null && (type == null || type == "row" || type == "cell")) {
+					components = type == "row" ? this.getRowComponents(page, container) : this.getCellComponents(page, container);
+				}
 				components.forEach(function(x) {
 					if (container.aris.components[x.name] == null) {
 						Vue.set(container.aris.components, x.name, {
