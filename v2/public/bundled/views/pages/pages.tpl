@@ -9,7 +9,7 @@
 			<li v-if="false" class="is-column" @click="selectedTab = 'bundles'"><button :class="{'is-active': selectedTab == 'bundles' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-cube"/><span class="is-text">Bundles</span></li>
 			<li v-for="entry in getAdditionalSettings()" class="is-column" @click="selectedTab = entry.route"><button :class="[{'is-active': selectedTab == entry.route }, 'setting-' + entry.name]" class="is-button is-variant-ghost-light is-size-small"><icon v-if="entry.icon" :name="entry.icon"/><span class="is-text">{{entry.title}}</span></button></li>
 		</ul>
-		<div class="is-column is-width-medium">
+		<div class="is-row is-width-medium is-direction-vertical">
 			<n-prompt v-if="showing" class="is-modal">
 				<n-form class="is-color-background is-spacing-large is-border-shadow is-variant-vertical">
 					<h3 class="is-h3">Page properties</h3>
@@ -22,7 +22,7 @@
 					</footer>
 				</n-form>
 			</n-prompt>
-			<n-form class="settings pages page-settings" v-if="$services.page.canEdit()" mode="component" ref="form">
+			<n-form v-if="$services.page.canEdit()" mode="component" ref="form">
 				<div v-if="selectedTab == 'settings'">
 					<h1 class="is-h1">General Settings</h1>
 					<div class="divider">
@@ -169,7 +169,7 @@
 										<p class="is-p">You can add custom metadata properties to your page.</p>
 										<div v-if="page.content.properties" class="is-column is-spacing-vertical-gap-medium">
 											<n-form v-for="property in page.content.properties" class="has-button-close is-spacing-large is-color-body is-variant-vertical">
-												<div class="is-row is-column-gap-medium">
+												<div class="is-row is-spacing-horizontal-gap-medium">
 													<n-form-text v-model="property.key" label="Key" :timeout="600" @input="save(page)" class="is-fill-normal"/>
 													<n-form-text v-model="property.value" label="Value":timeout="600" @input="save(page)" class="is-fill-normal"/>
 													<button @click="page.content.properties.splice(page.content.properties.indexOf(property), 1)" class="is-button is-variant-close"><icon name="times"/></button>
@@ -291,7 +291,11 @@
 											<n-form-text :value="'desktop'" :required="true" label="Device Name" :disabled="true"/>
 											<n-form-text v-model="getDevice('desktop').width" type="number" label="Width" :timeout="600" @input="$services.page.saveConfiguration" placeholder="1280"/>
 										</div>
-										<div class="list-row" v-for="device in $services.page.devices.filter(function(x) { return x.name != 'phone' && x.name != 'tablet' && x.name != 'desktop' })">
+										<div class="list-row">
+											<n-form-text :value="'wide'" :required="true" label="Device Name" :disabled="true"/>
+											<n-form-text v-model="getDevice('wide').width" type="number" label="Width" :timeout="600" @input="$services.page.saveConfiguration" placeholder="2560"/>
+										</div>
+										<div class="list-row" v-for="device in $services.page.devices.filter(function(x) { return x.name != 'phone' && x.name != 'tablet' && x.name != 'desktop' && x.name != 'wide' })">
 											<n-form-text v-model="device.name" :required="true" label="Device Name" :timeout="600" @input="$services.page.saveConfiguration"/>
 											<n-form-text v-model="device.width" type="number" label="Width" :timeout="600" @input="$services.page.saveConfiguration"/>
 											<span @click="$services.page.devices.splice($services.page.devices.indexOf(device), 1); $services.page.saveConfiguration()" class="fa fa-times"></span>

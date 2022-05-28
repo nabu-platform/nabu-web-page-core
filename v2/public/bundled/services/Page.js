@@ -1016,6 +1016,7 @@ nabu.services.VueService(Vue.extend({
 			ensure("phone", null); // 512
 			ensure("tablet", null);	// 960
 			ensure("desktop", null); // 1280
+			ensure("wide", null); // 2560
 		},
 		getApplicationStateNames: function(value) {
 			var values = this.applicationState.filter(function(x) { return !!x.name }).map(function(x) {

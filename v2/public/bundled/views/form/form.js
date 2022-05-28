@@ -1864,6 +1864,23 @@ Vue.component("page-form-configure-single", {
 		}
 	},
 	methods: {
+		getAvailableRowGrouping: function(value) {
+			var variants = [];
+			this.$services.page.getArisComponentHierarchy("form-group").forEach(function(component) {
+				if (component.variants != null) {
+					component.variants.forEach(function(variant) {
+						if (variants.indexOf(variant.name) < 0) {
+							variants.push(variant.name);
+						}
+					});
+				}
+			});
+			if (value != null) {
+				variants = variants.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+			}
+			variants.sort();
+			return variants;
+		},
 		filterFieldNames: function(value) {
  			var names = this.possibleFields.filter(function(x) {
  				return (!value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0);
