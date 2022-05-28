@@ -13,6 +13,8 @@
 			<n-form-switch v-model="cell.state.showOnlyOne" label="Only allow one open" v-if="cell.state.clickBased"/>
 			<n-form-switch v-model="cell.state.leaveOpen" label="Leave Open" v-if="cell.state.clickBased"/>
 			<n-form-switch v-model="cell.state.autoActions" label="Automatically generate actions for all pages"/>
+			<n-form-text v-model="cell.state.title" label="Title" after="Add a title to your menu"/>
+			<n-form-text v-model="cell.state.logo" label="Logo URL" after="Configure the url for your logo"/>
 		</n-collapsible>
 		<div v-if="!cell.state.autoActions">
 			<div class="list-actions">
@@ -135,6 +137,7 @@
 	<ul :class="[cell.state.class, {'page-actions-root': actions == null }, {'page-actions-child': actions != null }, getAdditionalClasses()]" 
 			v-auto-close.actions="autoclose"
 			v-fixed-header="cell.state.isFixedHeader != null && cell.state.isFixedHeader == true">
+		<li class="is-column is-title" v-if="root && (cell.state.title || cell.state.logo)"><h2 class="is-h2" :class="getChildComponentClasses('actions-title')"><img class="is-icon" v-if="cell.state.logo" :href="cell.state.logo"></span><span class="is-text" v-if="cell.state.title" v-html="$services.page.translate($services.page.interpret(cell.state.title, $self))"></span></h2></li>
 		<li v-for="action in (isAutoCalculated ? autoActions : (edit ? getActions() : resolvedActions.filter(function(x) { return !x.dynamic})))" v-if="isVisible(action)"
 				class="is-column"
 				:class="[{ 'has-children': action.actions != null && action.actions.length }, action.class, {'click-based': cell.state.clickBased}, {'is-open': showing.indexOf(action) >= 0}]"

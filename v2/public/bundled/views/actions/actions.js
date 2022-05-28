@@ -184,6 +184,10 @@ nabu.page.views.PageActionsGenerator = function(name) {
 					title: "Menu",
 					name: "actions-menu",
 					component: "menu"
+				}, {
+					title: "Title",
+					name: "actions-title",
+					component: "h2"
 				}];
 				return components;
 			},
