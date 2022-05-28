@@ -43,7 +43,7 @@
 					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'components'" :class="{'is-active': activeTab == 'components'}"><icon name="cubes"/><span class="is-text">Components</span></button></li>
 					<li class="is-column" v-if="cell || row"><button class="is-button is-variant-primary-outline is-size-small is-border-underline" @click="activeTab = 'selected'" :class="{'is-active': activeTab == 'selected'}"><icon name="cube"/>
 						<span class="is-text" v-if="selectedType == 'cell' && cell && cell.name">{{cell.name}}</span>
-						<span class="is-text" v-else-if="selectedType == 'row' && row && row.name">{{cell.name}}</span>
+						<span class="is-text" v-else-if="selectedType == 'row' && row && row.name">{{row.name}}</span>
 						<span class="is-text" v-else>Selected {{selectedType == 'cell' ? "cell" : "row"}}</span></button>
 					</li>
 				</ul>
