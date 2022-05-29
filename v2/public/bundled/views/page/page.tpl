@@ -813,16 +813,45 @@
 					@input="container.components[childComponent.name].modifiers.splice(0)"/>
 			</div>
 			<n-collapsible v-if="getAvailableModifierNames(childComponent).length > 0" title="modifier" class="is-highlight-left is-color-secondary-light" 
-					content-class="is-spacing-medium is-spacing-vertical-gap-none"
-					:after="listActiveModifiers(childComponent)">
-				<n-form-checkbox v-for="modifier in getAvailableModifierNames(childComponent)" :value="isActiveModifier(childComponent, modifier)" :label="modifier"
-					@input="function() { toggleModifier(childComponent, modifier) }"/>
+					content-class="is-spacing-medium is-spacing-vertical-gap-xsmall"
+					:after="listActiveModifiers(childComponent)"
+					@show="conditioning = null">
+				<div class="is-row" v-for="(modifier, index) in getAvailableModifierNames(childComponent)">
+					<n-form-checkbox v-if="conditioning != modifier" :value="isActiveModifier(childComponent, modifier)" :label="modifier"
+						@input="function() { toggleModifier(childComponent, modifier) }"
+						class="is-spacing-vertical-none"/>
+					<n-form-text v-model="container.components[childComponent.name].conditions[modifier]" v-else class="is-size-small is-border-underline" placeholder="Condition"/>
+					<div class="is-row is-position-right is-align-cross-end" v-if="isActiveModifier(childComponent, modifier)">
+						<ul v-if="conditioning == modifier" class="is-menu is-variant-toolbar">
+							<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="conditioning = null">Save</button></li>
+							<li class="is-column"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="container.components[childComponent.name].conditions[modifier] = null; conditioning = null">Clear</button></li>
+						</ul>
+						<ul v-else class="is-menu is-variant-toolbar">
+							<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="conditioning = modifier">Set Condition</button></li>
+							<li class="is-column" v-if="hasCondition(childComponent, modifier)"><button class="is-button is-size-xsmall is-variant-danger-outline has-tooltip" @click="container.components[childComponent.name].conditions[modifier] = null">Clear Condition</button></li>
+						</ul>
+					</div>
+				</div>
 			</n-collapsible>
 			<n-collapsible v-for="dimension in getAvailableDimensions(childComponent)" :only-one-open="true" :title="dimension.name" class="is-highlight-left is-color-secondary-light" 
 					content-class="is-spacing-medium is-spacing-vertical-gap-none"
-					:after="listActiveOptions(childComponent, dimension)">
-				<n-form-checkbox :value="isActiveOption(childComponent, dimension, option)" @input="function() { toggleOption(childComponent, dimension, option) }" v-for="option in dimension.options" 
-					:label="prettifyOption(option)"/>
+					:after="listActiveOptions(childComponent, dimension)"
+					@show="conditioning = null">
+				<div class="is-row" v-for="option in dimension.options">
+					<n-form-checkbox v-if="conditioning != dimension.name + '_' + option" :value="isActiveOption(childComponent, dimension, option)" @input="function() { toggleOption(childComponent, dimension, option) }"
+						:label="prettifyOption(option)"/>
+					<n-form-text v-model="container.components[childComponent.name].conditions[dimension.name + '_' + option]" v-else class="is-size-small is-border-underline" placeholder="Condition"/>
+					<div class="is-row is-position-right is-align-cross-end" v-if="isActiveOption(childComponent, dimension, option)">
+						<ul v-if="conditioning == dimension.name + '_' + option" class="is-menu is-variant-toolbar">
+							<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="conditioning = null">Save</button></li>
+							<li class="is-column"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="container.components[childComponent.name].conditions[dimension.name + '_' + option] = null; conditioning = null">Clear</button></li>
+						</ul>
+						<ul v-else class="is-menu is-variant-toolbar">
+							<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="conditioning = dimension.name + '_' + option">Set Condition</button></li>
+							<li class="is-column" v-if="hasCondition(childComponent, dimension.name + '_' + option)"><button class="is-button is-size-xsmall is-variant-danger-outline has-tooltip" @click="container.components[childComponent.name].conditions[dimension.name + '_' + option] = null">Clear Condition</button></li>
+						</ul>
+					</div>
+				</div>
 			</n-collapsible>
 		</n-collapsible>
 	</div>

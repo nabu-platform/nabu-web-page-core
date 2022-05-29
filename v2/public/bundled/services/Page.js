@@ -660,8 +660,15 @@ nabu.services.VueService(Vue.extend({
 							// applied modifiers (by name)
 							modifiers: [],
 							// applied options, this is written as "dimension_option"
-							options: []
+							options: [],
+							// for each modifier and option you can set a condition
+							// the key is the name of the modifier or option, the value is the condition
+							conditions: {}
 						});
+					}
+					// added later
+					if (container.aris.components[x.name].conditions == null) {
+						Vue.set(container.aris.components[x.name], "conditions", {});
 					}
 				});
 				// set this explicitly, in some cases the watcher is not triggered
@@ -670,8 +677,9 @@ nabu.services.VueService(Vue.extend({
 			return true;
 		},
 		
-		calculateArisComponents: function(container, specific) {
+		calculateArisComponents: function(container, specific, instance) {
 			var childComponents = {};
+			var self = this;
 			Object.keys(container.components).forEach(function(key) {
 				childComponents[key] = {
 					classes: []
@@ -693,12 +701,24 @@ nabu.services.VueService(Vue.extend({
 				}
 				if (container.components[key].options != null && container.components[key].options.length > 0) {
 					container.components[key].options.forEach(function(option) {
-						childComponents[key].classes.push("is-" + option.replace("_", "-"));
+						var add = true;
+						if (container.components[key].conditions && container.components[key].conditions[option] != null) {
+							add = self.isCondition(container.components[key].conditions[option], {}, instance);
+						}
+						if (add) {
+							childComponents[key].classes.push("is-" + option.replace("_", "-"));
+						}
 					});
 				}
 				if (container.components[key].modifiers != null && container.components[key].modifiers.length > 0) {
 					container.components[key].modifiers.forEach(function(modifier) {
-						childComponents[key].classes.push("is-" + modifier);
+						var add = true;
+						if (container.components[key].conditions && container.components[key].conditions[modifier] != null) {
+							add = self.isCondition(container.components[key].conditions[modifier], {}, instance);
+						}
+						if (add) {
+							childComponents[key].classes.push("is-" + modifier);
+						}
 					});
 				}
 				// if no classes are set, set the default name as variant so themes can target this

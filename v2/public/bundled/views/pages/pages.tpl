@@ -1,6 +1,6 @@
 <template id="nabu-pages">
-	<div class="nabu-pages has-menu-toolbar-sticky">
-		<ul class="is-row is-menu is-variant-toolbar is-dark is-main-top is-sticky is-primary-highlight is-content-width-medium">
+	<div class="nabu-pages">
+		<ul class="is-row is-menu is-variant-toolbar is-dark is-main-top is-primary-highlight is-content-width-large is-height-min3">
 			<li class="is-column"><button @click="selectedTab = 'pages'" class="is-button is-variant-ghost-light is-size-small"><img class="is-icon" src="${server.root()}resources/images/branding/nabu-logo.svg"/><span class="is-text">Page Builder</span></button></li>
 			<li class="is-column is-position-right" @click="selectedTab = 'pages'"><button :class="{'is-active': selectedTab == 'pages' }"class="is-button is-variant-ghost-light is-size-small"><icon name="file-alt"/><span class="is-text">Pages</span></li>
 			<li class="is-column" @click="selectedTab = 'settings'"><button :class="{'is-active': selectedTab == 'settings' }" class="is-button is-variant-ghost-light is-size-small"><icon name="cogs"/><span class="is-text">Settings</span></button></li>
@@ -9,7 +9,7 @@
 			<li v-if="false" class="is-column" @click="selectedTab = 'bundles'"><button :class="{'is-active': selectedTab == 'bundles' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-cube"/><span class="is-text">Bundles</span></li>
 			<li v-for="entry in getAdditionalSettings()" class="is-column" @click="selectedTab = entry.route"><button :class="[{'is-active': selectedTab == entry.route }, 'setting-' + entry.name]" class="is-button is-variant-ghost-light is-size-small"><icon v-if="entry.icon" :name="entry.icon"/><span class="is-text">{{entry.title}}</span></button></li>
 		</ul>
-		<div class="is-row is-width-medium is-direction-vertical">
+		<div class="is-row is-content-width-large is-direction-vertical is-height-max3 is-overflow-auto">
 			<n-prompt v-if="showing" class="is-modal">
 				<n-form class="is-color-background is-spacing-large is-border-shadow is-variant-vertical">
 					<h3 class="is-h3">Page properties</h3>

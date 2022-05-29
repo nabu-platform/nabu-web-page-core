@@ -3255,7 +3255,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		cellClasses: function(cell) {
 			var classes = [];
 			if (this.$services.page.useAris && cell.aris && cell.aris.components) {
-				var children = this.$services.page.calculateArisComponents(cell.aris, cell.alias);
+				var children = this.$services.page.calculateArisComponents(cell.aris, cell.alias, this);
 				if (children["page-column"] && children["page-column"].classes) {
 					nabu.utils.arrays.merge(classes, children["page-column"].classes);
 				}
@@ -3273,7 +3273,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		rowClasses: function(row) {
 			var classes = [];
 			if (this.$services.page.useAris && row.aris && row.aris.components) {
-				var children = this.$services.page.calculateArisComponents(row.aris);
+				var children = this.$services.page.calculateArisComponents(row.aris, null, this);
 				if (children["page-row"] && children["page-row"].classes) {
 					nabu.utils.arrays.merge(classes, children["page-row"].classes);
 				}
@@ -3456,7 +3456,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			};
 			// if we have an aris aware component, add a childComponents parameter
 			if (this.$services.page.useAris && cell && cell.aris && cell.aris.components) {
-				result.childComponents = this.$services.page.calculateArisComponents(cell.aris);
+				result.childComponents = this.$services.page.calculateArisComponents(cell.aris, null, this);
 			}
 			// if we have a trigger event, add it explicitly to trigger a redraw if needed
 			if (cell.on) {
@@ -4232,6 +4232,11 @@ Vue.component("aris-editor", {
 			required: false
 		}
 	},
+	data: function() {
+		return {
+			conditioning: null
+		}
+	},
 	methods: {
 		getAvailableDimensions: function(childComponent) {
 			var hierarchy = this.$services.page.getArisComponentHierarchy(childComponent.component);
@@ -4299,6 +4304,15 @@ Vue.component("aris-editor", {
 		},
 		isActiveModifier: function(childComponent, modifier) {
 			return this.container.components[childComponent.name].modifiers.indexOf(modifier) >= 0;
+		},
+		hasCondition: function(childComponent, name) {
+			return this.container.components[childComponent.name].conditions[name] != null;	
+		},
+		getCondition: function(childComponent, name) {
+			return this.container.components[childComponent.name].conditions[name];	
+		},
+		setCondition: function(childComponent, name, condition) {
+			this.container.components[childComponent.name].conditions[name] = condition == null ? null : condition;
 		},
 		toggleModifier: function(childComponent, modifier) {
 			var index = this.container.components[childComponent.name].modifiers.indexOf(modifier);

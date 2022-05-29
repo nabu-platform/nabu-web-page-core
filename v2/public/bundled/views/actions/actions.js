@@ -416,7 +416,7 @@ nabu.page.views.PageActionsGenerator = function(name) {
 			getDynamicWrapperClasses: function(action) {
 				var classes = [];
 				if (this.$services.page.useAris && action.aris) {
-					var components = this.$services.page.calculateArisComponents(action.aris);
+					var components = this.$services.page.calculateArisComponents(action.aris, null, this);
 					if (components && components["action-entry-wrapper"] && components["action-entry-wrapper"].classes) {
 						nabu.utils.arrays.merge(classes, components["action-entry-wrapper"].classes);
 					}
@@ -436,7 +436,7 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				}
 				var hasSpecificAris = false;
 				if (this.$services.page.useAris && action.aris) {
-					var components = this.$services.page.calculateArisComponents(action.aris);
+					var components = this.$services.page.calculateArisComponents(action.aris, null, this);
 					if (components && components["action-entry-button"] && components["action-entry-button"].classes && components["action-entry-button"].classes.length > 0) {
 						nabu.utils.arrays.merge(classes, components["action-entry-button"].classes);
 						hasSpecificAris = true;

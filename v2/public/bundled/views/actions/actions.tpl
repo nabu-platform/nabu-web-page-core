@@ -61,8 +61,8 @@
 						<n-form-switch v-model="action.iconReverse" label="Reverse icon order" v-if="action.icon"/>
 					</n-form-section>
 	
-					<n-form-combo v-model="action.class" label="Menu Entry Variant" :filter="$services.page.classes.bind($self, 'page-action')" :timeout="600" />
-					<n-form-combo v-model="action.buttonClass" label="Button Variant" :filter="getAvailableButtonVariants" :timeout="600"/>
+					<n-form-combo v-model="action.class" label="Menu Entry Variant" v-if="false" :filter="$services.page.classes.bind($self, 'page-action')" :timeout="600" />
+					<n-form-combo v-model="action.buttonClass" label="Button Variant" v-if="false" :filter="getAvailableButtonVariants" :timeout="600"/>
 					
 					<n-form-combo v-model="action.event" v-if="false && !action.route && !action.url" label="Event" :filter="function(value) { return value ? [value, '$close'] : ['$close'] }"
 						 @input="$updateEvents()" :timeout="600"/>
@@ -86,10 +86,7 @@
 							<label class="n-form-label">Disabled if</label>
 							<n-ace mode="javascript" v-model="action.disabled"/>
 						</div>
-						<div class="n-form-component n-form-ace">
-							<label class="n-form-label">Show if</label>
-							<n-ace mode="javascript" v-model="action.condition"/>
-						</div>
+							<n-form-ace mode="javascript" v-model="action.condition" label="Show if"/>
 						<n-form-combo v-model="action.validate" label="Only if valid" :filter="validatableItems" info="This action is only triggerable if the indicated item or group of items is valid"/>
 						<n-form-text info="The event to send out if we have a validation error" v-if="action.validate" v-model="action.validationErrorEvent" label="Validation Error Event" :timeout="600" />
 						<n-form-switch info="Whether we want to scroll to the first exception" v-if="action.validate" v-model="action.validationErrorScroll" label="Scroll to Validation Error" />
@@ -168,7 +165,7 @@
 					@click="handle(action)"
 					v-if="!cell.state.useButtons && (action.route || hasEvent(action) || action.url || action.close)"
 						><icon v-if="action.icon" :name="action.icon"
-						/><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></a>
+						/><span class="is-text" v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></a>
 				<button auto-close-actions class="is-button"
 					:data-event="action.name"
 					:class="getDynamicClasses(action)"
@@ -178,7 +175,7 @@
 					@click="handle(action)" 
 					v-else-if="cell.state.useButtons && (action.route || hasEvent(action) || action.url || action.close)"
 						><icon v-if="action.icon" :name="action.icon"
-						/><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span
+						/><span class="is-text" v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span
 						><span v-if="action.badge" v-html="$services.page.translate($services.page.interpret(action.badge, $self))" class="is-badge" :class="action.badgeVariant ? 'is-variant-' + action.badgeVariant : null"></span></button>
 				<span class="is-label page-action-entry" 
 					@click="toggle(action)"
@@ -186,7 +183,7 @@
 					:class="getDynamicClasses(action)"
 					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
 						><icon v-if="action.icon" :name="action.icon"
-						/><span v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></span>
+						/><span class="is-text" v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></span>
 				<page-actions :ref="'action_' + (edit ? getActions() : resolvedActions).indexOf(action)"
 					:root="false"
 					v-if="(action.actions && action.actions.length) || configuringAction == action"
