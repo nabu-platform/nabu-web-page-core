@@ -123,6 +123,7 @@ nabu.page.views.PageActionsGenerator = function(name) {
 						result.splice(i, 1);
 					}
 				}
+				nabu.utils.arrays.merge(result, this.resolvedActions);
 				return result;
 			}
 		},
