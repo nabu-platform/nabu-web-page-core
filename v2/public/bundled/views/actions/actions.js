@@ -433,7 +433,7 @@ nabu.page.views.PageActionsGenerator = function(name) {
 					nabu.utils.arrays.merge(classes, this.$services.page.getDynamicClasses(action.styles, this.state, this));
 				}
 				if (action.buttonClass) {
-					classes.push("is-variant-" + action.buttonClass);
+					classes.push(action.buttonClass);
 				}
 				var hasSpecificAris = false;
 				if (this.$services.page.useAris && action.aris) {
@@ -488,9 +488,8 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				return classes;
 			},
 			toggle: function(action) {
-				if (this.cell.state.clickBased) {
+				if (this.cell.state.clickBased && this.$services.page.isCondition(this.cell.state.clickBased, {}, this)) {
 					var index = this.showing.indexOf(action);
-					console.log("index is", action, index, this.showing.length);
 					if (index >= 0) {
 						this.showing.splice(index, 1);
 					}
@@ -503,7 +502,7 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				}
 			},
 			hide: function(action) {
-				if (!this.cell.state.clickBased) {
+				if (!this.cell.state.clickBased || !this.$services.page.isCondition(this.cell.state.clickBased, {}, this)) {
 					var index = this.showing.indexOf(action);
 					if (index >= 0) {
 						this.showing.splice(index, 1);
@@ -511,9 +510,13 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				}
 			},
 			show: function(action) {
-				if (!this.cell.state.clickBased) {
+				if (!this.cell.state.clickBased || !this.$services.page.isCondition(this.cell.state.clickBased, {}, this)) {
 					if (this.showing.indexOf(action) < 0) {
+						if (this.cell.state.showOnlyOne) {
+							this.showing.splice(0);
+						}
 						this.showing.push(action);
+						console.log("pushing action?", action, this.showing);
 					}
 				}
 			},
@@ -879,6 +882,14 @@ nabu.page.views.PageActionsGenerator = function(name) {
 					}
 					if (action.close) {
 						this.$emit("close");
+					}
+					if (nabu.page.event.getName(this.cell.state, "handledEvent") && !action.skipHandleEvent) {
+						console.log("sending handled");
+						var pageInstance = this.$services.page.getPageInstance(this.page, this);
+						pageInstance.emit(
+							nabu.page.event.getName(this.cell.state, "handledEvent"),
+							nabu.page.event.getInstance(this.cell.state, "handledEvent", this.page, this)
+						);
 					}
 				}
 			},

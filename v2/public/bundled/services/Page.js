@@ -281,6 +281,9 @@ nabu.services.VueService(Vue.extend({
 			}
 			return devices;
 		},
+		device: function(operator, name) {
+			return this.isDevice([{operator: operator, name: name}]);
+		},
 		isDevice: function(devices) {
 			var actual = this.$services.resizer.width;
 			for (var i = 0; i < devices.length; i++) {

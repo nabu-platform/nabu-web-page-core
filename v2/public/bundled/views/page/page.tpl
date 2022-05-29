@@ -1,5 +1,5 @@
 <template id="nabu-page">
-	<component :edit="edit" :is="pageTag()" :inline-all="true" class="page" :class="classes" :body-class="bodyClasses" :page="page.name" 
+	<component :edit="edit" :is="pageTag()" :inline-all="true" class="is-page" :class="classes" :body-class="bodyClasses" :page="page.name" 
 			@drop="dropMenu($event)" @dragover="dragOver($event)">
 		<div class="page-menu n-page-menu" v-if="edit && false">
 			<button @click="viewComponents = !viewComponents"><span class="fa fa-cubes" title="Add Components"></span></button>
@@ -691,7 +691,7 @@
 			<div class="is-row-menu is-row is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
 				<button class="is-button is-variant-primary is-size-xsmall has-tooltip" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-tooltip">Configure row</span></button>
 			</div>
-			<div v-if="row.customId" class="custom-row custom-id" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
+			<div v-if="row.customId" class="is-anchor" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 			<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
 					v-for="cell in getCalculatedCells(row)" 
 					v-if="shouldRenderCell(row, cell)" 
@@ -707,7 +707,7 @@
 					@mouseover="mouseOver($event, row, cell)"
 					v-bind="getRendererProperties(cell)">
 				<div v-if="false && (edit || $services.page.wantEdit) && cell.name" :style="getCellEditStyle(cell)" class="cell-edit-label"><span>{{cell.name}}</span></div>
-				<div v-if="cell.customId" class="custom-cell custom-id" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
+				<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				
 				<div class="is-column-menu is-row is-align-main-center is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
 					<button v-if="cell.alias" class="is-button is-variant-secondary is-size-xsmall has-tooltip" @click="configureCell($event, row, cell)"><icon name="cog"/><span class="is-tooltip">Configure Cell</span></button>
@@ -867,7 +867,7 @@
 						@mouseover="mouseOver($event, row)" 
 						class="is-row is-fill-normal">
 					<button class="is-button is-variant-ghost is-size-xsmall" @click="toggleRow(row)"><icon :name="opened.indexOf(row.id) >= 0 ? 'chevron-down' : 'chevron-right'"/></button>
-					<span class="is-content is-size-xsmall is-fill-normal is-position-center" @click="selectRow(row)" 
+					<span class="is-content is-size-xsmall is-fill-normal is-position-cross-center" @click="selectRow(row)" 
 						@dragstart="dragRow($event, row)"
 						:draggable="true" 
 						@click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
@@ -904,8 +904,8 @@
 								@keydown.ctrl.down="right(row, cell)"
 								:ref="'cell_' + cell.id"
 								tabindex="0">
-							<icon name="cube" class="is-size-xsmall is-position-center" @click.native="function() { editing = null; aliasing = aliasing == cell.id ? null : cell.id }" v-if="false"/>
-							<icon name="cube" class="is-size-xsmall is-position-center" />
+							<icon name="cube" class="is-size-xsmall is-position-cross-center" @click.native="function() { editing = null; aliasing = aliasing == cell.id ? null : cell.id }" v-if="false"/>
+							<icon name="cube" class="is-size-xsmall is-position-cross-center" />
 							<n-form-text v-if="editing == cell.id" v-model="cell.name" class="is-variant-inline is-size-xsmall" :placeholder="cell.alias ? cell.alias : cell.id" :autofocus="true"
 								:commit="true"
 								@commit="function() { editing = null }"
@@ -914,9 +914,9 @@
 								:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'" 
 								@keydown.escape="function() { aliasing = null }" 
 								@input="$services.page.slowNormalizeAris(page, cell)"/>
-							<span v-else class="is-content is-size-xsmall is-position-center" @click="selectCell(row, cell)" 
+							<span v-else class="is-content is-size-xsmall is-position-cross-center" @click="selectCell(row, cell)" 
 								>{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
-							<button class="is-button is-size-xxsmall is-variant-ghost is-position-center" @click="function() { aliasing = null; editing = cell.id }" v-if="false && aliasing != cell.id && editing != cell.id"><icon name="pencil-alt"/></button>
+							<button class="is-button is-size-xxsmall is-variant-ghost is-position-cross-center" @click="function() { aliasing = null; editing = cell.id }" v-if="false && aliasing != cell.id && editing != cell.id"><icon name="pencil-alt"/></button>
 						</div>
 						<ul class="is-menu is-variant-toolbar is-position-right is-spacing-horizontal-right-small">
 							<li class="is-column"><button class="is-button is-color-secondary-outline is-size-xsmall has-tooltip" @click="left(row, cell)" v-if="row.cells.length >= 2"><icon name="chevron-circle-up"/></button></li>

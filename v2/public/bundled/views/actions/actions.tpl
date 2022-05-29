@@ -9,12 +9,13 @@
 				:filter="function() { return cell.state.actions.map(function(x) { return x.name }) }"/>
 			<n-form-switch v-model="cell.state.useButtons" label="Use Buttons"/>
 			<n-form-switch v-model="cell.state.isFixedHeader" label="Fix as header"/>
-			<n-form-switch v-model="cell.state.clickBased" label="Use Clicks Instead of Hover"/>
 			<n-form-switch v-model="cell.state.showOnlyOne" label="Only allow one open" v-if="cell.state.clickBased"/>
 			<n-form-switch v-model="cell.state.leaveOpen" label="Leave Open" v-if="cell.state.clickBased"/>
 			<n-form-switch v-model="cell.state.autoActions" label="Automatically generate actions for all pages"/>
+			<n-form-text v-model="cell.state.clickBased" label="Use Clicks Instead of Hover" info="You can set a condition that will be evaluated"/>
 			<n-form-text v-model="cell.state.title" label="Title" after="Add a title to your menu"/>
 			<n-form-text v-model="cell.state.logo" label="Logo URL" after="Configure the url for your logo"/>
+			<page-event-value :page="page" :container="cell.state" title="Handled Event" name="handledEvent" @resetEvents="resetEvents" :inline="true"/>
 		</n-collapsible>
 		<div class="list-actions">
 			<button v-if="$services.page.isCopied('page-action')" @click="paste"><span class="fa fa-paste"></span></button>
@@ -60,13 +61,14 @@
 					<n-form-switch v-model="action.iconReverse" label="Reverse icon order" v-if="action.icon"/>
 				</n-form-section>
 
-				<n-form-combo v-model="action.class" label="Menu Entry Variant" v-if="false" :filter="$services.page.classes.bind($self, 'page-action')" :timeout="600" />
-				<n-form-combo v-model="action.buttonClass" label="Button Variant" v-if="false" :filter="getAvailableButtonVariants" :timeout="600"/>
+				<n-form-text v-model="action.class" label="Menu Entry Class" :timeout="600" />
+				<n-form-text v-model="action.buttonClass" label="Button Class" :timeout="600"/>
 				
 				<n-form-combo v-model="action.event" v-if="false && !action.route && !action.url" label="Event" :filter="function(value) { return value ? [value, '$close'] : ['$close'] }"
 					 @input="$updateEvents()" :timeout="600"/>
 					 
 				<n-form-switch v-model="action.close" label="Close"/>
+				<n-form-switch v-model="action.skipHandleEvent" label="Don't send handled event" v-if="$window.nabu.page.event.getName(cell.state, 'handledEvent')" after="If this action does not constitute the final user interaction, we don't want to send the handled event"/>
 				
 				<n-form-section v-if="!action.dynamic">
 					<n-form-combo v-model="action.route" v-if="(!action.event || !action.event.name) && !action.url" :filter="listRoutes" label="Route"/>
@@ -172,7 +174,7 @@
 						><icon v-if="action.icon" :name="action.icon"
 						/><span class="is-text" v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span
 						><span v-if="action.badge" v-html="$services.page.translate($services.page.interpret(action.badge, $self))" class="is-badge" :class="action.badgeVariant ? 'is-variant-' + action.badgeVariant : null"></span></button>
-				<span class="is-label page-action-entry" 
+				<span class="is-label page-action-entry is-button" 
 					@click="toggle(action)"
 					v-else
 					:class="getDynamicClasses(action)"
