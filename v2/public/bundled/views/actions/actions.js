@@ -516,13 +516,24 @@ nabu.page.views.PageActionsGenerator = function(name) {
 							this.showing.splice(0);
 						}
 						this.showing.push(action);
-						console.log("pushing action?", action, this.showing);
 					}
 				}
 			},
-			autoclose: function() {
+			autoclose: function(inside) {
 				if (!this.cell.state.leaveOpen) {
-					this.showing.splice(0, this.showing.length);
+					this.showing.splice(0);
+					// if we have an autoclose on the root instance (so because of a click outside the entire menu, not just a subpart of the menu)
+					// then we also want to send out a handled event (if any)
+					if (this.root) {
+						// we want to emit a handled because we are closing the menu
+						if (nabu.page.event.getName(this.cell.state, "handledEvent")) {
+							var pageInstance = this.$services.page.getPageInstance(this.page, this);
+							pageInstance.emit(
+								nabu.page.event.getName(this.cell.state, "handledEvent"),
+								nabu.page.event.getInstance(this.cell.state, "handledEvent", this.page, this)
+							);
+						}
+					}
 				}
 			},
 			listRoutes: function(value, includeValue) {
@@ -884,7 +895,6 @@ nabu.page.views.PageActionsGenerator = function(name) {
 						this.$emit("close");
 					}
 					if (nabu.page.event.getName(this.cell.state, "handledEvent") && !action.skipHandleEvent) {
-						console.log("sending handled");
 						var pageInstance = this.$services.page.getPageInstance(this.page, this);
 						pageInstance.emit(
 							nabu.page.event.getName(this.cell.state, "handledEvent"),

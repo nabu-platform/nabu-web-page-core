@@ -312,7 +312,6 @@ nabu.services.VueService(Vue.extend({
 							width = 512;
 						}
 					}
-					console.log("checking", actual, operator, width);
 					// infinitely big, so matches any query requesting larger
 					if (width == 0) {
 						if (operator != ">" && operator != ">=") {
