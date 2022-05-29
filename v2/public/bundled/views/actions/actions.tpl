@@ -152,7 +152,7 @@
 			
 			<template v-else>
 				<span v-if="edit && !action.dynamic" class="fa fa-cog" @click="configureAction(action)"></span>
-				<a auto-close-actions class="is-button" :href="getActionHref(action)"
+				<a :auto-close-actions="!action.skipHandleEvent" class="is-button" :href="getActionHref(action)"
 					:data-event="action.name"
 					:target="action.anchor == '$blank' && (action.url || action.route) ? '_blank' : null"
 					:class="getDynamicClasses(action)"
@@ -163,7 +163,7 @@
 					v-if="!cell.state.useButtons && (action.route || hasEvent(action) || action.url || action.close)"
 						><icon v-if="action.icon" :name="action.icon"
 						/><span class="is-text" v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></a>
-				<button auto-close-actions class="is-button"
+				<button :auto-close-actions="!action.skipHandleEvent" class="is-button"
 					:data-event="action.name"
 					:class="getDynamicClasses(action)"
 					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"

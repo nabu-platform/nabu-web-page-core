@@ -110,10 +110,12 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				var result = this.autoCategories.map(function(x) {
 					return normalize({
 						label: x ? x : "Misc",
+						auto: true,
 						actions: self.getPagesFor(x).filter(function(y) { return !!y.content.path }).map(function(y) {
 							return normalize({
 								label: y.content.label ? y.content.label : y.content.name,
-								route: y.content.name
+								route: y.content.name,
+								auto: true
 							});
 						})
 					});
@@ -422,6 +424,9 @@ nabu.page.views.PageActionsGenerator = function(name) {
 						nabu.utils.arrays.merge(classes, components["action-entry-wrapper"].classes);
 					}
 				}
+				if (action.auto) {
+					classes.push("is-automatic");
+				}
 				return classes;
 			},
 			getDynamicClasses: function(action) {
@@ -519,7 +524,7 @@ nabu.page.views.PageActionsGenerator = function(name) {
 					}
 				}
 			},
-			autoclose: function(inside) {
+			autoclose: function() {
 				if (!this.cell.state.leaveOpen) {
 					this.showing.splice(0);
 					// if we have an autoclose on the root instance (so because of a click outside the entire menu, not just a subpart of the menu)
