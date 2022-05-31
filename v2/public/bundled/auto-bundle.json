@@ -110,10 +110,12 @@
 						"url": "services/Resizer.js"
 					}, 
 					"Page.js": {
-						"url": "services/Page.js"
+						"url": "services/Page.js",
+						"template": true
 					},
 					"Analysis.js": {
-						"url": "services/Analysis.js"
+						"url": "services/Analysis.js",
+						"template": true
 					},
 					"Notifier.js": {
 						"url": "services/Notifier.js"
@@ -136,10 +138,12 @@
 							"url": "views/image/image.gcss"
 						}, 
 						"image.tpl": {
-							"url": "views/image/image.tpl"
+							"url": "views/image/image.tpl",
+							"template": true
 						}, 
 						"image.js": {
-							"url": "views/image/image.js"
+							"url": "views/image/image.js",
+							"template": true
 						}, 
 						"image.sass": {
 							"url": "views/image/image.sass"
@@ -156,7 +160,8 @@
 							"url": "views/pages/pages.gcss"
 						}, 
 						"pages.tpl": {
-							"url": "views/pages/pages.tpl"
+							"url": "views/pages/pages.tpl",
+							"template": true
 						}
 					}, 
 					"form": {
@@ -243,10 +248,12 @@
 					},
 					"video": {
 						"video.tpl": {
-							"url": "views/video/video.tpl"
+							"url": "views/video/video.tpl",
+							"template": true
 						}, 
 						"video.js": {
-							"url": "views/video/video.js"
+							"url": "views/video/video.js",
+							"template": true
 						}
 					},
 					"youtube": {
@@ -265,7 +272,8 @@
 							"url": "views/share/share.sass"
 						}, 
 						"share.js": {
-							"url": "views/share/share.js"
+							"url": "views/share/share.js",
+							"template": true
 						}
 					},
 					"page": {
@@ -282,20 +290,23 @@
 								"url": "views/page/components/components.js"
 							}, 
 							"components.tpl": {
-								"url": "views/page/components/components.tpl"
+								"url": "views/page/components/components.tpl",
+								"template": true
 							}, 
 							"components.sass": {
 								"url": "views/page/components/components.sass"
 							}
 						},
 						"page.js": {
-							"url": "views/page/page.js"
+							"url": "views/page/page.js",
+							"template": true
 						}, 
 						"page.sass": {
 							"url": "views/page/page.sass"
 						}, 
 						"page.tpl": {
-							"url": "views/page/page.tpl"
+							"url": "views/page/page.tpl",
+							"template": true
 						}, 
 						"page.md": {
 							"url": "views/page/page.md"
@@ -317,7 +328,8 @@
 							"url": "views/actions/actions.gcss"
 						}, 
 						"actions.js": {
-							"url": "views/actions/actions.js"
+							"url": "views/actions/actions.js",
+							"template": true
 						}, 
 						"actions.sass": {
 							"url": "views/actions/actions.sass"
@@ -351,7 +363,8 @@
 									"url": "views/providers/fragment/image/image.tpl"
 								}, 
 								"image.js": {
-									"url": "views/providers/fragment/image/image.js"
+									"url": "views/providers/fragment/image/image.js",
+									"template": true
 								}
 							}, 
 							"text.js": {
@@ -431,7 +444,8 @@
 								"url": "views/providers/form/file.js"
 							}, 
 							"static-image.js": {
-								"url": "views/providers/form/static-image.js"
+								"url": "views/providers/form/static-image.js",
+								"template": true
 							}, 
 							"richtext.js": {
 								"url": "views/providers/form/richtext.js"
@@ -469,7 +483,8 @@
 					"url": "auto-bundle.json"
 				}, 
 				"component.js": {
-					"url": "component.js"
+					"url": "component.js",
+					"template": true
 				},
 				"polyfill": {
 					"mobile-drag-drop.js": {

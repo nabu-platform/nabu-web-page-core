@@ -17,6 +17,7 @@ additional ?= ""
 # interesting values: no-referrer, no-referrer-when-downgrade, same-origin, origin, strict-origin, origin-when-crossorigin, strict-origin-when-crossorigin, unsafe-url
 referrer ?= "origin"
 noresolve ?= false
+defaultTemplate ?= true
 
 if (noresolve)
 	context.set("noresolve", noresolve)
@@ -72,7 +73,7 @@ if (nabu.web.application.Services.hasFragment(environment("webApplicationId"), "
 	echo("<meta name='apple-mobile-web-app-capable' content='yes'>")
 	echo("<meta name='mobile-web-app-capable' content='yes'>")
 	
-nabu.utils.tpl(target: target, staticTarget: staticTarget, bundlePath: bundlePath, directories: directories)
+nabu.utils.tpl(target: target, staticTarget: staticTarget, bundlePath: bundlePath, directories: directories, defaultTemplate: defaultTemplate)
 }}
 	</head>
 	<body${when(style, " class='n-default'", "")}>

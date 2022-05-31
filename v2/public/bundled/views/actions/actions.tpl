@@ -132,7 +132,7 @@
 	<ul :class="[cell.state.class, {'page-actions-root': actions == null }, {'page-actions-child': actions != null }, getAdditionalClasses()]" 
 			v-auto-close.actions="autoclose"
 			v-fixed-header="cell.state.isFixedHeader != null && cell.state.isFixedHeader == true">
-		<li class="is-column is-title" v-if="root && (cell.state.title || cell.state.logo)"><h2 class="is-h2" :class="getChildComponentClasses('actions-title')"><img class="is-icon" v-if="cell.state.logo" :href="cell.state.logo"></span><span class="is-text" v-if="cell.state.title" v-html="$services.page.translate($services.page.interpret(cell.state.title, $self))"></span></h2></li>
+		<li class="is-column is-title" v-if="root && (cell.state.title || cell.state.logo)"><h2 class="is-h2" :class="getChildComponentClasses('actions-title')" @click="$services.router.route('home')"><img class="is-icon" v-if="cell.state.logo" :href="cell.state.logo"></span><span class="is-text" v-if="cell.state.title" v-html="$services.page.translate($services.page.interpret(cell.state.title, $self))"></span></h2></li>
 		<li v-for="action in (isAutoCalculated ? autoActions : (edit ? getActions() : resolvedActions.filter(function(x) { return !x.dynamic})))" v-if="isVisible(action)"
 				class="is-column"
 				:class="[{ 'has-children': action.actions != null && action.actions.length }, action.class, {'click-based': cell.state.clickBased}, {'is-open': showing.indexOf(action) >= 0}, getDynamicWrapperClasses(action)]"

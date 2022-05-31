@@ -320,6 +320,13 @@ nabu.page.views.PageActionsGenerator = function(name) {
 						}
 					}
 				});
+				if (nabu.page.event.getName(this.cell.state, "handledEvent") != null) {
+					var type = nabu.page.event.getType(this.cell.state, "handledEvent");
+					if (type.properties && Object.keys(type.properties).length == 0 && this.cell.on) {
+						type = this.cell.on;
+					}
+					result[nabu.page.event.getName(this.cell.state, "handledEvent")] = type;
+				}
 				return result;
 			},
 			resolveActions: function() {
