@@ -1,6 +1,6 @@
 <template id="n-page-mapper">
-	<n-form-section>
-		<n-form-section v-for="field in fieldsToMap">
+	<div class="is-column is-spacing-vertical-gap-medium">
+		<div v-for="field in fieldsToMap">
 			<n-form-combo :label="'Map to ' + field" :labels="sources" :filter="fieldsFrom" 
 				class="vertical"
 				:value="getValueFor(field)"
@@ -20,6 +20,6 @@
 					:filter="$services.page.getFunctionOutput.bind($self, getValueFor(field))"
 					v-model="getObjectFor(field).output"/>
 			</n-collapsible>
-		</n-form-section>
-	</n-form-section>
+		</div>
+	</div>
 </template>

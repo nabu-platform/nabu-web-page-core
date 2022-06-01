@@ -456,7 +456,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		classes: function() {
 			var classes = [];
 			if (this.edit) {
-				classes.push("edit");
+				classes.push("is-editing");
 			}
 			if (this.page.content.class) {
 				classes.push(this.page.content.class);
@@ -472,7 +472,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			else {
 				classes.push("page-type-page");
 			}
-			classes.push("page-" + this.page.name);
+			classes.push("is-page-" + this.page.name);
 			return classes;
 		},
 		plugins: function() {
@@ -2864,41 +2864,43 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 		},
 		dragOver: function($event, row) {
-			var data = this.$services.page.hasDragData($event, "component-alias");
-			if (!data) {
-				data = this.$services.page.hasDragData($event, "template-content");
-			}
-			// TODO: in the future also drop page-cell and page-row from the side menu?
-			if (data) {
-				var self = this;
-				var rowTarget = document.getElementById(self.page.name + '_' + row.id);
-				this.$services.page.pushDragItem(rowTarget);
-				var rect = rowTarget.getBoundingClientRect();
-				rowTarget.classList.remove("is-hovering", "is-hover-top", "is-hover-bottom", "is-hover-left", "is-hover-right");
-				// bottom 15%, highlight bottom
-				if (Math.abs(event.clientY - rect.top) >= rect.height - (rect.height / 6)) {
-					rowTarget.classList.add("is-hover-bottom");
+			if (this.edit) {
+				var data = this.$services.page.hasDragData($event, "component-alias");
+				if (!data) {
+					data = this.$services.page.hasDragData($event, "template-content");
 				}
-				// top 15%, highlight top
-				else if (Math.abs(event.clientY - rect.top) <= rect.height / 6) {
-					rowTarget.classList.add("is-hover-top");
+				// TODO: in the future also drop page-cell and page-row from the side menu?
+				if (data) {
+					var self = this;
+					var rowTarget = document.getElementById(self.page.name + '_' + row.id);
+					this.$services.page.pushDragItem(rowTarget);
+					var rect = rowTarget.getBoundingClientRect();
+					rowTarget.classList.remove("is-hovering", "is-hover-top", "is-hover-bottom", "is-hover-left", "is-hover-right");
+					// bottom 15%, highlight bottom
+					if (Math.abs(event.clientY - rect.top) >= rect.height - (rect.height / 6)) {
+						rowTarget.classList.add("is-hover-bottom");
+					}
+					// top 15%, highlight top
+					else if (Math.abs(event.clientY - rect.top) <= rect.height / 6) {
+						rowTarget.classList.add("is-hover-top");
+					}
+					// not yet sure what this would entail
+					/*
+					// left 15%
+					else if (Math.abs(event.clientX - rect.left) <= rect.width / 6) {
+						rowTarget.classList.add("is-hover-left");
+					}
+					// right 15%
+					else if (Math.abs(event.clientX - rect.left) >= rect.width - (rect.width / 6)) {
+						rowTarget.classList.add("is-hover-right");
+					}
+					*/
+					else {
+						rowTarget.classList.add("is-hovering");
+					}
+					$event.preventDefault();
+					$event.stopPropagation();
 				}
-				// not yet sure what this would entail
-				/*
-				// left 15%
-				else if (Math.abs(event.clientX - rect.left) <= rect.width / 6) {
-					rowTarget.classList.add("is-hover-left");
-				}
-				// right 15%
-				else if (Math.abs(event.clientX - rect.left) >= rect.width - (rect.width / 6)) {
-					rowTarget.classList.add("is-hover-right");
-				}
-				*/
-				else {
-					rowTarget.classList.add("is-hovering");
-				}
-				$event.preventDefault();
-				$event.stopPropagation();
 			}
 		},
 		dragExit: function($event, row) {
@@ -3200,6 +3202,9 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			// backwards compatible
 			else if (component.configure) {
 				component.configure();
+			}
+			else {
+				this.goto(event, row, cell, "cell");
 			}
 		},
 		close: function(cell) {
@@ -3748,6 +3753,46 @@ Vue.component("page-sidemenu", {
 		}	
 	},
 	methods: {
+		requestFocusCell: function(cell) {
+			if (this.$refs["cell_" + cell.id] && this.$refs["cell_" + cell.id].length) {
+				this.$refs["cell_" + cell.id][0].focus();
+			}
+		},
+		requestFocus: function() {
+			var self = this;
+			Vue.nextTick(function() {
+				console.log("input is", self.$el.querySelector("input"));
+				self.$el.querySelector("input").focus();
+			});
+		},
+		wrapCell: function(row, cell) {
+			var newCell = this.addCell(row, true);
+			// we keep aris styling!
+			newCell.aris = cell.aris;
+			newCell.name = "Wrapper" + (cell.alias ? " for " + this.$services.page.prettifyRouteAlias(cell.alias) : "");
+			cell.aris = null;
+			var index = row.cells.indexOf(cell);
+			row.cells.splice(index, 1, newCell);
+			var row = this.addRow(newCell);
+			row.cells.push(cell);
+		},
+		rotate: function(row) {
+			this.$services.page.normalizeAris(this.page, row, "row");
+			var options = row.aris.components["page-row"].options;
+			// we remove vertical
+			var index = options.indexOf("direction_vertical");
+			if (index >= 0) {
+				options.splice(index, 1);
+			}
+			// otherwise we add it and remove any explicit horizontal
+			else {
+				index = options.indexOf("direction_horizontal");
+				if (index >= 0) {
+					options.splice(index, 1);	
+				}
+				options.push("direction_vertical");
+			}
+		},
 		up: function(row) {
 			var index = this.rows.indexOf(row);
 			if (index > 0) {
@@ -3910,7 +3955,7 @@ Vue.component("page-sidemenu", {
 			if (!target.rows) {
 				Vue.set(target, "rows", []);
 			}
-			target.rows.push({
+			var row = {
 				id: this.page.content.counter++,
 				cells: [],
 				class: null,
@@ -3926,7 +3971,9 @@ Vue.component("page-sidemenu", {
 				on: null,
 				collapsed: false,
 				name: null
-			});
+			};
+			target.rows.push(row);
+			return row;
 		},
 		removeCell: function(cells, cell) {
 			this.$confirm({
@@ -3939,7 +3986,7 @@ Vue.component("page-sidemenu", {
 			self.$services.page.closeRight();
 			cell.rows.splice(cell.rows(indexOf(row), 1));
 		},
-		addCell: function(target) {
+		addCell: function(target, skipInject) {
 			if (!target.cells) {
 				Vue.set(target, "cells", []);
 			}
@@ -3972,7 +4019,9 @@ Vue.component("page-sidemenu", {
 				clickEvent: null
 			};
 			this.$services.page.normalizeAris(this.page, cell);
-			target.cells.push(cell);
+			if (!skipInject) {
+				target.cells.push(cell);
+			}
 			return cell;
 		},
 		copyCell: function(cell) {
@@ -4420,7 +4469,7 @@ Vue.component("aris-editor", {
 					}
 				});
 				this.$services.swagger.execute("nabu.web.page.core.rest.aris.variant.update", {
-					variant: childComponent.component + "_variant_" + childComponent.name + (this.specific && childComponent.name == "page-column" ? "-" + this.specific : ""),
+					variant: childComponent.component + "_variant_" + (childComponent.defaultVariant ? childComponent.defaultVariant : childComponent.name) + (this.specific && childComponent.name == "page-column" ? "-" + this.specific : ""),
 					body: {
 						// we want to skip the trailing linefeed
 						content: result.length == 0 ? null : result.substring(0, result.length - 1)
@@ -4456,11 +4505,6 @@ Vue.component("aris-editor", {
 document.addEventListener("keydown", function(event) {
 	if (event.key == "s" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
 		application.services.page.editing.save(event);
-	}
-	else if (event.key == "b" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
-		application.services.page.editing.activeTab = 'components';
-		event.preventDefault();
-		event.stopPropagation();
 	}
 	else if (event.key == "d" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
 		application.services.page.editing.activeTab = 'layout';

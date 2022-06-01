@@ -672,6 +672,9 @@ nabu.services.VueService(Vue.extend({
 					if (container.aris.components[x.name].conditions == null) {
 						Vue.set(container.aris.components[x.name], "conditions", {});
 					}
+					if (x.defaultVariant) {
+						Vue.set(container.aris.components[x.name], "defaultVariant", x.defaultVariant);
+					}
 				});
 				// set this explicitly, in some cases the watcher is not triggered
 				this.setRerender(container.aris);
@@ -692,6 +695,9 @@ nabu.services.VueService(Vue.extend({
 					if (container.components[key].variant != "default") {
 						childComponents[key].classes.push("is-variant-" + container.components[key].variant);
 					}
+				}
+				else if (container.components[key].defaultVariant != null) {
+					childComponents[key].classes.push("is-variant-" + container.components[key].defaultVariant);
 				}
 				// we can have specific subvariants, for example for cells which have an alias
 				else if (specific) {
@@ -2434,6 +2440,8 @@ nabu.services.VueService(Vue.extend({
 					alias: self.alias(page),
 					url: page.content.initial ? "/.*" : pagePath,
 					query: page.content.query ? page.content.query : [],
+					name: page.content.label ? page.content.label : page.content.name,
+					category: page.content.category,
 					//parameters: page.content.parameters ? page.content.parameters.map(function(x) { return x.name }) : [],
 					parameters: parameters,
 					enter: function(parameters, mask) {
@@ -2553,6 +2561,34 @@ nabu.services.VueService(Vue.extend({
 				routes = routes.filter(function(x) { return not.indexOf(x) < 0 });
 			}
 			routes.sort();
+			return routes;
+		},
+		prettifyRouteAlias: function(alias) {
+			var routes = this.$services.router.list();
+			var route = routes.filter(function(x) { return x.alias == alias })[0];
+			if (route && route.name) {
+				var sameName = routes.filter(function(x) { return x.name == route.name });
+				if (sameName.length >= 2) {
+					return route.name + (route.category ? " (" + route.category + ")" : "");
+				}
+				else {
+					return route.name;
+				}
+			}
+			return alias;
+		},
+		getNamedRoutes: function(newValue) {
+			var routes = this.$services.router.list().filter(function(x) { return !!x.alias && !!x.name && (!newValue || x.name.toLowerCase().indexOf(newValue.toLowerCase()) >= 0) });
+			routes.sort(function(a, b) {
+				return a.name.localeCompare(b.name);
+			});
+			return routes;
+		},
+		getPageRoutes: function(newValue) {
+			var routes = this.$services.router.list().filter(function(x) { return x.isPage });
+			routes.sort(function(a, b) {
+				return a.name.localeCompare(b.name);
+			});
 			return routes;
 		},
 		getRoutes: function(newValue) {

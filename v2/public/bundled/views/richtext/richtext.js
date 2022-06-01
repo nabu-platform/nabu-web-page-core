@@ -2,60 +2,71 @@ if (!nabu) { var nabu = {} }
 if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 
-nabu.page.richtext = function(name) {
-	return Vue.component(name, {
-		template: "#" + name,
-		props: {
-			page: {
-				type: Object,
-				required: true
-			},
-			parameters: {
-				type: Object,
-				required: false
-			},
-			cell: {
-				type: Object,
-				required: true
-			},
-			edit: {
-				type: Boolean,
-				required: true
-			},
-			localState: {
-				type: Object,
-				required: false
-			}
+Vue.view("typography-richtext", {
+	template: "#typography-richtext",
+	icon: "modules/richtext/logo.svg",
+	description: "The rich text component can be used to write static texts with markup",
+	name: "Rich Text",
+	category: "Typography",
+	props: {
+		page: {
+			type: Object,
+			required: true
 		},
-		created: function() {
-			this.normalize(this.cell.state);
+		parameters: {
+			type: Object,
+			required: false
 		},
-		data: function() {
-			return {
-				configuring: false,
-				state: {}
-			}
+		cell: {
+			type: Object,
+			required: true
 		},
-		methods: {
-			configurator: function() {
-				return "page-richtext-configure";
-			},
-			normalize: function(state) {
-				if (!state.content) {
-					Vue.set(state, "content", null);
-				}
-			},
-			highlight: function(content) {
-				var highlighter = nabu.page.providers("page-format").filter(function(x) {
-					 return x.name == "highlight";
-				})[0];
-				return highlighter ? highlighter.format(content) : content;
-			},
-			lorem: function() {
-				return "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-			}
+		edit: {
+			type: Boolean,
+			required: true
 		}
-	});
-};
-nabu.page.richtext("page-richtext");
-nabu.page.richtext("page-richtext-configure");
+	},
+	created: function() {
+		if (this.edit && !this.cell.state.content) {
+			Vue.set(this.cell.state, "content", "");
+		}	
+	},
+	methods: {
+		configurator: function() {
+			return "typography-richtext-configure";
+		},
+		update: function(content) {
+			if (this.timer) {
+				clearTimeout(this.timer);
+				this.timer = null;
+			}
+			var self = this;
+			this.timer = setTimeout(function() {
+				self.cell.state.content = nabu.utils.elements.sanitize(content);
+			}, 100);
+		}
+	}
+});
+
+Vue.view("typography-richtext-configure", {
+	template: "#typography-richtext-configure",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		parameters: {
+			type: Object,
+			required: false
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
+		edit: {
+			type: Boolean,
+			required: true
+		}
+	}
+});
+

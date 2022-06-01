@@ -1,7 +1,7 @@
 <template id="nabu-pages">
 	<div class="nabu-pages">
 		<ul class="is-row is-menu is-variant-toolbar is-dark is-main-top is-primary-highlight is-content-width-large is-height-min3">
-			<li class="is-column"><button @click="selectedTab = 'pages'" class="is-button is-variant-ghost-light is-size-small"><img class="is-icon" src="${server.root()}resources/images/branding/nabu-logo.svg"/><span class="is-text">Page Builder</span></button></li>
+			<li class="is-column"><button @click="selectedTab = 'pages'" class="is-button is-variant-ghost-light is-size-small is-wrap-none"><img class="is-icon" src="${server.root()}resources/images/branding/nabu-logo.svg"/><span class="is-text">Page Builder</span></button></li>
 			<li class="is-column is-position-right" @click="selectedTab = 'pages'"><button :class="{'is-active': selectedTab == 'pages' }"class="is-button is-variant-ghost-light is-size-small"><icon name="file-alt"/><span class="is-text">Pages</span></li>
 			<li class="is-column" @click="selectedTab = 'settings'"><button :class="{'is-active': selectedTab == 'settings' }" class="is-button is-variant-ghost-light is-size-small"><icon name="cogs"/><span class="is-text">Settings</span></button></li>
 			<li class="is-column" @click="selectedTab = 'styles'"><button :class="{'is-active': selectedTab == 'styles' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-image"/><span class="is-text">Style</span></li>

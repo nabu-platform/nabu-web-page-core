@@ -2,6 +2,13 @@
 	"namespace": "page", 
 	"name": "core", 
 	"resources": {
+		"modules": {
+			"richtext": {
+				"logo.svg": {
+					"url": "views/richtext/richtext.svg"
+				}
+			}
+		},
 		"images": {
 			"branding": {
 				"nabu-logo.svg": {
@@ -191,17 +198,6 @@
 							"url": "views/custom-validator/custom-validator.js"
 						}
 					},
-					"markdown": {
-						"markdown.tpl": {
-							"url": "views/markdown/markdown.tpl"
-						}, 
-						"markdown.js": {
-							"url": "views/markdown/markdown.js"
-						}, 
-						"markdown.sass": {
-							"url": "views/markdown/markdown.sass"
-						}
-					},
 					"offline": {
 						"offline.tpl": {
 							"url": "views/offline/offline.tpl"
@@ -216,9 +212,6 @@
 					"richtext": {
 						"richtext.tpl": {
 							"url": "views/richtext/richtext.tpl"
-						},
-						"richtext.sass": {
-							"url": "views/richtext/richtext.sass"
 						},
 						"richtext.js": {
 							"url": "views/richtext/richtext.js"
@@ -321,6 +314,17 @@
 						}, 
 						"fields.js": {
 							"url": "views/fields/fields.js"
+						}
+					}, 
+					"typography": {
+						"typography.tpl": {
+							"url": "views/typography/typography.tpl"
+						}, 
+						"typography.js": {
+							"url": "views/typography/typography.js"
+						}, 
+						"typography.scss": {
+							"url": "views/typography/typography.scss"
 						}
 					}, 
 					"actions": {
@@ -472,11 +476,8 @@
 							}
 						}
 					}, 
-					"style.gcss": {
-						"url": "views/style.gcss"
-					}, 
-					"style.sass": {
-						"url": "views/style.sass"
+					"style.scss": {
+						"url": "views/style.scss"
 					}
 				}, 
 				"auto-bundle.json": {

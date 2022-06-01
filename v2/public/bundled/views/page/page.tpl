@@ -40,9 +40,10 @@
 				<ul class="is-menu is-variant-toolbar">
 					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'layout'" :class="{'is-active': activeTab == 'layout'}"><icon name="align-left"/><span class="is-text">Layout</span></button></li>
 					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'settings'" :class="{'is-active': activeTab == 'settings'}"><icon name="cog"/><span class="is-text">Settings</span></button></li>
-					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'components'" :class="{'is-active': activeTab == 'components'}"><icon name="cubes"/><span class="is-text">Components</span></button></li>
+					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'components'" :class="{'is-active': activeTab == 'components'}"><icon name="cubes"/><span class="is-text">Content</span></button></li>
 					<li class="is-column" v-if="cell || row"><button class="is-button is-variant-primary-outline is-size-small is-border-underline" @click="activeTab = 'selected'" :class="{'is-active': activeTab == 'selected'}"><icon name="cube"/>
 						<span class="is-text" v-if="selectedType == 'cell' && cell && cell.name">{{cell.name}}</span>
+						<span class="is-text" v-else-if="selectedType == 'cell' && cell && cell.alias">{{$services.page.prettifyRouteAlias(cell.alias)}}</span>
 						<span class="is-text" v-else-if="selectedType == 'row' && row && row.name">{{row.name}}</span>
 						<span class="is-text" v-else>Selected {{selectedType == 'cell' ? "cell" : "row"}}</span></button>
 					</li>
@@ -689,7 +690,7 @@
 			<div v-if="false && (edit || $services.page.wantEdit || row.wantVisibleName) && row.name && !row.collapsed" :style="getRowEditStyle(row)" class="row-edit-label"
 				:class="'direction-' + (row.direction ? row.direction : 'horizontal')"><span>{{row.name}}</span></div>
 			<div class="is-row-menu is-row is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
-				<button class="is-button is-variant-primary is-size-xsmall has-tooltip" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-tooltip">Configure row</span></button>
+				<button class="is-button is-variant-primary is-size-xsmall has-tooltip" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-text">Configure row</span></button>
 			</div>
 			<div v-if="row.customId" class="is-anchor" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 			<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
@@ -710,8 +711,8 @@
 				<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				
 				<div class="is-column-menu is-row is-align-main-center is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
-					<button v-if="cell.alias" class="is-button is-variant-secondary is-size-xsmall has-tooltip" @click="configureCell($event, row, cell)"><icon name="cog"/><span class="is-tooltip">Configure Cell</span></button>
-					<button v-else class="is-button is-variant-secondary is-size-xsmall has-tooltip" @click="goto($event, row, cell)"><icon name="magic"/><span class="is-tooltip">Configure Cell</span></button>
+					<button v-if="cell.alias" class="is-button is-variant-secondary is-size-xsmall has-tooltip" @click="configureCell($event, row, cell)"><icon name="cog"/><span class="is-text">Configure {{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
+					<button v-else class="is-button is-variant-secondary is-size-xsmall has-tooltip" @click="goto($event, row, cell)"><icon name="magic"/><span class="is-text">Configure {{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
 				</div>
 				
 				<div v-if="edit">
@@ -808,7 +809,7 @@
 			</ul>
 			<div class="is-column is-spacing-medium">
 				<n-form-combo v-model="container.components[childComponent.name].variant" label="Variant" :filter="getAvailableVariantNames.bind($self, childComponent)" after="Choose the main variant of this component"
-					:placeholder="childComponent.name"
+					:placeholder="childComponent.defaultVariant ? childComponent.defaultVariant : childComponent.name"
 					empty-value="No variants available"
 					@input="container.components[childComponent.name].modifiers.splice(0)"/>
 			</div>
@@ -865,21 +866,29 @@
 						@dragend="$services.page.clearDrag($event)"
 						@drop="dropRow($event, row)"
 						@mouseover="mouseOver($event, row)" 
-						class="is-row is-fill-normal">
+						@keydown.f2.prevent="function() { editing = null; aliasing = row.id }"
+						class="is-row is-fill-normal"
+						tabindex="0">
 					<button class="is-button is-variant-ghost is-size-xsmall" @click="toggleRow(row)"><icon :name="opened.indexOf(row.id) >= 0 ? 'chevron-down' : 'chevron-right'"/></button>
+					<n-form-text v-if="aliasing == row.id" v-model="row.name" class="is-variant-inline is-size-xsmall" :placeholder="row.alias ? row.alias : row.id" :autofocus="true"
+						:commit="true"
+						@commit="function() { aliasing = null }"
+						@keydown.escape="function() { aliasing = null }"/>
 					<span class="is-content is-size-xsmall is-fill-normal is-position-cross-center" @click="selectRow(row)" 
 						@dragstart="dragRow($event, row)"
 						:draggable="true" 
+						v-else
 						@click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
 				</div>
 				<ul class="is-menu is-variant-toolbar is-position-right is-spacing-horizontal-right-small">
+					<li class="is-column" v-if="$services.page.useAris"><button class="is-button is-variant-warning-outline is-size-xsmall has-tooltip" @click="rotate(row)"><icon name="undo"/><span class="is-tooltip is-position-bottom">Rotate row</span></button></li>
 					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="up(row)"><icon name="chevron-circle-up"/></button></li>
 					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="down(row)"><icon name="chevron-circle-down"/></button></li>
-					<li class="is-column"><button class="is-button is-size-xsmall is-color-primary-outline" @click="row.collapsed = !row.collapsed"><icon :name="row.collapsed ? 'eye-slash': 'eye'"/></button></li>
+					<li class="is-column"><button class="is-button is-size-xsmall is-color-primary-outline has-tooltip" @click="row.collapsed = !row.collapsed"><icon :name="row.collapsed ? 'eye-slash': 'eye'"/><span class="is-tooltip is-position-bottom">{{ row.collapsed ? "Show" : "Hide" }}</span></button></li>
 					<li class="is-column" v-if="false"><button class="is-button is-size-xsmall is-color-secondary-outline" @click="showHtml(row)"><icon name="code" /></button></li>
-					<li class="is-column"><button class="is-button is-size-xsmall is-color-primary-outline has-tooltip" @click="addCell(row)"><icon name="plus"/><span class="is-tooltip">Add cell</span></button></li>
-					<li class="is-column"><button class="is-button is-size-xsmall is-color-primary-outline has-tooltip" @click="copyRow(row)"><icon name="copy"/><span class="is-tooltip">Copy row</span></button></li>
-					<li class="is-column"><button class="is-button is-variant-warning has-tooltip is-size-xsmall" v-if="$services.page.copiedCell" @click="pasteCell(row)"><icon name="paste"/><span class="is-tooltip">Paste Cell</span></button></li>
+					<li class="is-column"><button class="is-button is-size-xsmall is-color-primary-outline has-tooltip" @click="addCell(row)"><icon name="plus"/><span class="is-tooltip is-position-bottom">Add cell</span></button></li>
+					<li class="is-column"><button class="is-button is-size-xsmall is-color-primary-outline has-tooltip" @click="copyRow(row)"><icon name="copy"/><span class="is-tooltip is-position-left">Copy row</span></button></li>
+					<li class="is-column"><button class="is-button is-variant-warning has-tooltip is-size-xsmall" v-if="$services.page.copiedCell" @click="pasteCell(row)"><icon name="paste"/><span class="is-tooltip is-position-left">Paste Cell</span></button></li>
 					<li class="is-column"><button class="is-button is-size-xsmall is-color-danger-outline" @click="$emit('removeRow', row)"><icon name="times"></span></button></li>
 				</ul>
 			</div>
@@ -897,8 +906,8 @@
 								@click="selectCell(row, cell)"
 								@dragstart="dragCell($event, row, cell)"
 								:draggable="true"
-								@keydown.f2.prevent="function() { aliasing = null; editing = cell.id }"
-								@keydown.f3.prevent="function() { editing = null; aliasing = cell.id }"
+								@keydown.f2.prevent="function() { aliasing = null; editing = cell.id; requestFocus() }"
+								@keydown.f3.prevent="function() { editing = null; aliasing = cell.id; requestFocus() }"
 								@keydown.esc.prevent="function() { editing = null; aliasing = null }"
 								@keydown.ctrl.up="left(row, cell)"
 								@keydown.ctrl.down="right(row, cell)"
@@ -906,19 +915,24 @@
 								tabindex="0">
 							<icon name="cube" class="is-size-xsmall is-position-cross-center" @click.native="function() { editing = null; aliasing = aliasing == cell.id ? null : cell.id }" v-if="false"/>
 							<icon name="cube" class="is-size-xsmall is-position-cross-center" />
-							<n-form-text v-if="editing == cell.id" v-model="cell.name" class="is-variant-inline is-size-xsmall" :placeholder="cell.alias ? cell.alias : cell.id" :autofocus="true"
+							<n-form-text v-if="editing == cell.id" v-model="cell.name" class="is-variant-inline is-size-xsmall" :placeholder="cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : cell.id" :autofocus="true"
+								ref="editor"
 								:commit="true"
-								@commit="function() { editing = null }"
-								@keydown.escape="function() { editing = null }"/>
-							<n-form-combo v-else-if="aliasing == cell.id" class="is-variant-inline is-size-xsmall" :filter="$services.page.getRoutes" v-model="cell.alias"
+								@commit="function() { editing = null; requestFocusCell(cell) }"
+								@keydown.escape="function() { editing = null; requestFocusCell(cell) }"/>
+							<n-form-combo v-if="aliasing == cell.id" class="is-variant-inline is-size-xsmall is-fill-normal is-spacing-horizontal-right-medium" :filter="$services.page.getNamedRoutes" v-model="cell.alias"
+								ref="aliaser"
+								:extracter="function(x) { return x.alias }"
+								:formatter="function(x) { return $services.page.prettifyRouteAlias(x.alias) }"
 								:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'" 
-								@keydown.escape="function() { aliasing = null }" 
+								@keydown.escape="function() { aliasing = null; requestFocusCell(cell) }" 
 								@input="$services.page.slowNormalizeAris(page, cell)"/>
-							<span v-else class="is-content is-size-xsmall is-position-cross-center" @click="selectCell(row, cell)" 
-								>{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? cell.alias : cell.id))}}</span>
+							<span v-if="editing != cell.id && aliasing != cell.id" class="is-content is-size-xsmall is-position-cross-center" @click="selectCell(row, cell)" 
+								>{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : cell.id))}}</span>
 							<button class="is-button is-size-xxsmall is-variant-ghost is-position-cross-center" @click="function() { aliasing = null; editing = cell.id }" v-if="false && aliasing != cell.id && editing != cell.id"><icon name="pencil-alt"/></button>
 						</div>
 						<ul class="is-menu is-variant-toolbar is-position-right is-spacing-horizontal-right-small">
+							<li class="is-column"><button class="is-button is-variant-warning-outline is-size-xsmall has-tooltip" @click="wrapCell(row, cell)"><icon name="chevron-circle-right"/><span class="is-tooltip is-position-bottom">Wrap cell</span></button></li>
 							<li class="is-column"><button class="is-button is-color-secondary-outline is-size-xsmall has-tooltip" @click="left(row, cell)" v-if="row.cells.length >= 2"><icon name="chevron-circle-up"/></button></li>
 							<li class="is-column"><button class="is-button is-color-secondary-outline is-size-xsmall has-tooltip" @click="right(row, cell)" v-if="row.cells.length >= 2"><icon name="chevron-circle-down"/></button></li>
 							<li class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall has-tooltip" @click="addRow(cell)"><icon name="plus"/><span class="is-tooltip">Add Row</span></button></li>

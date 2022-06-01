@@ -1,6 +1,12 @@
 <template id="page-actions-configure">
 	<div>
-		<n-collapsible title="Action Settings" v-if="!actions" class="padded">
+		<ul class="is-menu is-variant-toolbar is-align-end is-spacing-medium is-spacing-horizontal-gap-none">
+			<li class="is-column" v-if="$services.page.isCopied('page-action')"><button class="is-button is-variant-warning is-size-xsmall" @click="paste"><span class="fa fa-paste"></span></button></li>
+			<li class="is-column"><button class="is-button is-variant-primary is-size-xsmall" @click="addAction(false)"><icon name="plus"/>Static</button></li>
+			<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall" @click="addAction(true)"><icon name="plus"/>Dynamic</button></li>
+			<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall" @click="addContent()"><icon name="plus"/>Content</button></li>
+		</ul>
+		<n-collapsible :only-one-open="true" title="Generic Settings" v-if="!actions" content-class="is-spacing-medium">
 			<n-form-combo v-model="cell.state.class" label="Class" 
 				:filter="function(value) { return $services.page.classes('page-actions', value) }"/>
 			<n-form-text v-model="cell.state.activeClass" label="Active Class" info="The class that is set on the active action, this defaults to 'is-active'" :timeout="600"/>
@@ -17,30 +23,23 @@
 			<n-form-text v-model="cell.state.logo" label="Logo URL" after="Configure the url for your logo"/>
 			<page-event-value :page="page" :container="cell.state" title="Handled Event" name="handledEvent" @resetEvents="resetEvents" :inline="true"/>
 		</n-collapsible>
-		<div class="list-actions">
-			<button v-if="$services.page.isCopied('page-action')" @click="paste"><span class="fa fa-paste"></span></button>
-			<button @click="addAction(false)"><span class="fa fa-plus"></span>Static</button>
-			<button @click="addAction(true)"><span class="fa fa-plus"></span>Dynamic</button>
-			<button @click="addContent()"><span class="fa fa-plus"></span>Content</button>
-		</div>
-		<n-collapsible class="list-item dark" :title="action.label ? action.label : action.name" v-for="action in getActions()">
-			<div slot="buttons">
-				<button @click="$services.page.copyItem('page-action', action)"><span class="fa fa-copy"></span></button>
-				<button @click="up(action)"><span class="fa fa-chevron-circle-up"></span></button>
-				<button @click="down(action)"><span class="fa fa-chevron-circle-down"></span></button>
-				<button @click="getActions().splice(getActions().indexOf(action), 1)"><span class="fa fa-trash"></span></button>
-			</div>
+		<n-collapsible :only-one-open="true" :title="action.label ? action.label : action.name" v-for="action in getActions()">
+			<ul slot="buttons" class="is-menu is-variant-toolbar is-spacing-horizontal-right-medium">
+				<li class="is-column"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="up(action)"><icon name="chevron-circle-up"/></button></li>
+				<li class="is-column"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="down(action)"><icon name="chevron-circle-down"/></button></li>
+				<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="$services.page.copyItem('page-action', action)"><icon name="copy"/></button></li>
+				<li class="is-column"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="getActions().splice(getActions().indexOf(action), 1)"><icon name="times"/></button></li>
+			</ul>
 			
-			<div v-if="action.arbitrary" class="padded-content">
+			<div v-if="action.arbitrary" class="is-column is-spacing-medium">
 				<page-configure-arbitrary v-if="action.arbitrary" 
 					:page="page"
 					:cell="cell"
 					:target="action"
 					:keys="$services.page.getAvailableParameters(page, cell)"/>
 			</div>
-			<div v-else class="padded-content">
-				<n-form-text v-model="action.name" label="Name" info="The name is used for analytics purposes, check the console to see how this works" :timeout="600"/>
-				<n-form-section v-if="action.dynamic">
+			<div v-else class="is-column is-spacing-medium">
+				<div v-if="action.dynamic" class="is-column is-spacing-vertical-gap-medium">
 					<n-form-combo v-model="action.operation" label="Operation" :filter="getActionOperations"/>
 					<n-page-mapper :to="getInputParameters(action)" 
 						:from="$services.page.getAvailableParameters(page, cell, true)" 
@@ -49,29 +48,28 @@
 					<n-form-combo label="Label" v-if="action.operation" v-model="action.label" :filter="getOperationProperties.bind($self, action)"/>
 					<n-form-combo label="Icon" v-if="action.operation" v-model="action.icon" :filter="getOperationProperties.bind($self, action)"/>
 					<n-form-switch label="Autotrigger" v-model="action.autotrigger"/>
-				</n-form-section>
-				<n-form-section v-else>
+				</div>
+				<div class="is-column is-spacing-vertical-gap-medium" v-else>
 					<n-form-text v-model="action.label" label="Label" v-if="!action.compileLabel" :timeout="600"/>
-					<n-form-ace v-model="action.label" label="Label" v-else/>
-					<n-form-switch v-model="action.compileLabel" label="Compile"/>
-					<n-form-text v-model="action.id" label="Id" :timeout="600"/>
+					<n-form-ace mode="html" v-model="action.label" label="Label" v-else/>
+					<n-form-switch v-model="action.compileLabel" label="Label as html"/>
 					<n-form-text v-model="action.icon" label="Icon" :timeout="600"/>
-					<n-form-text v-model="action.badge" label="Badge" :timeout="600" info="Use the = syntax to interpret the badge dynamically"/>
-					<n-form-combo v-model="action.badgeVariant" v-if="action.badge" label="Badge Variant" :filter="getAvailableBadgeVariants"/>
 					<n-form-switch v-model="action.iconReverse" label="Reverse icon order" v-if="action.icon"/>
-				</n-form-section>
+					<n-form-text v-model="action.badge" label="Badge" :timeout="600" info="Use the = syntax to interpret the badge dynamically"/>
+				</div>
 
-				<n-form-text v-model="action.class" label="Menu Entry Class" :timeout="600" />
-				<n-form-text v-model="action.buttonClass" label="Button Class" :timeout="600"/>
+				<n-form-text v-if="false" v-model="action.id" label="Id" :timeout="600" after="Set an id on this action, can be useful for analytics"/>
+				<n-form-text v-model="action.name" label="Name" after="The name is used for analytics purposes, check the console to see how this works" :timeout="600"/>
 				
-				<n-form-combo v-model="action.event" v-if="false && !action.route && !action.url" label="Event" :filter="function(value) { return value ? [value, '$close'] : ['$close'] }"
-					 @input="$updateEvents()" :timeout="600"/>
-					 
-				<n-form-switch v-model="action.close" label="Close"/>
+				<n-form-switch v-model="action.close" label="Close" after="When this action is triggered, send a close event as well"/>
 				<n-form-switch v-model="action.skipHandleEvent" label="Don't send handled event" v-if="$window.nabu.page.event.getName(cell.state, 'handledEvent')" after="If this action does not constitute the final user interaction, we don't want to send the handled event"/>
 				
-				<n-form-section v-if="!action.dynamic">
-					<n-form-combo v-model="action.route" v-if="(!action.event || !action.event.name) && !action.url" :filter="listRoutes" label="Route"/>
+				<div v-if="!action.dynamic" class="is-column is-spacing-vertical-gap-medium">
+					<n-form-combo v-model="action.route" v-if="(!action.event || !action.event.name) && !action.url" 
+						:filter="$services.page.getPageRoutes" 
+						:formatter="function(x) { return $services.page.prettifyRouteAlias(x.alias) }" 
+						:extracter="function(x) { return x.alias }" 
+						label="Route to page"/>
 					<n-form-combo v-model="action.anchor" v-if="action.route || action.url" label="Anchor" :filter="function(value) { return value ? [value, '$blank', '$window'] : ['$blank', '$window'] }"/>
 					<n-form-switch v-model="action.absolute" v-if="action.route && !cell.state.useButtons" label="Absolute"/>
 					<n-form-switch v-model="action.mask" label="Mask" v-if="action.route"/>
@@ -88,42 +86,50 @@
 					<n-form-combo v-model="action.validate" label="Only if valid" :filter="validatableItems" info="This action is only triggerable if the indicated item or group of items is valid"/>
 					<n-form-text info="The event to send out if we have a validation error" v-if="action.validate" v-model="action.validationErrorEvent" label="Validation Error Event" :timeout="600" />
 					<n-form-switch info="Whether we want to scroll to the first exception" v-if="action.validate" v-model="action.validationErrorScroll" label="Scroll to Validation Error" />
-					<aris-editor v-if="$services.page.useAris && $services.page.normalizeAris(page, action, 'action', getActionComponents(action))" :child-components="getActionComponents(action)" :container="action.aris"/>
-				</n-form-section>
+				</div>
 			</div>
 			
-			<div class="list-item-actions" v-if="!action.arbitrary">
-				<button @click="action.triggers ? action.triggers.push('') : $window.Vue.set(action, 'triggers', [''])"><span class="fa fa-plus"></span>Trigger<n-info>You can have this action trigger when another event occurs.</n-info></button>
+			<p class="is-p is-size-small is-spacing-medium">Triggers allow you to fire an action when another event occurs. You can also control whether triggers should still fire even if the button is hidden.</p>
+			<div class="is-row is-align-end is-spacing-medium" v-if="!action.arbitrary">
+				<button class="is-button is-variant-primary is-size-xsmall" @click="action.triggers ? action.triggers.push('') : $window.Vue.set(action, 'triggers', [''])"><icon name="plus"/>Trigger</button>
 			</div>
-			<div v-if="action.triggers" class="padded-content">
-				<div class="list-row" v-for="i in Object.keys(action.triggers)">
-					<n-form-combo v-model="action.triggers[i]" label="Trigger" :items="$window.Object.keys($services.page.getAllAvailableParameters(page))"/>
-					<span @click="action.triggers.splice(i, 1)" class="fa fa-times"></span>
+			<div v-if="action.triggers" class="is-column is-spacing-medium">
+				<div class="is-column has-button-close" v-for="i in Object.keys(action.triggers)">
+					<n-form-combo v-model="action.triggers[i]" :items="$window.Object.keys($services.page.getAllAvailableParameters(page))"/>
+					<button class="is-button is-variant-close is-spacing-horizontal-right-large" @click="action.triggers.splice(i, 1)"><icon name="times"/></button>
 				</div>
 				<n-form-switch v-model="action.triggerIfHidden" v-if="action.triggers.length && action.condition" label="Allow trigger if hidden"/>
 			</div>
 			
-			<div class="list-item-actions" v-if="!action.arbitrary">
-				<button @click="action.activeRoutes.push('')"><span class="fa fa-plus"></span>Active Route<n-info>When is this action considered active (apart from the route you can already assign)?</n-info></button>
+			<p class="is-p is-size-small is-spacing-medium">When the action triggers a certain route, it is considered active. However, you may want to highlight it as active for other routes as well.</p>
+			<div class="is-row is-align-end is-spacing-medium" v-if="!action.arbitrary">
+				<button class="is-button is-variant-primary is-size-xsmall" @click="action.activeRoutes.push('')"><icon name="plus"/>Active Route</button>
 			</div>
-			<div class="list-row padded-content" v-for="i in Object.keys(action.activeRoutes)">
-				<n-form-combo v-model="action.activeRoutes[i]" label="Active Route" :filter="listRoutes"/>
-				<span @click="action.activeRoutes.splice(i, 1)" class="fa fa-times"></span>
+			<div class="is-column has-button-close is-spacing-medium" v-for="i in Object.keys(action.activeRoutes)">
+				<div class="is-column has-button-close">
+					<n-form-combo v-model="action.activeRoutes[i]"
+						:filter="$services.page.getPageRoutes" 
+						:formatter="function(x) { return $services.page.prettifyRouteAlias(x.alias) }" 
+						:extracter="function(x) { return x.alias }" />
+					<button class="is-button is-variant-close is-spacing-horizontal-right-large" @click="action.activeRoutes.splice(i, 1)"><icon name="times"/></button>
+				</div>
 			</div>
 			
-			<n-collapsible title="Style">
-				<div class="list-item-actions">
-					<button @click="addStyle(action)"><span class="fa fa-plus"></span>Style</button>
+			<aris-editor v-if="!action.arbitrary && $services.page.useAris && $services.page.normalizeAris(page, action, 'action', getActionComponents(action))" :child-components="getActionComponents(action)" :container="action.aris"/>			
+			<n-collapsible title="Custom classes" content-class="is-spacing-medium">
+				<n-form-text v-model="action.class" label="Menu Entry Class" :timeout="600" after="Set a custom css class on the menu entry" />
+				<n-form-text v-model="action.buttonClass" label="Button Class" :timeout="600" after="Set a custom css class on the button" />
+				<div class="is-row is-align-end is-spacing-vertical-medium">
+					<button class="is-button is-variant-primary is-size-xsmall" @click="addStyle(action)"><icon name="plus"/>Style</button>
 				</div>
-				<div v-if="action.styles" class="padded-content">
-					<n-form-section class="list-row" v-for="style in action.styles">
-						<n-form-text v-model="style.class" label="Class"/>
+				<div v-if="action.styles" class="is-column is-spacing-vertical-gap-medium">
+					<div v-for="style in action.styles" class="is-column has-button-close is-spacing-medium is-color-body">
+						<n-form-text v-model="style.class" label="CSS Class"/>
 						<n-form-text v-model="style.condition" label="Condition"/>
-						<span class="fa fa-times" @click="action.styles.splice(action.styles.indexOf(style), 1)"></span>
-					</n-form-section>
+						<button class="is-button is-variant-close" @click="action.styles.splice(action.styles.indexOf(style), 1)"><icon name="times"/></button>
+					</div>
 				</div>
 			</n-collapsible>
-
 		</n-collapsible>
 	</div>
 </template>
@@ -132,7 +138,7 @@
 	<ul :class="[cell.state.class, {'page-actions-root': actions == null }, {'page-actions-child': actions != null }, getAdditionalClasses()]" 
 			v-auto-close.actions="autoclose"
 			v-fixed-header="cell.state.isFixedHeader != null && cell.state.isFixedHeader == true">
-		<li class="is-column is-title" v-if="root && (cell.state.title || cell.state.logo)"><h2 class="is-h2" :class="getChildComponentClasses('actions-title')" @click="$services.router.route('home')"><img class="is-icon" v-if="cell.state.logo" :href="cell.state.logo"></span><span class="is-text" v-if="cell.state.title" v-html="$services.page.translate($services.page.interpret(cell.state.title, $self))"></span></h2></li>
+		<li class="is-column is-title" v-if="root && (cell.state.title || cell.state.logo)"><h2 class="is-h2" :class="getChildComponentClasses('actions-title')" @click="$services.router.route('home')"><img class="is-icon" v-if="cell.state.logo" :src="cell.state.logo"></span><span class="is-text" v-if="cell.state.title" v-html="$services.page.translate($services.page.interpret(cell.state.title, $self))"></span></h2></li>
 		<li v-for="action in (isAutoCalculated ? autoActions : (edit ? getActions() : resolvedActions.filter(function(x) { return !x.dynamic})))" v-if="isVisible(action)"
 				class="is-column"
 				:class="[{ 'has-children': action.actions != null && action.actions.length }, action.class, {'click-based': cell.state.clickBased}, {'is-open': showing.indexOf(action) >= 0}, getDynamicWrapperClasses(action)]"
@@ -151,7 +157,7 @@
 				:component="$self"/>
 			
 			<template v-else>
-				<span v-if="edit && !action.dynamic" class="fa fa-cog" @click="configureAction(action)"></span>
+				<span v-if="false && edit && !action.dynamic" class="fa fa-cog" @click="configureAction(action)"></span>
 				<a :auto-close-actions="!action.skipHandleEvent" class="is-button" :href="getActionHref(action)"
 					:data-event="action.name"
 					:target="action.anchor == '$blank' && (action.url || action.route) ? '_blank' : null"
@@ -195,6 +201,7 @@
 					v-show="(edit && false) || showing.indexOf(action) >= 0"/>
 			</template>
 		</li>
-		<li v-if="edit && !getActions().length && !cell.state.autoActions" class="page-placeholder"><button class="page-placeholder" @click="addAction(false);"><span class="fa fa-plus"></span>Static</button><button class="page-placeholder" @click="addAction(true);configure()"><span class="fa fa-plus"></span>Dynamic</button></li>
+		<li v-if="edit" class="is-column"><button class="is-button is-variant-primary" @click="addAction(false);"><icon name="plus"/><span class="is-text">Static</span></button></li>
+		<li v-if="edit" class="is-column"><button class="is-button is-variant-secondary" @click="addAction(true);configure()"><icon name="plus"/><span class="is-text">Dynamic</span></button></li>
 	</ul>
 </template>

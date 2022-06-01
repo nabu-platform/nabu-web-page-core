@@ -160,7 +160,15 @@ nabu.page.views.PageActionsGenerator = function(name) {
 		},
 		methods: {
 			getActionComponents: function(action) {
-				return [{title: 'Button Styling', name: 'action-entry-button', component: 'button'}, {title: 'Wrapper Styling', name: 'action-entry-wrapper', component: 'column'}];
+				var components = [{title: 'Button', name: 'action-entry-button', component: 'button'}, {title: 'Button Wrapper', name: 'action-entry-wrapper', component: 'column'}];
+				if (action.badge) {
+					components.push({
+						title: "Badge",
+						name: "action-entry-badge",
+						component: "badge"
+					});
+				}
+				return components;
 			},
 			getAvailableVariants: function(component, value) {
 				var variants = [];
