@@ -31,7 +31,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			},
 			getPageInstance: function() {
 				var instance =  this.$services.page.getPageInstance(this.page, this);
-				console.log("resolving cell state", this.cell.state.name, instance, instance.get("page." + this.cell.state.name));
+				//console.log("resolving cell state", this.cell.state.name, instance, instance.get("page." + this.cell.state.name));
 				return this.$services.page.getPageInstance(this.page, this);	
 			},
 			isDisabled: function() {
@@ -68,7 +68,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				var fields = [];
 				var parameters = this.$services.page.getPageParameters(this.page);
 				nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor(parameters, true, true));
-				console.log("fields are", fields);
+				//console.log("fields are", fields);
 				fields.sort();
 				if (value) {
 					fields = fields.filter(function(x) {

@@ -135,7 +135,9 @@
 </template>
 
 <template id="page-actions">
-	<ul :class="[cell.state.class, {'page-actions-root': actions == null }, {'page-actions-child': actions != null }, getAdditionalClasses()]" 
+	<ul :class="[cell.state.class, {'page-actions-root': actions == null }, {'page-actions-child': actions != null }, getAdditionalClasses(), {'is-empty-component': root && edit && (!cell.state.actions || !cell.state.actions.length)}]" 
+			class="has-inline-component-menu"
+			:placeholder="!actions || !actions.length ? 'Actions can be added here' : null"
 			v-auto-close.actions="autoclose"
 			v-fixed-header="cell.state.isFixedHeader != null && cell.state.isFixedHeader == true">
 		<li class="is-column is-title" v-if="root && (cell.state.title || cell.state.logo)"><h2 class="is-h2" :class="getChildComponentClasses('actions-title')" @click="$services.router.route('home')"><img class="is-icon" v-if="cell.state.logo" :src="cell.state.logo"></span><span class="is-text" v-if="cell.state.title" v-html="$services.page.translate($services.page.interpret(cell.state.title, $self))"></span></h2></li>
@@ -201,7 +203,9 @@
 					v-show="(edit && false) || showing.indexOf(action) >= 0"/>
 			</template>
 		</li>
-		<li v-if="edit" class="is-column"><button class="is-button is-variant-primary" @click="addAction(false);"><icon name="plus"/><span class="is-text">Static</span></button></li>
-		<li v-if="edit" class="is-column"><button class="is-button is-variant-secondary" @click="addAction(true);configure()"><icon name="plus"/><span class="is-text">Dynamic</span></button></li>
+		<ul v-if="root && edit" class="is-menu is-variant-toolbar is-variant-inline-component-menu">
+			<li class="is-column"><button class="is-button is-variant-primary is-size-xsmall" @click="addAction(false);"><icon name="plus"/><span class="is-text">Static</span></button></li>
+			<li class="is-column"><button class="is-button is-variant-secondary is-size-xsmall" @click="addAction(true);configure()"><icon name="plus"/><span class="is-text">Dynamic</span></button></li>
+		</ul>
 	</ul>
 </template>

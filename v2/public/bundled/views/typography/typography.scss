@@ -1,9 +1,12 @@
 .is-inline-editor {
 	display: inline-block;
-	min-height: 1rem;
+	min-height: 1.2rem;
 	min-width: 5rem;
+	height: 100%;
+	width: 100%;
 	&[placeholder]:empty:before {
 	    content: attr(placeholder);
-	    color: #555; 
+	    color: #555;
+	    margin-left: 0.2rem;
 	}
 }

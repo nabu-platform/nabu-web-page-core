@@ -27,6 +27,7 @@ Vue.view("typography-richtext", {
 		}
 	},
 	created: function() {
+		console.log("editing?", this.edit);
 		if (this.edit && !this.cell.state.content) {
 			Vue.set(this.cell.state, "content", "");
 		}	

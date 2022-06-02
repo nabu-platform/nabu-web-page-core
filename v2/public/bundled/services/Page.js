@@ -1812,6 +1812,13 @@ nabu.services.VueService(Vue.extend({
 				}
 				state.page = page;
 			});
+			// aliased components win, even if their state is null (it has to be predictable)
+			Object.keys(pageInstance.components).forEach(function(x) {
+				if (x.indexOf("alias_") == 0) {
+					var component = pageInstance.components[x];
+					state[x.substring("alias_".length)] = component.getState ? component.getState() : null;
+				}	
+			});
 			return state;
 		},
 		hasFeature: function(feature) {
@@ -2697,6 +2704,7 @@ nabu.services.VueService(Vue.extend({
 					result["parent"] = this.getPageParameters(parentInstance.page);
 				}
 			}
+			
 			// and the page itself
 			result.page = this.getPageParameters(page);
 			
@@ -2746,7 +2754,18 @@ nabu.services.VueService(Vue.extend({
 						result[x.name] = {properties:tmp};
 					}
 				}
-			})
+			});
+			
+			// and map all the aliased components
+			Object.keys(pageInstance.components).forEach(function(x) {
+				if (x.indexOf("alias_") == 0) {
+					var name = x.substring("alias_".length);
+					var component = pageInstance.components[x];
+					if (component.getStateDefinition) {
+						result[name] = component.getStateDefinition();
+					}
+				}
+			});
 			
 			return result;
 		},
@@ -2853,6 +2872,17 @@ nabu.services.VueService(Vue.extend({
 					}
 				});
 			}
+			
+			// and map all the aliased components
+			Object.keys(pageInstance.components).forEach(function(x) {
+				if (x.indexOf("alias_") == 0) {
+					var name = x.substring("alias_".length);
+					var component = pageInstance.components[x];
+					if (component.getStateDefinition) {
+						result[name] = component.getStateDefinition();
+					}
+				}
+			});
 			
 			// cell specific stuff overwrites everything else
 			if (cell) {
@@ -3015,6 +3045,12 @@ nabu.services.VueService(Vue.extend({
 			}
 			return false;
 		},
+		// TODO: we don't want to be able to edit stuff like events
+		// but components can add their own state to the page
+		// for that reason, we do need the page instance, to get (in turn) the aliased components with their own state
+		// we can't guarantee that the components will be there at runtime (due to conditions)
+		// but at you need to be able to bind to these things
+		// for instance the page-level form fields use this service to deduce which fields they can write to
 		getPageParameters: function(page) {
 			var parameters = {
 				properties: {}
@@ -3076,6 +3112,17 @@ nabu.services.VueService(Vue.extend({
 					parameters.properties[x.name] = self.getResolvedPageParameterType(x.type);
 				});
 			}
+			
+//			parameters = {properties:{page: { properties: parameters.properties}}};
+			var pageInstance = this.getPageInstance(page);
+			if (pageInstance) {
+				Object.keys(pageInstance.components).forEach(function(x) {
+					if (x.indexOf("alias_") == 0 && pageInstance.components[x].getStateDefinition) {
+						parameters.properties[x.substring("alias_".length)] = pageInstance.components[x].getStateDefinition();
+					}
+				});
+			}
+			
 			return parameters;
 		},
 		// not used atm

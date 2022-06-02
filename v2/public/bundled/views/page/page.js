@@ -487,8 +487,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 			// contains all the component instances
 			// the key is their id
 			components: {},
+			// counts upwards for each instance in this page
+			// this allows us to differentiate between repeated cells
+			instanceCounter: 0,
 			// contains (amongst other things) the event instances
 			variables: {},
+			// components can add their own variables
+			// each component can have its own name and structure
 			//lastParameters: null,
 			configuring: false,
 			// per cell
@@ -934,8 +939,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 				event.stopPropagation();
 			}
 			if (this.$services.page.getDragData(event, "operation")) {
-				this.initializeOperation(function() {
-					return self.addRow(self.page.content);
+				this.initializeOperation(function(target) {
+					return self.addRow(target ? target : self.page.content);
 				}, function(row) {
 					return self.addCell(row);
 				});
@@ -965,9 +970,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 		},
 		initializeOperationInternal: function(rowGenerator, cellGenerator, content) {
-			console.log("initializing operation", content);
 			var self = this;
 			var acceptedRoutes = this.$services.router.router.list().filter(function(route) {
+				if (route.accept) {
+					console.log("found acceptor", route.alias);
+				}
 				return route.accept && route.accept("operation", content);
 			});
 			// if we have multiple routes, only choose correctly annotated routes that we can ask the user which he wants
@@ -979,17 +986,18 @@ nabu.page.views.Page = Vue.component("n-page", {
 			var runRoute = function(route) {
 				var row = rowGenerator();
 				var cell = cellGenerator(row);
+				cell.alias = route.alias;
 				if (route.initialize) {
 					cell.$$initialize = function(instance) {
-						route.initialize("operation", content, instance, cell, row, self);
+						route.initialize("operation", content, instance, cell, row, self, rowGenerator, cellGenerator);
 					}
 				}
-				cell.alias = route.alias;
 				event.preventDefault();
 				event.stopPropagation();
 				self.$services.page.slowNormalizeAris(self.page, row, "row");
 				self.$services.page.slowNormalizeAris(self.page, cell);
 			};
+			console.log("accepted routes are", acceptedRoutes);
 			// if there is only one, execute it immediately
 			if (acceptedRoutes.length == 1) {
 				runRoute(acceptedRoutes[0]);
@@ -1086,6 +1094,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 		},
 		// destroy a component from the page
 		destroyComponent: function(component, cell) {
+			// keep track of the separate instances
+			if (this.components["instance_" + component.$$pageInstanceCounter]) {
+				Vue.delete(this.components, "instance_" + component.$$pageInstanceCounter, null);
+			}
+			if (component.getRuntimeAlias) {
+				Vue.delete(this.components, "alias_" + component.getRuntimeAlias(), null);
+			}
+			// this keeps track by cell id
 			if (this.components[cell.id] != null) {
 				if (this.components[cell.id] instanceof Array) {
 					var index = this.components[cell.id].indexOf(component);
@@ -1117,6 +1133,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			return result;
 		},
 		mounted: function(cell, row, state, component) {
+			console.log("mounted", cell.alias);
 			var self = this;
 			
 			if (component.$mounted) {
@@ -1127,7 +1144,19 @@ nabu.page.views.Page = Vue.component("n-page", {
 					self.$services.page.rendering--;
 				});
 			}
-
+			
+			// assign a page instance counter for unique temporary reference
+			component.$$pageInstanceCounter = this.instanceCounter++;
+			this.components["instance_" + component.$$pageInstanceCounter] = component;
+			
+			// define an alias
+			if (component.getRuntimeAlias) {
+				this.components["alias_" + component.getRuntimeAlias()] = component;
+				// is dependent on loading order to work correctly...:(
+				Vue.set(this.variables, component.getRuntimeAlias(), component.getState());
+				//Vue.set(this.variables, component.getRuntimeAlias(), null);
+			}
+			
 			
 			// run the initializer function (if any) with the component instance
 			if (cell.$$initialize) {
@@ -1280,7 +1309,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			return false;
 		},
-		addCell: function(target) {
+		addCell: function(target, skipInject) {
 			if (!target.cells) {
 				Vue.set(target, "cells", []);
 			}
@@ -1313,7 +1342,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 				clickEvent: null
 			};
 			this.$services.page.normalizeAris(this.page, cell);
-			target.cells.push(cell);
+			if (!skipInject) {
+				target.cells.push(cell);
+			}
 			return cell;
 		},
 		addRow: function(target, skipInject) {
@@ -1549,6 +1580,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 			}
 			return this.cachedEvents;
+		},
+		isRuntimeAlias: function(alias) {
+			return this.components["alias_" + alias] != null;	
 		},
 		getCellEvents: function(cellContainer, events) {
 			var self = this;
@@ -2240,6 +2274,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 				var name = name.substring("page.".length);
 				var dot = name.indexOf(".");
 				var localName = dot >= 0 ? name.substring(0, dot) : name;
+				
+				// can get component state with page. prefix
+				if (this.components["alias_" + localName] != null && this.components["alias_" + localName].getState) {
+					var component = this.components["alias_" + localName];
+					var state = component.getState();
+					return this.$services.page.getValue(state, name.substring(dot + 1));
+				}
+				
 				var relativeName = dot >= 0 ? name.substring(dot + 1) : null;
 				var applicationProperty = this.$services.page.properties.filter(function(property) {
 					return property.key == localName;
@@ -2272,6 +2314,17 @@ nabu.page.views.Page = Vue.component("n-page", {
 					}
 				}
 				return result;
+			}
+			// if we have an aliased component with that name, it takes precedence over variables
+			else if (this.components["alias_" + name.split(".")[0]] != null && this.components["alias_" + name.split(".")[0]].getState) {
+				var parts = name.split(".");
+				var component = this.components["alias_" + parts[0]];
+				var state = component.getState();
+				if (parts.length == 1 || (parts.length == 2 && parts[1] == "$all")) {
+					return state;
+				}
+				var variableName = name.substring((parts[0] + ".").length);
+				var result = state == null ? null : this.$services.page.getValue(state, variableName);
 			}
 			// we want an entire variable
 			else if (name.indexOf(".") < 0) {
@@ -2380,6 +2433,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 		},
 		set: function(name, value) {
+			console.log("setting", name, value);
 			var target = null;
 			var parts = null;
 			var updateUrl = false;
@@ -2391,6 +2445,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				var pageParameter = this.page.content.parameters ? this.page.content.parameters.filter(function(parameter) {
 					return parameter.name == name.substring("page.".length).split(".")[0];
 				})[0] : null;
+				parts = name.substring("page.".length).split(".");
 				if (pageParameter) {
 					target = this.variables;
 					// also set it as the default value if in edit mode or light edit mode
@@ -2421,14 +2476,25 @@ nabu.page.views.Page = Vue.component("n-page", {
 					// otherwise we might accidently update the parameters object which is passed along to all children
 					target = this.parameters;
 				}
+				// in case we set component state values with a page. prefix (...)
+				else if (this.components["alias_" + parts[0]] != null && this.components["alias_" + parts[0]].getState) {
+					target = this.components["alias_" + parts[0]].getState();
+					parts.splice(0, 1);
+				}
 				else {
 					target = this.variables;
 				}
-				parts = name.substring("page.".length).split(".");
 			}
 			else if (name.split) {
 				parts = name.split(".");
-				target = this.variables;
+				// we can set the component state without the page. prefix
+				if (this.components["alias_" + parts[0]] != null && this.components["alias_" + parts[0]].getState) {
+					target = this.components["alias_" + parts[0]].getState();
+					parts.splice(0, 1);
+				}
+				else {
+					target = this.variables;
+				}
 			}
 			// TODO: if single input, single output => can automatically bypass transformer?
 			// or set a reverse transformer?
@@ -2458,7 +2524,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 					while (name != null) {
 						if (this.subscriptions[name]) {
 							var valueToEmit = self.get(name);
-							console.log("subscriber", name, valueToEmit);
 							this.subscriptions[name].forEach(function(handler) {
 								handler(valueToEmit);
 							});
@@ -2768,6 +2833,34 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				return ["is-empty", "is-hover-top", "is-hover-bottom", "is-hover-left", "is-hover-right", "is-hovering"].indexOf(x) < 0;
 			});
 		},
+		dropCell: function(event, row, cell) {
+			var self = this;
+			var data = this.$services.page.getDragData(event, "component-alias");
+			var cellTarget = document.getElementById(self.page.name + '_' + row.id + '_' + cell.id);
+			if (data) {
+				cell.alias = data;
+				event.preventDefault();
+				event.stopPropagation();
+			}
+			else {
+				data = this.$services.page.getDragData(event, "template-content");
+				if (data) {
+					var structure = JSON.parse(data);
+					if (structure.type == "page-cell") {
+						structure = structure.content;
+						if (structure.alias) {
+							cell.alias = structure.alias;
+						}
+						if (structure.rows) {
+							var rows = structure.rows.map(function(x) { return self.$services.page.renumber(self.page, x) });
+							nabu.utils.arrays.merge(cell.rows, rows);
+						}
+						event.preventDefault();
+						event.stopPropagation();
+					}
+				}
+			}
+		},
 		drop: function(event, row) {
 			var self = this;
 			var data = this.$services.page.getDragData(event, "component-alias");
@@ -2863,6 +2956,34 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				}
 			}
 		},
+		dragOverCell: function($event, row, cell) {
+			// can only accept drags if there is nothing in the cell yet
+			if (!cell.alias && this.edit) {
+				var data = this.$services.page.hasDragData($event, "component-alias");
+				if (!data) {
+					data = this.$services.page.hasDragData($event, "template-content");
+					// check that it is the correct type of data
+					if (data) {
+						var structure = JSON.parse(data);
+						// we can only drop cell templates here?
+						if (structure.type != "page-cell") {
+							data = null;
+						}
+					}
+				}
+				// TODO: in the future also drop page-cell and page-row from the side menu?
+				if (data) {
+					var self = this;
+					var cellTarget = document.getElementById(self.page.name + '_' + row.id + '_' + cell.id);
+					this.$services.page.pushDragItem(cellTarget);
+					var rect = cellTarget.getBoundingClientRect();
+					cellTarget.classList.remove("is-hovering", "is-hover-top", "is-hover-bottom", "is-hover-left", "is-hover-right");
+					cellTarget.classList.add("is-hovering");
+					$event.preventDefault();
+					$event.stopPropagation();
+				}
+			}
+		},
 		dragOver: function($event, row) {
 			if (this.edit) {
 				var data = this.$services.page.hasDragData($event, "component-alias");
@@ -2901,6 +3022,17 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 					$event.preventDefault();
 					$event.stopPropagation();
 				}
+			}
+		},
+		dragExitCell: function($event, row, cell) {
+			if (!cell.alias && this.edit) {
+				var self = this;
+				var cellTarget = document.getElementById(self.page.name + '_' + row.id + '_' + cell.id);
+				if (cellTarget) {
+					cellTarget.classList.remove("is-hovering");
+				}
+				$event.preventDefault();
+				$event.stopPropagation();
 			}
 		},
 		dragExit: function($event, row) {
