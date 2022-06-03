@@ -502,18 +502,23 @@
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Rendering" content-class="is-spacing-medium" class="is-highlight-left">
 							<n-form-ace mode="javascript" label="Condition" v-model="cell.condition" after="If you fill in a condition, the cell will only render the content if the condition evaluates to true" :timeout="600"/>
-							<n-form-combo label="Cell Renderer" v-model="cell.renderer" :items="getRenderers('cell')" 
+							<n-form-combo label="Cell Renderer" v-model="cell.renderer" :items="$services.page.getRenderers('cell')" 
 								after="You can set a custom renderer for this cell"
 								empty-value="No renderers found"
 								:formatter="function(x) { return x.name }" 
 								:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
-							<n-form-section v-if="cell.renderer">
-								<n-form-text v-for="property in getRendererPropertyKeys(cell)" :label="property" v-model="cell.rendererProperties[property]"/>
-							</n-form-section>
+								
+							<div v-if="cell.renderer && $services.page.getRendererState(cell.renderer, row)" class="is-column is-spacing-vertical-gap-medium">
+								<n-form-text v-model="cell.runtimeAlias" label="Runtime alias for renderer state"/>
+								<n-form-switch v-model="cell.retainState" label="Retain state once cell is destroyed" v-if="cell.runtimeAlias"/>
+							</div>
+							<div v-if="cell.renderer && $services.page.getRendererConfiguration(cell.renderer)">
+								<component :is="$services.page.getRendererConfiguration(cell.renderer)" :target="row" :page="page"/>
+							</div>
 								
 							<n-form-text label="Cell Width" v-model="cell.width" info="By default flex is used to determine cell size, you can either configure a number for flex or choose to go for a fixed value" :timeout="600"/>
 							<n-form-text label="Cell Height" v-model="cell.height" info="You can configure any height, for example 200px" :timeout="600"/>
-							<n-form-text label="Cell Reference" v-model="cell.ref" info="A reference you can use to retrieve this cell programmatically" :timeout="600"/>
+							<n-form-text label="Cell Reference" v-model="cell.ref" info="A reference you can use to retrieve this cell programmatically" :timeout="600" v-if="false"/>
 							<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
 							<div v-if="$services.page.devices.length">
 								<p class="is-p is-size-small is-color-light is-spacing-vertical-bottom-small">You can choose to render the cell only if a set of device rules is met.</p>
@@ -596,10 +601,15 @@
 							
 							<h2>Additional<span class="subscript">Configure some additional settings for this row</span></h2>
 							<n-form-text label="Row Id" v-model="row.customId" info="If you set a custom id for this row, a container will be rendered in this row with that id. This can be used for targeting with specific content."/>
-							<n-form-combo label="Row Renderer" v-model="row.renderer" :items="getRenderers('row')"  :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
-							<n-form-section v-if="row.renderer">
-								<n-form-text v-for="property in getRendererPropertyKeys(row)" :label="property" v-model="row.rendererProperties[property]"/>
-							</n-form-section>
+							<n-form-combo label="Row Renderer" v-model="row.renderer" :items="$services.page.getRenderers('row')"  :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
+							<div v-if="row.renderer && $services.page.getRendererState(row.renderer, row)" class="is-column is-spacing-vertical-gap-medium">
+								<n-form-text v-model="row.runtimeAlias" label="Runtime alias for renderer state"/>
+								<n-form-switch v-model="row.retainState" label="Retain state once row is destroyed" v-if="row.runtimeAlias"/>
+							</div>
+							<div v-if="row.renderer && $services.page.getRendererConfiguration(row.renderer)">
+								<component :is="$services.page.getRendererConfiguration(row.renderer)" :target="row" :page="page"/>
+							</div>
+							
 							<div v-if="$services.page.devices.length">
 								<div class="is-row is-align-end">
 									<button class="is-button is-variant-primary-outline is-size-xsmall" @click="addDevice(row)"><icon name="plus"/>Device rule</button>
@@ -686,7 +696,9 @@
 				@click.ctrl="goto($event, row)"
 				@click.meta="goto($event, row)"
 				@click.alt="$emit('select', row, null, 'row')"
-				v-bind="getRendererProperties(row)">
+				:target="row"
+				:edit="edit"
+				:page="page">
 			<div v-if="false && (edit || $services.page.wantEdit || row.wantVisibleName) && row.name && !row.collapsed" :style="getRowEditStyle(row)" class="row-edit-label"
 				:class="'direction-' + (row.direction ? row.direction : 'horizontal')"><span>{{row.name}}</span></div>
 			<div class="is-row-menu is-row is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
@@ -710,7 +722,9 @@
 					@dragover="dragOverCell($event, row, cell)"
 					@dragexit="dragExitCell($event, row, cell)"
 					@drop="dropCell($event, row, cell)"
-					v-bind="getRendererProperties(cell)">
+					:target="cell"
+					:edit="edit"
+					:page="page">
 				<div v-if="false && (edit || $services.page.wantEdit) && cell.name" :style="getCellEditStyle(cell)" class="cell-edit-label"><span>{{cell.name}}</span></div>
 				<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				

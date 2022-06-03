@@ -41,9 +41,6 @@
 					"buttons.svg": {
 						"url": "images/buttons.svg"
 					},
-					"richtext.svg": {
-						"url": "images/richtext.svg"
-					},
 					"image.svg": {
 						"url": "images/image.svg"
 					},
@@ -491,6 +488,16 @@
 					"mobile-drag-drop.js": {
 						"url": "https://raw.githubusercontent.com/Bernardo-Castilho/dragdroptouch/master/DragDropTouch.js"
 					}
+				}
+			}
+		},
+		"renderers": {
+			"form": {
+				"form.js": {
+					"url": "renderers/form/form.js"
+				},
+				"form.tpl": {
+					"url": "renderers/form/form.tpl"
 				}
 			}
 		}

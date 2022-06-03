@@ -1100,6 +1100,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			if (component.getRuntimeAlias) {
 				Vue.delete(this.components, "alias_" + component.getRuntimeAlias(), null);
+				// unset the state again so it can be reused
+				// or at the very least it is clear that it is gone
+				Vue.set(this.variables, component.getRuntimeAlias(), null);
 			}
 			// this keeps track by cell id
 			if (this.components[cell.id] != null) {
@@ -1133,7 +1136,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 			return result;
 		},
 		mounted: function(cell, row, state, component) {
-			console.log("mounted", cell.alias);
 			var self = this;
 			
 			if (component.$mounted) {
@@ -1151,12 +1153,32 @@ nabu.page.views.Page = Vue.component("n-page", {
 			
 			// define an alias
 			if (component.getRuntimeAlias) {
+				// not used atm, but could be handy to retrieve a component by its name
+				// there might also be a ref that does this? see below cell.ref
 				this.components["alias_" + component.getRuntimeAlias()] = component;
-				// is dependent on loading order to work correctly...:(
+				// override the currently empty state with the actual state
+				// all modification of that state must occur on this object (by reference)
 				Vue.set(this.variables, component.getRuntimeAlias(), component.getState());
-				//Vue.set(this.variables, component.getRuntimeAlias(), null);
 			}
-			
+			// same thing if we have a row renderer with state
+			// TODO: we assume the parent is the first vue component above the component
+			// if you were to set a row renderer _and_ a cell renderer, we might not pick it up?
+			if (cell.renderer && cell.runtimeAlias && component.$parent && component.$parent.getState) {
+				Vue.set(this.variables, cell.runtimeAlias, component.$parent.getState());
+				if (!cell.retainState) {
+					component.$parent.$on("hook:beforeDestroy", function() {
+						Vue.set(this.variables, cell.runtimeAlias, null);
+					});
+				}
+			}
+			else if (row.renderer && row.runtimeAlias && component.$parent && component.$parent.getState) {
+				Vue.set(this.variables, row.runtimeAlias, component.$parent.getState());
+				if (!row.retainState) {
+					component.$parent.$on("hook:beforeDestroy", function() {
+						Vue.set(this.variables, row.runtimeAlias, null);
+					});
+				}
+			}
 			
 			// run the initializer function (if any) with the component instance
 			if (cell.$$initialize) {
@@ -1506,7 +1528,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				
 				// add the cell events
 				this.page.content.rows.map(function(row) {
-					self.getCellEvents(row, events);
+					self.getNestedEvents(row, events);
 				});
 				
 				Object.keys(this.components).map(function(cellId) {
@@ -1581,13 +1603,25 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			return this.cachedEvents;
 		},
-		isRuntimeAlias: function(alias) {
-			return this.components["alias_" + alias] != null;	
+		getRendererEvents: function(name, target) {
+			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == name })[0];
+			var result = null;
+			if (renderer.events) {
+				result = renderer.events(target);
+			}
+			return result ? result : {};
 		},
-		getCellEvents: function(cellContainer, events) {
+		getNestedEvents: function(cellContainer, events) {
+			if (cellContainer.renderer) {
+				nabu.utils.objects.merge(events, this.getRendererEvents(cellContainer.renderer, cellContainer));
+			}
 			var self = this;
 			if (cellContainer.cells) {
-				cellContainer.cells.map(function(cell) {
+				cellContainer.cells.forEach(function(cell) {
+					if (cell.renderer) {
+						nabu.utils.objects.merge(events, this.getRendererEvents(cell.renderer, cell));
+					}
+					
 					if (nabu.page.event.getName(cell, "clickEvent")) {
 						events[nabu.page.event.getName(cell, "clickEvent")] = nabu.page.event.getType(cell, "clickEvent");
 					}
@@ -1604,7 +1638,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					// </DEPRECATED>
 					if (cell.rows) {
 						cell.rows.map(function(row) {
-							self.getCellEvents(row, events);
+							self.getNestedEvents(row, events);
 						});
 					}
 				});
@@ -2223,6 +2257,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			this.page.content.globalEventSubscriptions.push({localName: null, globalName: null});
 		},
 		get: function(name) {
+			
 			// probably not filled in the value yet
 			if (!name) {
 				return null;
@@ -2274,14 +2309,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 				var name = name.substring("page.".length);
 				var dot = name.indexOf(".");
 				var localName = dot >= 0 ? name.substring(0, dot) : name;
-				
-				// can get component state with page. prefix
-				if (this.components["alias_" + localName] != null && this.components["alias_" + localName].getState) {
-					var component = this.components["alias_" + localName];
-					var state = component.getState();
-					return this.$services.page.getValue(state, name.substring(dot + 1));
-				}
-				
 				var relativeName = dot >= 0 ? name.substring(dot + 1) : null;
 				var applicationProperty = this.$services.page.properties.filter(function(property) {
 					return property.key == localName;
@@ -2303,6 +2330,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 				else {
 					result = this.parameters[name];
+					// if it exists nowhere else, we will create an entry for it in variables
+					// at least then there is SOMETHING to bind to reactively, if we _do_ get the state at a later point in variables, it should be reactive
+					if (result == null) {
+						if (!this.variables.hasOwnProperty(localName)) {
+							Vue.set(this.variables, localName, null);
+						}
+						result = this.variables[localName];
+					}
 				}
 				if (result != null && relativeName != null) {
 					var parts = relativeName.split(".");
@@ -2315,25 +2350,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 				return result;
 			}
-			// if we have an aliased component with that name, it takes precedence over variables
-			else if (this.components["alias_" + name.split(".")[0]] != null && this.components["alias_" + name.split(".")[0]].getState) {
-				var parts = name.split(".");
-				var component = this.components["alias_" + parts[0]];
-				var state = component.getState();
-				if (parts.length == 1 || (parts.length == 2 && parts[1] == "$all")) {
-					return state;
-				}
-				var variableName = name.substring((parts[0] + ".").length);
-				var result = state == null ? null : this.$services.page.getValue(state, variableName);
-			}
-			// we want an entire variable
-			else if (name.indexOf(".") < 0) {
-				return this.variables[name];
-			}
-			// we still want an entire variable
-			else if (name.indexOf(".$all") >= 0) {
-				return this.variables[name.substring(0, name.indexOf(".$all"))];
-			}
 			// note: currently this is slightly out of sync with "page." logic
 			// the problem is if you simply do get("queryParameter"), it won't work
 			// because query paramters are not available in variables
@@ -2342,32 +2358,47 @@ nabu.page.views.Page = Vue.component("n-page", {
 			// workaround: use "page.queryParameter" syntax to resolve (currently used until decision is made) for example by page form components
 			// note that set() also suffers from the same problem it seems!
 			else {
-				var parts = name.split(".");
-				if (this.variables[parts[0]]) {
-					var value = this.variables[parts[0]];
-					for (var i = 1; i < parts.length; i++) {
-						if (value) {
-							if (value instanceof Array) {
-								value = value.map(function(x) { return x[parts[i]] });
-							}
-							else {
-								value = value[parts[i]];
-							}
-						}
+				
+				// let's check if there is a provider for it
+				var result = null;
+				// check if there is a provider for it
+				nabu.page.providers("page-bindings").forEach(function(provider) {
+					var provided = provider();
+					if (Object.keys(provided.definition).indexOf(parts[0]) >= 0) {
+						result = provided.resolve(name.substring(name.indexOf(".") + 1));
 					}
-					return value;
-				}
-				else {
-					var result = null;
-					// check if there is a provider for it
-					nabu.page.providers("page-bindings").map(function(provider) {
-						var provided = provider();
-						if (Object.keys(provided.definition).indexOf(parts[0]) >= 0) {
-							result = provided.resolve(name.substring(name.indexOf(".") + 1));
-						}
-					});
+				});
+				// if we found it through a provider, so be it
+				if (result != null) {
 					return result;
 				}
+				
+				// at this point, it _has_ to be in variables
+				// note that (like above with page.) if there is a value missing we want an empty value in variables so it is at least responsive if we do eventually get the value
+				
+				var parts = name.split(".");
+				if (!this.variables.hasOwnProperty(parts[0])) {
+					Vue.set(this.variables, parts[0], null);
+				}
+				result = this.variables[parts[0]];
+				
+				// we want a whole variable
+				if (result == null || parts.length == 1 || (parts.length == 2 && parts[1] == "$any")) {
+					return result;
+				}
+				
+				var value = this.variables[parts[0]];
+				for (var i = 1; i < parts.length; i++) {
+					if (value) {
+						if (value instanceof Array) {
+							value = value.map(function(x) { return x[parts[i]] });
+						}
+						else {
+							value = value[parts[i]];
+						}
+					}
+				}
+				return value;
 			}
 		},
 		saveTranslatedContent: function(content) {
@@ -2476,11 +2507,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 					// otherwise we might accidently update the parameters object which is passed along to all children
 					target = this.parameters;
 				}
-				// in case we set component state values with a page. prefix (...)
-				else if (this.components["alias_" + parts[0]] != null && this.components["alias_" + parts[0]].getState) {
-					target = this.components["alias_" + parts[0]].getState();
-					parts.splice(0, 1);
-				}
 				else {
 					target = this.variables;
 				}
@@ -2488,13 +2514,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			else if (name.split) {
 				parts = name.split(".");
 				// we can set the component state without the page. prefix
-				if (this.components["alias_" + parts[0]] != null && this.components["alias_" + parts[0]].getState) {
-					target = this.components["alias_" + parts[0]].getState();
-					parts.splice(0, 1);
-				}
-				else {
-					target = this.variables;
-				}
+				target = this.variables;
 			}
 			// TODO: if single input, single output => can automatically bypass transformer?
 			// or set a reverse transformer?
@@ -2582,23 +2602,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 			var pageInstance = this;
 			var cellInstance = pageInstance.getComponentForCell(cell.id);
 			return cellInstance && cellInstance.configure;
-		},
-		getRendererPropertyKeys: function(container) {
-			if (!container.renderer) {
-				return {};
-			}
-			if (!container.rendererProperties) {
-				Vue.set(container, "rendererProperties", {});
-			}
-			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == container.renderer })[0];
-			if (renderer == null) {
-				return {};
-			}
-			return renderer.properties ? renderer.properties : [];
-		},
-		// type is cell or row (currently)
-		getRenderers: function(type) {
-			return nabu.page.providers("page-renderer").filter(function(x) { return x.type == null || x.type == type || (x.type instanceof Array && x.type.indexOf(type) >= 0) });
 		},
 		getRouteParameters: function(cell) {
 			var route = this.$services.router.get(cell.alias);
@@ -3044,9 +3047,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			$event.preventDefault();
 			$event.stopPropagation();
 		},
-		getRendererProperties: function(container) {
-			return container.rendererProperties != null ? container.rendererProperties : {};	
-		},
 		setRowConfiguring: function(id) {
 			this.configuring = id;	
 		},
@@ -3066,7 +3066,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		},
 		rowTagFor: function(row) {
 			var renderer = row.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == row.renderer })[0];
-			if (this.edit || renderer == null) {
+			if (renderer == null) {
 				if (!this.page.content.pageType || this.page.content.pageType == "page") {
 					return "div";	
 				}
@@ -3090,7 +3090,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		},
 		cellTagFor: function(row, cell) {
 			var renderer = cell.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == cell.renderer })[0];
-			if (this.edit || renderer == null) {
+			if (renderer == null) {
 				if (!this.page.content.pageType || this.page.content.pageType == "page") {
 					return "div";	
 				}

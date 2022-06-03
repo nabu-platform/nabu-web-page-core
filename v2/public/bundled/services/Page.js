@@ -203,6 +203,55 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		getSwaggerOperationInputDefinition: function(operationId) {
+			var result = {properties: {}};
+			var self = this;
+			if (operationId) {
+				var operation = this.$services.swagger.operations[operationId];
+				if (operation && operation.parameters) {
+					var self = this;
+					operation.parameters.forEach(function(key) {
+						if (key.schema) {
+							result.properties[key.name] = self.$services.swagger.resolve(key.schema);
+						}
+						else {
+							result.properties[key.name] = key;
+						}
+					});
+				}
+			}
+			return result;
+		},
+		getSwaggerOperationOutputDefinition: function(operationId) {
+			var self = this;
+			var result = {};
+			if (operationId != null) {
+				var operation = this.$services.swagger.operations[operationId];
+				if (operation && operation.responses["200"]) {
+					var response = operation.responses["200"];
+					var schema = null;
+					if (response && response.schema) {
+						schema = this.$services.swagger.resolve(response.schema);
+						if (schema) {
+							result = schema;
+						}
+					}
+				}
+			}
+			console.log("output is", result);
+			return result;
+		},
+		getRenderers: function(type) {
+			return nabu.page.providers("page-renderer").filter(function(x) { return x.type == null || x.type == type || (x.type instanceof Array && x.type.indexOf(type) >= 0) });
+		},
+		getRendererConfiguration: function(name) {
+			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == name })[0];
+			return renderer ? renderer.configuration : null
+		},
+		getRendererState: function(name, target) {
+			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == name })[0];
+			return renderer && renderer.state ? renderer.state(target) : null;	
+		},
 		calculateAcceptedCookies: function() {
 			this.hasAcceptedCookies = !!this.$services.cookies.get("cookie-settings");	
 		},
@@ -588,7 +637,8 @@ nabu.services.VueService(Vue.extend({
 			components.push({
 				title: "Cell",
 				name: "page-column",
-				component: "page-column"
+				component: "page-column",
+				defaultVariant: "page-column" + (cell.alias ? "-" + cell.alias : "")
 			});
 			var pageInstance = this.getPageInstance(page);
 			var component = pageInstance.getComponentForCell(cell.id);
@@ -1813,12 +1863,13 @@ nabu.services.VueService(Vue.extend({
 				state.page = page;
 			});
 			// aliased components win, even if their state is null (it has to be predictable)
-			Object.keys(pageInstance.components).forEach(function(x) {
+			// subsumed by variables
+/*			Object.keys(pageInstance.components).forEach(function(x) {
 				if (x.indexOf("alias_") == 0) {
 					var component = pageInstance.components[x];
 					state[x.substring("alias_".length)] = component.getState ? component.getState() : null;
 				}	
-			});
+			});*/
 			return state;
 		},
 		hasFeature: function(feature) {
@@ -2366,6 +2417,12 @@ nabu.services.VueService(Vue.extend({
 				page.content = self.normalize({});
 			}
 			page.content.name = page.name;
+			
+			// we need to calculate aliased components so we know all aliases that exist BEFORE the components are mounted
+			// the problem is that we can't dictate the order of mounting, and aliases only become known once they are mounted
+			// at that point, already mounted modules may depend on it
+			
+			
 			//page.marshalled = JSON.stringify(page.content, null, "\t");
 			page.marshalled = JSON.stringify(page.content);
 			return this.$services.swagger.execute("nabu.web.page.core.rest.page.update", { body: page }).then(function() {
@@ -2756,6 +2813,11 @@ nabu.services.VueService(Vue.extend({
 				}
 			});
 			
+			this.enrichWithRuntimeAliasDefinitions(result, pageInstance);
+			
+			return result;
+		},
+		enrichWithRuntimeAliasDefinitions: function(result, pageInstance) {
 			// and map all the aliased components
 			Object.keys(pageInstance.components).forEach(function(x) {
 				if (x.indexOf("alias_") == 0) {
@@ -2765,9 +2827,35 @@ nabu.services.VueService(Vue.extend({
 						result[name] = component.getStateDefinition();
 					}
 				}
-			});
-			
-			return result;
+			});	
+			var self = this;
+			// we also want to find all aliased rows and cells
+			var checkRows = function(rows) {
+				rows.forEach(function(row) {
+					if (row.renderer && row.runtimeAlias) {
+						var state = self.getRendererState(row.renderer, row);
+						if (state) {
+							result[row.runtimeAlias] = state;
+						}
+					}
+					if (row.cells) {
+						row.cells.forEach(function(cell) {
+							if (cell.renderer && cell.runtimeAlias) {
+								var state = self.getRendererState(cell.renderer, cell);
+								if (state) {
+									result[cell.runtimeAlias] = state;
+								}
+							}
+							if (cell.rows) {
+								checkRows(cell.rows);
+							}
+						})
+					}
+				})
+			}
+			if (pageInstance.page && pageInstance.page.content && pageInstance.page.content.rows) {
+				checkRows(pageInstance.page.content.rows);
+			}
 		},
 		getAllAvailableKeys: function(page, includeComplex, value) {
 			var keys = [];
@@ -2873,16 +2961,7 @@ nabu.services.VueService(Vue.extend({
 				});
 			}
 			
-			// and map all the aliased components
-			Object.keys(pageInstance.components).forEach(function(x) {
-				if (x.indexOf("alias_") == 0) {
-					var name = x.substring("alias_".length);
-					var component = pageInstance.components[x];
-					if (component.getStateDefinition) {
-						result[name] = component.getStateDefinition();
-					}
-				}
-			});
+			this.enrichWithRuntimeAliasDefinitions(result, pageInstance);
 			
 			// cell specific stuff overwrites everything else
 			if (cell) {
@@ -3115,12 +3194,9 @@ nabu.services.VueService(Vue.extend({
 			
 //			parameters = {properties:{page: { properties: parameters.properties}}};
 			var pageInstance = this.getPageInstance(page);
+			
 			if (pageInstance) {
-				Object.keys(pageInstance.components).forEach(function(x) {
-					if (x.indexOf("alias_") == 0 && pageInstance.components[x].getStateDefinition) {
-						parameters.properties[x.substring("alias_".length)] = pageInstance.components[x].getStateDefinition();
-					}
-				});
+				this.enrichWithRuntimeAliasDefinitions(parameters.properties, pageInstance);
 			}
 			
 			return parameters;

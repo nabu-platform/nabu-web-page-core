@@ -513,13 +513,15 @@ window.addEventListener("load", function() {
 			namespace: "nabu.page"
 		});
 		
-		// renderers
+		// renderers, not used up to this point, specification has been made much more powerful
+		/*
 		nabu.page.provide("page-renderer", {
 			name: "slider",
 			component: "page-renderer-slider",
 			type: "row",
 			properties: ["group", "tag"]
 		});
+		*/
 		
 		nabu.page.provide("page-type", {
 			name: "email",
