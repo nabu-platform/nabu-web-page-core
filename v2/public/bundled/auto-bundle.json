@@ -315,7 +315,8 @@
 					}, 
 					"typography": {
 						"typography.tpl": {
-							"url": "views/typography/typography.tpl"
+							"url": "views/typography/typography.tpl",
+							"template": true
 						}, 
 						"typography.js": {
 							"url": "views/typography/typography.js"
@@ -325,18 +326,21 @@
 						}
 					}, 
 					"actions": {
-						"actions.gcss": {
-							"url": "views/actions/actions.gcss"
-						}, 
 						"actions.js": {
 							"url": "views/actions/actions.js",
 							"template": true
 						}, 
-						"actions.sass": {
-							"url": "views/actions/actions.sass"
-						}, 
 						"actions.tpl": {
 							"url": "views/actions/actions.tpl"
+						}
+					},
+					"button": {
+						"button.js": {
+							"url": "views/button/button.js"
+						}, 
+						"button.tpl": {
+							"url": "views/button/button.tpl",
+							"template": true
 						}
 					},
 					"notifier": {
@@ -498,6 +502,14 @@
 				},
 				"form.tpl": {
 					"url": "renderers/form/form.tpl"
+				}
+			},
+			"menu": {
+				"menu.js": {
+					"url": "renderers/menu/menu.js"
+				},
+				"menu.tpl": {
+					"url": "renderers/menu/menu.tpl"
 				}
 			}
 		}

@@ -2,7 +2,6 @@ nabu.page.provide("page-renderer", {
 	name: "Form",
 	type: ["row", "cell"],
 	component: "renderer-form",
-	properties: ["variant", "operation"],
 	configuration: "renderer-form-configure",
 	// can inject state into the page so we can manipulate it
 	state: function(container) {

@@ -1,0 +1,4 @@
+- for filtering, we can probably do "tagging" as a renderer?
+	- need to intercept all the @input (and @label! events)
+	- can auto tag
+	- can offer customization options?

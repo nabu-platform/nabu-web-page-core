@@ -110,8 +110,7 @@ Vue.view("typography-h2", {
 	category: "Typography",
 	data: function() {
 		return {
-			tag: "h2"
-			,
+			tag: "h2",
 			placeholder: "Heading 2"
 		}
 	}

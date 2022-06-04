@@ -1,0 +1,20 @@
+<template id="page-button">
+	<button class="is-button" @click="handle">
+		<img :src="cell.state.icon.indexOf('http') == 0 ? cell.state.icon : '${server.root()}resources/' + cell.state.icon" v-if="cell.state.icon && cell.state.icon.match(/^.*\.[^.]+$/)" class="is-icon"/>
+		<icon :name="cell.state.icon" v-if="cell.state.icon"/>
+		<span class="is-text" v-if="cell.state.content && !edit" v-html="$services.page.translate(cell.state.content)"></span>
+		<span class="is-text is-inline-editor" v-else-if="edit" 
+			v-html-once="cell.state.content ? cell.state.content : null"
+			ref="editor"
+			@keyup="update" @blur="update" @input="update"
+			:contenteditable="true"
+			placeholder="Button label"></span>
+		<span class="is-badge" v-if="cell.state.badge" v-html="cell.state.badge"></span>
+	</button>
+</template>
+
+<template id="page-button-configure">
+	<div>
+		no configuration yet
+	</div>
+</template>
