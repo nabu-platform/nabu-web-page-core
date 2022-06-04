@@ -1,10 +1,11 @@
 nabu.page.provide("page-renderer", {
-	name: "Form",
+	title: "Form",
+	name: "form",
 	type: ["row", "cell"],
 	component: "renderer-form",
 	configuration: "renderer-form-configure",
 	// can inject state into the page so we can manipulate it
-	state: function(container) {
+	getState: function(container) {
 		if (container.form) {
 			var operationId = container.form.operation;
 			return application.services.page.getSwaggerOperationInputDefinition(operationId);
@@ -14,7 +15,7 @@ nabu.page.provide("page-renderer", {
 	// e.g. a success event for form submit
 	// an error event
 	// a submit event (with the input state)
-	events: function(container) {
+	getEvents: function(container) {
 		var result = {};
 		if (container.form) {
 			var operationId = container.form.operation;

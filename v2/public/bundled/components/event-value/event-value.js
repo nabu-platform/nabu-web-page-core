@@ -42,6 +42,7 @@ Vue.component("page-event-value", {
 				name: null
 			});
 		}
+			console.log("initializing", this.container);
 	},
 	methods: {
 		addEventField: function(target) {

@@ -1375,6 +1375,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			var row = {
 				id: this.page.content.counter++,
+				state: {},
 				cells: [],
 				class: null,
 				// a custom id for this row
@@ -1606,8 +1607,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 		getRendererEvents: function(name, target) {
 			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == name })[0];
 			var result = null;
-			if (renderer.events) {
-				result = renderer.events(target);
+			if (renderer && renderer.getEvents) {
+				result = renderer.getEvents(target);
 			}
 			return result ? result : {};
 		},
@@ -2837,29 +2838,31 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			});
 		},
 		dropCell: function(event, row, cell) {
-			var self = this;
-			var data = this.$services.page.getDragData(event, "component-alias");
-			var cellTarget = document.getElementById(self.page.name + '_' + row.id + '_' + cell.id);
-			if (data) {
-				cell.alias = data;
-				event.preventDefault();
-				event.stopPropagation();
-			}
-			else {
-				data = this.$services.page.getDragData(event, "template-content");
+			if (!cell.alias) {
+				var self = this;
+				var data = this.$services.page.getDragData(event, "component-alias");
+				var cellTarget = document.getElementById(self.page.name + '_' + row.id + '_' + cell.id);
 				if (data) {
-					var structure = JSON.parse(data);
-					if (structure.type == "page-cell") {
-						structure = structure.content;
-						if (structure.alias) {
-							cell.alias = structure.alias;
+					cell.alias = data;
+					event.preventDefault();
+					event.stopPropagation();
+				}
+				else {
+					data = this.$services.page.getDragData(event, "template-content");
+					if (data) {
+						var structure = JSON.parse(data);
+						if (structure.type == "page-cell") {
+							structure = structure.content;
+							if (structure.alias) {
+								cell.alias = structure.alias;
+							}
+							if (structure.rows) {
+								var rows = structure.rows.map(function(x) { return self.$services.page.renumber(self.page, x) });
+								nabu.utils.arrays.merge(cell.rows, rows);
+							}
+							event.preventDefault();
+							event.stopPropagation();
 						}
-						if (structure.rows) {
-							var rows = structure.rows.map(function(x) { return self.$services.page.renumber(self.page, x) });
-							nabu.utils.arrays.merge(cell.rows, rows);
-						}
-						event.preventDefault();
-						event.stopPropagation();
 					}
 				}
 			}
@@ -3410,7 +3413,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		rowClasses: function(row) {
 			var classes = [];
 			if (this.$services.page.useAris && row.aris && row.aris.components) {
-				var children = this.$services.page.calculateArisComponents(row.aris, null, this);
+				var children = this.$services.page.calculateArisComponents(row.aris, row.renderer, this);
 				if (children["page-row"] && children["page-row"].classes) {
 					nabu.utils.arrays.merge(classes, children["page-row"].classes);
 				}
@@ -3671,6 +3674,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 			var row = {
 				id: this.page.content.counter++,
+				state: {},
 				cells: [],
 				class: null,
 				// a custom id for this row
@@ -4089,6 +4093,7 @@ Vue.component("page-sidemenu", {
 			}
 			var row = {
 				id: this.page.content.counter++,
+				state: {},
 				cells: [],
 				class: null,
 				// a custom id for this row
@@ -4386,7 +4391,6 @@ Vue.component("page-sidemenu", {
 			handler: function() {
 				if (this.selected && this.$refs["cell_" + this.selected.id] && this.$refs["cell_" + this.selected.id].length) {
 					var self = this;
-					console.log("selecting", self.$refs["cell_" + this.selected.id][0]);
 					setTimeout(function() {
 						self.$refs["cell_" + self.selected.id][0].focus();
 					}, 0);

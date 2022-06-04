@@ -244,13 +244,16 @@ nabu.services.VueService(Vue.extend({
 		getRenderers: function(type) {
 			return nabu.page.providers("page-renderer").filter(function(x) { return x.type == null || x.type == type || (x.type instanceof Array && x.type.indexOf(type) >= 0) });
 		},
+		getRenderer: function(name) {
+			return nabu.page.providers("page-renderer").filter(function(x) { return x.name == name })[0];
+		},
 		getRendererConfiguration: function(name) {
 			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == name })[0];
 			return renderer ? renderer.configuration : null
 		},
 		getRendererState: function(name, target) {
 			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == name })[0];
-			return renderer && renderer.state ? renderer.state(target) : null;	
+			return renderer && renderer.getState ? renderer.getState(target) : null;	
 		},
 		calculateAcceptedCookies: function() {
 			this.hasAcceptedCookies = !!this.$services.cookies.get("cookie-settings");	
@@ -633,13 +636,21 @@ nabu.services.VueService(Vue.extend({
 		
 		getCellComponents: function(page, cell) {
 			var components = [];
-			// push the cell itself
-			components.push({
-				title: "Cell",
-				name: "page-column",
-				component: "page-column",
-				defaultVariant: "page-column" + (cell.alias ? "-" + cell.alias : "")
-			});
+			if (cell.renderer) {
+				var renderer = this.getRenderer(cell.renderer);	
+				if (renderer && renderer.getChildComponents) {
+					nabu.utils.arrays.merge(components, renderer.getChildComponents(cell));
+				}
+			}
+			// push the cell itself if the renderer turned up nothing
+			if (components.length == 0) {
+				components.push({
+					title: "Cell",
+					name: "page-column",
+					component: "page-column",
+					defaultVariant: "page-column" + (cell.alias ? "-" + cell.alias : "")
+				});
+			}
 			var pageInstance = this.getPageInstance(page);
 			var component = pageInstance.getComponentForCell(cell.id);
 			if (component != null) {
@@ -666,12 +677,21 @@ nabu.services.VueService(Vue.extend({
 		},
 		getRowComponents: function(page, row) {
 			var components = [];
-			// push the cell itself
-			components.push({
-				title: "Row",
-				name: "page-row",
-				component: "page-row"
-			});
+			if (row.renderer) {
+				var renderer = this.getRenderer(row.renderer);	
+				if (renderer && renderer.getChildComponents) {
+					nabu.utils.arrays.merge(components, renderer.getChildComponents(row));
+				}
+			}
+			// only add the default component if we got nothing from the renderer
+			if (components.length == 0) {
+				// push the cell itself
+				components.push({
+					title: "Row",
+					name: "page-row",
+					component: "page-row"
+				});
+			}
 			return components;
 		},
 		slowNormalizeAris: function(page, container, type) {
@@ -735,55 +755,57 @@ nabu.services.VueService(Vue.extend({
 		calculateArisComponents: function(container, specific, instance) {
 			var childComponents = {};
 			var self = this;
-			Object.keys(container.components).forEach(function(key) {
-				childComponents[key] = {
-					classes: []
-				};
-				if (container.components[key].variant != null) {
-					// you can explicitly set it to default to override the other default
-					// however, we don't need to include that in the css classes
-					if (container.components[key].variant != "default") {
-						childComponents[key].classes.push("is-variant-" + container.components[key].variant);
+			if (container && container.components) {
+				Object.keys(container.components).forEach(function(key) {
+					childComponents[key] = {
+						classes: []
+					};
+					if (container.components[key].variant != null) {
+						// you can explicitly set it to default to override the other default
+						// however, we don't need to include that in the css classes
+						if (container.components[key].variant != "default") {
+							childComponents[key].classes.push("is-variant-" + container.components[key].variant);
+						}
 					}
-				}
-				else if (container.components[key].defaultVariant != null) {
-					childComponents[key].classes.push("is-variant-" + container.components[key].defaultVariant);
-				}
-				// we can have specific subvariants, for example for cells which have an alias
-				else if (specific) {
-					childComponents[key].classes.push("is-variant-" + key + "-" + specific);
-				}
-				// we always add the default now, you can always actively choose another variant to start from (the default for instance)
-				else {
-					childComponents[key].classes.push("is-variant-" + key);
-				}
-				if (container.components[key].options != null && container.components[key].options.length > 0) {
-					container.components[key].options.forEach(function(option) {
-						var add = true;
-						if (container.components[key].conditions && container.components[key].conditions[option] != null) {
-							add = self.isCondition(container.components[key].conditions[option], {}, instance);
-						}
-						if (add) {
-							childComponents[key].classes.push("is-" + option.replace("_", "-"));
-						}
-					});
-				}
-				if (container.components[key].modifiers != null && container.components[key].modifiers.length > 0) {
-					container.components[key].modifiers.forEach(function(modifier) {
-						var add = true;
-						if (container.components[key].conditions && container.components[key].conditions[modifier] != null) {
-							add = self.isCondition(container.components[key].conditions[modifier], {}, instance);
-						}
-						if (add) {
-							childComponents[key].classes.push("is-" + modifier);
-						}
-					});
-				}
-				// if no classes are set, set the default name as variant so themes can target this
-//				if (childComponents[key].classes.length == 0) {
-//					childComponents[key].classes.push("is-variant-" + key);
-//				}
-			});
+					else if (container.components[key].defaultVariant != null) {
+						childComponents[key].classes.push("is-variant-" + container.components[key].defaultVariant);
+					}
+					// we can have specific subvariants, for example for cells which have an alias
+					else if (specific) {
+						childComponents[key].classes.push("is-variant-" + key + "-" + specific);
+					}
+					// we always add the default now, you can always actively choose another variant to start from (the default for instance)
+					else {
+						childComponents[key].classes.push("is-variant-" + key);
+					}
+					if (container.components[key].options != null && container.components[key].options.length > 0) {
+						container.components[key].options.forEach(function(option) {
+							var add = true;
+							if (container.components[key].conditions && container.components[key].conditions[option] != null) {
+								add = self.isCondition(container.components[key].conditions[option], {}, instance);
+							}
+							if (add) {
+								childComponents[key].classes.push("is-" + option.replace("_", "-"));
+							}
+						});
+					}
+					if (container.components[key].modifiers != null && container.components[key].modifiers.length > 0) {
+						container.components[key].modifiers.forEach(function(modifier) {
+							var add = true;
+							if (container.components[key].conditions && container.components[key].conditions[modifier] != null) {
+								add = self.isCondition(container.components[key].conditions[modifier], {}, instance);
+							}
+							if (add) {
+								childComponents[key].classes.push("is-" + modifier);
+							}
+						});
+					}
+					// if no classes are set, set the default name as variant so themes can target this
+	//				if (childComponents[key].classes.length == 0) {
+	//					childComponents[key].classes.push("is-variant-" + key);
+	//				}
+				});
+			}
 			return childComponents;
 		},
 		// this returns all the parent components as well

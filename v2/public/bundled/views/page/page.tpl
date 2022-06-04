@@ -481,7 +481,7 @@
 				
 				<page-components-overview v-else-if="activeTab == 'components'"/>
 				
-				<div v-else-if="activeTab == 'selected' && cell && selectedType == 'cell'">
+				<div v-else-if="activeTab == 'selected' && cell && selectedType == 'cell'" :key="'page_' + pageInstanceId + '_cell_' + cell.id + '_configuration'">
 					<n-form class="is-variant-floating-labels" key="cell-form">
 						<h2 class="is-h4 is-color-primary-outline is-spacing-medium">Cell Configuration</h2>
 						<p class="is-p is-size-small is-color-light is-spacing-medium">Here you can configure cell settings that are available to all cells in the grid regardless of the content type.</p>
@@ -588,7 +588,7 @@
 					</n-form>
 				</div>
 				
-				<div v-else-if="activeTab == 'selected' && row && selectedType == 'row'">
+				<div v-else-if="activeTab == 'selected' && row && selectedType == 'row'" :key="'page_' + pageInstanceId + '_row_' + row.id + '_configuration'">
 					<n-form class="is-variant-floating-labels" key="cell-form">
 						<h2 class="is-h4 is-color-primary-outline is-spacing-medium">Row Configuration</h2>
 						<n-collapsible title="Row Settings" content-class="is-spacing-medium">
@@ -601,7 +601,7 @@
 							
 							<h2>Additional<span class="subscript">Configure some additional settings for this row</span></h2>
 							<n-form-text label="Row Id" v-model="row.customId" info="If you set a custom id for this row, a container will be rendered in this row with that id. This can be used for targeting with specific content."/>
-							<n-form-combo label="Row Renderer" v-model="row.renderer" :items="$services.page.getRenderers('row')"  :formatter="function(x) { return x.name }" :extracter="function(x) { return x.name }"/>
+							<n-form-combo label="Row Renderer" v-model="row.renderer" :items="$services.page.getRenderers('row')"  :formatter="function(x) { return x.title ? x.title : x.name }" :extracter="function(x) { return x.name }"/>
 							<div v-if="row.renderer && $services.page.getRendererState(row.renderer, row)" class="is-column is-spacing-vertical-gap-medium">
 								<n-form-text v-model="row.runtimeAlias" label="Runtime alias for renderer state"/>
 								<n-form-switch v-model="row.retainState" label="Retain state once row is destroyed" v-if="row.runtimeAlias"/>
@@ -698,10 +698,11 @@
 				@click.alt="$emit('select', row, null, 'row')"
 				:target="row"
 				:edit="edit"
-				:page="page">
+				:page="page"
+				:child-components="$services.page.calculateArisComponents(row.aris, row.renderer, $self)">
 			<div v-if="false && (edit || $services.page.wantEdit || row.wantVisibleName) && row.name && !row.collapsed" :style="getRowEditStyle(row)" class="row-edit-label"
 				:class="'direction-' + (row.direction ? row.direction : 'horizontal')"><span>{{row.name}}</span></div>
-			<div class="is-row-menu is-row is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
+			<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
 				<button class="is-button is-variant-primary is-size-xsmall has-tooltip is-wrap-none" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-text">Configure row</span></button>
 			</div>
 			<div v-if="row.customId" class="is-anchor" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
@@ -724,17 +725,18 @@
 					@drop="dropCell($event, row, cell)"
 					:target="cell"
 					:edit="edit"
-					:page="page">
+					:page="page"
+					:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)">
 				<div v-if="false && (edit || $services.page.wantEdit) && cell.name" :style="getCellEditStyle(cell)" class="cell-edit-label"><span>{{cell.name}}</span></div>
 				<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				
-				<div class="is-column-menu is-row is-align-main-center is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
+				<div class="is-column-menu is-layout is-align-main-center is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
 					<button v-if="cell.alias" class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="configureCell($event, row, cell)"><icon name="cog"/><span class="is-text">Configure {{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
 					<button v-else class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="goto($event, row, cell)"><icon name="magic"/><span class="is-text">Configure {{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
 				</div>
 				
 				<template v-if="edit">
-					<div class="is-page-column-content" v-if="cell.alias" :key="'page_' + pageInstanceId + '_edit_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
+					<div class="is-column-content" v-if="cell.alias" :key="'page_' + pageInstanceId + '_edit_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
 					<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 						:depth="depth + 1"
 						:parameters="parameters"
@@ -785,7 +787,7 @@
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>						
 					</n-absolute>
 					<template v-else>
-						<div class="is-page-column-content" class="page-cell-content" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
+						<div class="is-page-column-content" class="is-column-content" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:depth="depth + 1"
 							:parameters="parameters"

@@ -27,13 +27,77 @@ Vue.view("page-button", {
 	icon: "link",
 	data: function() {
 		return {
-			timer: null
+			timer: null,
+			running: false
 		}
 	},
 	methods: {
-		handle: function() {
+		getChildComponents: function() {
+			return [{
+				title: "Button",
+				name: "page-button",
+				component: "button"
+			}]	
+		},
+		handle: function($event) {
+			// we don't always call this handler (immediately), so we separate the logic
+			var self = this;
+			var handler = function() {
+				// event-based
+				if (nabu.page.event.getName(self.cell.state, "clickEvent")) {
+					var pageInstance = self.$services.page.getPageInstance(self.page, self);
+					return pageInstance.emit(
+						nabu.page.event.getName(self.cell.state, "clickEvent"),
+						nabu.page.event.getInstance(self.cell.state, "clickEvent", self.page, self)
+					);
+				}
+				// route based
+				else if (self.cell.state.route) {
+					var route = self.cell.state.route;
+					// variable route possible
+					if (route.charAt(0) == "=") {
+						route = self.$services.page.interpret(route, self);
+					}
+					var parameters = {};
+					var pageInstance = self.$services.page.getPageInstance(self.page, self);
+					Object.keys(self.cell.state.bindings).map(function(key) {
+						if (self.cell.state.bindings[key] != null) {
+							var value = self.$services.page.getBindingValue(pageInstance, self.cell.state.bindings[key], self);
+							if (value != null) {
+								parameters[key] = value;
+							}
+						}
+					});
+					if (self.cell.state.anchor == "$blank") {
+						window.open(self.$services.router.template(route, parameters));
+					}
+					else if (self.cell.state.anchor == "$window") {
+						window.location = self.$services.router.template(route, parameters);
+					}
+					else {
+						self.$services.router.route(route, parameters, self.cell.state.anchor, self.cell.state.mask);
+					}
+				}
+				if (self.cell.state.close) {
+					self.$emit("close");
+				}
+			};
 			if (!this.edit) {
-				console.log("do something");
+				var unlock = function() {
+					self.running = null;
+				};
+				this.running = true;
+				var promise = handler();
+				if (promise && promise.then) {
+					promise.then(unlock, unlock);
+				}
+				else {
+					unlock();
+				}
+			}
+			if (this.cell.state.stopPropagation) {
+				$event.stopPropagation();
+				$event.preventDefault();
 			}
 		},
 		configurator: function() {
@@ -52,22 +116,6 @@ Vue.view("page-button", {
 		}
 	}
 });
-
-Vue.view("page-button2", {
-	template: "#typography-template",
-	mixins: [Vue.component("typography-core")],
-	data: function() {
-		return {
-			tag: "button",
-			placeholder: "Button label"
-		}
-	},
-	name: "Button",
-	category: "Interactive",
-	description: "A button to send out events, go to a different page,...",
-	icon: "link"
-});
-
 
 Vue.component("page-button-configure", {
 	template: "#page-button-configure",
@@ -91,6 +139,11 @@ Vue.component("page-button-configure", {
 		edit: {
 			type: Boolean,
 			required: true
+		}
+	},
+	created: function() {
+		if (!this.cell.state.bindings) {
+			Vue.set(this.cell.state, "bindings", {});
 		}
 	}
 })
