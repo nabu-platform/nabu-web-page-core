@@ -78,13 +78,13 @@ Vue.view("page-button", {
 						self.$services.router.route(route, parameters, self.cell.state.anchor, self.cell.state.mask);
 					}
 				}
-				if (self.cell.state.close) {
-					self.$emit("close");
-				}
 			};
 			if (!this.edit) {
 				var unlock = function() {
 					self.running = null;
+					if (self.cell.state.emitClose) {
+						self.$emit("close");
+					}
 				};
 				this.running = true;
 				var promise = handler();

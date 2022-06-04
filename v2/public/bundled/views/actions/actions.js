@@ -916,10 +916,13 @@ nabu.page.views.PageActionsGenerator = function(name) {
 					}
 					if (nabu.page.event.getName(this.cell.state, "handledEvent") && !action.skipHandleEvent) {
 						var pageInstance = this.$services.page.getPageInstance(this.page, this);
-						pageInstance.emit(
-							nabu.page.event.getName(this.cell.state, "handledEvent"),
-							nabu.page.event.getInstance(this.cell.state, "handledEvent", this.page, this)
-						);
+						// might have already browsed away
+						if (pageInstance) {
+							pageInstance.emit(
+								nabu.page.event.getName(this.cell.state, "handledEvent"),
+								nabu.page.event.getInstance(this.cell.state, "handledEvent", this.page, this)
+							);
+						}
 					}
 				}
 			},

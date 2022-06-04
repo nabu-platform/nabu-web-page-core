@@ -16,6 +16,7 @@
 <template id="page-button-configure">
 	<div>
 		<n-form-switch v-model="cell.state.stopPropagation" label="Stop click propagation"/>
+		<n-form-switch v-model="cell.state.emitClose" label="Emit close on click"/>
 		<n-form-combo v-model="cell.state.route" v-if="(!cell.state.clickEvent || !cell.state.clickEvent.name) && !cell.state.url" 
 			:filter="$services.page.getPageRoutes" 
 			:formatter="function(x) { return $services.page.prettifyRouteAlias(x.alias) }" 

@@ -57,13 +57,15 @@ Vue.component("renderer-menu", {
 	},
 	methods: {
 		handle: function() {
-			console.log("clicked on menu");
 			if (nabu.page.event.getName(this.target.state, "handledEvent")) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
-				pageInstance.emit(
-					nabu.page.event.getName(this.target.state, "handledEvent"),
-					nabu.page.event.getInstance(this.target.state, "handledEvent", this.page, this)
-				);
+				// if you have routed away, it may no longer be available
+				if (pageInstance) {
+					pageInstance.emit(
+						nabu.page.event.getName(this.target.state, "handledEvent"),
+						nabu.page.event.getInstance(this.target.state, "handledEvent", this.page, this)
+					);
+				}
 			}
 		}
 	}
