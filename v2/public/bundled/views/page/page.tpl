@@ -501,6 +501,7 @@
 						
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Rendering" content-class="is-spacing-medium" class="is-highlight-left">
+							<n-form-combo v-model="cell.state.openTrigger" label="Open on" placeholder="Always open" :items="['click', 'hover']"/>
 							<n-form-ace mode="javascript" label="Condition" v-model="cell.condition" after="If you fill in a condition, the cell will only render the content if the condition evaluates to true" :timeout="600"/>
 							<n-form-combo label="Cell Renderer" v-model="cell.renderer" :items="$services.page.getRenderers('cell')" 
 								after="You can set a custom renderer for this cell"
@@ -715,7 +716,7 @@
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
 							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-							@click="clickOnCell(cell)"
+							@click="clickOnCell(row, cell)"
 							@click.ctrl="goto($event, row, cell)"
 							@click.meta="goto($event, row, cell)"
 							@mouseout="mouseOut($event, row, cell)"
@@ -757,7 +758,7 @@
 								:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 								:key="cellId(cell)"
 								:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-								@click="clickOnCell(cell)"
+								@click="clickOnCell(row, cell)"
 								@click.ctrl="goto($event, row, cell)"
 								@click.meta="goto($event, row, cell)"
 								@mouseout="mouseOut($event, row, cell)"
@@ -791,7 +792,7 @@
 								:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 								:key="cellId(cell)"
 								:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-								@click="clickOnCell(cell)"
+								@click="clickOnCell(row, cell)"
 								@click.ctrl="goto($event, row, cell)"
 								@click.meta="goto($event, row, cell)"
 								@mouseout="mouseOut($event, row, cell)"
@@ -825,7 +826,7 @@
 								:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 								:key="cellId(cell)"
 								:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-								@click="clickOnCell(cell)"
+								@click="clickOnCell(row, cell)"
 								@click.ctrl="goto($event, row, cell)"
 								@click.meta="goto($event, row, cell)"
 								@mouseout="mouseOut($event, row, cell)"
@@ -859,7 +860,7 @@
 								:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 								:key="cellId(cell)"
 								:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-								@click="clickOnCell(cell)"
+								@click="clickOnCell(row, cell)"
 								@click.ctrl="goto($event, row, cell)"
 								@click.meta="goto($event, row, cell)"
 								@mouseout="mouseOut($event, row, cell)"
@@ -868,13 +869,14 @@
 								@dragover="dragOverCell($event, row, cell)"
 								@dragexit="dragExitCell($event, row, cell)"
 								@drop="dropCell($event, row, cell)"
+								v-auto-close="cell.state.openTrigger ? function(inside) { autocloseCell(row, cell, inside) } : null"
 								:target="cell"
 								:edit="edit"
 								:page="page"
 								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)">
 							<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 							
-							<div class="is-column-content" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
+							<div class="is-column-content" @click="clickOnContentCell(row, cell)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 							<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 								:depth="depth + 1"
 								:parameters="parameters"

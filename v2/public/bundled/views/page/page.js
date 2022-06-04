@@ -3408,6 +3408,10 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				//return this.$services.page.getDynamicClasses(cell.styles, this.state, this);
 				nabu.utils.arrays.merge(classes, this.$services.page.getDynamicClasses(cell.styles, pageInstance.variables, this));
 			}
+			// if we have an explicit open trigger on click, we explicitly close it as well
+			if (cell.state.openTrigger == "click") {
+				classes.push("is-closed");
+			}
 			return classes;
 		},
 		rowClasses: function(row) {
@@ -3620,7 +3624,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			pageInstance.resetEvents();	
 		},
-		clickOnCell: function(cell) {
+		clickOnCell: function(row, cell) {
 			if (nabu.page.event.getName(cell, "clickEvent") && !this.edit) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				pageInstance.emit(
@@ -3629,7 +3633,33 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				);
 			}
 		},
-		
+		clickOnContentCell: function(row, cell) {
+			if (cell.state.openTrigger == "click") {
+				var cellInstance = document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
+				if (cellInstance) {
+					if (cellInstance.classList.contains("is-open")) {
+						cellInstance.classList.remove("is-open");
+						cellInstance.classList.add("is-closed");
+					}
+					else {
+						cellInstance.classList.remove("is-closed");
+						cellInstance.classList.add("is-open");
+					}
+				}
+			}
+		},
+		autocloseCell: function(row, cell, inside) {
+			console.log("autoclosing", cell, inside);
+			if (cell.state.openTrigger == "click") {
+				var cellInstance = document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
+				if (cellInstance) {
+					if (cellInstance.classList.contains("is-open")) {
+						cellInstance.classList.remove("is-open");
+						cellInstance.classList.add("is-closed");
+					}
+				}
+			}
+		},
 		
 		addCell: function(target) {
 			var self = this;
