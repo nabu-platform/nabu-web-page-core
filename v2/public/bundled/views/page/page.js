@@ -3378,7 +3378,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			return this.$services.page.isDevice(devices);
 		},
 		cellId: function(cell) {
-			var cellId = 'page_' + this.pageInstanceId + '_cell_' + cell.id;
+			var cellId = 'page_' + this.pageInstanceId + '_cell_' + cell.id + (this.edit ? '_edit' : '');
 			if (cell.on && cell.optimizeVueKey) {
 				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);

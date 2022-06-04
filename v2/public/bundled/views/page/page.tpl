@@ -724,8 +724,14 @@
 					@drop="dropCell($event, row, cell)"
 					:target="cell"
 					:edit="edit"
-					:page="page">
-				<div v-if="false && (edit || $services.page.wantEdit) && cell.name" :style="getCellEditStyle(cell)" class="cell-edit-label"><span>{{cell.name}}</span></div>
+					:page="page"
+					 v-route-render="{ 
+					 	alias: edit || !cell.target || cell.target == 'page' ? cell.alias: null, 
+					 	parameters: getParameters(row, cell), 
+					 	mounted: getMountedFor(cell, row), 
+					 	rerender: edit ? function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; } : function() { return !stopRerender && !cell.stopRerender }, 
+					 	created: getCreatedComponent(row, cell) 
+					 }">
 				<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 				
 				<div class="is-column-menu is-row is-align-main-center is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
@@ -734,8 +740,7 @@
 				</div>
 				
 				<template v-if="edit">
-					<div class="is-page-column-content" v-if="cell.alias" :key="'page_' + pageInstanceId + '_edit_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
-					<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
+					<n-page-rows :unclearable="true" v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 						:depth="depth + 1"
 						:parameters="parameters"
 						:events="events"
@@ -785,8 +790,7 @@
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>						
 					</n-absolute>
 					<template v-else>
-						<div class="is-page-column-content" class="page-cell-content" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
-						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
+						<n-page-rows :unclearable="true" v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:depth="depth + 1"
 							:parameters="parameters"
 							:events="events"

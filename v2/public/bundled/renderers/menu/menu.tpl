@@ -1,5 +1,5 @@
 <template id="renderer-menu">
-	<ul class="is-menu is-variant-toolbar">
+	<ul class="is-menu">
 		<slot></slot>
 	</ul>
 </template>

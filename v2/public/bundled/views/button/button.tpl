@@ -2,7 +2,7 @@
 	<button class="is-button" @click="handle">
 		<img :src="cell.state.icon.indexOf('http') == 0 ? cell.state.icon : '${server.root()}resources/' + cell.state.icon" v-if="cell.state.icon && cell.state.icon.match(/^.*\.[^.]+$/)" class="is-icon"/>
 		<icon :name="cell.state.icon" v-if="cell.state.icon"/>
-		<span class="is-text" v-if="cell.state.content && !edit" v-html="$services.page.translate(cell.state.content)"></span>
+		<span class="is-text" v-if="cell.state.content && !edit" v-html="$services.page.translate($services.page.interpret(cell.state.content, $self))"></span>
 		<span class="is-text is-inline-editor" v-else-if="edit" 
 			v-html-once="cell.state.content ? cell.state.content : null"
 			ref="editor"
