@@ -26,6 +26,50 @@ Vue.component("typography-core-configure", {
 		return {
 			icon: true
 		}
+	},
+	created: function() {
+		if (!this.cell.state.fragments) {
+			Vue.set(this.cell.state, "fragments", {});
+		}	
+		var self = this;
+		this.variables.forEach(function(x) {
+			if (!self.cell.state.fragments[x]) {
+				Vue.set(self.cell.state.fragments, x, {});
+			}
+		})
+	},
+	computed: {
+		variables: function() {
+			var variables = [];
+			var index = 0;
+			var disqualifiers = ["%", "$", "{"];
+			while (index >= 0) {
+				// find next match
+				index = this.cell.state.content.indexOf("{", index);
+				if (index < 0) {
+					break;
+				}
+				// make sure we don't intercept other stuff
+				var disqualified = index > 0 && disqualifiers.indexOf(this.cell.state.content.charAt(index - 1)) >= 0;
+				if (!disqualified) {
+					var endIndex = this.cell.state.content.indexOf("}", index);
+					// no closing bracket
+					if (endIndex < 0) {
+						break;
+					}
+					var substring = this.cell.state.content.substring(index, endIndex + 1);
+					// if it contains another opening tag (because we are hitting the first of {{ or because you have nested tags), we skip it
+					if (substring.substring(1).indexOf("{") < 0) {
+						variables.push(substring.substring(1, substring.length - 1));
+					}
+					index = endIndex + 1;
+				}
+				else {
+					index++;
+				}
+			}
+			return variables;
+		}
 	}
 });
 Vue.component("typography-core", {
@@ -56,7 +100,72 @@ Vue.component("typography-core", {
 			timer: null
 		}
 	},
+	// copy paste from above!
+	computed: {
+		variables: function() {
+			var variables = [];
+			var index = 0;
+			var disqualifiers = ["%", "$", "{"];
+			while (index >= 0) {
+				// find next match
+				index = this.cell.state.content.indexOf("{", index);
+				if (index < 0) {
+					break;
+				}
+				// make sure we don't intercept other stuff
+				var disqualified = index > 0 && disqualifiers.indexOf(this.cell.state.content.charAt(index - 1)) >= 0;
+				if (!disqualified) {
+					var endIndex = this.cell.state.content.indexOf("}", index);
+					// no closing bracket
+					if (endIndex < 0) {
+						break;
+					}
+					var substring = this.cell.state.content.substring(index, endIndex + 1);
+					// if it contains another opening tag (because we are hitting the first of {{ or because you have nested tags), we skip it
+					if (substring.substring(1).indexOf("{") < 0) {
+						var variable = substring.substring(1, substring.length - 1);
+						if (variables.indexOf(variable) < 0) {
+							variables.push(variable);
+						}
+					}
+					index = endIndex + 1;
+				}
+				else {
+					index++;
+				}
+			}
+			return variables;
+		}
+	},
 	methods: {
+		getContentWithVariables: function() {
+			var content = this.cell.state.content;
+			var self = this;
+			var component = Vue.component("page-formatted");
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			this.variables.forEach(function(variable) {
+				// we must at the very least have selected a key
+				if (self.cell.state.fragments && self.cell.state.fragments[variable] && self.cell.state.fragments[variable].key) {
+					//content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<page-formatted :page='page' :cell='cell' :value=\"getVariableValue('" + variable + "')\" :fragment=\"getVariableFragment('" + variable + "')\"/>");
+					var div = document.createElement("div");
+					var formatted = new component({propsData: {
+						page: self.page,
+						cell: self.cell,
+						value: pageInstance.get(self.cell.state.fragments[variable].key),
+						fragment: self.cell.state.fragments[variable]
+					}});
+					formatted.$mount();
+					content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), formatted.$el.outerHTML);
+				}
+			});
+			return content;
+		},
+		getVariableValue: function(variable) {
+			console.log("getting value for", variable);
+		},
+		getVariableFragment: function(variable) {
+			return this.cell.state.fragments[variable];
+		},
 		highlight: function(content) {
 			var highlighter = nabu.page.providers("page-format").filter(function(x) {
 				 return x.name == "highlight";

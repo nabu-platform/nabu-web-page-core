@@ -2876,7 +2876,10 @@ nabu.services.VueService(Vue.extend({
 					var name = x.substring("alias_".length);
 					var component = pageInstance.components[x];
 					if (component.getStateDefinition) {
-						result[name] = component.getStateDefinition();
+						var definition = component.getStateDefinition();
+						if (definition) {
+							result[name] = definition;
+						}
 					}
 				}
 			});	

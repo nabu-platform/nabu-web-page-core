@@ -1106,10 +1106,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 				Vue.delete(this.components, "instance_" + component.$$pageInstanceCounter, null);
 			}
 			if (component.getRuntimeAlias) {
-				Vue.delete(this.components, "alias_" + component.getRuntimeAlias(), null);
-				// unset the state again so it can be reused
-				// or at the very least it is clear that it is gone
-				Vue.set(this.variables, component.getRuntimeAlias(), null);
+				var alias = component.getRuntimeAlias();
+				if (alias != null) {
+					Vue.delete(this.components, "alias_" + component.getRuntimeAlias(), null);
+					// unset the state again so it can be reused
+					// or at the very least it is clear that it is gone
+					Vue.set(this.variables, component.getRuntimeAlias(), null);
+				}
 			}
 			// this keeps track by cell id
 			if (this.components[cell.id] != null) {
@@ -1171,12 +1174,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 			
 			// define an alias
 			if (component.getRuntimeAlias) {
-				// not used atm, but could be handy to retrieve a component by its name
-				// there might also be a ref that does this? see below cell.ref
-				this.components["alias_" + component.getRuntimeAlias()] = component;
-				// override the currently empty state with the actual state
-				// all modification of that state must occur on this object (by reference)
-				Vue.set(this.variables, component.getRuntimeAlias(), component.getState());
+				var alias = component.getRuntimeAlias();
+				if (alias != null) {
+					// not used atm, but could be handy to retrieve a component by its name
+					// there might also be a ref that does this? see below cell.ref
+					this.components["alias_" + component.getRuntimeAlias()] = component;
+					// override the currently empty state with the actual state
+					// all modification of that state must occur on this object (by reference)
+					Vue.set(this.variables, component.getRuntimeAlias(), component.getState());
+				}
 			}
 			// if you were to set a row renderer _and_ a cell renderer, we might not pick it up?
 			// the problem with this approach is manyfold:
