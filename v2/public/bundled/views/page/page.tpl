@@ -506,7 +506,7 @@
 								:formatter="function(x) { return x.name }" 
 								:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
 								
-							<div v-if="cell.renderer && $services.page.getRendererState(cell.renderer, row)" class="is-column is-spacing-vertical-gap-medium">
+							<div v-if="cell.renderer && $services.page.getRendererState(cell.renderer, row, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
 								<n-form-text v-model="cell.runtimeAlias" label="Runtime alias for renderer state"/>
 								<n-form-switch v-model="cell.retainState" label="Retain state once cell is destroyed" v-if="cell.runtimeAlias"/>
 							</div>
@@ -600,7 +600,7 @@
 							<h2>Additional<span class="subscript">Configure some additional settings for this row</span></h2>
 							<n-form-text label="Row Id" v-model="row.customId" info="If you set a custom id for this row, a container will be rendered in this row with that id. This can be used for targeting with specific content."/>
 							<n-form-combo label="Row Renderer" v-model="row.renderer" :items="$services.page.getRenderers('row')"  :formatter="function(x) { return x.title ? x.title : x.name }" :extracter="function(x) { return x.name }"/>
-							<div v-if="row.renderer && $services.page.getRendererState(row.renderer, row)" class="is-column is-spacing-vertical-gap-medium">
+							<div v-if="row.renderer && $services.page.getRendererState(row.renderer, row, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
 								<n-form-text v-model="row.runtimeAlias" label="Runtime alias for renderer state"/>
 								<n-form-switch v-model="row.retainState" label="Retain state once row is destroyed" v-if="row.runtimeAlias"/>
 							</div>
@@ -977,7 +977,7 @@
 						class="is-row is-fill-normal"
 						tabindex="0">
 					<button class="is-button is-variant-ghost is-size-xsmall" @click="toggleRow(row)"><icon :name="opened.indexOf(row.id) >= 0 ? 'chevron-down' : 'chevron-right'"/></button>
-					<n-form-text v-if="aliasing == row.id" v-model="row.name" class="is-variant-inline is-size-xsmall" :placeholder="row.alias ? row.alias : row.id" :autofocus="true"
+					<n-form-text v-if="aliasing == row.id" v-model="row.name" class="is-variant-inline is-size-xsmall" :placeholder="row.name ? row.name : ($services.page.getRenderer(row.renderer) ? $services.page.getRenderer(row.renderer).title : (row.class ? row.class : row.id))" :autofocus="true"
 						:commit="true"
 						@commit="function() { aliasing = null }"
 						@keydown.escape="function() { aliasing = null }"/>
@@ -985,7 +985,7 @@
 						@dragstart="dragRow($event, row)"
 						:draggable="true" 
 						v-else
-						@click.ctrl="scrollIntoView(row)">{{row.name ? row.name : (row.class ? row.class : row.id)}}</span>
+						@click.ctrl="scrollIntoView(row)">{{row.name ? row.name : ($services.page.getRenderer(row.renderer) ? $services.page.getRenderer(row.renderer).title : row.id)}}</span>
 				</div>
 				<ul class="is-menu is-variant-toolbar is-position-right is-spacing-horizontal-right-small">
 					<li class="is-column" v-if="$services.page.useAris"><button class="is-button is-variant-warning-outline is-size-xsmall has-tooltip" @click="rotate(row)"><icon name="undo"/><span class="is-tooltip is-position-bottom">Rotate row</span></button></li>
@@ -1035,7 +1035,7 @@
 								@keydown.escape="function() { aliasing = null; requestFocusCell(cell) }" 
 								@input="$services.page.slowNormalizeAris(page, cell)"/>
 							<span v-if="editing != cell.id && aliasing != cell.id" class="is-content is-size-xsmall is-position-cross-center" @click="selectCell(row, cell)" 
-								>{{cell.name ? cell.name : (cell.class ? cell.class : (cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : cell.id))}}</span>
+								>{{cell.name ? cell.name : (cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : ($services.page.getRenderer(cell.renderer) ? $services.page.getRenderer(cell.renderer).title : cell.id))}}</span>
 							<button class="is-button is-size-xxsmall is-variant-ghost is-position-cross-center" @click="function() { aliasing = null; editing = cell.id }" v-if="false && aliasing != cell.id && editing != cell.id"><icon name="pencil-alt"/></button>
 						</div>
 						<ul class="is-menu is-variant-toolbar is-position-right is-spacing-horizontal-right-small">

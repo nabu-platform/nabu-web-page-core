@@ -40,6 +40,7 @@ nabu.page.provide("page-renderer", {
 
 Vue.component("renderer-form", {
 	template: "#renderer-form",
+	mixins: [nabu.page.mixins.renderer],
 	props: {
 		page: {
 			type: Object,

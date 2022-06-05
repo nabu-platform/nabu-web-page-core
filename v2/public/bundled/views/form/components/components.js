@@ -23,6 +23,9 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				type: String,
 				required: false,
 				default: "page-form-input-text-configure"
+			},
+			edit: {
+				type: Boolean
 			}
 		},
 		methods: {
@@ -41,6 +44,9 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				return !!this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, state, this);
 			},
 			getSchema: function() {
+				if (!this.edit && this.schemaResolved) {
+					return this.schema;
+				}
 				if (!this.cell.state.name) {
 					return null;
 				}
@@ -62,7 +68,13 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				}
 				var definition = this.$services.page.getPageParameters(this.page);
 				var parts = this.cell.state.name.split(".");
-				return definition ? recursiveGet(definition, parts, 0) : null;
+				var result = definition ? recursiveGet(definition, parts, 0) : null;
+				if (!this.edit) {
+					this.schema = result;
+					// make sure we know its resolved, even if it's null
+					this.schemaResolved = true;
+				}
+				return result;
 			},
 			availableFields: function(value) {
 				var fields = [];

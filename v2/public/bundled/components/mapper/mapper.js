@@ -79,7 +79,7 @@ Vue.component("n-page-mapper", {
 			}
 			var fields = this.$services.page.getSimpleKeysFor(def, true, true);
 			if (value) {
-				fields = fields.filter(function(x) { x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+				fields = fields.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
 			}
 			fields.push("$all");
 			return fields;

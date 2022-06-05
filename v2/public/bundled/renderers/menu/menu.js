@@ -35,6 +35,7 @@ nabu.page.provide("page-renderer", {
 
 Vue.component("renderer-menu", {
 	template: "#renderer-menu",
+	mixins: [nabu.page.mixins.renderer],
 	props: {
 		page: {
 			type: Object,

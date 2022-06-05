@@ -101,7 +101,14 @@ Vue.mixin({
 			return literal ? result : this.$services.page.parseValue(result);
 		}
 	}
-})
+});
+
+nabu.page.mixins.renderer = {
+	created: function() {
+		var pageInstance = this.$services.page.getPageInstance(this.page, this);
+		pageInstance.mountRenderer(this.target, this);
+	}	
+};
 
 // methods in cell instances:
 // - configure: start configuration for the cell content
@@ -1135,6 +1142,17 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			return result;
 		},
+		// can do an explicit renderer mount
+		mountRenderer: function(target, component) {
+			if (target.renderer && target.runtimeAlias && component.getState) {
+				Vue.set(this.variables, target.runtimeAlias, component.getState());
+				if (!target.retainState) {
+					component.$on("hook:beforeDestroy", function() {
+						Vue.set(this.variables, target.runtimeAlias, null);
+					});
+				}
+			}
+		},
 		mounted: function(cell, row, state, component) {
 			var self = this;
 			
@@ -1160,9 +1178,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 				// all modification of that state must occur on this object (by reference)
 				Vue.set(this.variables, component.getRuntimeAlias(), component.getState());
 			}
-			// same thing if we have a row renderer with state
-			// TODO: we assume the parent is the first vue component above the component
 			// if you were to set a row renderer _and_ a cell renderer, we might not pick it up?
+			// the problem with this approach is manyfold:
+			// - some renderers _don't_ render children the "normal" way (e.g. repeat), so the mounted() hook of a child is never called, meaning it is never picked up
+			// - other renderer can obviously render multiple children (e.g. a form), we don't want to repeatedly register
+			/*
 			if (cell.renderer && cell.runtimeAlias && component.$parent && component.$parent.getState) {
 				Vue.set(this.variables, cell.runtimeAlias, component.$parent.getState());
 				if (!cell.retainState) {
@@ -1179,6 +1199,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					});
 				}
 			}
+			*/
 			
 			// run the initializer function (if any) with the component instance
 			if (cell.$$initialize) {
@@ -3657,7 +3678,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 		},
 		autocloseCell: function(row, cell, inside) {
-			console.log("autoclosing", cell, inside);
 			if (cell.state.openTrigger == "click") {
 				var cellInstance = document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
 				if (cellInstance) {

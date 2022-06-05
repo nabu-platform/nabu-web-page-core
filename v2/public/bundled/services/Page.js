@@ -251,9 +251,12 @@ nabu.services.VueService(Vue.extend({
 			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == name })[0];
 			return renderer ? renderer.configuration : null
 		},
-		getRendererState: function(name, target) {
+		// we often need to query the renderer state definition while determining the page state definition
+		// this can lead to recursive lookups, so instead, we pass the page state definition to the renderer, it should not try to calculate it on its own
+		// this _will_ lead to infinite loops
+		getRendererState: function(name, target, page, pageParameters) {
 			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == name })[0];
-			return renderer && renderer.getState ? renderer.getState(target) : null;	
+			return renderer && renderer.getState ? renderer.getState(target, page, pageParameters, this.$services) : null;	
 		},
 		calculateAcceptedCookies: function() {
 			this.hasAcceptedCookies = !!this.$services.cookies.get("cookie-settings");	
@@ -1801,6 +1804,33 @@ nabu.services.VueService(Vue.extend({
 					&& operation.responses["200"];
 			});
 		},
+		// all operations that return an array of some sort
+		getArrayOperations: function(value) {
+			var self = this;
+			return this.getOperations(function(operation) {
+				// must be a get
+				var isAllowed = operation.method.toLowerCase() == "get"
+					// and contain the name fragment (if any)
+					&& (!name || operation.id.toLowerCase().indexOf(name.toLowerCase()) >= 0)
+					// must have _a_ response
+					&& operation.responses["200"];
+				// we also need at least _a_ complex array in the results
+				if (isAllowed && operation.responses["200"] != null && operation.responses["200"].schema != null) {
+					var schema = operation.responses["200"].schema;
+					if (!schema["$ref"]) {
+						isAllowed = false;
+					}
+					else {
+						var definition = self.$services.swagger.resolve(schema["$ref"]);
+						isAllowed = self.$services.page.getArrays(definition).length > 0;
+					}
+				}
+				if (isAllowed && value) {
+					isAllowed = operation.id.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				}
+				return isAllowed;
+			});
+		},
 		getSimpleClasses: function(value) {
 			var classes = ["primary", "secondary", "info", "success", "warning", "danger", "inline"];
 			if (value) {
@@ -2750,7 +2780,7 @@ nabu.services.VueService(Vue.extend({
 		// currently not cell specific, so does not take into account repeats
 		getAllAvailableParameters: function(page, context) {
 			var result = {};
-			
+
 			var self = this;
 			if (!context) {
 				context = self;
@@ -2855,7 +2885,7 @@ nabu.services.VueService(Vue.extend({
 			var checkRows = function(rows) {
 				rows.forEach(function(row) {
 					if (row.renderer && row.runtimeAlias) {
-						var state = self.getRendererState(row.renderer, row);
+						var state = self.getRendererState(row.renderer, row, pageInstance.page, result);
 						if (state) {
 							result[row.runtimeAlias] = state;
 						}
@@ -2863,7 +2893,7 @@ nabu.services.VueService(Vue.extend({
 					if (row.cells) {
 						row.cells.forEach(function(cell) {
 							if (cell.renderer && cell.runtimeAlias) {
-								var state = self.getRendererState(cell.renderer, cell);
+								var state = self.getRendererState(cell.renderer, cell, pageInstance.page, result);
 								if (state) {
 									result[cell.runtimeAlias] = state;
 								}

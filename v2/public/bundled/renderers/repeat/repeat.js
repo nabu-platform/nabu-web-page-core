@@ -18,21 +18,76 @@ nabu.page.provide("page-renderer", {
 	name: "repeat",
 	type: ["row", "cell"],
 	component: "renderer-repeat",
-	getState: function(container) {
-		// currently we hardcode
-		return {
-			properties: {
-				"value": {
-					type: "string"
+	configuration: "renderer-repeat-configure",
+	getState: function(container, page, pageParameters, $services) {
+		var result = {};
+		if (container.state.operation) {
+			var operation = $services.swagger.operations[container.state.operation];
+			if (operation && operation.responses && operation.responses["200"] && operation.responses["200"].schema) {
+				var properties = {};
+				var definition = $services.swagger.resolve(operation.responses["200"].schema);
+				var arrays = $services.page.getArrays(definition);
+				if (arrays.length > 0) {
+					var childDefinition = $services.page.getChildDefinition(definition, arrays[0]);
+					if (childDefinition && childDefinition.items && childDefinition.items.properties) {
+						nabu.utils.objects.merge(properties, childDefinition.items.properties);
+					}
+				}
+				if (definition.properties) {
+					Object.keys(definition.properties).map(function(field) {
+						if (definition.properties[field].type == "array") {
+							var items = definition.properties[field].items;
+							if (items.properties) {
+								nabu.utils.objects.merge(properties, items.properties);
+							}
+						}
+					});
+				}
+				result.record = {properties:properties};
+				
+				// we also want to expose the parameters as input
+				var parameters = operation.parameters;
+				if (parameters) {
+					parameters.forEach(function(x) {
+						// reserved!
+						if (x.name != "record") {
+							result[x.name] = x;
+						}
+					});
 				}
 			}
 		}
+		else if (container.state.array) {
+			var record = {};
+			var available = pageParameters;
+			var indexOfDot = container.state.array.indexOf(".");
+			var variable = indexOfDot < 0 ? container.state.array : container.state.array.substring(0, indexOfDot);
+			var rest = indexOfDot < 0 ? null : container.state.array.substring(indexOfDot + 1);
+			if (available[variable]) {
+				// we can have root arrays rather than part of something else
+				// for example from a multiselect event
+				if (!rest) {
+					if (available[variable].items && available[variable].items.properties) {
+						nabu.utils.objects.merge(record, available[variable].items.properties);
+					}
+				}
+				else {
+					var childDefinition = $services.page.getChildDefinition(available[variable], rest);
+					if (childDefinition) {
+						nabu.utils.objects.merge(record, childDefinition.items.properties);
+					}
+				}
+			}
+			result.record = {properties:record};
+		}
+		return {properties:result};
 	},
 });
 
 var $$rendererInstanceCounter = 0;
 Vue.component("renderer-repeat", {
 	template: "#renderer-repeat",
+	mixins: [nabu.page.mixins.renderer],
 	props: {
 		page: {
 			type: Object,
@@ -55,31 +110,67 @@ Vue.component("renderer-repeat", {
 	},
 	data: function() {
 		return {
-			items: [{
+			records: [{
 				value: "firstValue"
 			}, {
 				value: "secondValue"
 			}],
 			// the instance counter is used to manage our pages on the router
-			instanceCounter: $$rendererInstanceCounter++
+			instanceCounter: $$rendererInstanceCounter++,
+			paging: {},
+			loading: true,
+			// the state in the original page, this can be used to write stuff like "limit" etc to
+			// note that the "record" will not actually be in this
+			state: {}
 		}
 	},
 	created: function() {
 		this.loadPage();
+		// note that this is NOT an activate, we can not stop the rendering until the call is done
+		// in the future we could add a "working" icon or a placeholder logic
+		this.loadData();
 	},
 	computed: {
 		alias: function() {
 			return "fragment-renderer-repeat-" + this.instanceCounter;
+		},
+		operationParameters: function() {
+			var parameters = {};
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			var self = this;
+			Object.keys(this.target.state.bindings).map(function(name) {
+				if (self.target.state.bindings[name]) {
+					var value = self.$services.page.getBindingValue(pageInstance, self.target.state.bindings[name], self);
+					if (value != null && typeof(value) != "undefined") {
+						parameters[name] = value;
+					}
+				}
+			});
+			return parameters;
+		}
+	},
+	watch: {
+		operationParameters: function() {
+			this.loadData();	
+		},
+		state: {
+			deep: true,
+			handler: function(newValue) {
+				this.loadData();
+			}
 		}
 	},
 	beforeDestroy: function() {
 		this.unloadPage();
 	},
 	methods: {
-		getParameters: function(item) {
+		getState: function() {
+			return this.state;	
+		},
+		getParameters: function(record) {
 			var result = {};
 			if (this.target.runtimeAlias) {
-				result[this.target.runtimeAlias] = item;
+				result[this.target.runtimeAlias] = {record:record};
 			}
 			return result;
 		},
@@ -88,15 +179,100 @@ Vue.component("renderer-repeat", {
 		},
 		mounted: function(component) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			console.log("mounted fragment", component);
 			// TODO: subscribe to all events and emit them to this page
 			component.$on("hook:beforeDestroy", function() {
-				console.log("Destroying fragmented page");
+				console.log("Destroying repeated fragmented page");
 			});
 			// we don't need to explicitly unsubscribe? once the page gets destroyed, its gone anyway
 			component.subscribe("$any", function(name, value) {
 				pageInstance.emit(name, value);
 			});
+		},
+		// in the future we can add a "load more" event support, we then listen to that event and load more data, this means we want to append
+		// currently we don't do anything special with limit and offset, you can fill them in in the bindings if you want
+		// we will just do the call as a whole, assuming it is a limited service result
+		// in the future we can hide the limit/offset inputs and instead expose them as state so you can directly write to them (?)
+		loadData: function(append) {
+			var self = this;
+			// we want to call an operation
+			if (this.target.state.operation) {
+				var parameters = this.operationParameters;
+				// local state variables win from passed in ones!
+				Object.keys(this.state).forEach(function(key) {
+					// someone might still attempt to write to record?
+					// by default the state has no keys
+					// any key available is explicitly written by the user, so even a null value is an active decision
+					if (key != "record") {
+						parameters[key] = self.state[key];
+					}
+				});
+				
+				// the initial value of loading is already true, so initially we see this
+				// if we reload due to limit changes etc, it is OK (?) to see the "old" content until the new is available
+				// so we don't explicitly set it again here
+				// if it is a slow service and we want feedback to the user, we could set this to true
+				// but then we need a decent placeholder solution
+				//this.loading = true;
+				this.$services.swagger.execute(this.target.state.operation, parameters).then(function(list) {
+					if (!append) {
+						self.records.splice(0);
+					}
+					if (list) {
+						var arrayFound = false;
+						var findArray = function(root) {
+							Object.keys(root).forEach(function(field) {
+								if (root[field] instanceof Array && !arrayFound) {
+									root[field].forEach(function(x, i) {
+										if (x) {
+											x.$position = i;
+										}
+									});
+									nabu.utils.arrays.merge(self.records, root[field]);
+									arrayFound = true;
+								}
+								if (!arrayFound && typeof(root[field]) === "object" && root[field] != null) {
+									findArray(root[field]);
+								}
+							});
+						}
+						findArray(list);
+						
+						var pageFound = false;
+						var findPage = function(root) {
+							Object.keys(root).forEach(function(field) {
+								// check if we have an object that has the necessary information
+								if (typeof(root[field]) === "object" && root[field] != null && !pageFound) {
+									// these are the two fields we use and map, check if they exist
+									if (root[field].current != null && root[field].total != null) {
+										nabu.utils.objects.merge(self.paging, root[field]);
+										pageFound = true;
+									}
+									// recurse
+									if (!pageFound) {
+										findPage(root[field]);
+									}
+								}
+							});
+						}
+						findPage(list);
+					}
+					self.loading = false;
+				}, function(error) {
+					// TODO: what in case of error?
+					self.loading = false;
+				})
+			}
+			else if (this.target.state.array) {
+				if (!append) {
+					this.records.splice(0, this.records.length);
+				}
+				var records = this.$services.page.getPageInstance(this.page, this).get(this.target.state.array);
+				console.log("data is", records);
+				if (records) {
+					nabu.utils.arrays.merge(this.records, records);
+				}
+				this.loading = false;
+			}
 		},
 		// create a custom route for rendering
 		loadPage: function() {
@@ -181,3 +357,48 @@ Vue.component("renderer-repeat", {
 		}
 	}
 });
+
+
+Vue.component("renderer-repeat-configure", {
+	template: "#renderer-repeat-configure",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		// the target (cell or row)
+		target: {
+			type: Object,
+			required: true
+		},
+		// whether or not we are in edit mode (we can do things slightly different)
+		edit: {
+			type: Boolean,
+			required: false
+		},
+		childComponents: {
+			type: Object,
+			required: false
+		}
+	},
+	created: function() {
+		if (!this.target.state.bindings) {
+			Vue.set(this.target.state, "bindings", {});
+		}	
+	},
+	computed: {
+		operationParameters: function() {
+			var result = [];
+			if (this.target.state.operation) {
+				// could be an invalid operation?
+				if (this.$services.swagger.operations[this.target.state.operation]) {
+					var parameters = this.$services.swagger.operations[this.target.state.operation].parameters;
+					if (parameters) {
+						nabu.utils.arrays.merge(result, parameters.map(function(x) { return x.name }));
+					}
+				}
+			}
+			return result;
+		}
+	}
+})
