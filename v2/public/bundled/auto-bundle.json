@@ -511,6 +511,14 @@
 				"menu.tpl": {
 					"url": "renderers/menu/menu.tpl"
 				}
+			},
+			"repeat": {
+				"repeat.js": {
+					"url": "renderers/repeat/repeat.js"
+				},
+				"repeat.tpl": {
+					"url": "renderers/repeat/repeat.tpl"
+				}
 			}
 		}
 	}

@@ -2146,8 +2146,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			
 			if (this.subscriptions[name]) {
-				this.subscriptions[name].map(function(handler) {
+				this.subscriptions[name].forEach(function(handler) {
 					var result = handler(value);
+					if (result && result.then) {
+						promises.push(result);
+					}
+				});
+			}
+			else if (this.subscriptions["$any"]) {
+				this.subscriptions["$any"].forEach(function(handler) {
+					var result = handler(name, value);
 					if (result && result.then) {
 						promises.push(result);
 					}

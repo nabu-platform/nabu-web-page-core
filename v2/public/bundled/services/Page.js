@@ -3046,23 +3046,25 @@ nabu.services.VueService(Vue.extend({
 			Object.keys(parameters).map(function(key) {
 				nabu.utils.arrays.merge(arrays, self.getArrays(parameters[key]).map(function(x) { return x == null ? key : key + "." + x }));
 			});
-			// get all arrays available in parent rows/cells
-			var path = this.getTargetPath(page.content, targetId);
-			if (path.length) {
-				path.map(function(entry) {
-					if (entry.instances) {
-						Object.keys(entry.instances).map(function(key) {
-							var mapping = entry.instances[key];
-							if (mapping) {
-								var index = mapping.indexOf(".");
-								var variable = mapping.substring(0, index);
-								var path = mapping.substring(index + 1);
-								var definition = self.getChildDefinition(parameters[variable], path);
-								nabu.utils.arrays.merge(arrays, self.getArrays(definition.items).map(function(x) { return key + "." + x }));
-							}
-						});
-					}
-				});
+			if (targetId != null) {
+				// get all arrays available in parent rows/cells
+				var path = this.getTargetPath(page.content, targetId);
+				if (path.length) {
+					path.map(function(entry) {
+						if (entry.instances) {
+							Object.keys(entry.instances).map(function(key) {
+								var mapping = entry.instances[key];
+								if (mapping) {
+									var index = mapping.indexOf(".");
+									var variable = mapping.substring(0, index);
+									var path = mapping.substring(index + 1);
+									var definition = self.getChildDefinition(parameters[variable], path);
+									nabu.utils.arrays.merge(arrays, self.getArrays(definition.items).map(function(x) { return key + "." + x }));
+								}
+							});
+						}
+					});
+				}
 			}
 			return arrays;
 		},

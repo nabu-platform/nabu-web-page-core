@@ -39,6 +39,14 @@ Vue.view("page-button", {
 				component: "button"
 			}]	
 		},
+		getEvents: function() {
+			var result = {};
+			if (nabu.page.event.getName(this.cell.state, "clickEvent") && nabu.page.event.getName(this.cell.state, "clickEvent") != "$close") {
+				var type = nabu.page.event.getType(this.cell.state, "clickEvent");
+				result[nabu.page.event.getName(this.cell.state, "clickEvent")] = type;
+			}	
+			return result;
+		},
 		handle: function($event) {
 			// we don't always call this handler (immediately), so we separate the logic
 			var self = this;

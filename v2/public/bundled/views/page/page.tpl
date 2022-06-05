@@ -1,10 +1,7 @@
 <template id="nabu-page">
 	<component :edit="edit" :is="pageTag()" :inline-all="true" class="is-page" :class="classes" :body-class="bodyClasses" :page="page.name" 
 			@drop="dropMenu($event)" @dragover="dragOver($event)">
-		<div class="page-menu n-page-menu" v-if="edit && false">
-			<button @click="viewComponents = !viewComponents"><span class="fa fa-cubes" title="Add Components"></span></button>
-		</div>
-		<div class="is-page-edit-menu" v-else-if="$services.page.canEdit() && $services.page.wantEdit && !embedded && !$services.page.editing" 
+		<div class="is-page-edit-menu" v-if="!page.content.readOnly && $services.page.canEdit() && $services.page.wantEdit && !embedded && !$services.page.editing" 
 				:draggable="true" 
 				@dragstart="dragMenu($event)"
 				:class="{'is-bookmarkable': !!page.content.path}"
