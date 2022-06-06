@@ -146,6 +146,9 @@ Vue.component("typography-core", {
 			this.variables.forEach(function(variable) {
 				// we must at the very least have selected a key
 				if (self.cell.state.fragments && self.cell.state.fragments[variable] && self.cell.state.fragments[variable].key) {
+					var updateFunction = function() {
+						console.log("TODO: reformat the entire thing")
+					}
 					//content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<page-formatted :page='page' :cell='cell' :value=\"getVariableValue('" + variable + "')\" :fragment=\"getVariableFragment('" + variable + "')\"/>");
 					var div = document.createElement("div");
 					var formatted = new component({propsData: {
@@ -153,9 +156,9 @@ Vue.component("typography-core", {
 						cell: self.cell,
 						value: pageInstance.get(self.cell.state.fragments[variable].key),
 						fragment: self.cell.state.fragments[variable]
-					}});
+					}, updated: updateFunction, ready: updateFunction});
 					formatted.$mount();
-					content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), formatted.$el.outerHTML);
+					content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), formatted.$el.innerHTML);
 				}
 			});
 			return content;

@@ -389,6 +389,9 @@
 											:from="availableParameters" 
 											v-model="action.bindings"/>
 											
+										
+										
+											
 										<n-form-ace mode="javascript" v-model="action.script" label="Execute Script"/>
 										
 										<h4 class="is-h4">Reset Events</h4>
