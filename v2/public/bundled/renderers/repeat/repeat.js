@@ -1,3 +1,6 @@
+// TODO: when in edit mode, still load the _first_ instance and set it as state in the local page
+// this will allow for visual editing
+
 // the components and functionalities are built around state in a page
 // however, the problem in a loop is that, depending on the iteration, we have different state
 // this different state can not co-exist at the root of the page, only one thing can be true at a time

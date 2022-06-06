@@ -241,6 +241,107 @@ nabu.services.VueService(Vue.extend({
 			console.log("output is", result);
 			return result;
 		},
+		// calculate all the available actions in a page
+		getAvailableActions: function(pageInstance, value) {
+			var self = this;
+			// we care about the available actions, not the input/output etc yet
+			// if two actions are named the same but have different input/output, it doesn't matter at this point
+			// in the next phase, you select an actual target
+			// at that point we have the exact definition of the action
+			var available = {};
+			Object.keys(pageInstance.components).forEach(function(key) {
+				self.getActions(pageInstance.components[key]).forEach(function(action) {
+					available[action.name] = action;
+				});
+			});
+			// we also need to check for renderers
+			this.getAvailableRenderers(pageInstance.page).forEach(function(target) {
+				var renderer = this.getRenderer(target.renderer);
+				self.getActions(renderer).forEach(function(action) {
+					available[action.name] = action;
+				});	
+			});
+			var result = Object.values(available);
+			result.sort(function(a, b) {
+				return a.name.localeCompare(b.name);
+			});
+			if (value) {
+				result = result.filter(function(x) {
+					return x.name.toLowerCase().indexOf(value.toLowerCase()) >= 0
+						|| (x.title && x.title.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+				})
+			}
+			return result;
+		},
+		// once we've chosen an action, we want to list all the targets that support this
+		// we always want a target cell or row
+		// this is for a number of reasons:
+		// - we want to streamline with renderers
+		// - cells and rows always have an identity and metadata like name etc, components might not
+		// this provides a better listing
+		// in the new way of doing things, normal cells should only every have a single component
+		// page arbitrary is (hopefully) deprecated and the old repeat is gone as well
+		getActionTargets: function(pageInstance, action, value) {
+			var targets = [];
+			Object.keys(pageInstance.components).forEach(function(key) {
+				var hasAction = self.getActions(pageInstance.components[key]).filter(function(action) {
+					return action.name == action;
+				}).length > 0;
+				if (hasAction) {
+					targets.push(pageInstance.components[key].$$cell);
+				}
+			});
+			// we also need to check for renderers
+			this.getAvailableRenderers(pageInstance.page).forEach(function(target) {
+				var renderer = this.getRenderer(target.renderer);
+				var hasAction = self.getActions(renderer).filter(function(action) {
+					return action.name == action;
+				}).length > 0;
+				if (hasAction) {
+					targets.push(target);
+				}
+			});
+			if (value) {
+				targets = targets.filter(function(x) {
+					return x.name && x.name.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				})
+			}
+			return targets;
+		},
+		// we want to look for all components that implement a particular specification
+		getSpecificationTargets: function(pageInstance, specification) {
+			var targets = [];
+			Object.keys(pageInstance.components).forEach(function(key) {
+				var component = pageInstance.components[key];
+				if (component.getSpecifications && component.getSpecifications().indexOf(specification) >= 0) {
+					targets.push(component.$$cell);
+				}
+			});
+			this.getAvailableRenderers(pageInstance.page).forEach(function(target) {
+				var renderer = this.getRenderer(target.renderer);
+				if (renderer.getSpecifications && renderer.getSpecifications().indexOf(specification) >= 0) {
+					targets.push(target);
+				}
+			});
+			return targets;
+		},
+		// combine all the actions a component supports (including specifications)
+		getActions: function(component) {
+			var actions = [];
+			if (component.getActions) {
+				nabu.utils.arrays.merge(actions, component.getActions());
+			}
+			if (component.getSpecifications) {
+				var specifications = component.getSpecifications();
+				var implemented = nabu.page.providers("page-specification").filter(function(x) {
+					return specifications.indexOf(x.name) >= 0;
+				});
+				implemented.forEach(function(x) {
+					nabu.utils.arrays.merge(actions, x.actions);
+				});
+			}
+			return actions;
+		},
 		getRenderers: function(type) {
 			return nabu.page.providers("page-renderer").filter(function(x) { return x.type == null || x.type == type || (x.type instanceof Array && x.type.indexOf(type) >= 0) });
 		},
@@ -2884,22 +2985,29 @@ nabu.services.VueService(Vue.extend({
 				}
 			});	
 			var self = this;
+			this.getAvailableRenderers(pageInstance.page).forEach(function(target) {
+				if (target.runtimeAlias) {
+					var state = self.getRendererState(target.renderer, target, pageInstance.page, result);
+					if (state) {
+						result[target.runtimeAlias] = state;
+					}
+				}
+			});
+		},
+		// get the renderers in a page
+		getAvailableRenderers: function(page) {
+			var renderers = [];
+			var self = this;
 			// we also want to find all aliased rows and cells
 			var checkRows = function(rows) {
 				rows.forEach(function(row) {
-					if (row.renderer && row.runtimeAlias) {
-						var state = self.getRendererState(row.renderer, row, pageInstance.page, result);
-						if (state) {
-							result[row.runtimeAlias] = state;
-						}
+					if (row.renderer) {
+						renderers.push(row);
 					}
 					if (row.cells) {
 						row.cells.forEach(function(cell) {
-							if (cell.renderer && cell.runtimeAlias) {
-								var state = self.getRendererState(cell.renderer, cell, pageInstance.page, result);
-								if (state) {
-									result[cell.runtimeAlias] = state;
-								}
+							if (cell.renderer) {
+								renderers.push(cell);
 							}
 							if (cell.rows) {
 								checkRows(cell.rows);
@@ -2908,9 +3016,10 @@ nabu.services.VueService(Vue.extend({
 					}
 				})
 			}
-			if (pageInstance.page && pageInstance.page.content && pageInstance.page.content.rows) {
-				checkRows(pageInstance.page.content.rows);
+			if (page && page.content && page.content.rows) {
+				checkRows(page.content.rows);
 			}
+			return renderers;
 		},
 		getAllAvailableKeys: function(page, includeComplex, value) {
 			var keys = [];

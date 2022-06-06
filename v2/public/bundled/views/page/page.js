@@ -1172,6 +1172,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 			component.$$pageInstanceCounter = this.instanceCounter++;
 			this.components["instance_" + component.$$pageInstanceCounter] = component;
 			
+			// set the cell on the component, we might need to trace it back?
+			component.$$cell = cell;
+			
 			// define an alias
 			if (component.getRuntimeAlias) {
 				var alias = component.getRuntimeAlias();
