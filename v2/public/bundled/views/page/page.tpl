@@ -675,6 +675,7 @@
 				@click.ctrl="goto($event, row)"
 				@click.meta="goto($event, row)"
 				@click.alt="$emit('select', row, null, 'row')"
+				:placeholder="row.name ? row.name : null"
 				:target="row"
 				:edit="edit"
 				:page="page"
@@ -706,6 +707,7 @@
 							:target="cell"
 							:edit="edit"
 							:page="page"
+							:placeholder="cell.name ? cell.name : (cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : null)"
 							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)">
 						<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 						
