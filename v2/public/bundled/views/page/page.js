@@ -1170,17 +1170,27 @@ nabu.page.views.Page = Vue.component("n-page", {
 			if (target.renderer && target.runtimeAlias && component.getRuntimeState) {
 				Vue.set(this.variables, target.runtimeAlias, component.getRuntimeState());
 				if (!target.retainState) {
-					component.$on("hook:beforeDestroy", function() {
-						Vue.set(this.variables, target.runtimeAlias, null);
-					});
 				}
 			}
+			var self = this;
+			component.$on("hook:beforeDestroy", function() {
+				if (target.renderer && target.runtimeAlias && component.getRuntimeState && !target.retainState) {
+					Vue.set(self.variables, target.runtimeAlias, null);
+				}
+				if (target.renderer) {
+					self.components[target.id] = null;	
+				}
+			});
 			// resolve anyone waiting for this component
 			if (this.waitingForMount[target.id] instanceof Array) {
 				this.waitingForMount[target.id].forEach(function(x) {
 					x.resolve(component);
 				});
 				Vue.delete(this.waitingForMount, target.id);
+			}
+			// we set this as the target id, this may conflict with cells?
+			if (target.renderer) {
+				this.components[target.id] = component;
 			}
 		},
 		mounted: function(cell, row, state, component) {

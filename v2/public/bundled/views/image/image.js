@@ -16,6 +16,10 @@ Vue.view("page-image", {
 			type: Object,
 			required: false
 		},
+		childComponents: {
+			type: Object,
+			required: false
+		},
 		cell: {
 			type: Object,
 			required: true
@@ -25,7 +29,13 @@ Vue.view("page-image", {
 			required: true
 		}
 	},
+	created: function() {
+		console.log("created new image");
+	},
 	activate: function(done) {
+		if (this.edit) {
+			done();
+		}
 		var self = this;
 		var promises = [];
 		// won't trigger with the new configuration thing as activate() doesn't work for components
@@ -54,22 +64,7 @@ Vue.view("page-image", {
 	},
 	computed: {
 		href: function() {
-			var href = null;
-			if (this.cell.state.href) {
-				href = this.$services.page.interpret(this.cell.state.href, this);
-			}
-			// if the href is not an absolute one (either globally absolute or application absolute), we inject the server root
-			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && href.substring(0, 1) != "/") {
-				href = "${server.root()}" + href;
-			}
-			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && this.cell.state.absolute) {
-				href = "${environment('url')}" + href;
-			}
-			// on mobile we don't want absolute paths starting with "/", otherwise it won't fetch from the file system
-			else if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && ${environment("mobile") == true} && href.indexOf("/") == 0) {
-				href = href.substring(1);
-			}
-			return href;
+			return this.getHref();	
 		},
 		hasPrevious: function() {
 			var self = this;
@@ -90,6 +85,32 @@ Vue.view("page-image", {
 		}
 	},
 	methods: {
+		getHref: function() {
+			var href = null;
+			if (this.cell.state.href) {
+				href = this.$services.page.interpret(this.cell.state.href, this);
+			}
+			// if the href is not an absolute one (either globally absolute or application absolute), we inject the server root
+			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && href.substring(0, 1) != "/") {
+				href = "${server.root()}" + href;
+			}
+			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && this.cell.state.absolute) {
+				href = "${environment('url')}" + href;
+			}
+			// on mobile we don't want absolute paths starting with "/", otherwise it won't fetch from the file system
+			else if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && ${environment("mobile") == true} && href.indexOf("/") == 0) {
+				href = href.substring(1);
+			}
+			return href;
+		},
+		getChildComponents: function() {
+			console.log("query child comopnet");
+			return [{
+				title: "Image",
+				name: "image",
+				component: "image"
+			}];
+		},
 		next: function() {
 			var self = this;
 			if (!this.cell.state.href) {
@@ -146,5 +167,19 @@ Vue.view("page-image", {
 })
 
 Vue.component("page-image-configure", {
-	template: "#page-image-configure"
+	template: "#page-image-configure",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
+		edit: {
+			type: Boolean,
+			required: true
+		}
+	}
 })

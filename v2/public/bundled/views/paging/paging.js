@@ -39,10 +39,11 @@ Vue.view("page-paging", {
 		if (this.cell.state.target) {
 			pageInstance.getComponent(this.cell.state.target).then(function(component) {
 				self.component = component;
-				component.runAction("get-paging").then(function(paging) {
+				Vue.set(self, "paging", component.getRuntimeState().paging);
+				/*component.runAction("get-paging").then(function(paging) {
 					// this should be reactive!
 					Vue.set(self, "paging", paging);
-				});
+				});*/
 			});
 		}
 	},

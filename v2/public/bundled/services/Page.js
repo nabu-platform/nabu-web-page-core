@@ -430,12 +430,10 @@ nabu.services.VueService(Vue.extend({
 			}
 			if (renderer.getSpecifications) {
 				var specifications = renderer.getSpecifications(target);
-				console.log("specs are", specifications);
 				var implemented = nabu.page.providers("page-specification").filter(function(x) {
 					return specifications.indexOf(x.name) >= 0;
 				});
 				implemented.forEach(function(x) {
-					console.log("implemented", x);
 					if (x.state) {
 						nabu.utils.objects.merge(state.properties, x.state);
 					}

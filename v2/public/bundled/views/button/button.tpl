@@ -21,10 +21,12 @@
 			:filter="$services.page.getPageRoutes" 
 			:formatter="function(x) { return $services.page.prettifyRouteAlias(x.alias) }" 
 			:extracter="function(x) { return x.alias }" 
-			label="Route to page"/>
+			label="Route to page"
+			key="button-route"/>
 		<page-event-value v-if="!cell.state.route && !cell.state.url && !cell.state.action" :page="page" :container="cell.state" title="Click Event" name="clickEvent" @resetEvents="resetEvents" :inline="true"/>
 		<n-page-mapper v-if="cell.state.route && $services.router.get(cell.state.route)" :to="$services.page.getRouteParameters($services.router.get(cell.state.route))"
 			:from="$services.page.getAvailableParameters(page, cell)" 
+			key="button-route-mapper"
 			v-model="cell.state.bindings"/>
 			
 		<n-form-combo v-model="cell.state.action" v-if="!cell.state.route && (!cell.state.clickEvent || !cell.state.clickEvent.name) && !cell.state.url"
@@ -33,6 +35,7 @@
 			:formatter="function(x) { return x.title ? x.title : x.name }"
 			:extracter="function(x) { return x.name }"
 			@input="cell.state.actionTarget = null"
+			key="button-action"
 			/>
 			
 		<n-form-combo v-model="cell.state.actionTarget" v-if="cell.state.action"
@@ -40,11 +43,13 @@
 			:filter="$services.page.getActionTargets.bind($self, $services.page.getPageInstance(page, $self), cell.state.action)"
 			:formatter="function(x) { return x.name  ? x.name : (x.alias ? $services.page.prettifyRouteAlias(x.alias) : x.id) }"
 			:extracter="function(x) { return x.id }"
+			key="button-action-target"
 			/>
 			
 		<n-page-mapper v-if="cell.state.action && cell.state.actionTarget && $services.page.getActionInput($services.page.getPageInstance(page, $self), cell.state.actionTarget, cell.state.action)" 
 			:to="{properties:$services.page.getActionInput($services.page.getPageInstance(page, $self), cell.state.actionTarget, cell.state.action)}"
 			:from="$services.page.getAvailableParameters(page, cell)" 
+			key="button-action-mapper"
 			v-model="cell.state.bindings"/>
 			
 		<n-form-text v-model="cell.state.actionEvent" 
@@ -63,6 +68,7 @@
 			
 		<n-form-text v-model="cell.state.url" label="URL to redirect to" v-if="!cell.state.route && (!cell.state.clickEvent || !cell.state.clickEvent.name) && !cell.state.action" :timeout="600"/>
 		
-		<n-form-combo v-model="cell.state.anchor" v-if="cell.state.url || cell.state.route" label="Anchor" :items="['$blank', '$window']"/>
+		<n-form-combo v-model="cell.state.anchor" v-show="cell.state.url || cell.state.route" label="Anchor" :items="['$blank', '$window']"
+			key="button-anchor"/>
 	</div>
 </template>

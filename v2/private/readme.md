@@ -22,3 +22,14 @@ This is the same requirement with the state.
 TODO:
 specifications currently only revolve around actions which means we model some actions just to retrieve state
 -> we could however also include state in the specification, as an example the paging component, we use get-paging but could just as well use the state
+
+
+# Flashing Aris Editor
+
+When you update aris styling, the component gets redrawn. If there is no activate (or it ends immediately), it is rerendered fast enough that vue reuses the component.
+Meaning there is no flickering.
+
+If however, you do an asynchronous action, it stays away long enough that it appears as a new component. The consequence is new child components and the aris menu gets redrawn.
+This in turn is seriously annoying as it fully collapses every time.
+
+Workaround: in edit mode, always directly call done().

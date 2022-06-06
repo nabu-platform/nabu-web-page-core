@@ -568,7 +568,9 @@
 									</n-form-section>
 								</div>
 							</div>
-							<aris-editor v-if="$services.page.useAris && $services.page.normalizeAris(page, cell)" :child-components="$services.page.getCellComponents(page, cell)" :container="cell.aris"
+							<aris-editor 
+									:key="'cell_' + cell.id + '_aris_editing'"
+									v-if="$services.page.useAris && $services.page.normalizeAris(page, cell)" :child-components="$services.page.getCellComponents(page, cell)" :container="cell.aris"
 									:specific="cell.alias"/>
 						</n-collapsible>
 						<div v-if="canConfigureInline(cell)" class="is-column is-spacing-vertical-top-large">
