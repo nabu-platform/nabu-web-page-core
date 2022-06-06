@@ -357,6 +357,18 @@ nabu.services.VueService(Vue.extend({
 			}
 			return null;
 		},
+		getActionInput: function(pageInstance, actionTarget, action) {
+			var target = this.getActionTarget(pageInstance, actionTarget);
+			if (target) {
+				var result = this.getActions(target).filter(function(x) {
+					return x.name == action;
+				})[0];
+				if (result && result.input && Object.keys(result.input).length > 0) {
+					return result.input;
+				}
+			}
+			return null;
+		},
 		// combine all the actions a component supports (including specifications)
 		getActions: function(component) {
 			var actions = [];

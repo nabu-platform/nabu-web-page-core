@@ -1,3 +1,9 @@
+- in button -> calculate anchors? instead of hardcoding $blank and $window
+
+- allow for more "error" feedback
+	- for example if you configure a button with an action but without a target, this will not do anything at runtime
+	- we should be able to flag this as "invalid" so the user can "fix" the page easily
+
 - could do away with content wrapper if we have no rows in the cell? though not very predictable?
 	- can add dedicated styling for the content wrapper just in case?
 	- this can focus on positioning within the cell

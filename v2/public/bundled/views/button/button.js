@@ -44,12 +44,33 @@ Vue.view("page-button", {
 			if (nabu.page.event.getName(this.cell.state, "clickEvent") && nabu.page.event.getName(this.cell.state, "clickEvent") != "$close") {
 				var type = nabu.page.event.getType(this.cell.state, "clickEvent");
 				result[nabu.page.event.getName(this.cell.state, "clickEvent")] = type;
-			}	
+			}
+			if (this.cell.state.action && this.cell.state.actionTarget && this.cell.state.actionEvent) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				var output = this.$services.page.getActionOutput(pageInstance, this.cell.state.actionTarget, this.cell.state.action);
+				// we may just want marker events without output
+				result[this.cell.state.actionEvent] = output ? {properties:output} : {};
+			}
 			return result;
 		},
 		handle: function($event) {
 			// we don't always call this handler (immediately), so we separate the logic
 			var self = this;
+			
+			var getBindings = function() {
+				var parameters = {};
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				Object.keys(self.cell.state.bindings).map(function(key) {
+					if (self.cell.state.bindings[key] != null) {
+						var value = self.$services.page.getBindingValue(pageInstance, self.cell.state.bindings[key], self);
+						if (value != null) {
+							parameters[key] = value;
+						}
+					}
+				});
+				return parameters;
+			}
+			
 			var handler = function() {
 				// event-based
 				if (nabu.page.event.getName(self.cell.state, "clickEvent")) {
@@ -66,16 +87,7 @@ Vue.view("page-button", {
 					if (route.charAt(0) == "=") {
 						route = self.$services.page.interpret(route, self);
 					}
-					var parameters = {};
-					var pageInstance = self.$services.page.getPageInstance(self.page, self);
-					Object.keys(self.cell.state.bindings).map(function(key) {
-						if (self.cell.state.bindings[key] != null) {
-							var value = self.$services.page.getBindingValue(pageInstance, self.cell.state.bindings[key], self);
-							if (value != null) {
-								parameters[key] = value;
-							}
-						}
-					});
+					var parameters = getBindings();
 					if (self.cell.state.anchor == "$blank") {
 						window.open(self.$services.router.template(route, parameters));
 					}
@@ -84,6 +96,38 @@ Vue.view("page-button", {
 					}
 					else {
 						self.$services.router.route(route, parameters, self.cell.state.anchor, self.cell.state.mask);
+					}
+				}
+				else if (self.cell.state.url) {
+					var url = this.$services.page.interpret(self.cell.state.url, this);
+					if (self.cell.state.anchor == "$blank") {
+						window.open(url);
+					}
+					else {
+						window.location = url;
+					}
+				}
+				// we might want to run an action
+				else if (self.cell.state.action) {
+					if (self.cell.state.actionTarget) {
+						var pageInstance = self.$services.page.getPageInstance(self.page, self);
+						var target = self.$services.page.getActionTarget(pageInstance, self.cell.state.actionTarget);
+						// at this point it is a renderer or a component
+						if (target && target.runAction) {
+							var result = target.runAction(self.cell.state.action, getBindings());
+							// if we want to emit an action event, let's, even if the result is null
+							if (self.cell.state.actionEvent) {
+								if (result && result.then) {
+									// we don't do anything (yet) on error?
+									result.then(function(x) {
+										pageInstance.emit(self.cell.state.actionEvent, x);
+									})
+								}
+								else {
+									pageInstance.emit(self.cell.state.actionEvent, result);
+								}
+							}
+						}
 					}
 				}
 			};

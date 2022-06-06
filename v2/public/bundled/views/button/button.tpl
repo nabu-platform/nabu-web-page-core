@@ -32,6 +32,7 @@
 			:filter="$services.page.getAvailableActions.bind($self, $services.page.getPageInstance(page, $self))"
 			:formatter="function(x) { return x.title ? x.title : x.name }"
 			:extracter="function(x) { return x.name }"
+			@input="cell.state.actionTarget = null"
 			/>
 			
 		<n-form-combo v-model="cell.state.actionTarget" v-if="cell.state.action"
@@ -41,10 +42,27 @@
 			:extracter="function(x) { return x.id }"
 			/>
 			
+		<n-page-mapper v-if="cell.state.action && cell.state.actionTarget && $services.page.getActionInput($services.page.getPageInstance(page, $self), cell.state.actionTarget, cell.state.action)" 
+			:to="{properties:$services.page.getActionInput($services.page.getPageInstance(page, $self), cell.state.actionTarget, cell.state.action)}"
+			:from="$services.page.getAvailableParameters(page, cell)" 
+			v-model="cell.state.bindings"/>
+			
 		<n-form-text v-model="cell.state.actionEvent" 
+			:timeout="600"
+			label="Output event"
+			after="This action does not have an output but you may want to send an event when it is done"
+			v-if="cell.state.action && cell.state.actionTarget && !$services.page.getActionOutput($services.page.getPageInstance(page, $self), cell.state.actionTarget, cell.state.action)"
+			/>
+			
+		<n-form-text v-model="cell.state.actionEvent" 
+			:timeout="600"
 			label="Output event"
 			after="This action has an output which we can emit as an event"
-			v-if="cell.state.action && cell.state.actionTarget && $services.page.getActionOutput($services.page.getPageInstance(page, $self), cell.state.actionTarget, cell.state.action)"
+			v-else-if="cell.state.action && cell.state.actionTarget"
 			/>
+			
+		<n-form-text v-model="cell.state.url" label="URL to redirect to" v-if="!cell.state.route && (!cell.state.clickEvent || !cell.state.clickEvent.name) && !cell.state.action" :timeout="600"/>
+		
+		<n-form-combo v-model="action.anchor" v-if="cell.state.url || cell.state.route" label="Anchor" :items="['$blank', '$window']"/>
 	</div>
 </template>
