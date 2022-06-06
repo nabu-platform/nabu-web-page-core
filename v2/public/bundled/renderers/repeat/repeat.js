@@ -164,7 +164,7 @@ Vue.component("renderer-repeat", {
 		this.unloadPage();
 	},
 	methods: {
-		getState: function() {
+		getRuntimeState: function() {
 			return this.state;	
 		},
 		getParameters: function(record) {

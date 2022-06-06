@@ -32,7 +32,7 @@ nabu.page.provide("page-renderer", {
 	},
 	// return the child components in play for the given container
 	// these can be added to the list of stuff to style
-	childComponents: function(container) {
+	getChildComponents: function(container) {
 		
 	}
 });
@@ -88,7 +88,7 @@ Vue.component("renderer-form", {
 		}
 	},
 	methods: {
-		getState: function() {
+		getRuntimeState: function() {
 			return this.state;		
 		}
 	}

@@ -1147,8 +1147,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 		},
 		// can do an explicit renderer mount
 		mountRenderer: function(target, component) {
-			if (target.renderer && target.runtimeAlias && component.getState) {
-				Vue.set(this.variables, target.runtimeAlias, component.getState());
+			if (target.renderer && target.runtimeAlias && component.getRuntimeState) {
+				Vue.set(this.variables, target.runtimeAlias, component.getRuntimeState());
 				if (!target.retainState) {
 					component.$on("hook:beforeDestroy", function() {
 						Vue.set(this.variables, target.runtimeAlias, null);
@@ -1181,7 +1181,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 					this.components["alias_" + component.getRuntimeAlias()] = component;
 					// override the currently empty state with the actual state
 					// all modification of that state must occur on this object (by reference)
-					Vue.set(this.variables, component.getRuntimeAlias(), component.getState());
+					if (component.getRuntimeState) {
+						Vue.set(this.variables, component.getRuntimeAlias(), component.getRuntimeState());
+					}
 				}
 			}
 			// if you were to set a row renderer _and_ a cell renderer, we might not pick it up?
@@ -1385,7 +1387,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 				// flex width
 				width: null,
 				height: null,
-				instances: {},
 				condition: null,
 				devices: [],
 				clickEvent: null
@@ -1407,10 +1408,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 				class: null,
 				// a custom id for this row
 				customId: null,
-				// you can map an instance of an array to a row
-				// for instance if you have an array of "contracts", you could map it to the variable "contract"
-				// the key is the local name, the value is the name of the object in the page
-				instances: {},
 				condition: null,
 				direction: null,
 				align: null,
@@ -2691,12 +2688,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			return devices;
 		},
-		addInstance: function(target) {
-			if (!target.instances) {
-				Vue.set(target, "instances", {});
-			}
-			Vue.set(target.instances, "unnamed", null);
-		},
 		removeCell: function(cells, cell) {
 			var self = this;
 			this.$confirm({
@@ -3720,7 +3711,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				// flex width
 				width: null,
 				height: null,
-				instances: {},
 				condition: null,
 				devices: [],
 				clickEvent: null
@@ -3743,10 +3733,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				class: null,
 				// a custom id for this row
 				customId: null,
-				// you can map an instance of an array to a row
-				// for instance if you have an array of "contracts", you could map it to the variable "contract"
-				// the key is the local name, the value is the name of the object in the page
-				instances: {},
 				condition: null,
 				direction: null,
 				align: null,
@@ -4162,10 +4148,6 @@ Vue.component("page-sidemenu", {
 				class: null,
 				// a custom id for this row
 				customId: null,
-				// you can map an instance of an array to a row
-				// for instance if you have an array of "contracts", you could map it to the variable "contract"
-				// the key is the local name, the value is the name of the object in the page
-				instances: {},
 				condition: null,
 				direction: null,
 				align: null,
@@ -4214,7 +4196,6 @@ Vue.component("page-sidemenu", {
 				// flex width
 				width: null,
 				height: null,
-				instances: {},
 				condition: null,
 				devices: [],
 				clickEvent: null

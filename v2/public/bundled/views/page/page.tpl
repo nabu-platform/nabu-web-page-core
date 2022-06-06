@@ -533,16 +533,6 @@
 								</div>
 							</div>
 						</n-collapsible>
-						<n-collapsible title="Repeat" class="is-highlight-left" v-if="cell.instances && $services.page.getAllArrays(page, cell.id).length">
-							<div class="is-row is-align-end is-spacing-medium" v-if="!Object.keys(cell.instances).length">
-								<button @click="addInstance(cell)"><icon name="plus"/>Repeat</button>
-							</div>
-							<n-collapsible class="is-color-primary-light" :title="key" v-for="key in Object.keys(cell.instances)" content-class="is-spacing-medium">
-								<n-form-text :value="key" label="Name" :required="true" :timeout="600" @input="function(value) { renameInstance(cell, key, value) }"/>
-								<n-form-combo v-model="cell.instances[key]" label="Array" :filter="function() { return $services.page.getAllArrays(page, cell.id) }" />
-								<button class="is-button is-variant-close" @click="removeInstance(cell, key)"><icon name="times"/></button>
-							</n-collapsible>
-						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Eventing" key="cell-events" content-class="is-spacing-medium" class="is-highlight-left">
 							<n-form-switch label="Closeable" v-model="cell.closeable" v-if="!cell.on"/>
 							<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents" v-if="!cell.closeable"
@@ -621,18 +611,6 @@
 									</div>
 								</div>
 							</div>
-						</n-collapsible>
-						<n-collapsible title="Repeat" class="list" v-if="false && row.instances && $services.page.getAllArrays(page, row.id).length">
-							<div class="list-actions" v-if="!Object.keys(row.instances).length">
-								<button @click="addInstance(row)">Add Repeat</button>
-							</div>
-							<n-collapsible class="is-color-primary-light" :title="key" v-for="key in Object.keys(row.instances)">
-								<n-form-text :value="key" label="Name" :required="true" :timeout="600" @input="function(value) { renameInstance(row, key, value) }"/>
-								<n-form-combo v-model="row.instances[key]" label="Array" :filter="function() { return $services.page.getAllArrays(page, row.id) }" />
-								<div class="is-row is-align-end">
-									<span @click="removeInstance(row, key)" class="fa fa-trash"></span>
-								</div>
-							</n-collapsible>
 						</n-collapsible>
 						<n-collapsible title="Eventing" content-class="is-spacing-medium">
 							<n-form-combo label="Show On" v-model="row.on" :filter="getAvailableEvents"/>
