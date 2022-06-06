@@ -540,10 +540,30 @@ nabu.page.views.Page = Vue.component("n-page", {
 			rendered: false,
 			oldBodyClasses: [],
 			initialStateLoaded: [],
-			activeTab: "layout"
+			activeTab: "layout",
+			// anything waiting for a mount
+			waitingForMount: {}
 		}
 	},
 	methods: {
+		// we want to listen for a component, this could be a renderer or a target component
+		// it is based on the id
+		// it might already be available or it might be mounted at a later point in time
+		// either way we return a promise to be consistent
+		getComponent: function(id) {
+			var promise = this.$services.q.defer();
+			// great, resolve it immediately
+			if (this.components[id]) {
+				promise.resolve(this.components[id]);
+			}
+			else {
+				if (!this.waitingForMount.hasOwnProperty(id)) {
+					Vue.set(this.waitingForMount, id, []);	
+				}
+				this.waitingForMount[id].push(promise);
+			}
+			return promise;
+		},
 		addNotification: function() {
 			if (!this.page.content.notifications) {
 				Vue.set(this.page.content, "notifications", []);
@@ -1155,6 +1175,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 					});
 				}
 			}
+			// resolve anyone waiting for this component
+			if (this.waitingForMount[target.id] instanceof Array) {
+				this.waitingForMount[target.id].forEach(function(x) {
+					x.resolve(component);
+				});
+				Vue.delete(this.waitingForMount, target.id);
+			}
 		},
 		mounted: function(cell, row, state, component) {
 			var self = this;
@@ -1334,6 +1361,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 				Object.keys(component.$options.events).forEach(function(name) {
 					component.$pageSubscriptions.push(self.subscribe(name, component.$options.events[name].bind(component)));
 				});
+			}
+			
+			// resolve anyone waiting for this component
+			if (this.waitingForMount[cell.id] instanceof Array) {
+				this.waitingForMount[cell.id].forEach(function(x) {
+					x.resolve(component);
+				});
+				Vue.delete(this.waitingForMount, cell.id);
 			}
 		},
 		hasConfigureListener: function(rows) {

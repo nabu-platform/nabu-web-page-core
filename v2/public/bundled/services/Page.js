@@ -238,7 +238,6 @@ nabu.services.VueService(Vue.extend({
 					}
 				}
 			}
-			console.log("output is", result);
 			return result;
 		},
 		// calculate all the available actions in a page
@@ -326,6 +325,7 @@ nabu.services.VueService(Vue.extend({
 		// we want to look for all components that implement a particular specification
 		getSpecificationTargets: function(pageInstance, specification) {
 			var targets = [];
+			var self = this;
 			this.getSingularComponents(pageInstance).forEach(function(component) {
 				if (component.getSpecifications && component.getSpecifications().indexOf(specification) >= 0) {
 					targets.push(component.$$cell);

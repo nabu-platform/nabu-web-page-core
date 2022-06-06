@@ -361,6 +361,14 @@
 							}
 						}
 					},
+					"paging": {
+						"paging.js": {
+							"url": "views/paging/paging.js"
+						},
+						"paging.tpl": {
+							"url": "views/paging/paging.tpl"
+						}
+					},
 					"providers": {
 						"fragment": {
 							"image": {
