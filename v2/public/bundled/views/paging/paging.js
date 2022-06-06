@@ -26,11 +26,8 @@ Vue.view("page-paging", {
 	icon: "sort-numeric-down",
 	data: function() {
 		return {
-			// we don't use vue.set, so we need to specifically define the fields
-			paging: {
-				total: 0,
-				current: 0
-			},
+			// we start with _some_ paging so we see something in edit mode
+			paging: {},
 			component: null
 		}
 	},
@@ -41,6 +38,10 @@ Vue.view("page-paging", {
 		if (this.cell.state.target) {
 			pageInstance.getComponent(this.cell.state.target).then(function(component) {
 				self.component = component;
+				component.runAction("get-paging").then(function(paging) {
+					// this should be reactive!
+					Vue.set(self, "paging", paging);
+				});
 			});
 		}
 	},
@@ -48,26 +49,14 @@ Vue.view("page-paging", {
 		load: function(page) {
 			if (this.component) {
 				var self = this;
+				// our paging is already reactive, don't need to update it again
 				return this.component.runAction("jump-page", {
 					page: page
-				}).then(function(paging) {
-					nabu.utils.objects.merge(self.paging, paging);
 				});
 			}
 		},
 		configurator: function() {
 			return "page-paging-configure";
-		}
-	},
-	watch: {
-		component: function(component) {
-			if (component) {
-				var self = this;
-				component.runAction("get-paging").then(function(paging) {
-					console.log("received", paging);
-					nabu.utils.objects.merge(self.paging, paging);
-				});
-			}
 		}
 	}
 });
