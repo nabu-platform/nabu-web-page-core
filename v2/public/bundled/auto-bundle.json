@@ -524,6 +524,9 @@
 		"specifications": {
 			"pageable.js": {
 				"url": "specifications/pageable.js"
+			},
+			"browseable.js": {
+				"url": "specifications/browseable.js"
 			}
 		}
 	}
