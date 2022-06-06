@@ -500,7 +500,7 @@
 						<n-collapsible :only-one-open="true" title="Rendering" content-class="is-spacing-medium" class="is-highlight-left">
 							<n-form-combo v-model="cell.state.openTrigger" label="Open on" placeholder="Always open" :items="['click', 'hover']"/>
 							<n-form-ace mode="javascript" label="Condition" v-model="cell.condition" after="If you fill in a condition, the cell will only render the content if the condition evaluates to true" :timeout="600"/>
-							<n-form-combo label="Cell Renderer" v-model="cell.renderer" :items="$services.page.getRenderers('cell')" 
+							<n-form-combo label="Cell Renderer" v-if="!cell.alias" v-model="cell.renderer" :items="$services.page.getRenderers('cell')" 
 								after="You can set a custom renderer for this cell"
 								empty-value="No renderers found"
 								:formatter="function(x) { return x.name }" 

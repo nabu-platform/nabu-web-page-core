@@ -249,14 +249,14 @@ nabu.services.VueService(Vue.extend({
 			// in the next phase, you select an actual target
 			// at that point we have the exact definition of the action
 			var available = {};
-			Object.keys(pageInstance.components).forEach(function(key) {
-				self.getActions(pageInstance.components[key]).forEach(function(action) {
+			this.getSingularComponents(pageInstance).forEach(function(component) {
+				self.getActions(component).forEach(function(action) {
 					available[action.name] = action;
 				});
 			});
 			// we also need to check for renderers
 			this.getAvailableRenderers(pageInstance.page).forEach(function(target) {
-				var renderer = this.getRenderer(target.renderer);
+				var renderer = self.getRenderer(target.renderer);
 				self.getActions(renderer).forEach(function(action) {
 					available[action.name] = action;
 				});	
@@ -273,6 +273,20 @@ nabu.services.VueService(Vue.extend({
 			}
 			return result;
 		},
+		// get all SINGULAR components
+		// components might be registered multiple times (e.g. alias_ and instance_)
+		// multiple components might be registered to the same cell (through older means like arbitrary, repeat,...)
+		getSingularComponents: function(pageInstance) {
+			var components = [];
+			Object.keys(pageInstance.components).forEach(function(key) {
+				if (key instanceof Number || key.match(/^[0-9]+$/)) {
+					if (!(pageInstance.components[key] instanceof Array)) {
+						components.push(pageInstance.components[key]);
+					}
+				}	
+			});
+			return components;
+		},
 		// once we've chosen an action, we want to list all the targets that support this
 		// we always want a target cell or row
 		// this is for a number of reasons:
@@ -283,19 +297,20 @@ nabu.services.VueService(Vue.extend({
 		// page arbitrary is (hopefully) deprecated and the old repeat is gone as well
 		getActionTargets: function(pageInstance, action, value) {
 			var targets = [];
-			Object.keys(pageInstance.components).forEach(function(key) {
-				var hasAction = self.getActions(pageInstance.components[key]).filter(function(action) {
-					return action.name == action;
+			var self = this;
+			this.getSingularComponents(pageInstance).forEach(function(component) {
+				var hasAction = self.getActions(component).filter(function(x) {
+					return x.name == action;
 				}).length > 0;
 				if (hasAction) {
-					targets.push(pageInstance.components[key].$$cell);
+					targets.push(component.$$cell);
 				}
 			});
 			// we also need to check for renderers
 			this.getAvailableRenderers(pageInstance.page).forEach(function(target) {
-				var renderer = this.getRenderer(target.renderer);
-				var hasAction = self.getActions(renderer).filter(function(action) {
-					return action.name == action;
+				var renderer = self.getRenderer(target.renderer);
+				var hasAction = self.getActions(renderer).filter(function(x) {
+					return x.name == action;
 				}).length > 0;
 				if (hasAction) {
 					targets.push(target);
@@ -311,19 +326,36 @@ nabu.services.VueService(Vue.extend({
 		// we want to look for all components that implement a particular specification
 		getSpecificationTargets: function(pageInstance, specification) {
 			var targets = [];
-			Object.keys(pageInstance.components).forEach(function(key) {
-				var component = pageInstance.components[key];
+			this.getSingularComponents(pageInstance).forEach(function(component) {
 				if (component.getSpecifications && component.getSpecifications().indexOf(specification) >= 0) {
 					targets.push(component.$$cell);
 				}
 			});
 			this.getAvailableRenderers(pageInstance.page).forEach(function(target) {
-				var renderer = this.getRenderer(target.renderer);
+				var renderer = self.getRenderer(target.renderer);
 				if (renderer.getSpecifications && renderer.getSpecifications().indexOf(specification) >= 0) {
 					targets.push(target);
 				}
 			});
 			return targets;
+		},
+		// the action target is _always_ the id, but it might be a cell, a row or a component within a cell
+		// can't combine cell renderers with cell content for now, there is only one id
+		// though we do keep an additional reference under instance_<id> to the actual content...
+		getActionTarget: function(pageInstance, actionTarget) {
+			return pageInstance.components[actionTarget];
+		},
+		getActionOutput: function(pageInstance, actionTarget, action) {
+			var target = this.getActionTarget(pageInstance, actionTarget);
+			if (target) {
+				var result = this.getActions(target).filter(function(x) {
+					return x.name == action;
+				})[0];
+				if (result && result.output && Object.keys(result.output).length > 0) {
+					return result.output;
+				}
+			}
+			return null;
 		},
 		// combine all the actions a component supports (including specifications)
 		getActions: function(component) {

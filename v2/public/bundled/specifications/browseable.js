@@ -12,11 +12,21 @@ nabu.page.provide("page-specification", {
 				type: "boolean"
 			}
 		},
-		output: {}
+		output: {
+			// can we go further?
+			hasMore: {
+				type: "boolean"
+			}
+		}
 	}, {
 		title: "Previous Page", 
 		name: "previous-page",
 		input: {},
-		output: {}
+		output: {
+			// can we go back further?
+			hasMore: {
+				type: "boolean"
+			}
+		}
 	}]
 });

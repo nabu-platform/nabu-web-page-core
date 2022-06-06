@@ -23,12 +23,12 @@
 			<n-form-text v-model="cell.state.logo" label="Logo URL" after="Configure the url for your logo"/>
 			<page-event-value :page="page" :container="cell.state" title="Handled Event" name="handledEvent" @resetEvents="resetEvents" :inline="true"/>
 		</n-collapsible>
-		<n-collapsible :only-one-open="true" :title="action.label ? action.label : action.name" v-for="action in getActions()">
+		<n-collapsible :only-one-open="true" :title="action.label ? action.label : action.name" v-for="action in getAllActions()">
 			<ul slot="buttons" class="is-menu is-variant-toolbar is-spacing-horizontal-right-medium">
 				<li class="is-column"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="up(action)"><icon name="chevron-circle-up"/></button></li>
 				<li class="is-column"><button class="is-button is-size-xsmall is-variant-secondary-outline" @click="down(action)"><icon name="chevron-circle-down"/></button></li>
 				<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="$services.page.copyItem('page-action', action)"><icon name="copy"/></button></li>
-				<li class="is-column"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="getActions().splice(getActions().indexOf(action), 1)"><icon name="times"/></button></li>
+				<li class="is-column"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="getAllActions().splice(getAllActions().indexOf(action), 1)"><icon name="times"/></button></li>
 			</ul>
 			
 			<div v-if="action.arbitrary" class="is-column is-spacing-medium">
@@ -141,11 +141,11 @@
 			v-auto-close.actions="autoclose"
 			v-fixed-header="cell.state.isFixedHeader != null && cell.state.isFixedHeader == true">
 		<li class="is-column is-title" v-if="root && (cell.state.title || cell.state.logo)"><h2 class="is-h2" :class="getChildComponentClasses('actions-title')" @click="$services.router.route('home')"><img class="is-icon" v-if="cell.state.logo" :src="cell.state.logo"></span><span class="is-text" v-if="cell.state.title" v-html="$services.page.translate($services.page.interpret(cell.state.title, $self))"></span></h2></li>
-		<li v-for="action in (isAutoCalculated ? autoActions : (edit ? getActions() : resolvedActions.filter(function(x) { return !x.dynamic})))" v-if="isVisible(action)"
+		<li v-for="action in (isAutoCalculated ? autoActions : (edit ? getAllActions() : resolvedActions.filter(function(x) { return !x.dynamic})))" v-if="isVisible(action)"
 				class="is-column"
 				:class="[{ 'has-children': action.actions != null && action.actions.length }, action.class, {'click-based': cell.state.clickBased}, {'is-open': showing.indexOf(action) >= 0}, getDynamicWrapperClasses(action)]"
 				@mouseover="show(action)" @mouseout="hide(action)"
-				:sequence="(isAutoCalculated ? autoActions : (edit ? getActions() : resolvedActions)).indexOf(action) + 1">
+				:sequence="(isAutoCalculated ? autoActions : (edit ? getAllActions() : resolvedActions)).indexOf(action) + 1">
 			
 			<n-sidebar class="page-settings" v-if="configuringAction" :inline="true" @close="configuringAction = null" :autocloseable="false">
 				<component is="page-actions-configure" :cell="cell" :page="page" :edit="edit" :actions="configuringAction.actions"/>
@@ -164,7 +164,7 @@
 					:data-event="action.name"
 					:target="action.anchor == '$blank' && (action.url || action.route) ? '_blank' : null"
 					:class="getDynamicClasses(action)"
-					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
+					:sequence="(edit ? getAllActions() : resolvedActions).indexOf(action) + 1"
 					:disabled="isDisabled(action)"
 					:id="$services.page.interpret(action.id, $self)"
 					@click="handle(action)"
@@ -174,7 +174,7 @@
 				<button :auto-close-actions="!action.skipHandleEvent" class="is-button"
 					:data-event="action.name"
 					:class="getDynamicClasses(action)"
-					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
+					:sequence="(edit ? getAllActions() : resolvedActions).indexOf(action) + 1"
 					:disabled="isDisabled(action)"
 					:id="$services.page.interpret(action.id, $self)"
 					@click="handle(action)" 
@@ -186,10 +186,10 @@
 					@click="toggle(action)"
 					v-else
 					:class="getDynamicClasses(action)"
-					:sequence="(edit ? getActions() : resolvedActions).indexOf(action) + 1"
+					:sequence="(edit ? getAllActions() : resolvedActions).indexOf(action) + 1"
 						><icon v-if="action.icon" :name="action.icon"
 						/><span class="is-text" v-content.parameterized="{value:$services.page.translate($services.page.interpret(action.label, $self)), sanitize:!action.compileLabel, compile: !!action.compileLabel, plain: !action.compileLabel }"></span></span>
-				<page-actions :ref="'action_' + (edit ? getActions() : resolvedActions).indexOf(action)"
+				<page-actions :ref="'action_' + (edit ? getAllActions() : resolvedActions).indexOf(action)"
 					:root="false"
 					v-if="(action.actions && action.actions.length) || configuringAction == action"
 					:cell="cell"

@@ -3122,7 +3122,13 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		},
 		cellTagFor: function(row, cell) {
 			var renderer = cell.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == cell.renderer })[0];
-			if (renderer == null) {
+			// once we have a cell.alias, we can not use a renderer!
+			// must be enforced here
+			// the problem is that we only store a single id for now, if we have a renderer, it will overwrite the id that is already registering the component
+			// we "could" find a way around this (component is also registered under instance_<id>) but then we need to do some refactoring on actions
+			// where we keep track of the possibility that both exist etc
+			// it is an unlikely usecase...
+			if (renderer == null || cell.alias) {
 				if (!this.page.content.pageType || this.page.content.pageType == "page") {
 					return "div";	
 				}

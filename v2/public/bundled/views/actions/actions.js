@@ -145,7 +145,7 @@ nabu.page.views.PageActionsGenerator = function(name) {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			
-			this.getActions().forEach(function(action) {
+			this.getAllActions().forEach(function(action) {
 				if (action.triggers) {
 					action.triggers.forEach(function(trigger) {
 						self.subscriptions.push(pageInstance.subscribe(trigger, function() {
@@ -223,7 +223,7 @@ nabu.page.views.PageActionsGenerator = function(name) {
 			paste: function() {
 				var action = this.$services.page.pasteItem("page-action");	
 				if (action) {
-					this.getActions().push(action);
+					this.getAllActions().push(action);
 				}
 			},
 			getPagesFor: function(category) {
@@ -383,7 +383,7 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				});
 				return this.$services.q.all(promises);
 			},
-			getActions: function() {
+			getAllActions: function() {
 				return this.actions ? this.actions : this.cell.state.actions;
 			},
 			// still need to allow configuring of child actions
@@ -571,20 +571,20 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				return routes;
 			},
 			addContent: function() {
-				this.getActions().push({
+				this.getAllActions().push({
 					arbitrary: true,
 					name: null,
 					class: null,
 					content: {},
-					label: "Content" + (this.getActions().length + 1),
+					label: "Content" + (this.getAllActions().length + 1),
 					activeRoutes: []
 				});
 			},
 			addAction: function(dynamic) {
-				this.getActions().push({
+				this.getAllActions().push({
 					dynamic: dynamic,
 					operation: null,
-					label: "Action" + (this.getActions().length + 1),
+					label: "Action" + (this.getAllActions().length + 1),
 					route: null,
 					event: null,
 					eventState: null,
@@ -943,12 +943,12 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				var self = this;
 				// give it time to render and resolve the $ref
 				Vue.nextTick(function() {
-					var key = "action_" + self.getActions().indexOf(action);
+					var key = "action_" + self.getAllActions().indexOf(action);
 					self.$refs[key][0].configureChild();
 				});
 			},
 			up: function(action) {
-				var actions = this.getActions();
+				var actions = this.getAllActions();
 				var index = actions.indexOf(action);
 				if (index > 0) {
 					var replacement = actions[index - 1];
@@ -957,7 +957,7 @@ nabu.page.views.PageActionsGenerator = function(name) {
 				}
 			},
 			down: function(action) {
-				var actions = this.getActions();
+				var actions = this.getAllActions();
 				var index = actions.indexOf(action);
 				if (index < actions.length - 1) {
 					var replacement = actions[index + 1];
