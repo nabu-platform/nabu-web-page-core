@@ -3,6 +3,32 @@
 
 nabu.page.provide("page-specification", {
 	name: "pageable",
+	state: {
+		paging: {
+			properties: {
+				// current page
+				current: {
+					type: "int64"
+				},
+				// the total amount of pages
+				total: {
+					type: "int64"
+				},
+				// how many items on a page
+				pageSize: {
+					type: "int64"
+				},
+				// the offset in rows
+				rowOffset: {
+					type: "int64"
+				},
+				// total amount of rows available
+				totalCount: {
+					type: "int64"
+				}
+			}
+		}
+	},
 	actions: [{
 		title: "Jump to page",
 		name: "jump-page",

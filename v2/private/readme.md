@@ -1,3 +1,8 @@
+reactiveness:
+any state that is exchanged should (as far as possible and necessary) be reactive
+this includes state that is exposed and state that is returned
+
+
 Actions can be added to run with say a button.
 Actions have a defined input and optionally output.
 The output can _always_ be returned in a promise (or directly), you must keep that in mind.
@@ -13,3 +18,7 @@ However, there are a lot of ways that the paging can be updated, someone can cli
 The component that received the paging object should ideally at every point see the latest data.
 
 This is the same requirement with the state.
+
+TODO:
+specifications currently only revolve around actions which means we model some actions just to retrieve state
+-> we could however also include state in the specification, as an example the paging component, we use get-paging but could just as well use the state

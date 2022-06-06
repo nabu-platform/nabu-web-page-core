@@ -17,9 +17,12 @@ Vue.component("page-components-overview", {
 		},
 		components: function() {
 			// only keep the routes with a visual icon and a name
-			return this.$services.router.router.routes.filter(function(x) {
+			var all = this.$services.router.router.routes.filter(function(x) {
 				return x.icon && x.name;
 			});
+			// combine routes and templates
+			nabu.utils.arrays.merge(all, this.$services.page.templates);
+			return all;
 		},
 		componentCategories: function() {
 			var groups = [];
@@ -114,9 +117,15 @@ Vue.component("page-components-overview", {
 			});
 		},
 		dragComponent: function(event, component) {
-			this.$services.page.setDragData(event, "component-alias", component.alias);
-			if (component.form) {
-				this.$services.page.setDragData(event, "form-name", component.form);
+			// you're actually dragging a template, we have unified these two
+			if (!component.alias && component.content) {
+				this.dragTemplate(event, component);
+			}
+			else {
+				this.$services.page.setDragData(event, "component-alias", component.alias);
+				if (component.form) {
+					this.$services.page.setDragData(event, "form-name", component.form);
+				}
 			}
 		},
 		dragTemplate: function(event, template) {

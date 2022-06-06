@@ -2967,30 +2967,48 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 					if (structure.type == "page-row") {
 						structure = structure.content;
 					}
-					if (structure.rows) {
-						var rows = structure.rows.map(function(x) { return self.$services.page.renumber(self.page, x) });
+					// we assume the structure is a valid cell or row
+					// we want to copy all the stuff configured on the actual cell or row as well
+					// renumber the structure
+					self.$services.page.renumber(self.page, structure);
+					
+					// it's a row
+					if (structure.cells) {
+						//var rows = structure.rows.map(function(x) { return self.$services.page.renumber(self.page, x) });
 						var parent = this.$services.page.getTarget(this.page.content, row.id, true);
 						var index = parent.rows.indexOf(row);
 						if (below) {
-							rows.unshift(0);
-							rows.unshift(index + 1);
-							parent.rows.splice.apply(null, rows);
-							//parent.rows.splice(index + 1, 0, structure);
+							if (index == parent.rows.length - 1) {
+								parent.rows.push(structure);
+							}
+							else {
+								parent.rows.splice(index + 1, 0, structure);
+							}
+							//rows.unshift(0);
+							//rows.unshift(index + 1);
+							//parent.rows.splice.apply(null, rows);
 						}
 						else if (above) {
-							rows.unshift(0);
-							rows.unshift(index);
-							parent.rows.splice.apply(null, rows);
-							//parent.rows.splice(index, 0, structure);
+							if (index == 0) {
+								parent.rows.unshift(structure);
+							}
+							else {
+								parent.rows.splice(index, 0, structure);
+							}
+							//rows.unshift(0);
+							//rows.unshift(index);
+							//parent.rows.splice.apply(null, rows);
 						}
 						else {
-							var cell = this.addCell(row);
-							nabu.utils.arrays.merge(cell.rows, rows);
+							//var cell = this.addCell(row);
+							//nabu.utils.arrays.merge(cell.rows, rows);
+							parent.rows.push(structure);
 							//cell.rows.push(structure);
 						}
 					}
-					else if (structure.cells) {
-						var cells = structure.cells.map(function(x) { return self.$services.page.renumber(self.page, x) });
+					// it's a cell
+					else if (structure.rows) {
+						//var cells = structure.cells.map(function(x) { return self.$services.page.renumber(self.page, x) });
 						var parent = this.$services.page.getTarget(this.page.content, row.id, true);
 						var index = parent.rows.indexOf(row);
 						if (below) {
@@ -3014,9 +3032,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 							}
 						}
 						nabu.utils.arrays.merge(row.cells, cells);
-						if (!row.name) {
-							row.name = structure.name;
-						}
 					}
 					if (structure.actions) {
 						nabu.utils.arrays.merge(this.page.content.actions, structure.actions);

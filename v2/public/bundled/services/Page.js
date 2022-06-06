@@ -370,6 +370,24 @@ nabu.services.VueService(Vue.extend({
 			return null;
 		},
 		// combine all the actions a component supports (including specifications)
+		getState: function(component) {
+			var state = {};
+			if (component.getSpecifications) {
+				var specifications = component.getSpecifications();
+				var implemented = nabu.page.providers("page-specification").filter(function(x) {
+					return specifications.indexOf(x.name) >= 0;
+				});
+				implemented.forEach(function(x) {
+					if (x.state) {
+						nabu.utils.objects.merge(state, x.state);
+					}
+				});
+			}
+			if (component.getState) {
+				nabu.utils.objects.merge(state, component.getState());
+			}
+		},
+		// combine all the actions a component supports (including specifications)
 		getActions: function(component) {
 			var actions = [];
 			if (component.getActions) {
@@ -381,7 +399,9 @@ nabu.services.VueService(Vue.extend({
 					return specifications.indexOf(x.name) >= 0;
 				});
 				implemented.forEach(function(x) {
-					nabu.utils.arrays.merge(actions, x.actions);
+					if (x.actions) {
+						nabu.utils.arrays.merge(actions, x.actions);
+					}
 				});
 			}
 			return actions;
@@ -401,7 +421,27 @@ nabu.services.VueService(Vue.extend({
 		// this _will_ lead to infinite loops
 		getRendererState: function(name, target, page, pageParameters) {
 			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == name })[0];
-			return renderer && renderer.getState ? renderer.getState(target, page, pageParameters, this.$services) : null;	
+			var state = renderer && renderer.getState ? renderer.getState(target, page, pageParameters, this.$services) : null;	
+			if (!state) {
+				state = {properties:{}};
+			}
+			else if (!state.properties) {
+				state.properties = {};
+			}
+			if (renderer.getSpecifications) {
+				var specifications = renderer.getSpecifications(target);
+				console.log("specs are", specifications);
+				var implemented = nabu.page.providers("page-specification").filter(function(x) {
+					return specifications.indexOf(x.name) >= 0;
+				});
+				implemented.forEach(function(x) {
+					console.log("implemented", x);
+					if (x.state) {
+						nabu.utils.objects.merge(state.properties, x.state);
+					}
+				});
+			}
+			return state;
 		},
 		calculateAcceptedCookies: function() {
 			this.hasAcceptedCookies = !!this.$services.cookies.get("cookie-settings");	
@@ -3788,14 +3828,8 @@ nabu.services.VueService(Vue.extend({
 			if (cell.bindings == null) {
 				cell.bindings = {};
 			}
-			if (cell.instances == null) {
-				cell.instances = {};
-			}
 			if (cell.devices == null) {
 				cell.devices = [];
-			}
-			if (cell.state == null) {
-				cell.state = {};
 			}
 			if (cell.id == null) {
 				cell.id = -1;
@@ -3806,9 +3840,6 @@ nabu.services.VueService(Vue.extend({
 		normalizeRow: function(row) {
 			if (row.cells == null) {
 				row.cells = [];
-			}
-			if (row.instances == null) {
-				row.instances = {};
 			}
 			if (row.id == null) {
 				row.id = -1;

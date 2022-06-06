@@ -60,19 +60,6 @@ window.addEventListener("load", function() {
 		});
 		
 		$services.router.register({
-			alias: "page-static-image",
-			query: ["href"],
-			enter: function(parameters) {
-				return new nabu.page.views.Image({propsData: parameters});
-			},
-			category: "Content",
-			name: "Static Image",
-			description: "Position a static image with this component",
-			icon: "page/core/images/image.svg"
-		});
-		
-
-		$services.router.register({
 			alias: "page-code",
 			enter: function(parameters) {
 				return new nabu.page.views.Code({propsData: parameters});

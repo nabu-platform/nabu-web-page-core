@@ -22,8 +22,9 @@ Vue.view("page-paging", {
 		}
 	},
 	name: "Paging",
-	category: "Data Utilities",
+	category: "Data",
 	icon: "sort-numeric-down",
+	description: "Allow you to page through a data set",
 	data: function() {
 		return {
 			// we start with _some_ paging so we see something in edit mode

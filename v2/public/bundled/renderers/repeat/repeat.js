@@ -48,16 +48,18 @@ nabu.page.provide("page-renderer", {
 				}
 				result.record = {properties:properties};
 				
+				var filters = {};
 				// we also want to expose the parameters as input
 				var parameters = operation.parameters;
 				if (parameters) {
 					parameters.forEach(function(x) {
 						// reserved!
 						if (x.name != "record") {
-							result[x.name] = x;
+							filters[x.name] = x;
 						}
 					});
 				}
+				result.filters = {properties:filters};
 			}
 		}
 		else if (container.state.array) {
@@ -85,6 +87,11 @@ nabu.page.provide("page-renderer", {
 		}
 		return {properties:result};
 	},
+	getSpecifications: function(target) {
+		// TODO: check that it is an operation _and_ it has limit/offset capabilities
+		return [];
+		//return ["pageable", "browseable"];
+	}
 });
 
 var $$rendererInstanceCounter = 0;

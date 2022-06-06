@@ -26,16 +26,21 @@
 </template>
 
 <template id="page-image">
-	<div class="page-image">
-		<div ref="inline" v-content="inlineContent" v-if="cell.state.inline" class="image" 
-			:style="{'height': cell.state.height ? cell.state.height : 'inherit'}"
+	<div class="page-image" :class="{'is-editing': edit}">
+		<div class="is-inline-image-menu" v-if="edit">
+			<button class="is-button is-variant-primary is-size-xsmall is-position-center" :disabled="!hasPrevious" @click="previous"><icon name="chevron-left"/><span class="is-text">Previous</span></button>
+			<n-input-file v-model="files" @change="upload" :types="['image/*']"/>
+			<button class="is-button is-variant-primary is-size-xsmall is-position-center" :disabled="!hasNext" @click="next"><icon name="chevron-right"/><span class="is-text">Next</span></button>
+		</div>
+		
+		<img v-if="!href && edit" src="${server.root()}resources/modules/image/placeholder.svg" class="is-image is-fit-cover" />
+			
+		<div ref="inline" v-content="inlineContent" v-else-if="href && cell.state.inline" class="image" 
 			:title="cell.state.title"></div>
-		<img v-else-if="cell.state.size == 'native' && (cell.state.href || href)" :src="fullHref"
-			:style="{'height': cell.state.height ? cell.state.height : 'inherit'}"
+
+		<img v-else="href" :src="href"
+			class="is-image"
 			:title="cell.state.title"/>
-		<div v-else-if="cell.state.href || href" class="image" 
-			:style="{'background-image': 'url(' + fullHref + ')', 'height': cell.state.height ? cell.state.height : 'inherit', 'background-size': cell.state.size }"
-			:title="cell.state.title"></div>
-		<n-input-file v-else-if="edit" v-model="files" @change="upload" :types="['image']"/>
+
 	</div>
 </template>

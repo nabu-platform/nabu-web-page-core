@@ -63,6 +63,6 @@
 			
 		<n-form-text v-model="cell.state.url" label="URL to redirect to" v-if="!cell.state.route && (!cell.state.clickEvent || !cell.state.clickEvent.name) && !cell.state.action" :timeout="600"/>
 		
-		<n-form-combo v-model="action.anchor" v-if="cell.state.url || cell.state.route" label="Anchor" :items="['$blank', '$window']"/>
+		<n-form-combo v-model="cell.state.anchor" v-if="cell.state.url || cell.state.route" label="Anchor" :items="['$blank', '$window']"/>
 	</div>
 </template>
