@@ -1,5 +1,5 @@
 <template id="page-components-overview">
-	<div class="page-components-overview">
+	<div class="page-components-overview" @drop.prevent="function($event) { $event.stopPropagation() }">
 		<ul class="is-menu is-variant-toolbar is-spacing-horizontal-sides-medium">
 			<li class="is-column"><button class="is-button is-border-underline is-size-small" @click="selected = 'components'" :class="{'is-active': selected == 'components'}">Components</button></li>
 			<li class="is-column"><button class="is-button is-border-underline is-size-small" @click="selected = 'templates'" :class="{'is-active': selected == 'templates'}">Templates</button></li>
@@ -10,10 +10,14 @@
 			<n-collapsible :only-one-open="true" v-for="category in componentCategories" :title="prettyPrint(category)" content-class="is-pattern-underline">
 				<div class="is-row is-height-min-4 is-align-cross-center is-spacing-horizontal-medium is-spacing-vertical-small is-highlight-light is-cursor-pointer" v-for="(component, index) in getComponentCategory(category)" :draggable="true"
 						@dragstart="dragComponent($event, component)">
-					<img :draggable="false" :src="'${server.root()}resources/' + component.icon" class="is-column is-width-column-1" v-if="component.icon && component.icon.match(/^.*\.[^.]+$/)"/>
+					<img :draggable="false" :src="'${server.root()}resources/' + component.icon" class="is-column is-width-min-2" v-if="component.icon && component.icon.match(/^.*\.[^.]+$/)"/>
 					<icon v-else-if="component.icon" :name="component.icon" class="is-column is-width-column-1"/>
 					<div class="is-column is-width-column-11">
-						<h5 class="is-h5 is-size-medium">{{ component.name }}</h5>
+						<h5 class="is-h5 is-size-medium is-spacing-horizontal-gap-small">
+							<span class="is-text">{{ component.name }}</span>
+							<span class="is-badge is-size-xsmall is-color-secondary-outline" v-if="component.type">{{component.type}}</span>
+							<span class="is-badge is-size-xsmall is-color-secondary-outline" v-if="component.templateVersion">v{{component.templateVersion}}</span>
+						</h5>
 						<p class="is-p is-size-xsmall" v-if="component.description">{{ component.description }}</p>
 					</div>
 				</div>
@@ -23,10 +27,10 @@
 			<n-collapsible class="component-category" v-for="category in templateCategories" :title="prettyPrint(category)" content-class="is-pattern-underline">
 				<div class="is-row is-height-min-4 is-align-cross-center is-spacing-horizontal-medium is-spacing-vertical-small is-highlight-light is-cursor-pointer" v-for="template in getTemplateCategory(category)" :draggable="true"
 						@dragstart="dragTemplate($event, template)">
-					<img :draggable="false" :src="'${server.root()}resources/' + template.icon" class="is-column is-width-column-1" v-if="template.icon && template.icon.match(/^.*\.[^.]+$/)"/>
+					<img :draggable="false" :src="'${server.root()}resources/' + template.icon" class="is-column is-width-min-2" v-if="template.icon && template.icon.match(/^.*\.[^.]+$/)"/>
 					<icon v-else-if="template.icon" :name="template.icon" class="is-column is-width-column-1"/>
 					<div class="is-column is-width-column-11">
-						<h5 class="is-h5 is-size-medium">{{ template.name }}</h5>
+						<h5 class="is-h5 is-size-medium">{{ template.name }}<span class="is-content is-size-xsmall is-color-neutral is-spacing-horizontal-left-medium" v-if="template.type">{{template.type}}</span></h5>
 						<p class="is-p is-size-xsmall" v-if="template.description">{{ template.description }}</p>
 					</div>
 				</div>

@@ -325,7 +325,20 @@ window.addEventListener("load", function() {
 			category: "Form",
 			name: "Rich Text",
 			description: "This input component allows you to capture rich text from the user",
-			icon: "page/core/images/richtext.svg"
+			icon: "modules/richtext/logo.svg"
+		});
+		$services.router.register({
+			alias: "page-form-file",
+			enter: function(parameters) {
+				parameters.formComponent = "page-form-input-file";
+				parameters.configurationComponent = "page-form-input-file-configure";
+				return new nabu.page.views.FormComponent({propsData: parameters});
+			},
+			form: "file",
+			category: "Form",
+			name: "File",
+			description: "Upload a file to a REST service with a stream as input",
+			icon: "file"
 		});
 		
 		// fragment providers

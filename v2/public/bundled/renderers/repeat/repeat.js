@@ -24,66 +24,68 @@ nabu.page.provide("page-renderer", {
 	configuration: "renderer-repeat-configure",
 	getState: function(container, page, pageParameters, $services) {
 		var result = {};
-		if (container.state.operation) {
-			var operation = $services.swagger.operations[container.state.operation];
-			if (operation && operation.responses && operation.responses["200"] && operation.responses["200"].schema) {
-				var properties = {};
-				var definition = $services.swagger.resolve(operation.responses["200"].schema);
-				var arrays = $services.page.getArrays(definition);
-				if (arrays.length > 0) {
-					var childDefinition = $services.page.getChildDefinition(definition, arrays[0]);
-					if (childDefinition && childDefinition.items && childDefinition.items.properties) {
-						nabu.utils.objects.merge(properties, childDefinition.items.properties);
+		if (container.repeat) {
+			if (container.repeat.operation) {
+				var operation = $services.swagger.operations[container.repeat.operation];
+				if (operation && operation.responses && operation.responses["200"] && operation.responses["200"].schema) {
+					var properties = {};
+					var definition = $services.swagger.resolve(operation.responses["200"].schema);
+					var arrays = $services.page.getArrays(definition);
+					if (arrays.length > 0) {
+						var childDefinition = $services.page.getChildDefinition(definition, arrays[0]);
+						if (childDefinition && childDefinition.items && childDefinition.items.properties) {
+							nabu.utils.objects.merge(properties, childDefinition.items.properties);
+						}
 					}
-				}
-				if (definition.properties) {
-					Object.keys(definition.properties).map(function(field) {
-						if (definition.properties[field].type == "array") {
-							var items = definition.properties[field].items;
-							if (items.properties) {
-								nabu.utils.objects.merge(properties, items.properties);
+					if (definition.properties) {
+						Object.keys(definition.properties).map(function(field) {
+							if (definition.properties[field].type == "array") {
+								var items = definition.properties[field].items;
+								if (items.properties) {
+									nabu.utils.objects.merge(properties, items.properties);
+								}
 							}
-						}
-					});
-				}
-				result.record = {properties:properties};
-				
-				var filters = {};
-				// we also want to expose the parameters as input
-				var parameters = operation.parameters;
-				if (parameters) {
-					parameters.forEach(function(x) {
-						// reserved!
-						if (x.name != "record") {
-							filters[x.name] = x;
-						}
-					});
-				}
-				result.filters = {properties:filters};
-			}
-		}
-		else if (container.state.array) {
-			var record = {};
-			var available = pageParameters;
-			var indexOfDot = container.state.array.indexOf(".");
-			var variable = indexOfDot < 0 ? container.state.array : container.state.array.substring(0, indexOfDot);
-			var rest = indexOfDot < 0 ? null : container.state.array.substring(indexOfDot + 1);
-			if (available[variable]) {
-				// we can have root arrays rather than part of something else
-				// for example from a multiselect event
-				if (!rest) {
-					if (available[variable].items && available[variable].items.properties) {
-						nabu.utils.objects.merge(record, available[variable].items.properties);
+						});
 					}
-				}
-				else {
-					var childDefinition = $services.page.getChildDefinition(available[variable], rest);
-					if (childDefinition) {
-						nabu.utils.objects.merge(record, childDefinition.items.properties);
+					result.record = {properties:properties};
+					
+					var filters = {};
+					// we also want to expose the parameters as input
+					var parameters = operation.parameters;
+					if (parameters) {
+						parameters.forEach(function(x) {
+							// reserved!
+							if (x.name != "record") {
+								filters[x.name] = x;
+							}
+						});
 					}
+					result.filters = {properties:filters};
 				}
 			}
-			result.record = {properties:record};
+			else if (container.repeat.array) {
+				var record = {};
+				var available = pageParameters;
+				var indexOfDot = container.repeat.array.indexOf(".");
+				var variable = indexOfDot < 0 ? container.repeat.array : container.repeat.array.substring(0, indexOfDot);
+				var rest = indexOfDot < 0 ? null : container.repeat.array.substring(indexOfDot + 1);
+				if (available[variable]) {
+					// we can have root arrays rather than part of something else
+					// for example from a multiselect event
+					if (!rest) {
+						if (available[variable].items && available[variable].items.properties) {
+							nabu.utils.objects.merge(record, available[variable].items.properties);
+						}
+					}
+					else {
+						var childDefinition = $services.page.getChildDefinition(available[variable], rest);
+						if (childDefinition) {
+							nabu.utils.objects.merge(record, childDefinition.items.properties);
+						}
+					}
+				}
+				result.record = {properties:record};
+			}
 		}
 		return {properties:result};
 	},
@@ -128,7 +130,7 @@ Vue.component("renderer-repeat", {
 			// the instance counter is used to manage our pages on the router
 			instanceCounter: $$rendererInstanceCounter++,
 			paging: {},
-			loading: true,
+			loading: false,
 			// the state in the original page, this can be used to write stuff like "limit" etc to
 			// note that the "record" will not actually be in this
 			state: {}
@@ -148,14 +150,16 @@ Vue.component("renderer-repeat", {
 			var parameters = {};
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			var self = this;
-			Object.keys(this.target.state.bindings).map(function(name) {
-				if (self.target.state.bindings[name]) {
-					var value = self.$services.page.getBindingValue(pageInstance, self.target.state.bindings[name], self);
-					if (value != null && typeof(value) != "undefined") {
-						parameters[name] = value;
+			if (this.target.repeat.bindings) {
+				Object.keys(this.target.repeat.bindings).map(function(name) {
+					if (self.target.repeat.bindings[name]) {
+						var value = self.$services.page.getBindingValue(pageInstance, self.target.repeat.bindings[name], self);
+						if (value != null && typeof(value) != "undefined") {
+							parameters[name] = value;
+						}
 					}
-				}
-			});
+				});
+			}
 			return parameters;
 		}
 	},
@@ -203,9 +207,10 @@ Vue.component("renderer-repeat", {
 		// we will just do the call as a whole, assuming it is a limited service result
 		// in the future we can hide the limit/offset inputs and instead expose them as state so you can directly write to them (?)
 		loadData: function(append) {
+			console.log("loading repeat", this.target);
 			var self = this;
 			// we want to call an operation
-			if (this.target.state.operation) {
+			if (this.target.repeat && this.target.repeat.operation) {
 				var parameters = this.operationParameters;
 				// local state variables win from passed in ones!
 				Object.keys(this.state).forEach(function(key) {
@@ -217,13 +222,8 @@ Vue.component("renderer-repeat", {
 					}
 				});
 				
-				// the initial value of loading is already true, so initially we see this
-				// if we reload due to limit changes etc, it is OK (?) to see the "old" content until the new is available
-				// so we don't explicitly set it again here
-				// if it is a slow service and we want feedback to the user, we could set this to true
-				// but then we need a decent placeholder solution
-				//this.loading = true;
-				this.$services.swagger.execute(this.target.state.operation, parameters).then(function(list) {
+				this.loading = true;
+				this.$services.swagger.execute(this.target.repeat.operation, parameters).then(function(list) {
 					if (!append) {
 						self.records.splice(0);
 					}
@@ -272,16 +272,14 @@ Vue.component("renderer-repeat", {
 					self.loading = false;
 				})
 			}
-			else if (this.target.state.array) {
+			else if (this.target.repeat && this.target.repeat.array) {
 				if (!append) {
 					this.records.splice(0, this.records.length);
 				}
-				var records = this.$services.page.getPageInstance(this.page, this).get(this.target.state.array);
-				console.log("data is", records);
+				var records = this.$services.page.getPageInstance(this.page, this).get(this.target.repeat.array);
 				if (records) {
 					nabu.utils.arrays.merge(this.records, records);
 				}
-				this.loading = false;
 			}
 		},
 		// create a custom route for rendering
@@ -392,17 +390,21 @@ Vue.component("renderer-repeat-configure", {
 		}
 	},
 	created: function() {
-		if (!this.target.state.bindings) {
-			Vue.set(this.target.state, "bindings", {});
+		if (!this.target.repeat) {
+			Vue.set(this.target, "repeat", {});
+		}
+		if (!this.target.repeat.bindings) {
+			Vue.set(this.target.repeat, "bindings", {});
 		}	
 	},
 	computed: {
 		operationParameters: function() {
 			var result = [];
-			if (this.target.state.operation) {
+			console.log("operation", this.target.repeat.operation);
+			if (this.target.repeat.operation) {
 				// could be an invalid operation?
-				if (this.$services.swagger.operations[this.target.state.operation]) {
-					var parameters = this.$services.swagger.operations[this.target.state.operation].parameters;
+				if (this.$services.swagger.operations[this.target.repeat.operation]) {
+					var parameters = this.$services.swagger.operations[this.target.repeat.operation].parameters;
 					if (parameters) {
 						nabu.utils.arrays.merge(result, parameters.map(function(x) { return x.name }));
 					}
@@ -411,4 +413,4 @@ Vue.component("renderer-repeat-configure", {
 			return result;
 		}
 	}
-})
+});

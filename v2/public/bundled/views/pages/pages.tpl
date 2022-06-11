@@ -11,7 +11,7 @@
 		</ul>
 		<div class="is-row is-content-width-large is-direction-vertical is-height-max-3 is-overflow-auto">
 			<n-prompt v-if="showing" class="is-modal">
-				<n-form class="is-color-background is-spacing-large is-border-shadow is-variant-vertical">
+				<n-form class="is-color-background is-spacing-large is-shadow-xsmall is-variant-vertical">
 					<h3 class="is-h3">Page properties</h3>
 					<n-form-section>
 						<n-form-text v-for="key in Object.keys(parameters)" v-model="parameters[key]" :label="key"/>
@@ -124,7 +124,7 @@
 					<div v-for="category in categories" class="is-column is-variant-card is-spacing-large">
 						<h3 class="is-h3" :key="category" :ref="'category_' + category">
 							<span class="is-text">{{category}}</span>
-							<ul class="is-menu is-variant-toolbar">
+							<ul class="is-menu is-variant-toolbar is-position-right">
 								<li class="is-column"><button class="is-button is-variant-primary-outline is-size-small has-tooltip" @click="copyCategory(category)"><icon name="copy"/><span class="is-text">Copy category</span><span class="is-tooltip is-position-top is-width-medium">Copy all pages in this category</span></button></li>
 							</ul>
 						</h3>
@@ -162,7 +162,7 @@
 									<div class="is-column is-spacing-vertical-gap-medium is-fill-normal">
 										<h3 class="is-h3">
 											<span class="is-text">Metadata</span>
-											<ul class="is-menu is-variant-toolbar">
+											<ul class="is-menu is-variant-toolbar is-position-right">
 												<li class="is-column"><button class="is-button is-variant-warning is-align-end is-size-small" @click="page.content.properties ? page.content.properties.push({}) : $window.Vue.set(page.content, 'properties', [{}])"><span class="fa fa-plus"></span>Property</button></li>
 											</ul>
 										</h3>
@@ -333,7 +333,7 @@
 </template>
 
 <template id="nabu-create-page">
-	<n-form class="is-color-background is-spacing-large is-border-shadow is-variant-vertical" ref="form">
+	<n-form class="is-color-background is-spacing-large is-shadow-xsmall is-variant-vertical" ref="form">
 		<h3 class="is-h3">Add a new page</h3>
 		<n-form-section>
 			<n-form-text v-model="name" label="Page name" :required="true" :validator="validator" after="The name of your page should be unique within your application"/>
@@ -349,7 +349,7 @@
 </template>
 
 <template id="nabu-pages-paste">
-	<n-form class="is-color-background is-spacing-large is-border-shadow is-variant-vertical" ref="form">
+	<n-form class="is-color-background is-spacing-large is-shadow-xsmall is-variant-vertical" ref="form">
 		<n-form-section>
 			<n-form-text v-model="category" label="Paste in category" :required="true"/>
 			<n-form-text v-model="name" label="Paste with name" :required="true"/>

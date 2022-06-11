@@ -7,8 +7,22 @@ nabu.page.provide("page-renderer", {
 	// can inject state into the page so we can manipulate it
 	getState: function(container) {
 		if (container.form) {
-			var operationId = container.form.operation;
-			return application.services.page.getSwaggerOperationInputDefinition(operationId);
+			if (container.form.operation) {
+				var operationId = container.form.operation;
+				return application.services.page.getSwaggerOperationInputDefinition(operationId);
+			}
+			else if (container.form.fields) {
+				var result = {};
+				container.form.fields.forEach(function(x) {
+					result[x.name] = {
+						type: x.type ? x.type : "string"
+					}
+				});
+				return {properties:result};
+			}
+		}
+		else {
+			return {};
 		}
 	},
 	// can emit events
@@ -33,7 +47,25 @@ nabu.page.provide("page-renderer", {
 	// return the child components in play for the given container
 	// these can be added to the list of stuff to style
 	getChildComponents: function(container) {
-		
+		return [{
+			title: "Form",
+			name: "form",
+			component: "form"
+		}, {
+			title: "Form Container",
+			name: "form-container",
+			component: "form-section"
+		}];
+	},
+	getActions: function(container) {
+		var actions = [];
+		if (container && container.form && (container.form.operation || (container.form.fields && container.form.fields.length > 0))) {
+			actions.push({
+				title: "Submit",
+				name: "submit"
+			});
+		}
+		return actions;
 	}
 });
 
@@ -50,6 +82,10 @@ Vue.component("renderer-form", {
 		target: {
 			type: Object,
 			required: true
+		},
+		childComponents: {
+			type: Object,
+			required: false
 		},
 		// whether or not we are in edit mode (we can do things slightly different)
 		edit: {
@@ -76,7 +112,6 @@ Vue.component("renderer-form", {
 				if (self.target.form.submitEvent) {
 					pageInstance.emit(self.target.form.submitEvent, self.state);
 				}
-				console.log("subscription triggered!");
 			}));
 		}
 	},
@@ -90,6 +125,17 @@ Vue.component("renderer-form", {
 	methods: {
 		getRuntimeState: function() {
 			return this.state;		
+		},
+		runAction: function(name, input) {
+			if (name == "submit") {
+				// do an operation call
+				if (this.target.form.operation) {
+					console.log("TODO: form operation submit");
+				}
+				else if (this.target.form.fields && this.target.form.fields.length) {
+					this.$services.page.applyRendererParameters(this.$services.page.getPageInstance(this.page, this), this.target, this.state);
+				}
+			}
 		}
 	}
 });
@@ -112,6 +158,17 @@ Vue.component("renderer-form-configure", {
 		if (!this.target.form) {
 			Vue.set(this.target, "form", {});
 		}
+		if (!this.target.form.bindings) {
+			Vue.set(this.target.form, "bindings", {});
+		}
+		if (!this.target.form.fields) {
+			Vue.set(this.target.form, "fields", []);
+		}
+	},
+	computed: {
+		definition: function() {
+			
+		}
 	},
 	methods: {
 		getOperations: function(name) {
@@ -122,6 +179,14 @@ Vue.component("renderer-form-configure", {
 					// and contain the name fragment (if any)
 					&& (!name || operation.id.toLowerCase().indexOf(name.toLowerCase()) >= 0);
 			});
-		}
+		},
+		getParameterTypes: function(value) {
+			var types = ['string', 'boolean', 'number', 'integer'];
+			nabu.utils.arrays.merge(types, Object.keys(this.$services.swagger.swagger.definitions));
+			if (value) {
+				types = types.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+			}
+			return types;
+		},
 	}
-})
+});

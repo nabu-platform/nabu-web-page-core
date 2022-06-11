@@ -499,6 +499,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			instanceCounter: 0,
 			// contains (amongst other things) the event instances
 			variables: {},
+			// labels for values (if relevant)
+			labels: {},
 			// components can add their own variables
 			// each component can have its own name and structure
 			//lastParameters: null,
@@ -1205,6 +1207,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 				});
 			}
 			
+			component.$on("close", function() {
+				if (cell.on || cell.closeable) {
+					Vue.set(self.closed, cell.id, cell.on ? cell.on : "$any");
+				}
+				else if (component.$parent) {
+					component.$parent.$emit("close");
+				}
+			});
+			
 			// assign a page instance counter for unique temporary reference
 			component.$$pageInstanceCounter = this.instanceCounter++;
 			this.components["instance_" + component.$$pageInstanceCounter] = component;
@@ -1692,7 +1703,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			if (cellContainer.cells) {
 				cellContainer.cells.forEach(function(cell) {
 					if (cell.renderer) {
-						nabu.utils.objects.merge(events, this.getRendererEvents(cell.renderer, cell));
+						nabu.utils.objects.merge(events, self.getRendererEvents(cell.renderer, cell));
 					}
 					
 					if (nabu.page.event.getName(cell, "clickEvent")) {
@@ -2337,6 +2348,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			this.page.content.globalEventSubscriptions.push({localName: null, globalName: null});
 		},
+		getLabel: function(name) {
+			return this.$services.page.getValue(this.labels, name);	
+		},
 		get: function(name) {
 			
 			// probably not filled in the value yet
@@ -2544,8 +2558,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				});
 			}
 		},
-		set: function(name, value) {
-			console.log("setting", name, value);
+		set: function(name, value, label) {
 			var target = null;
 			var parts = null;
 			var updateUrl = false;
@@ -2608,6 +2621,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 					target = target[parts[i]];
 				}
 				Vue.set(target, parts[parts.length - 1], value);
+				// always set label (can be an unset)
+				this.$services.page.setValue(this.labels, name, label == null ? value : label);
 				if (updateUrl) {
 					var route = this.$services.router.get(this.$services.page.alias(this.page));
 					if (route.url != null) {
@@ -2772,12 +2787,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 				type: "page-cell",
 				content: cell
 			});
+			this.$services.page.copiedCell = JSON.parse(JSON.stringify(cell));
+			this.$services.page.copiedRow = null;
 		},
 		copyRow: function(row) {
 			nabu.utils.objects.copy({
 				type: "page-row",
 				content: row
 			});
+			this.$services.page.copiedRow = JSON.parse(JSON.stringify(row));
+			this.$services.page.copiedCell = null;
 		},
 		pasteCell: function(row) {
 			row.cells.push(this.$services.page.renumber(this.page, this.$services.page.copiedCell));
@@ -2881,6 +2900,37 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		});
 	},
 	methods: {
+		getRendererParameters: function(target) {
+			var result = {};
+			if (target && target.rendererBindings) {
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				Object.keys(target.rendererBindings).forEach(function(key) {
+					self.$services.page.setValue(result, key, self.$services.page.getBindingValue(pageInstance, target.rendererBindings[key]));
+				});
+			}
+			return result;
+		},
+		copyArisStyling: function(event, target) {
+			if (target.aris) {
+				this.$services.page.copiedStyling = JSON.parse(JSON.stringify(target.aris));
+			}
+			event.stopPropagation();
+			event.preventDefault();
+		},
+		pasteArisStyling: function(event, target) {
+			if (this.$services.page.copiedStyling) {
+				if (target.aris == null) {
+					Vue.set(target, "aris", {
+						components: {}
+					});
+				}
+				Vue.set(target, "aris", this.$services.page.copiedStyling);
+				this.$services.page.setRerender(target.aris);
+			}
+			event.stopPropagation();
+			event.preventDefault();
+		},
 		goto: function(event, row, cell) {
 			if (this.edit) {
 				this.$emit("select", row, cell, cell ? "cell" : "row");
@@ -2926,14 +2976,19 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 					if (data) {
 						var structure = JSON.parse(data);
 						if (structure.type == "page-cell") {
+							self.$services.page.renumber(self.page, structure.content);
 							structure = structure.content;
-							if (structure.alias) {
+							// do a reactive merge
+							Object.keys(structure).forEach(function(key) {
+								Vue.set(cell, key, structure[key]);
+							});
+							/*if (structure.alias) {
 								cell.alias = structure.alias;
 							}
 							if (structure.rows) {
 								var rows = structure.rows.map(function(x) { return self.$services.page.renumber(self.page, x) });
 								nabu.utils.arrays.merge(cell.rows, rows);
-							}
+							}*/
 							event.preventDefault();
 							event.stopPropagation();
 						}
@@ -2974,7 +3029,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				data = this.$services.page.getDragData(event, "template-content");
 				if (data) {
 					var structure = JSON.parse(data);
-					if (structure.type == "page-row") {
+					if (structure.type == "page-row" || structure.type == "page-cell") {
 						structure = structure.content;
 					}
 					// we assume the structure is a valid cell or row
@@ -3041,7 +3096,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 								parent.rows.splice(index, 0, row);
 							}
 						}
-						nabu.utils.arrays.merge(row.cells, cells);
+						row.cells.push(structure);
 					}
 					if (structure.actions) {
 						nabu.utils.arrays.merge(this.page.content.actions, structure.actions);
@@ -3052,6 +3107,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 		},
 		dragOverCell: function($event, row, cell) {
+			console.log("dragging over cell");
 			// can only accept drags if there is nothing in the cell yet
 			if (!cell.alias && this.edit) {
 				var data = this.$services.page.hasDragData($event, "component-alias");
@@ -3059,7 +3115,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 					data = this.$services.page.hasDragData($event, "template-content");
 					// check that it is the correct type of data
 					if (data) {
-						var structure = JSON.parse(data);
+						var structure = JSON.parse(this.$services.page.getDragData(event, "template-content"));
 						// we can only drop cell templates here?
 						if (structure.type != "page-cell") {
 							data = null;
@@ -4280,12 +4336,16 @@ Vue.component("page-sidemenu", {
 				type: "page-cell",
 				content: cell
 			});
+			this.$services.page.copiedCell = JSON.parse(JSON.stringify(cell));
+			this.$services.page.copiedRow = null;
 		},
 		copyRow: function(row) {
 			nabu.utils.objects.copy({
 				type: "page-row",
 				content: row
 			});
+			this.$services.page.copiedRow = JSON.parse(JSON.stringify(row));
+			this.$services.page.copiedCell = null;
 		},
 		pasteCell: function(row) {
 			row.cells.push(this.$services.page.renumber(this.page, this.$services.page.copiedCell));
@@ -4747,6 +4807,121 @@ Vue.component("aris-editor", {
 				else {
 					newValue.rerender = true;
 				}
+			}
+		}
+	}
+})
+
+Vue.component("renderer-bindings", {
+	template: "#renderer-bindings",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		target: {
+			type: Object,
+			required: true
+		}
+	},
+	created: function() {
+		console.log("created bindings thing", this.fields);
+		if (!this.target.rendererBindings) {
+			Vue.set(this.target, "rendererBindings", {});
+		}
+	},
+	computed: {
+		fields: function() {
+			var fields = [];
+			if (this.target.renderer) {
+				var state = this.$services.page.getRendererState(this.target.renderer, this.target, this.page, this.$services.page.getAllAvailableParameters(this.page));
+				if (state) {
+					nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor(state));
+				}
+			}
+			console.log("fields are", fields);
+			return fields;
+		}
+	}
+});
+
+Vue.component("template-manager", {
+	template: "#template-manager",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		// the cell or row
+		target: {
+			type: Object,
+			required: true
+		}
+	},
+	computed: {
+		path: function() {
+			return this.$services.page.getTargetPath(this.page.content, this.target.id);
+		},
+		excluded: function() {
+			var self = this;
+			return this.path.filter(function(x) { return x.id != self.target.id && !!x.excludeFromTemplate }).length > 0;
+		},
+		partOfTemplate: function() {
+			var self = this;
+			return this.path.filter(function(x) { return x.id != self.target.id && !!x.isTemplate }).length > 0;
+		}
+	},
+	methods: {
+		release: function() {
+			// make sure we include this in the stable version!
+			this.target.templateVersion++;
+			// the current stable release of the template
+			this.target.templateStable = JSON.parse(JSON.stringify(this.target));
+			// remove any nested stable!! otherwise we keep it indefinitely
+			// while this might be nice for versioning, it would just blow up
+			this.target.templateStable.templateStable = null;
+			// the template (when injected) should not be marked as a template
+			this.target.templateStable.isTemplate = false;
+			// also unset the template id, it is stored in the ref
+			this.target.templateStable.templateId = null;
+			
+			var self = this;
+			// on injecting this template into a page, it will be renumbered, we need to keep a reference to the original template
+			var createRef = function(target) {
+				// the id of the full template
+				target.templateReferenceId = self.target.templateId;
+				// the id of the content within the template
+				target.templateFragmentId = target.id;
+				var repeat = target.cells ? target.cells : target.rows;
+				if (repeat) {
+					// first we remove any exclusions
+					var exclusions = repeat.filter(function(x) {
+						return !!x.excludeFromTemplate;
+					});
+					exclusions.forEach(function(exclusion) {
+						repeat.splice(repeat.indexOf(exclusion), 1);
+					});
+					// when we recurse over the remaining
+					repeat.forEach(function(single) {
+						createRef(single);
+					});
+				}
+			}
+			createRef(this.target.templateStable);
+		}
+	},
+	watch: {
+		"target.isTemplate": function(newValue) {
+			if (newValue) {
+				// the current version of the template, we start a 0 indicating that no release has happened yet
+				// we don't immediately release because we want to give you the option to fill in the title etc
+				Vue.set(this.target, "templateVersion", 0);
+				
+				// mark the page as having templates, this is only meant to speed up page checking on larger applications
+				Vue.set(this.page.content, "hasTemplates", true);
+				
+				// make sure we have a template id
+				Vue.set(this.target, "templateId", this.page.content.name + "-" + this.target.id);
 			}
 		}
 	}

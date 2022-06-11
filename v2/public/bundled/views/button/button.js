@@ -1,3 +1,13 @@
+nabu.page.provide("page-renumberer", {
+	component: "page-button",
+	renumber: function(target, mapping) {
+		// update the action target
+		if (target.state.actionTarget != null && mapping[target.state.actionTarget] != null) {
+			target.state.actionTarget = mapping[target.state.actionTarget];	
+		}
+	}
+});
+
 Vue.view("page-button", {
 	props: {
 		page: {
@@ -20,7 +30,7 @@ Vue.view("page-button", {
 			type: Boolean,
 			required: true
 		}
-	},
+	},  
 	name: "Button",
 	category: "Interactive",
 	description: "A button to send out events, go to a different page,...",
@@ -31,7 +41,23 @@ Vue.view("page-button", {
 			running: false
 		}
 	},
+	computed: {
+		active: function() {
+			// if we have a routing button, check the primary route and alternative routes
+			if (this.cell.state.route && this.cell.state.route == this.$services.vue.route) {
+				return true;
+			}
+			else if (this.cell.state.route && this.cell.state.activeRoutes && this.cell.state.activeRoutes.indexOf(this.$services.vue.route) >= 0) {
+				return true;
+			}
+			return false;
+		}
+	},
 	methods: {
+		getContentWithVariables: function(content) {
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			return !content ? content : this.$services.typography.replaceVariables(pageInstance, this.cell.state, content);
+		},
 		getChildComponents: function() {
 			return [{
 				title: "Button",
@@ -70,7 +96,6 @@ Vue.view("page-button", {
 				});
 				return parameters;
 			}
-			
 			var handler = function() {
 				// event-based
 				if (nabu.page.event.getName(self.cell.state, "clickEvent")) {
@@ -95,7 +120,7 @@ Vue.view("page-button", {
 						window.location = self.$services.router.template(route, parameters);
 					}
 					else {
-						self.$services.router.route(route, parameters, self.cell.state.anchor, self.cell.state.mask);
+						return self.$services.router.route(route, parameters, self.cell.state.anchor, self.cell.state.mask);
 					}
 				}
 				else if (self.cell.state.url) {
@@ -115,18 +140,21 @@ Vue.view("page-button", {
 						// at this point it is a renderer or a component
 						if (target && target.runAction) {
 							var result = target.runAction(self.cell.state.action, getBindings());
+							var promise = self.$services.q.defer();
 							// if we want to emit an action event, let's, even if the result is null
 							if (self.cell.state.actionEvent) {
 								if (result && result.then) {
 									// we don't do anything (yet) on error?
 									result.then(function(x) {
 										pageInstance.emit(self.cell.state.actionEvent, x);
-									})
+										promise.resolve();
+									}, promise);
 								}
 								else {
-									pageInstance.emit(self.cell.state.actionEvent, result);
+									pageInstance.emit(self.cell.state.actionEvent, result).then(promise, promise);
 								}
 							}
+							return promise;
 						}
 					}
 				}
@@ -161,10 +189,12 @@ Vue.view("page-button", {
 				this.timer = null;
 			}
 			var self = this;
-			var last = self.$refs.editor.innerHTML;
-			this.timer = setTimeout(function() {
-				self.cell.state.content = nabu.utils.elements.sanitize(self.$refs.editor ? self.$refs.editor.innerHTML : last);
-			}, 100);
+			if (this.$refs.editor) {
+				var last = self.$refs.editor.innerHTML;
+				this.timer = setTimeout(function() {
+					self.cell.state.content = nabu.utils.elements.sanitize(self.$refs.editor ? self.$refs.editor.innerHTML : last);
+				}, 100);
+			}
 		}
 	}
 });
@@ -197,5 +227,12 @@ Vue.component("page-button-configure", {
 		if (!this.cell.state.bindings) {
 			Vue.set(this.cell.state, "bindings", {});
 		}
+		// otherwise not reactive...?
+		if (!this.cell.state.actionTarget) {
+			Vue.set(this.cell.state, "actionTarget", null);
+		}
+		if (!this.cell.state.activeRoutes) {
+			Vue.set(this.cell.state, "activeRoutes", []);
+		}
 	}
-})
+});

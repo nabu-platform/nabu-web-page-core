@@ -89,8 +89,8 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				}
 				return fields;
 			},
-			update: function(value) {
-				this.getPageInstance().set("page." + this.cell.state.name, value);
+			update: function(value, label) {
+				this.getPageInstance().set("page." + this.cell.state.name, value, label);
 			},
 			validate: function () {
 				if (this.$refs && this.$refs.input) {

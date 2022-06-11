@@ -5,7 +5,7 @@
 				class="vertical"
 				:value="getValueFor(field)"
 				:initial-label="getLabelFor(field)"
-				@input="function(newValue, label) { setValue(field, newValue, label) }"/>
+				@input="function(newValue, formatted, selectedLabel) { setValue(field, newValue, selectedLabel) }"/>
 			
 			<n-form-switch v-model="value[field].lambda" label="As lambda" 
 				v-if="isLambdable(field)"/>

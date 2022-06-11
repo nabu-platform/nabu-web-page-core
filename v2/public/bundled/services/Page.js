@@ -103,7 +103,9 @@ nabu.services.VueService(Vue.extend({
 			cookieProviders: {},
 			// whether or not to use aris
 			useAris: true,
-			aris: null
+			aris: null,
+			// you can copy styling for later pasting
+			copiedStyling: null
 		}
 	},
 	activate: function(done) {
@@ -128,9 +130,11 @@ nabu.services.VueService(Vue.extend({
 						var parsed = JSON.parse(data);
 						if (parsed && parsed.type == "page-row") {
 							self.copiedRow = parsed.content;
+							self.copiedCell = null;
 						}
 						else if (parsed && parsed.type == "page-cell") {
 							self.copiedCell = parsed.content;
+							self.copiedRow = null;
 						}
 						else if (parsed.type && parsed.content) {
 							self.copiedType = parsed.type;
@@ -256,7 +260,7 @@ nabu.services.VueService(Vue.extend({
 			// we also need to check for renderers
 			this.getAvailableRenderers(pageInstance.page).forEach(function(target) {
 				var renderer = self.getRenderer(target.renderer);
-				self.getActions(renderer).forEach(function(action) {
+				self.getActions(renderer, target).forEach(function(action) {
 					available[action.name] = action;
 				});	
 			});
@@ -279,7 +283,7 @@ nabu.services.VueService(Vue.extend({
 			var components = [];
 			Object.keys(pageInstance.components).forEach(function(key) {
 				if (key instanceof Number || key.match(/^[0-9]+$/)) {
-					if (!(pageInstance.components[key] instanceof Array)) {
+					if (pageInstance.components[key] && (!(pageInstance.components[key] instanceof Array))) {
 						components.push(pageInstance.components[key]);
 					}
 				}	
@@ -308,7 +312,7 @@ nabu.services.VueService(Vue.extend({
 			// we also need to check for renderers
 			this.getAvailableRenderers(pageInstance.page).forEach(function(target) {
 				var renderer = self.getRenderer(target.renderer);
-				var hasAction = self.getActions(renderer).filter(function(x) {
+				var hasAction = self.getActions(renderer, target).filter(function(x) {
 					return x.name == action;
 				}).length > 0;
 				if (hasAction) {
@@ -388,10 +392,10 @@ nabu.services.VueService(Vue.extend({
 			}
 		},
 		// combine all the actions a component supports (including specifications)
-		getActions: function(component) {
+		getActions: function(component, target) {
 			var actions = [];
 			if (component.getActions) {
-				nabu.utils.arrays.merge(actions, component.getActions());
+				nabu.utils.arrays.merge(actions, component.getActions(target));
 			}
 			if (component.getSpecifications) {
 				var specifications = component.getSpecifications();
@@ -440,6 +444,16 @@ nabu.services.VueService(Vue.extend({
 				});
 			}
 			return state;
+		},
+		// do the reverse from input binding: apply the renderer state to the pageInstance
+		applyRendererParameters: function(pageInstance, target, state) {
+			if (target && target.rendererBindings) {
+				var self = this;
+				// note that we also explicitly set null values to allow you to unset
+				Object.keys(target.rendererBindings).forEach(function(key) {
+					pageInstance.set(target.rendererBindings[key], self.$services.page.getValue(state, key));
+				});
+			}
 		},
 		calculateAcceptedCookies: function() {
 			this.hasAcceptedCookies = !!this.$services.cookies.get("cookie-settings");	
@@ -1226,6 +1240,7 @@ nabu.services.VueService(Vue.extend({
 							//nabu.utils.arrays.merge(self.templates, list.templates);
 						}
 					}));
+					self.scanPagesForTemplates();
 				}
 				if (self.canTest()) {
 					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.feature.get").then(function(features) {
@@ -1287,6 +1302,69 @@ nabu.services.VueService(Vue.extend({
 				});
 			});
 		},
+		// we can do inline templates in pages
+		scanPagesForTemplates: function() {
+			var self = this;
+			this.pages.forEach(function(page) {
+				// the marker to even start checking
+				if (page.content.hasTemplates) {
+					var check = function(target) {
+						if (target.rows) {
+							target.rows.forEach(function(x) {
+								if (x.isTemplate) {
+									if (x.templateStable) {
+										self.templates.push({
+											id: x.templateId,
+											version: x.release,
+											type: "row",
+											templateVersion: x.templateVersion,
+											category: x.templateCategory ? x.templateCategory : page.content.name,
+											name: x.templateTitle,
+											description: x.templateDescription,
+											icon: x.templateIcon ? x.templateIcon : "align-justify",
+											content: JSON.stringify({
+												type: "page-row",
+												content: x.templateStable
+											})
+										})
+									}
+								}
+								// only recursively check if we are not already in a template
+								else if (x.cells) {
+									check(x);
+								}
+							});
+						}
+						if (target.cells) {
+							target.cells.forEach(function(x) {
+								if (x.isTemplate) {
+									if (x.templateStable) {
+										self.templates.push({
+											id: x.templateId,
+											version: x.release,
+											type: "cell",
+											templateVersion: x.templateVersion,
+											category: x.templateCategory ? x.templateCategory : page.content.name,
+											name: x.templateTitle,
+											description: x.templateDescription,
+											icon: x.templateIcon ? x.templateIcon : "align-justify",
+											content: JSON.stringify({
+												type: "page-cell",
+												content: x.templateStable
+											})
+										})
+									}
+								}
+								else if (x.rows) {
+									check(x);
+								}
+							});
+						}
+					}
+					check(page.content);
+				}
+			})
+		},
 		ensureDevices: function() {
 			var self = this;
 			var ensure = function(name, width) {
@@ -1335,22 +1413,59 @@ nabu.services.VueService(Vue.extend({
 				return this.$services.q.reject();
 			}
 		},
-		renumber: function(page, entity) {
+		renumber: function(page, entity, mapping) {
+			var initial = false;
+			if (!mapping) {
+				mapping = {};
+				initial = true;
+			}
 			var self = this;
 			if (entity.id) {
+				var oldId = entity.id;
 				entity.id = page.content.counter++;
+				mapping[oldId] = entity.id;
 			}
 			if (entity.rows) {
 				entity.rows.map(function(row) {
-					self.renumber(page, row);
+					self.renumber(page, row, mapping);
 				});
 			}
 			if (entity.cells) {
 				entity.cells.map(function(cell) {
-					self.renumber(page, cell);
+					self.renumber(page, cell, mapping);
 				});
 			}
-			return entity;
+			if (initial) {
+				var renumberInternally = function(target) {
+					if (target.renderer) {
+						var renumberProvider = nabu.page.providers("page-renumberer").filter(function(x) {
+							return x.renderer == target.renderer;
+						})[0];
+						if (renumberProvider) {
+							renumberProvider.renumber(target, mapping);
+						}
+					}
+					if (target.alias) {
+						var renumberProvider = nabu.page.providers("page-renumberer").filter(function(x) {
+							return x.component == target.alias;
+						})[0];
+						if (renumberProvider) {
+							renumberProvider.renumber(target, mapping);
+						}
+					}
+					if (target.cells) {
+						target.cells.forEach(renumberInternally);
+					}
+					if (target.rows) {
+						target.rows.forEach(renumberInternally);
+					}
+				}
+				renumberInternally(entity, mapping);
+				return entity;
+			}
+			else {
+				return mapping;
+			}
 		},
 		saveStyle: function(style) {
 			// we don't want to see any changes done by reference to the style content while the validation occurs
@@ -2884,10 +2999,16 @@ nabu.services.VueService(Vue.extend({
 			return routes;
 		},
 		getPageRoutes: function(newValue) {
-			var routes = this.$services.router.list().filter(function(x) { return x.isPage });
+			var routes = this.$services.router.list().filter(function(x) { return x.isPage && !x.defaultAnchor });
 			routes.sort(function(a, b) {
 				return a.name.localeCompare(b.name);
 			});
+			if (newValue) {
+				routes = routes.filter(function(a) {
+					return a.name.toLowerCase().indexOf(newValue.toLowerCase()) >= 0
+						|| (a.label && a.label.toLowerCase().indexOf(newValue.toLowerCase()) >= 0);
+				});
+			}
 			return routes;
 		},
 		getRoutes: function(newValue) {

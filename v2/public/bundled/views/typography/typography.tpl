@@ -8,8 +8,21 @@
 		<n-form-richtext v-model="cell.state.content" :support-blocks="false" v-if="edit && !cell.state.highlight" :placeholder="placeholder ? placeholder : tag + ' placeholder'"/>
 		<n-form-text type="area" v-else-if="edit && cell.state.highlight" v-model="cell.state.content"/>
 		<span class="is-text" v-else-if="cell.state.content" 
-			v-html="cell.state.highlight ? highlight(getContentWithVariables()) : $services.page.translate($services.page.interpret(getContentWithVariables(), $self))"></span>
+			v-html="cell.state.highlight ? highlight(getContentWithVariables()) : getContentWithVariables($services.page.translate($services.page.interpret(cell.state.content, $self)))"></span>
 	</component>
+</template>
+
+<template id="typography-variable-replacer">
+	<div>
+		<div v-for="variable in $services.typography.getVariables(content)" class="is-column is-color-body is-spacing-medium">
+			<h4 class="is-h4">{{variable}}</h4>
+			<n-form-combo v-model="container.fragments[variable].key" :filter="$services.page.getAllAvailableKeys.bind($self, page, true)" label="Variable to bind"/>
+			<page-formatted-configure :page="page" :cell="cell" 
+				:fragment="container.fragments[variable]" 
+				:allow-html="true"
+				:keys="$services.page.getAllAvailableKeys(page, true)"/>
+		</div>
+	</div>
 </template>
 
 <template id="typography-template-configure">
@@ -17,15 +30,7 @@
 		<n-form-text v-model="cell.state.icon" label="Icon" v-if="icon"/>
 		<n-form-switch v-model="cell.state.highlight" label="Highlight" v-if="highlightable && canHighlight" after="This will perform syntax highlighting, based on the format. If no format is configured, a best effort guess is made"/>
 		<n-form-combo v-model="cell.state.highlightFormat" label="Highlight Format" v-if="cell.state.highlight" :items="['html', 'bash', 'sql', 'yaml', 'css', 'scss', 'javascript', 'java', 'c++', 'xml', 'json', 'markdown', 'latex', 'http']" />
-		
-		<div v-for="variable in variables" class="is-column is-color-body is-spacing-medium">
-			<h4 class="is-h4">{{variable}}</h4>
-			<n-form-combo v-model="cell.state.fragments[variable].key" :filter="$services.page.getAllAvailableKeys.bind($self, page, true)" label="Variable to bind"/>
-			<page-formatted-configure :page="page" :cell="cell" 
-				:fragment="cell.state.fragments[variable]" 
-				:allow-html="true"
-				:keys="$services.page.getAllAvailableKeys(page, true)"/>
-		</div>
+		<typography-variable-replacer :content="cell.state.content" :container="cell.state" :page="page"/>
 	</div>
 </template>
 

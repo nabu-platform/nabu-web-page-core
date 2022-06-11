@@ -31,36 +31,35 @@ Vue.component("typography-core-configure", {
 		if (!this.cell.state.fragments) {
 			Vue.set(this.cell.state, "fragments", {});
 		}	
-		var self = this;
-		this.variables.forEach(function(x) {
-			if (!self.cell.state.fragments[x]) {
-				Vue.set(self.cell.state.fragments, x, {});
-			}
-		})
-	},
-	computed: {
-		variables: function() {
+	}
+});
+Vue.service("typography", {
+	methods: {
+		getVariables: function(content) {
 			var variables = [];
 			var index = 0;
 			var disqualifiers = ["%", "$", "{"];
 			while (index >= 0) {
 				// find next match
-				index = this.cell.state.content.indexOf("{", index);
+				index = content.indexOf("{", index);
 				if (index < 0) {
 					break;
 				}
 				// make sure we don't intercept other stuff
-				var disqualified = index > 0 && disqualifiers.indexOf(this.cell.state.content.charAt(index - 1)) >= 0;
+				var disqualified = index > 0 && disqualifiers.indexOf(content.charAt(index - 1)) >= 0;
 				if (!disqualified) {
-					var endIndex = this.cell.state.content.indexOf("}", index);
+					var endIndex = content.indexOf("}", index);
 					// no closing bracket
 					if (endIndex < 0) {
 						break;
 					}
-					var substring = this.cell.state.content.substring(index, endIndex + 1);
+					var substring = content.substring(index, endIndex + 1);
 					// if it contains another opening tag (because we are hitting the first of {{ or because you have nested tags), we skip it
 					if (substring.substring(1).indexOf("{") < 0) {
-						variables.push(substring.substring(1, substring.length - 1));
+						var variable = substring.substring(1, substring.length - 1);
+						if (variables.indexOf(variable) < 0) {
+							variables.push(variable);
+						}
 					}
 					index = endIndex + 1;
 				}
@@ -69,6 +68,72 @@ Vue.component("typography-core-configure", {
 				}
 			}
 			return variables;
+		},
+		// the container holds the fragment configuration
+		replaceVariables: function(pageInstance, container, content) {
+			var self = this;
+			var component = Vue.component("page-formatted");
+			this.getVariables(content).forEach(function(variable) {
+				// we must at the very least have selected a key
+				if (container.fragments && container.fragments[variable] && container.fragments[variable].key) {
+					var formatted;
+					var oldContent;
+					var updateFunction = function() {
+						// need a formatted version and a mounted typography
+						if (formatted && self.$el) {
+							var newContent = formatted.$el.innerHTML;
+							if (newContent != oldContent) {
+								self.$el.querySelectorAll("[variable='" + variable + "]").forEach(function(x) {
+									x.innerHTML = newContent;
+								})
+								oldContent = newContent;
+							}
+						}
+					};
+					//content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<page-formatted :page='page' :cell='cell' :value=\"getVariableValue('" + variable + "')\" :fragment=\"getVariableFragment('" + variable + "')\"/>");
+					var div = document.createElement("div");
+					formatted = new component({propsData: {
+						page: self.page,
+						cell: self.cell,
+						value: pageInstance.get(container.fragments[variable].key),
+						fragment: container.fragments[variable]
+					}, updated: updateFunction, ready: updateFunction});
+					formatted.$mount();
+					oldContent = formatted.$el.innerHTML;
+					content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<span variable='" + variable + "'>" + oldContent + "</span>");
+				}
+			});
+			return content;
+		}
+	}
+});
+Vue.component("typography-variable-replacer", {
+	template: "#typography-variable-replacer",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		container: {
+			type: Object,
+			required: true
+		},
+		content: {
+			type: String,
+			required: false
+		}
+	},
+	created: function() {
+		if (!this.container.fragments) {
+			Vue.set(this.container, "fragments", {});
+		}
+		var self = this;
+		if (this.content) {
+			this.$services.typography.getVariables(this.content).forEach(function(x) {
+				if (!self.container.fragments[x]) {
+					Vue.set(self.container.fragments, x, {});
+				}
+			});
 		}
 	}
 });
@@ -100,80 +165,10 @@ Vue.component("typography-core", {
 			timer: null
 		}
 	},
-	// copy paste from above!
-	computed: {
-		variables: function() {
-			var variables = [];
-			var index = 0;
-			var disqualifiers = ["%", "$", "{"];
-			while (index >= 0) {
-				// find next match
-				index = this.cell.state.content.indexOf("{", index);
-				if (index < 0) {
-					break;
-				}
-				// make sure we don't intercept other stuff
-				var disqualified = index > 0 && disqualifiers.indexOf(this.cell.state.content.charAt(index - 1)) >= 0;
-				if (!disqualified) {
-					var endIndex = this.cell.state.content.indexOf("}", index);
-					// no closing bracket
-					if (endIndex < 0) {
-						break;
-					}
-					var substring = this.cell.state.content.substring(index, endIndex + 1);
-					// if it contains another opening tag (because we are hitting the first of {{ or because you have nested tags), we skip it
-					if (substring.substring(1).indexOf("{") < 0) {
-						var variable = substring.substring(1, substring.length - 1);
-						if (variables.indexOf(variable) < 0) {
-							variables.push(variable);
-						}
-					}
-					index = endIndex + 1;
-				}
-				else {
-					index++;
-				}
-			}
-			return variables;
-		}
-	},
 	methods: {
-		getContentWithVariables: function() {
-			var content = this.cell.state.content;
-			var self = this;
-			var component = Vue.component("page-formatted");
+		getContentWithVariables: function(content) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			this.variables.forEach(function(variable) {
-				// we must at the very least have selected a key
-				if (self.cell.state.fragments && self.cell.state.fragments[variable] && self.cell.state.fragments[variable].key) {
-					var formatted;
-					var oldContent;
-					var updateFunction = function() {
-						// need a formatted version and a mounted typography
-						if (formatted && self.$el) {
-							var newContent = formatted.$el.innerHTML;
-							if (newContent != oldContent) {
-								self.$el.querySelectorAll("[variable='" + variable + "]").forEach(function(x) {
-									x.innerHTML = newContent;
-								})
-								oldContent = newContent;
-							}
-						}
-					};
-					//content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<page-formatted :page='page' :cell='cell' :value=\"getVariableValue('" + variable + "')\" :fragment=\"getVariableFragment('" + variable + "')\"/>");
-					var div = document.createElement("div");
-					formatted = new component({propsData: {
-						page: self.page,
-						cell: self.cell,
-						value: pageInstance.get(self.cell.state.fragments[variable].key),
-						fragment: self.cell.state.fragments[variable]
-					}, updated: updateFunction, ready: updateFunction});
-					formatted.$mount();
-					oldContent = formatted.$el.innerHTML;
-					content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<span variable='" + variable + "'>" + oldContent + "</span>");
-				}
-			});
-			return content;
+			return !content ? content : this.$services.typography.replaceVariables(pageInstance, this.cell.state, content);
 		},
 		getVariableValue: function(variable) {
 			console.log("getting value for", variable);

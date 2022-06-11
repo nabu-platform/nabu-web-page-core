@@ -1,5 +1,5 @@
 <template id="renderer-menu">
-	<ul class="is-menu is-variant-toolbar" :class="[{'is-expanded': edit}, getChildComponentClasses('renderer-menu')]" @click="handle">
+	<ul class="is-menu" :class="[{'is-expanded': edit}, getChildComponentClasses('renderer-menu')]" @click="handle">
 		<slot></slot>
 	</ul>
 </template>

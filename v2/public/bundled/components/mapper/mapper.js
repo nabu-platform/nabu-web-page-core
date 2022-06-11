@@ -115,18 +115,18 @@ Vue.component("n-page-mapper", {
 			}
 			else if (label == "$function" && newValue) {
 				var def = this.$services.page.getFunctionDefinition(newValue);
-				this.value[field] = {
+				Vue.set(this.value, field, {
 					label: label,
 					value: newValue,
 					bindings: {},
 					lambda: def && def.async ? true : false,
 					lambdable: false,
 					output: null
-				};
+				});
 				this.value[field].lambdable = def && !def.async;
 			}
 			else {
-				this.value[field] = label && newValue ? label + '.' + newValue : null;
+				Vue.set(this.value, field, label && newValue ? label + '.' + newValue : null);
 			}
 		},
 		getBindingsFor: function(field) {

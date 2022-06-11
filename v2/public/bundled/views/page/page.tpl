@@ -499,28 +499,8 @@
 								:from="getAvailableParameters(cell)" 
 								v-model="cell.bindings"/>
 						
-						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Rendering" content-class="is-spacing-medium" class="is-highlight-left">
-							<n-form-combo v-model="cell.state.openTrigger" label="Open on" placeholder="Always open" :items="['click', 'hover']"/>
 							<n-form-ace mode="javascript" label="Condition" v-model="cell.condition" after="If you fill in a condition, the cell will only render the content if the condition evaluates to true" :timeout="600"/>
-							<n-form-combo label="Cell Renderer" v-if="!cell.alias" v-model="cell.renderer" :items="$services.page.getRenderers('cell')" 
-								after="You can set a custom renderer for this cell"
-								empty-value="No renderers found"
-								:formatter="function(x) { return x.name }" 
-								:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
-								
-							<div v-if="cell.renderer && $services.page.getRendererState(cell.renderer, row, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
-								<n-form-text v-model="cell.runtimeAlias" label="Runtime alias for renderer state"/>
-								<n-form-switch v-model="cell.retainState" label="Retain state once cell is destroyed" v-if="cell.runtimeAlias"/>
-							</div>
-							<div v-if="cell.renderer && $services.page.getRendererConfiguration(cell.renderer)">
-								<component :is="$services.page.getRendererConfiguration(cell.renderer)" :target="row" :page="page"/>
-							</div>
-								
-							<n-form-text label="Cell Width" v-model="cell.width" info="By default flex is used to determine cell size, you can either configure a number for flex or choose to go for a fixed value" :timeout="600"/>
-							<n-form-text label="Cell Height" v-model="cell.height" info="You can configure any height, for example 200px" :timeout="600"/>
-							<n-form-text label="Cell Reference" v-model="cell.ref" info="A reference you can use to retrieve this cell programmatically" :timeout="600" v-if="false"/>
-							<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
+							<n-form-combo v-model="cell.state.openTrigger" label="Open on" placeholder="Always open" :items="['click', 'hover']"/>
 							<div v-if="$services.page.devices.length">
 								<p class="is-p is-size-small is-color-light is-spacing-vertical-bottom-small">You can choose to render the cell only if a set of device rules is met.</p>
 								<div class="is-row is-align-end is-spacing-vertical-bottom-small">
@@ -535,6 +515,24 @@
 									</div>
 								</div>
 							</div>
+						</n-collapsible>
+						<n-collapsible :only-one-open="true" title="Rendering" content-class="is-spacing-medium" class="is-highlight-left">
+							<n-form-combo label="Cell Renderer" v-if="!cell.alias" v-model="cell.renderer" :items="$services.page.getRenderers('cell')" 
+								after="You can set a custom renderer for this cell"
+								empty-value="No renderers found"
+								:formatter="function(x) { return x.name }" 
+								:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
+								
+							<div v-if="cell.renderer && $services.page.getRendererState(cell.renderer, cell, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
+								<n-form-text v-model="cell.runtimeAlias" label="Runtime alias for renderer state"/>
+								<n-form-switch v-model="cell.retainState" label="Retain state once cell is destroyed" v-if="cell.runtimeAlias"/>
+								<renderer-bindings :target="cell" :page="page"/>
+							</div>
+							<div v-if="cell.renderer && $services.page.getRendererConfiguration(cell.renderer)">
+								<component :is="$services.page.getRendererConfiguration(cell.renderer)" :target="cell" :page="page"/>
+							</div>
+								
+							<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Eventing" key="cell-events" content-class="is-spacing-medium" class="is-highlight-left">
 							<n-form-switch label="Closeable" v-model="cell.closeable" v-if="!cell.on"/>
@@ -573,6 +571,9 @@
 									v-if="$services.page.useAris && $services.page.normalizeAris(page, cell)" :child-components="$services.page.getCellComponents(page, cell)" :container="cell.aris"
 									:specific="cell.alias"/>
 						</n-collapsible>
+						<n-collapsible :only-one-open="true" title="Templating" content-class="is-spacing-medium">
+							<template-manager :target="cell" :page="page"/>
+						</n-collapsible>
 						<div v-if="canConfigureInline(cell)" class="is-column is-spacing-vertical-top-large">
 							<h2 class="is-h4 is-spacing-medium is-color-primary-outline">Content Configuration</h2>
 							<p class="is-p is-size-small is-color-light is-spacing-medium">Here you can find additional configuration settings for the content type that you have chosen.</p>
@@ -587,21 +588,8 @@
 						<n-collapsible title="Row Settings" content-class="is-spacing-medium">
 							<n-form-text label="Row Name" v-model="row.name" info="A descriptive name" :timeout="600"/>
 							<h2>Rendering<span class="subscript">Choose how this row will be rendered</span></h2>
-							<n-form-combo label="Direction" v-model="row.direction" :items="['horizontal', 'vertical']"/>
-							<n-form-combo label="Alignment" v-model="row.align" :items="['center', 'flex-start', 'flex-end', 'stretch', 'baseline']"/>
-							<n-form-combo label="Justification" v-model="row.justify" :items="['center', 'flex-start', 'flex-end', 'space-between', 'space-around', 'space-evenly']"/>
 							<n-form-ace mode="javascript" label="Condition" v-model="row.condition" class="vertical"/>
-							
-							<h2>Additional<span class="subscript">Configure some additional settings for this row</span></h2>
 							<n-form-text label="Row Id" v-model="row.customId" info="If you set a custom id for this row, a container will be rendered in this row with that id. This can be used for targeting with specific content."/>
-							<n-form-combo label="Row Renderer" v-model="row.renderer" :items="$services.page.getRenderers('row')"  :formatter="function(x) { return x.title ? x.title : x.name }" :extracter="function(x) { return x.name }"/>
-							<div v-if="row.renderer && $services.page.getRendererState(row.renderer, row, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
-								<n-form-text v-model="row.runtimeAlias" label="Runtime alias for renderer state"/>
-								<n-form-switch v-model="row.retainState" label="Retain state once row is destroyed" v-if="row.runtimeAlias"/>
-							</div>
-							<div v-if="row.renderer && $services.page.getRendererConfiguration(row.renderer)">
-								<component :is="$services.page.getRendererConfiguration(row.renderer)" :target="row" :page="page"/>
-							</div>
 							
 							<div v-if="$services.page.devices.length">
 								<div class="is-row is-align-end">
@@ -615,6 +603,17 @@
 										<button class="is-button is-variant-close" @click="row.devices.splice(row.devices.indexOf(device), 1)"><icon name="times"/></button>
 									</div>
 								</div>
+							</div>
+						</n-collapsible>
+						<n-collapsible title="Rendering">
+							<n-form-combo label="Row Renderer" v-model="row.renderer" :items="$services.page.getRenderers('row')"  :formatter="function(x) { return x.title ? x.title : x.name }" :extracter="function(x) { return x.name }"/>
+							<div v-if="row.renderer && $services.page.getRendererState(row.renderer, row, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
+								<n-form-text v-model="row.runtimeAlias" label="Runtime alias for renderer state"/>
+								<n-form-switch v-model="row.retainState" label="Retain state once row is destroyed" v-if="row.runtimeAlias"/>
+								<renderer-bindings :target="row" :page="page"/>	
+							</div>
+							<div v-if="row.renderer && $services.page.getRendererConfiguration(row.renderer)">
+								<component :is="$services.page.getRendererConfiguration(row.renderer)" :target="row" :page="page"/>
 							</div>
 						</n-collapsible>
 						<n-collapsible title="Eventing" content-class="is-spacing-medium">
@@ -636,6 +635,9 @@
 								</n-form-section>
 							</div>
 							<aris-editor v-if="$services.page.useAris && $services.page.normalizeAris(page, row, 'row')" :child-components="$services.page.getRowComponents(page, row)" :container="row.aris"/>
+						</n-collapsible>
+						<n-collapsible :only-one-open="true" title="Templating" content-class="is-spacing-medium">
+							<template-manager :target="row" :page="page"/>
 						</n-collapsible>
 					</n-form>
 				</n-sidebar>
@@ -681,7 +683,8 @@
 				:target="row"
 				:edit="edit"
 				:page="page"
-				:child-components="$services.page.calculateArisComponents(row.aris, row.renderer, $self)">
+				:child-components="$services.page.calculateArisComponents(row.aris, row.renderer, $self)"
+				:parameters="getRendererParameters(row)">
 			<div v-if="false && (edit || $services.page.wantEdit || row.wantVisibleName) && row.name && !row.collapsed" :style="getRowEditStyle(row)" class="row-edit-label"
 				:class="'direction-' + (row.direction ? row.direction : 'horizontal')"><span>{{row.name}}</span></div>
 			<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
@@ -700,6 +703,8 @@
 							@click="clickOnCell(row, cell)"
 							@click.ctrl="goto($event, row, cell)"
 							@click.meta="goto($event, row, cell)"
+							@click.alt.prevent="pasteArisStyling($event, cell)"
+							@contextmenu.prevent.alt="copyArisStyling($event, cell)"
 							@mouseout="mouseOut($event, row, cell)"
 							@mouseover="mouseOver($event, row, cell)"
 							@dragend="$services.page.clearDrag($event)"
@@ -710,7 +715,8 @@
 							:edit="edit"
 							:page="page"
 							:placeholder="cell.name ? cell.name : (cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : null)"
-							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)">
+							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
+							:parameters="getRendererParameters(cell)">
 						<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 						
 						<div class="is-column-content" v-if="cell.alias" :key="'page_' + pageInstanceId + '_edit_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
@@ -740,6 +746,7 @@
 								:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 								:key="cellId(cell)"
 								:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+								@close="close(cell)"
 								@click="clickOnCell(row, cell)"
 								@click.ctrl="goto($event, row, cell)"
 								@click.meta="goto($event, row, cell)"
@@ -764,7 +771,7 @@
 								:local-state="getLocalState(row, cell)"
 								:page-instance-id="pageInstanceId"
 								:stop-rerender="stopRerender"
-								@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
+								@close="close(cell)"/>
 						</component>
 					</n-sidebar>
 					<n-prompt v-else-if="cell.target == 'prompt'" @close="close(cell)" :autoclose="cell.autoclose">
@@ -774,6 +781,7 @@
 								:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 								:key="cellId(cell)"
 								:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+								@close="close(cell)"
 								@click="clickOnCell(row, cell)"
 								@click.ctrl="goto($event, row, cell)"
 								@click.meta="goto($event, row, cell)"
@@ -798,7 +806,7 @@
 								:local-state="getLocalState(row, cell)"
 								:page-instance-id="pageInstanceId"
 								:stop-rerender="stopRerender"
-								@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
+								@close="close(cell)"/>
 						</component>
 					</n-prompt>
 					<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right">          
@@ -808,6 +816,7 @@
 								:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 								:key="cellId(cell)"
 								:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+								@close="close(cell)"
 								@click="clickOnCell(row, cell)"
 								@click.ctrl="goto($event, row, cell)"
 								@click.meta="goto($event, row, cell)"
@@ -832,7 +841,7 @@
 								:local-state="getLocalState(row, cell)"
 								:page-instance-id="pageInstanceId"
 								:stop-rerender="stopRerender"
-								@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
+								@close="close(cell)"/>
 						</component>
 					</n-absolute>
 					<template v-else>
@@ -842,6 +851,7 @@
 								:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 								:key="cellId(cell)"
 								:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+								@close="close(cell)"
 								@click="clickOnCell(row, cell)"
 								@click.ctrl="goto($event, row, cell)"
 								@click.meta="goto($event, row, cell)"
@@ -867,7 +877,7 @@
 								:local-state="getLocalState(row, cell)"
 								:page-instance-id="pageInstanceId"
 								:stop-rerender="stopRerender"
-								@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
+								@close="close(cell)"/>
 						</component>
 					</template>
 				</template>
@@ -1045,5 +1055,42 @@
 	</div>
 </template>
 
+<template id="renderer-bindings">
+	<div>
+		<n-page-mapper :to="fields"
+			:from="$services.page.getAvailableParameters(page, null, true)"
+			v-model="target.rendererBindings"/>
+	</div>
+</template>
 
-  
+<template id="template-manager">
+	<div>
+		<div v-if="target.templateReferenceId">
+			<p class="is-p is-spacing-horizontal-gap-small"><span class="is-text">This is part of a template instance</span><span class="is-badge is-variant-primary-outline is-size-xsmall" v-if="target.templateVersion">v{{target.templateVersion}}</span></p>
+		</div>
+		<div v-else-if="partOfTemplate">
+			<p class="is-p" v-if="excluded">
+				This is part of a template definition exclusion.
+			</p>
+			<div v-else class="is-column is-spacing-vertical-gap-medium">
+				<p class="is-p">This is part of a template definition.</p>
+				<n-form-switch label="Exclude from template" v-model="target.excludeFromTemplate" after="You can choose to not include this part into the template"/>
+			</div>
+		</div>
+		<div v-else class="is-column is-spacing-vertical-medium">
+			<n-form-switch label="Make template" v-model="target.isTemplate"/>
+			<div v-if="target.isTemplate" class="is-column is-spacing-vertical-gap-medium">
+				<n-form-text label="Template title" v-model="target.templateTitle" after="Keep the title short"/>
+				<n-form-text label="Template category" v-model="target.templateCategory" after="The template category this belongs in"/>
+				<n-form-text label="Template icon" v-model="target.templateIcon" />
+				<n-form-text label="Template description" type="area" v-model="target.templateDescription"/>
+				
+				<p class="is-p">Current release: {{target.templateVersion ? target.templateVersion : "unreleased"}}</p>
+				<div class="is-row is-align-end is-spacing-vertical-medium">
+					<button class="is-button is-variant-primary-outline is-size-xsmall" @click="release">Create release</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</template>
+
