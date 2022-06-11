@@ -1067,6 +1067,9 @@
 	<div>
 		<div v-if="target.templateReferenceId">
 			<p class="is-p is-spacing-horizontal-gap-small"><span class="is-text">This is part of a template instance</span><span class="is-badge is-variant-primary-outline is-size-xsmall" v-if="target.templateVersion">v{{target.templateVersion}}</span></p>
+			<div v-if="target.templateVersion && latestAvailableVersion != null && target.templateVersion != latestAvailableVersion" class="is-row is-align-end">
+				<button class="is-button is-variant-primary-outline is-size-xsmall" @click="updateToLatest">Update to v{{latestAvailableVersion}}</button>
+			</div>
 		</div>
 		<div v-else-if="partOfTemplate">
 			<p class="is-p" v-if="excluded">

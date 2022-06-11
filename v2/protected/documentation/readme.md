@@ -14,10 +14,9 @@ The key factor is that it is a conscious decision to update to the latest templa
 ## Versions
 
 Templates have versions, you might spend weeks tweaking a particular template before you decide that it is ready for further use. At that point you can "release" it and other instances of the template will be able to update to the new template.
-Note that because there is only one instance of the master template, any new instances (currently) get the in-between version, not the final version from the previous release. That would require keeping a copy of that version (which could also be a solution...?)
 
-We do need to keep a copy of the last stable version, we should do this in the root of the template. On dragging, we check for a "stable" version and drag that if possible.
 We need to be able to tinker with a template without interrupting people working with them.
+We do need to keep a copy of the last stable version, we should do this in the root of the template. On dragging, we check for a "stable" version and drag that if possible.
 
 Additionally it needs to be visible that a template has changed with regards to its last "stable" release so you know when there are pending changes.
 
@@ -54,6 +53,12 @@ You could theoretically nest templates this way, not sure if that's a good idea.
 
 The root of the template is marked with "isTemplate: true"
 Any part of the hierarchy that is specifically not a part of the template has "excludeFromTemplate: true"
+
+
+TODO:
+- when you release a template, you need to refresh for page builder to pick it up, should add logic to immediately update the available templates
+- be able to update to the latest version of the template, this should copy over the aris styling for all elements and add "new" elements. it should not remove elements that no longer exist but they should be updated to reflect that they are no longer part of the template
+	not entirely sure if we want to automatically move parts of the template
 
 possilibities:
 - visually mark in the tree when a cell/row is linked to a template (use the ref)

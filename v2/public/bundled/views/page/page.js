@@ -4869,6 +4869,14 @@ Vue.component("template-manager", {
 		partOfTemplate: function() {
 			var self = this;
 			return this.path.filter(function(x) { return x.id != self.target.id && !!x.isTemplate }).length > 0;
+		},
+		latestAvailableVersion: function() {
+			var self = this;
+			var current = this.$services.page.templates.filter(function(x) {
+				return x.id == self.target.templateReferenceId;
+			})[0];
+			console.log("current version is", current);
+			return current ? current.templateVersion : null;
 		}
 	},
 	methods: {
@@ -4882,6 +4890,8 @@ Vue.component("template-manager", {
 			this.target.templateStable.templateStable = null;
 			// the template (when injected) should not be marked as a template
 			this.target.templateStable.isTemplate = false;
+			// mark it as a template instance though, otherwise only the availability of the version is a marker which is not very clean
+			this.target.templateStable.isTemplateInstance = true;
 			// also unset the template id, it is stored in the ref
 			this.target.templateStable.templateId = null;
 			
@@ -4908,6 +4918,43 @@ Vue.component("template-manager", {
 				}
 			}
 			createRef(this.target.templateStable);
+		},
+		updateToLatest: function() {
+			var self = this;
+			var latest = this.$services.page.templates.filter(function(x) {
+				return x.id == self.target.templateReferenceId;
+			})[0];
+			var instance = JSON.parse(latest.content).content;
+			var getOriginal = function(instance, id) {
+				if (instance.id == id) {
+					return instance;
+				}
+				else if (instance.cells) {
+					return instance.cells.reduce(function(all, x) {
+						return all == null ? getOriginal(x, id) : all;
+					}, null);
+				}
+				else if (instance.rows) {
+					return instance.rows.reduce(function(all, x) {
+						return all == null ? getOriginal(x, id) : all;
+					}, null);
+				}
+			}
+			var recursiveUpdate = function(target) {
+				var original = getOriginal(instance, target.templateFragmentId);
+				if (original && original.aris) {
+					Vue.set(target, "aris", original.aris);
+					self.$services.page.setRerender(target.aris);
+				}
+				if (target.cells) {
+					target.cells.forEach(recursiveUpdate);
+				}
+				if (target.rows){
+					target.rows.forEach(recursiveUpdate);
+				}
+			}
+			recursiveUpdate(this.target);
+			this.target.templateVersion = latest.templateVersion;
 		}
 	},
 	watch: {

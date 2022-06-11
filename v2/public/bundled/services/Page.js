@@ -1405,7 +1405,6 @@ nabu.services.VueService(Vue.extend({
 			if (state && state.operation) {
 				var self = this;
 				return this.$services.swagger.execute(state.operation).then(function(result) {
-					console.log("updated state received", result);
 					Vue.set(self.variables, state.name, result);
 				});
 			}
