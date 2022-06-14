@@ -75,6 +75,14 @@
 					}
 				},
 				"components": {
+					"triggerable": {
+						"triggerable.js": {
+							"url": "components/triggerable/triggerable.js"
+						},
+						"triggerable.tpl": {
+							"url": "components/triggerable/triggerable.tpl"
+						}
+					},
 					"ace": {
 						"ace.js": {
 							"url": "components/ace/ace.js"

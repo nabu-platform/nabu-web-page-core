@@ -1,13 +1,13 @@
 <template id="renderer-repeat">
 	<div>
 		<template v-if="!edit && !loading && records.length">
-			<div v-for="(record, index) in records">
+			<div v-for="(record, index) in records" :record-index="index">
 				<div class="is-repeat-content" 
 					:key="'repeat_' + instanceCounter + '_rendered_' + index"
 					v-route-render="{ alias: alias, parameters: getParameters(record), mounted: mounted }"></div>
 			</div>
 		</template>
-		<template v-if="!edit && !loading && !records.length">
+		<template v-else-if="!edit && !loading && !records.length">
 			<span class="is-text" v-if="target.repeat.emptyPlaceholder" v-html="$services.page.translate(target.repeat.emptyPlaceholder)"></span>
 		</template>
 		<template v-else-if="!edit && loading">

@@ -67,6 +67,9 @@ Vue.view("page-button", {
 		},
 		getEvents: function() {
 			var result = {};
+			nabu.utils.objects.merge(result, this.$services.triggerable.getEvents(this.cell.state));
+
+			
 			if (nabu.page.event.getName(this.cell.state, "clickEvent") && nabu.page.event.getName(this.cell.state, "clickEvent") != "$close") {
 				var type = nabu.page.event.getType(this.cell.state, "clickEvent");
 				result[nabu.page.event.getName(this.cell.state, "clickEvent")] = type;
@@ -80,6 +83,25 @@ Vue.view("page-button", {
 			return result;
 		},
 		handle: function($event) {
+			var promise = this.$services.triggerable.trigger(this.cell.state, "click", null, this);
+			
+			if (this.cell.state.stopPropagation) {
+				$event.stopPropagation();
+				$event.preventDefault();
+			}
+			
+			this.running = true;
+			var self = this;
+			var unlock = function() {
+				self.running = false;
+				if (self.cell.state.emitClose) {
+					self.$emit("close");
+				}
+			}
+			promise.then(unlock, unlock);
+			
+			return promise;
+			
 			// we don't always call this handler (immediately), so we separate the logic
 			var self = this;
 			
@@ -153,6 +175,9 @@ Vue.view("page-button", {
 								else {
 									pageInstance.emit(self.cell.state.actionEvent, result).then(promise, promise);
 								}
+							}
+							else {
+								promise.resolve();
 							}
 							return promise;
 						}

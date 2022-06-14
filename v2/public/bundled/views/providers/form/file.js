@@ -71,9 +71,6 @@ Vue.component("page-form-input-file", {
 			type: Object,
 			required: true
 		},
-		parentValue: {
-			required: true
-		},
 		value: {
 			required: true
 		},
@@ -117,17 +114,12 @@ Vue.component("page-form-input-file", {
 		changed: function(newValue) {
 			var file = newValue && newValue.length ? newValue[0] : null;
 			if (this.field.contentType) {
-				this.$services.page.setValue(this.parentValue, this.field.contentType, file ? file.type : null);
-				if (this.field.fileName.indexOf(".") > 0) {
-					Vue.set(this.parentValue, this.field.contentType, file ? file.type : null);
-				}
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				pageInstance.set(this.field.contentType, file ? file.type : null);
 			}
 			if (this.field.fileName) {
-				this.$services.page.setValue(this.parentValue, this.field.fileName, file ? file.name : null);
-				// also set .-separated syntax
-				if (this.field.fileName.indexOf(".") > 0) {
-					Vue.set(this.parentValue, this.field.fileName, file ? file.name : null);
-				}
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				pageInstance.set(this.field.contentType, file ? file.name : null);
 			}
 			// only emit this _after_ we set the previous
 			// otherwise forms with "submit on change" might trigger before the above values are set

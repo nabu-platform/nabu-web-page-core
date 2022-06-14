@@ -29,6 +29,20 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			}
 		},
 		methods: {
+			getChildComponents: function() {
+				var result = [];
+				if (this.$refs.input && this.$refs.input.getChildComponents) {
+					nabu.utils.arrays.merge(result, this.$refs.input.getChildComponents());
+				}
+				if (result.length == 0) {
+					result.push({
+						title: "Form Component",
+						name: "form-component",
+						component: "form-component"
+					});
+				}
+				return result;
+			},
 			configurator: function() {
 				return "nabu-form-component-configuration";	
 			},

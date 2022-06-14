@@ -122,11 +122,7 @@ Vue.component("renderer-repeat", {
 	},
 	data: function() {
 		return {
-			records: [{
-				value: "firstValue"
-			}, {
-				value: "secondValue"
-			}],
+			records: [],
 			// the instance counter is used to manage our pages on the router
 			instanceCounter: $$rendererInstanceCounter++,
 			paging: {},

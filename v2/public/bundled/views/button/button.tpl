@@ -14,10 +14,17 @@
 </template>
 
 <template id="page-button-configure">
-	<div class="is-column is-spacing-medium">
-		<n-form-text v-model="cell.state.icon" label="Icon"/>
-		<n-form-switch v-model="cell.state.stopPropagation" label="Stop click propagation"/>
-		<n-form-switch v-model="cell.state.emitClose" label="Emit close on click"/>
+	<div class="is-column">
+		
+		<div class="is-column is-spacing-medium">
+			<n-form-text v-model="cell.state.icon" label="Icon"/>
+			<n-form-switch v-model="cell.state.stopPropagation" label="Stop click propagation"/>
+			<n-form-switch v-model="cell.state.emitClose" label="Emit close on click"/>
+		</div>
+		
+		<page-triggerable-configure :page="page" :target="cell.state" :triggers="{'click': {}}"/>
+		
+		<div v-if="false">
 		<n-form-combo v-model="cell.state.route" v-if="(!cell.state.clickEvent || !cell.state.clickEvent.name) && !cell.state.url && !cell.state.action" 
 			:filter="$services.page.getPageRoutes" 
 			:formatter="function(x) { return $services.page.prettifyRouteAlias(x.alias) }" 
@@ -88,6 +95,9 @@
 		
 		<n-form-combo v-model="cell.state.anchor" v-show="cell.state.url || cell.state.route" label="Anchor" :items="['$blank', '$window']"
 			key="button-anchor"/>
+			
+		</div>
+			
 			
 		<typography-variable-replacer :content="cell.state.content" :container="cell.state" :page="page"/>
 	</div>

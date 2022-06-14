@@ -759,7 +759,8 @@
 								:target="cell"
 								:edit="edit"
 								:page="page"
-								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)">
+								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
+								:parameters="getRendererParameters(cell)">
 							<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 							
 							<div class="is-column-content" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
@@ -794,7 +795,8 @@
 								:target="cell"
 								:edit="edit"
 								:page="page"
-								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)">
+								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
+								:parameters="getRendererParameters(cell)">
 							<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 							
 							<div class="is-column-content" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
@@ -829,7 +831,8 @@
 								:target="cell"
 								:edit="edit"
 								:page="page"
-								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)">
+								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
+								:parameters="getRendererParameters(cell)">
 							<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 							
 							<div class="is-column-content" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
@@ -865,7 +868,8 @@
 								:target="cell"
 								:edit="edit"
 								:page="page"
-								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)">
+								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
+								:parameters="getRendererParameters(cell)">
 							<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 							
 							<div class="is-column-content" @click="clickOnContentCell(row, cell)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>

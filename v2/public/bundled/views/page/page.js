@@ -17,12 +17,12 @@ Vue.mixin({
 	},
 	data: function() {
 		return {
-			state: {},
+//			state: {},
 			runtimeId: null
 		}
 	},
 	// not ideal, can it be replaced everywhere liwith $services.page.getBindingValue() ?
-	beforeMount: function() {
+/*	beforeMount: function() {
 		var self = this;
 		// map any local state
 
@@ -57,7 +57,7 @@ Vue.mixin({
 			});
 			Vue.set(self.state, "application", application);
 		}
-	},
+	},*/
 	computed: {
 		$self: function() {
 			return this;

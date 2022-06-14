@@ -276,6 +276,19 @@ window.addEventListener("load", function() {
 			icon: "page/core/images/enumeration.png"
 		});
 		$services.router.register({
+			alias: "page-form-enumeration-provider",
+			enter: function(parameters) {
+				parameters.formComponent = "page-form-input-enumeration-provider";
+				parameters.configurationComponent = "page-form-input-enumeration-provider-configure";
+				return new nabu.page.views.FormComponent({propsData: parameters});
+			},
+			form: "enumerationProvider",
+			category: "Form",
+			name: "Enumeration (Provider)",
+			description: "An enumeration based on a data provider",
+			icon: "page/core/images/enumeration.png"
+		});
+		$services.router.register({
 			alias: "page-form-date",
 			enter: function(parameters) {
 				parameters.formComponent = "page-form-input-date";

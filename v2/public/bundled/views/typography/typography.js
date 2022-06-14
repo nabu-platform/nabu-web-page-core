@@ -39,7 +39,7 @@ Vue.service("typography", {
 			var variables = [];
 			var index = 0;
 			var disqualifiers = ["%", "$", "{"];
-			while (index >= 0) {
+			while (content != null && index >= 0) {
 				// find next match
 				index = content.indexOf("{", index);
 				if (index < 0) {
