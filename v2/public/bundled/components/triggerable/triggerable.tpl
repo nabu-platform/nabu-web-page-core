@@ -4,11 +4,11 @@
 			<button class="is-button is-variant-primary-outline is-size-xsmall" @click="addTrigger"><icon name="plus"/><span class="is-title">Trigger</span></button>
 		</div>
 		<div class="is-accordion">
-			<n-collapsible :is-only-one-open="true" :title="'On ' + (trigger.trigger ? trigger.trigger : 'nothing')" v-for="(trigger, triggerIndex) in target[name]" content-class="is-spacing-medium" :start-open="triggerIndex == 0">
+			<n-collapsible  class="is-highlight-left is-color-primary-light" :is-only-one-open="true" :title="'On ' + (trigger.trigger ? trigger.trigger : '?')" v-for="(trigger, triggerIndex) in target[name]" content-class="is-spacing-medium" :start-open="false && triggerIndex == 0">
 				<ul slot="buttons" class="is-menu is-variant-toolbar is-align-end is-spacing-horizontal-right-medium">
 					<li class="is-column"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="target[name].splice(triggerIndex, 1)"><icon name="times"/></button></li>
 				</ul>
-				<n-form-combo v-model="trigger.trigger" v-if="getTriggerNames().length >= 2" :filter="getTriggerNames"/>
+				<n-form-combo v-model="trigger.trigger" v-if="getTriggerNames().length >= 2" :filter="getTriggerNames" label="Trigger On"/>
 				<n-form-text v-model="trigger.condition" label="Condition" after="You can configure an additional condition that must evaluate to true before the trigger is activated"/>
 				<n-form-text v-model="trigger.confirmation" label="Confirmation message" after="You can prompt the user for additional confirmation before executing the trigger"/>
 				<div v-for="(action, actionIndex) in trigger.actions" class="is-column is-spacing-medium is-color-body">

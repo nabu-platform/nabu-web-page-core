@@ -1610,6 +1610,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 					});
 				}
 				
+				nabu.utils.objects.merge(events, this.$services.triggerable.getEvents(this.page.content));
+				
 				// add the cell events
 				this.page.content.rows.map(function(row) {
 					self.getNestedEvents(row, events);
@@ -2226,6 +2228,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 					}
 				});
+				
+				promises.push(this.$services.triggerable.trigger(this.page.content, name, value, this));
 			}
 			
 			if (this.subscriptions[name]) {

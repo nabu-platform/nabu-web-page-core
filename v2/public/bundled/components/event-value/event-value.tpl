@@ -2,7 +2,7 @@
 	<component :is="inline ? 'div' : 'n-collapsible'" :title="title" class="is-event-value">
 		<div :class="{'padded-content': !inline}" class="is-column is-spacing-vertical-gap-small">
 			<n-form-text v-model="container[name].name" :label="inline ? title : 'Event Name'" :timeout="600" @input="$updateEvents()" v-if="nameModifiable"/>
-			<div v-for="eventField in container[name].eventFields" class="has-button-close is-column is-color-body is-spacing-medium">
+			<div v-for="eventField in container[name].eventFields" class="has-button-close is-column is-color-body is-spacing-medium  is-border-full">
 				<n-form-text v-model="eventField.name" label="Field Name" :timeout="600"/>
 				<n-form-combo v-model="eventField.stateValue" v-if="!eventField.isFixed" label="State Value"
 					:filter="function(value) { return $services.page.getSimpleKeysFor({properties:$services.page.getAllAvailableParameters(page, null, true)}, true).filter(function(x) { return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0 }) }"/>

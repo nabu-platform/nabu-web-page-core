@@ -1,3 +1,8 @@
+// TODO: add support for calling operations
+// TODO: add support for executing arbitrary javascript
+// TODO: add support for resetting events (though this might be an action on the page itself?)
+
+
 Vue.service("triggerable", {
 	methods: {
 		// get all the events that can occur from these triggers

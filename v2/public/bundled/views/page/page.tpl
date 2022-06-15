@@ -334,7 +334,10 @@
 										<page-event-value :page="page" :container="event" title="Initial Event" name="definition" @resetEvents="resetEvents" :inline="true"/>
 									</n-collapsible>
 								</n-collapsible>
-								<n-collapsible :only-one-open="true" title="Triggers" class="list">
+								<n-collapsible :only-one-open="true" title="Triggers">
+									<page-triggerable-configure :page="page" :target="page.content" :triggers="getEvents()"/>
+								</n-collapsible>
+								<n-collapsible :only-one-open="true" title="Triggers" class="list" v-if="false">
 									<div class="is-column is-spacing-medium">
 										<p class="is-p is-size-small is-color-light">Triggers can be used to react to events as they occur. User interaction with this page will usually trigger events which can lead to actions defined here.</p>
 										<div class="is-row is-align-end">
