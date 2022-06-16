@@ -46,7 +46,7 @@
 							
 						<n-form-text v-model="action.url" label="Route to an external URL" v-if="!action.route && !action.routeFormula" :timeout="600"/>
 					
-						<n-form-combo v-model="action.anchor" v-show="action.url || action.route" label="Anchor" :items="['$blank', '$window']"
+						<n-form-combo v-model="action.anchor" v-show="action.url || action.route" label="Anchor" :filter="getAnchors"
 							key="button-anchor"/>
 						
 						<div v-if="action.route" class="is-column is-spacing-vertical-gap-medium">
@@ -65,6 +65,8 @@
 								<button class="is-button is-variant-close is-size-small is-spacing-horizontal-right-large" @click="action.activeRoutes.splice(index, 1)"><icon name="times"/></button>
 							</div>
 						</div>
+						
+						<n-form-switch v-model="action.mask" label="Mask the routing" v-if="action.route || action.routeFormula"/>
 					</div>
 					
 					<div v-else-if="action.type == 'event'">

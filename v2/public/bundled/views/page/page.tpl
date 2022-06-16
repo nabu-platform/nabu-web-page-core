@@ -699,7 +699,7 @@
 			<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
 				<button class="is-button is-variant-primary is-size-xsmall has-tooltip is-wrap-none" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-text">Configure row</span></button>
 			</div>
-			<div v-if="row.customId" class="is-anchor" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
+			<div v-if="row.customId" class="is-anchor" :anchor="row.customId" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 			
 			<template v-for="cell in getCalculatedCells(row)">
 				<template v-if="edit">
@@ -726,7 +726,7 @@
 							:placeholder="cell.name ? cell.name : (cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : null)"
 							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 							:parameters="getRendererParameters(cell)">
-						<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
+						<div v-if="cell.customId" :anchor="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 						
 						<div class="is-column-content" v-if="cell.alias" :key="'page_' + pageInstanceId + '_edit_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
 						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
@@ -770,7 +770,7 @@
 								:page="page"
 								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 								:parameters="getRendererParameters(cell)">
-							<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
+							<div v-if="cell.customId" :anchor="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 							
 							<div class="is-column-content" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 							<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
@@ -806,7 +806,7 @@
 								:page="page"
 								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 								:parameters="getRendererParameters(cell)">
-							<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
+							<div v-if="cell.customId" :anchor="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 							
 							<div class="is-column-content" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 							<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
@@ -842,7 +842,7 @@
 								:page="page"
 								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 								:parameters="getRendererParameters(cell)">
-							<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
+							<div v-if="cell.customId" :anchor="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 							
 							<div class="is-column-content" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 							<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
@@ -879,7 +879,7 @@
 								:page="page"
 								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 								:parameters="getRendererParameters(cell)">
-							<div v-if="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
+							<div v-if="cell.customId" :anchor="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
 							
 							<div class="is-column-content" @click="clickOnContentCell(row, cell)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 							<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"

@@ -140,7 +140,11 @@ Vue.service("triggerable", {
 						// route based
 						else if (action.type == "route" && (action.route || action.routeFormula)) {
 							var route = action.routeAsFormula ? self.$services.page.eval(action.routeFormula, self.state, instance) : action.route;
-							self.$services.page.chosenRoute = route;
+							// if we are using an anchor we are either rendering outside ($blank, $window etc) or in a very specific location which can likely not be reached on replay
+							// so we don't store it
+							if (!action.anchor) {
+								self.$services.page.chosenRoute = route;
+							}
 							var parameters = getBindings();
 							if (action.anchor == "$blank") {
 								window.open(self.$services.router.template(route, parameters));
@@ -354,6 +358,17 @@ Vue.component("page-triggerable-configure", {
 		}
 	},
 	methods: {
+		getAnchors: function(value) {
+			var result = ["$blank", "$window"];
+			document.body.querySelectorAll("[anchor]").forEach(function(element) {
+				result.push(element.getAttribute("anchor"));
+			})
+			result.sort();
+			if (value) {
+				result = result.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+			}
+			return result;
+		},
 		actionUp: function(trigger, action) {
 			var index = trigger.actions.indexOf(action);	
 			if (index > 0) {
