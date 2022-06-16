@@ -74,8 +74,8 @@
 		<n-form-combo v-model="fragment.format" label="Format as" :items="types"/>
 		<n-form-text label="Max Length" v-model="fragment.maxLength" v-if="fragment.format == 'text'"/>
 		<n-form-switch v-model="fragment.compile" label="Compile content" v-if="!skipCompile && !mustCompile"/>
-		<n-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
-		<n-ace v-if="fragment.format == 'html'" mode="html" v-model="fragment.html"/>
+		<n-form-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
+		<n-form-ace v-if="fragment.format == 'html'" mode="html" v-model="fragment.html"/>
 		<n-form-text v-if="fragment.format == 'number'" v-model="fragment.amountOfDecimals" label="Amount of decimals"/>
 		<n-form-switch v-if="fragment.format == 'number'" v-model="fragment.retainTrailing" label="Retain trailing 0"/>
 		<n-form-combo label="Date Format" v-if="fragment.format == 'date'" v-model="fragment.dateFormat" :filter="function(value) { return [value, 'date', 'dateTime', '\'yy MMM dd', '\'yy MMM dd HH:mm', 'MMMM dd, yyyy'] }"/>

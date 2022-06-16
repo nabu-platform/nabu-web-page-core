@@ -406,6 +406,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 		this.postRender.splice(0).forEach(function(x) { x() });
 	},
 	created: function() {
+		// we want to be able to push data to the page
+		nabu.utils.objects.merge(this.variables, this.parameters);
 		this.$services.page.rendering++;
 		this.$services.page.setPageInstance(this.page, this);
 		var self = this;
@@ -548,6 +550,23 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		getPageArisComponents: function() {
+			return [{
+				title: "Page Grid",
+				name: "page-grid",
+				component: "grid"
+			}]	
+		},
+		getGridClasses: function() {
+			var classes = [];
+			if (this.$services.page.useAris && this.page.content.aris && this.page.content.aris.components) {
+				var children = this.$services.page.calculateArisComponents(this.page.content.aris, null, this);
+				if (children["page-grid"] && children["page-grid"].classes) {
+					nabu.utils.arrays.merge(classes, children["page-grid"].classes);
+				}
+			}
+			return classes;
+		},
 		// we want to listen for a component, this could be a renderer or a target component
 		// it is based on the id
 		// it might already be available or it might be mounted at a later point in time
@@ -1486,7 +1505,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			this.page.content.parameters.push({
 				name: null,
-				type: 'string',
+				type: null,
 				format: null,
 				default: null,
 				global: false,
@@ -1610,7 +1629,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					});
 				}
 				
-				nabu.utils.objects.merge(events, this.$services.triggerable.getEvents(this.page.content));
+				nabu.utils.objects.merge(events, this.$services.triggerable.getEvents(this.page, this.page.content));
 				
 				// add the cell events
 				this.page.content.rows.map(function(row) {

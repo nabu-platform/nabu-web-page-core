@@ -14,6 +14,10 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				type: Object,
 				required: true
 			},
+			childComponents: {
+				type: Object,
+				required: false
+			},
 			formComponent: {
 				type: String,
 				required: false,

@@ -5,17 +5,67 @@
 
 Vue.service("triggerable", {
 	methods: {
-		// get all the events that can occur from these triggers
-		getEvents: function(target) {
-			var result = {};
+		getActiveRoutes: function(target) {
+			var routes = [];
 			if (target.triggers) {
 				target.triggers.forEach(function(trigger) {
+					if (trigger.actions) {
+						trigger.actions.forEach(function(action) {
+							if (action.type == "route") {
+								// must not be a rule
+								if (action.route && action.route.indexOf("=") != 0) {
+									routes.push(action.route);
+								}
+								if (action.activeRoutes) {
+									nabu.utils.arrays.merge(routes, action.activeRoutes);
+								}
+							}
+						})
+					}
+				})
+			}
+			return routes;
+		},
+		getInternalState: function(page, trigger, action) {
+			var result = {};
+			// depending on where you are in the action chain, you may have additional state
+			var pageInstance = this.$services.page.getPageInstance(page);
+			var index = action ? trigger.actions.indexOf(action) : trigger.actions.length;
+			for (var i = 0; i < index; i++) {
+				var before = trigger.actions[i];
+				// we have explicitly saved a local state
+				if (before.type == 'action' && before.resultName && before.actionTarget && before.action) {
+					result[before.resultName] = this.$services.page.getActionOutput(pageInstance, before.actionTarget, before.action);
+				}
+				else if (before.type == "operation" && before.operation && before.resultName) {
+					result[before.resultName] = this.$services.page.getSwaggerOperationOutputDefinition(before.operation);
+				}
+			}
+			return result;
+		},
+		// get all the events that can occur from these triggers
+		getEvents: function(page, target) {
+			var result = {};
+			var self = this;
+			var pageInstance = this.$services.page.getPageInstance(page);
+			if (target.triggers) {
+				target.triggers.forEach(function(trigger) {
+					var internalState = self.getInternalState(page, trigger);
 					trigger.actions.forEach(function(action) {
 						if (nabu.page.event.getName(action, "event") && nabu.page.event.getName(action, "event") != "$close") {
-							var type = nabu.page.event.getType(action, "event");
-							result[nabu.page.event.getName(action, "event")] = type;
+							if (action.eventContent) {
+								result[nabu.page.event.getName(action, "event")] = internalState[action.eventContent];
+							}
+							else {
+								var type = nabu.page.event.getType(action, "event");
+								result[nabu.page.event.getName(action, "event")] = type;
+							}
 						}
-					})
+					});
+					// no content currently
+					if (trigger.errorEvent) {
+						result[trigger.errorEvent] = {};
+					}
 				});
 			}
 			return result;
@@ -28,15 +78,18 @@ Vue.service("triggerable", {
 			var self = this;
 			
 			// TODO: the name "triggers" is actually configurable
-			var triggers = target.triggers.filter(function(x) {
+			var triggers = target.triggers ? target.triggers.filter(function(x) {
 				return x.trigger == trigger
 					&& (!x.condition || self.$services.page.isCondition(x.condition, value, instance));
-			});
+			}) : [];
 			
 			var promises = triggers.map(function(x) {
 				var actions = x.actions.filter(function(y) {
 					return !y.condition || self.$services.page.isCondition(y.condition, value, instance);
 				});
+				
+				// local state we have built up, we can get variables from there
+				var state = {};
 				
 				// we start a new promise for the full trigger
 				var triggerPromise = self.$services.q.defer();
@@ -48,10 +101,25 @@ Vue.service("triggerable", {
 					var getBindings = function() {
 						var parameters = {};
 						var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
-						console.log("bindings for", action);
 						Object.keys(action.bindings).map(function(key) {
 							if (action.bindings[key] != null) {
-								var value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], instance);
+								console.log("resolving", action.bindings[key], state);
+								var value = null;
+								
+								// need to check if you want to access local state
+								var index = action.bindings[key].indexOf(".");
+								var resolved = false;
+								if (index > 0) {
+									var variableName = action.bindings[key].substring(0, index);
+									// if we have it in state, that wins
+									if (state.hasOwnProperty(variableName)) {
+										value = self.$services.page.getValue(state, action.bindings[key]);
+										resolved = true;
+									}
+								}
+								if (!resolved) {
+									value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], instance);
+								}
 								if (value != null) {
 									parameters[key] = value;
 								}
@@ -62,20 +130,17 @@ Vue.service("triggerable", {
 					
 					var handler = function() {
 						// event-based
-						if (nabu.page.event.getName(action, "event")) {
+						if (action.type == "event" && nabu.page.event.getName(action, "event")) {
 							var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
 							return pageInstance.emit(
 								nabu.page.event.getName(action, "event"),
-								nabu.page.event.getInstance(action, "event", instance.page, instance)
+								action.eventContent ? state[action.eventContent] : nabu.page.event.getInstance(action, "event", instance.page, instance)
 							);
 						}
 						// route based
-						else if (action.route) {
-							var route = action.route;
-							// variable route possible
-							if (route.charAt(0) == "=") {
-								route = self.$services.page.interpret(route, instance);
-							}
+						else if (action.type == "route" && (action.route || action.routeFormula)) {
+							var route = action.routeAsFormula ? self.$services.page.eval(action.routeFormula, self.state, instance) : action.route;
+							self.$services.page.chosenRoute = route;
 							var parameters = getBindings();
 							if (action.anchor == "$blank") {
 								window.open(self.$services.router.template(route, parameters));
@@ -87,7 +152,7 @@ Vue.service("triggerable", {
 								return self.$services.router.route(route, parameters, action.anchor, action.mask);
 							}
 						}
-						else if (action.url) {
+						else if (action.type == "route" && action.url) {
 							var url = self.$services.page.interpret(action.url, instance);
 							if (action.anchor == "$blank") {
 								window.open(url);
@@ -97,7 +162,7 @@ Vue.service("triggerable", {
 							}
 						}
 						// we might want to run an action
-						else if (action.action) {
+						else if (action.type == "action" && action.action) {
 							if (action.actionTarget) {
 								var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
 								var target = self.$services.page.getActionTarget(pageInstance, action.actionTarget);
@@ -105,18 +170,13 @@ Vue.service("triggerable", {
 								if (target && target.runAction) {
 									var result = target.runAction(action.action, getBindings());
 									var promise = self.$services.q.defer();
-									// if we want to emit an action event, let's, even if the result is null
-									if (action.actionEvent) {
-										if (result && result.then) {
-											// we don't do anything (yet) on error?
-											result.then(function(x) {
-												pageInstance.emit(action.actionEvent, x);
-												promise.resolve();
-											}, promise);
-										}
-										else {
-											pageInstance.emit(action.actionEvent, result).then(promise, promise);
-										}
+									if (result && result.then) {
+										result.then(function(answer) {
+											if (action.resultName) {
+												state[action.resultName] = answer;
+											}
+											promise.resolve(answer);
+										}, promise);
 									}
 									else {
 										promise.resolve();
@@ -124,6 +184,15 @@ Vue.service("triggerable", {
 									return promise;
 								}
 							}
+						}
+						else if (action.type == "operation" && action.operation) {
+							var operation = self.$services.swagger.operations[action.operation];
+							var parameters = getBindings();
+							return self.$services.swagger.execute(action.operation, parameters).then(function(answer) {
+								if (action.resultName) {
+									state[action.resultName] = answer;
+								}
+							}, promise);
 						}
 					};
 					
@@ -139,6 +208,11 @@ Vue.service("triggerable", {
 									triggerPromise.resolve();
 								}
 							}
+							else if (promise) {
+								promise.then(function() {
+									runAction(index + 1, promise);
+								})
+							}
 							else {
 								runAction(index + 1, promise);
 							}
@@ -149,7 +223,7 @@ Vue.service("triggerable", {
 						// we don't want to chain it, immediately execute
 						if (!lastPromise || action.immediate) {
 							// if we returned a promise, we want to keep in mind when running following actions
-							if (result.then) {
+							if (result && result.then) {
 								// if we have a lastpromise and we are in immediate mode, we are actually in parallel
 								if (lastPromise && action.immediate) {
 									lastPromise = self.$services.q.all(lastPromise, result);
@@ -164,7 +238,7 @@ Vue.service("triggerable", {
 							runNext(lastPromise);
 						}
 						else {
-							runNext(result.then ? result : lastPromise);
+							runNext(result && result.then ? result : lastPromise);
 						}
 					}
 				};
@@ -186,7 +260,16 @@ Vue.service("triggerable", {
 					triggerPromise.resolve();
 				}
 				
-				return triggerPromise;
+				return triggerPromise.then(function() {
+					if (x.closeEvent) {
+						instance.$emit("close");
+					}
+				}, function(error) {
+					if (x.errorEvent) {
+						var pageInstance = self.$services.page.getPageInstance(self.page);
+						pageInstance.emit(x.errorEvent, error ? error : {});
+					}
+				});
 			});
 			
 			return this.$services.q.all(promises);
@@ -216,12 +299,58 @@ Vue.component("page-triggerable-configure", {
 		name: {
 			type: String,
 			default: "triggers"
+		},
+		allowClosing: {
+			type: Boolean,
+			default: false
 		}
 	},
 	created: function() {
 		// normalize
 		if (!this.target[this.name]) {
 			Vue.set(this.target, this.name, []);
+		}
+	},
+	computed: {
+		actionTypes: function() {
+			var types = [];
+			types.push({
+				title: "Call a REST operation in the backend",
+				name: "operation"
+			});
+			types.push({
+				title: "Download data from the backend",
+				name: "download"
+			})
+			types.push({
+				title: "Call an action on another component",
+				name: "action"
+			});
+			types.push({
+				title: "Send an event to the entire page",
+				name: "event"
+			});
+			types.push({
+				title: "Show a notification to the user",
+				name: "notification"
+			})
+			types.push({
+				title: "Redirect the user to another page (this is a final action)",
+				name: "route"
+			});
+			types.push({
+				title: "Scroll to a particular position in the page",
+				name: "scroll"
+			});
+			types.push({
+				title: "Execute javascript",
+				name: "javascript"
+			});
+			types.push({
+				title: "Reset other events",
+				name: "reset"
+			});
+			return types;
 		}
 	},
 	methods: {
@@ -238,6 +367,12 @@ Vue.component("page-triggerable-configure", {
 				trigger.actions.splice(index, 1);
 				trigger.actions.splice(index + 1, 0, action);
 			}
+		},
+		getAvailableParameters: function(trigger, action) {
+			var result = {};
+			nabu.utils.objects.merge(result, this.$services.page.getAvailableParameters(this.page));
+			nabu.utils.objects.merge(result, this.$services.triggerable.getInternalState(this.page, trigger, action));
+			return result;
 		},
 		addAction: function(target) {
 			var action = {

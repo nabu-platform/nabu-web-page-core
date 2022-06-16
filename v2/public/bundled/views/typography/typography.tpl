@@ -16,11 +16,11 @@
 	<div>
 		<div v-for="variable in $services.typography.getVariables(content)" class="is-column is-color-body is-spacing-medium">
 			<h4 class="is-h4">{{variable}}</h4>
-			<n-form-combo v-model="container.fragments[variable].key" :filter="$services.page.getAllAvailableKeys.bind($self, page, true)" label="Variable to bind"/>
+			<n-form-combo v-model="container.fragments[variable].key" :filter="getAllKeys" label="Variable to bind"/>
 			<page-formatted-configure :page="page" :cell="cell" 
 				:fragment="container.fragments[variable]" 
 				:allow-html="true"
-				:keys="$services.page.getAllAvailableKeys(page, true)"/>
+				:keys="getAllKeys()"/>
 		</div>
 	</div>
 </template>

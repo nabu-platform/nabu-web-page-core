@@ -41,22 +41,21 @@ Vue.view("page-button", {
 			running: false
 		}
 	},
+	created: function() {
+		this.elementPromise = this.$services.q.defer();
+	},
+	ready: function() {
+		this.elementPromise.resolve(this.$el);	
+	},
 	computed: {
 		active: function() {
-			// if we have a routing button, check the primary route and alternative routes
-			if (this.cell.state.route && this.cell.state.route == this.$services.vue.route) {
-				return true;
-			}
-			else if (this.cell.state.route && this.cell.state.activeRoutes && this.cell.state.activeRoutes.indexOf(this.$services.vue.route) >= 0) {
-				return true;
-			}
-			return false;
+			return this.$services.triggerable.getActiveRoutes(this.cell.state).indexOf(this.$services.vue.route) >= 0;
 		}
 	},
 	methods: {
 		getContentWithVariables: function(content) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			return !content ? content : this.$services.typography.replaceVariables(pageInstance, this.cell.state, content);
+			return !content ? content : this.$services.typography.replaceVariables(pageInstance, this.cell.state, content, this.elementPromise);
 		},
 		getChildComponents: function() {
 			return [{
@@ -67,7 +66,7 @@ Vue.view("page-button", {
 		},
 		getEvents: function() {
 			var result = {};
-			nabu.utils.objects.merge(result, this.$services.triggerable.getEvents(this.cell.state));
+			nabu.utils.objects.merge(result, this.$services.triggerable.getEvents(this.page, this.cell.state));
 
 			
 			if (nabu.page.event.getName(this.cell.state, "clickEvent") && nabu.page.event.getName(this.cell.state, "clickEvent") != "$close") {

@@ -1,6 +1,7 @@
 <template id="renderer-form">
 	<n-form :class="getChildComponentClasses('form')" :content-class="getChildComponentClasses('form-container')">
 		<slot></slot>
+		<n-messages :messages="messages" slot="footer" v-if="messages.length"/>
 	</n-form>
 </template>
 

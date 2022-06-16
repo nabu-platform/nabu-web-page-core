@@ -70,7 +70,7 @@ Vue.service("typography", {
 			return variables;
 		},
 		// the container holds the fragment configuration
-		replaceVariables: function(pageInstance, container, content) {
+		replaceVariables: function(pageInstance, container, content, elementPromise, state) {
 			var self = this;
 			var component = Vue.component("page-formatted");
 			this.getVariables(content).forEach(function(variable) {
@@ -78,32 +78,49 @@ Vue.service("typography", {
 				if (container.fragments && container.fragments[variable] && container.fragments[variable].key) {
 					var formatted;
 					var oldContent;
-					var updateFunction = function() {
-						// need a formatted version and a mounted typography
-						if (formatted && self.$el) {
-							var newContent = formatted.$el.innerHTML;
-							if (newContent != oldContent) {
-								self.$el.querySelectorAll("[variable='" + variable + "]").forEach(function(x) {
-									x.innerHTML = newContent;
-								})
-								oldContent = newContent;
+					var updateContent = function(newValue) {
+						elementPromise.then(function(element) {
+							// if we passed something in, use it
+							if (newValue != null) {
+								element.querySelectorAll("[variable='" + variable + "']").forEach(function(x) {
+									x.innerHTML = newValue;
+								});
+								oldContent = newValue;
 							}
-						}
+						});
+					}
+					var updateFunction = function() {
+						elementPromise.then(function(element) {
+							if (formatted) {
+								var newContent = formatted.$el.innerHTML;
+								if (newContent != oldContent) {
+									element.querySelectorAll("[variable='" + variable + "']").forEach(function(x) {
+										x.innerHTML = newContent;
+									})
+									oldContent = newContent;
+								}
+							}
+						});
 					};
 					//content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<page-formatted :page='page' :cell='cell' :value=\"getVariableValue('" + variable + "')\" :fragment=\"getVariableFragment('" + variable + "')\"/>");
 					var div = document.createElement("div");
 					formatted = new component({propsData: {
 						page: self.page,
 						cell: self.cell,
-						value: pageInstance.get(container.fragments[variable].key),
-						fragment: container.fragments[variable]
-					}, updated: updateFunction, ready: updateFunction});
+						value: state ? self.$services.page.getValue(state, container.fragments[variable].key) : pageInstance.get(container.fragments[variable].key),
+						fragment: container.fragments[variable],
+						updater: updateFunction
+					}, updated: updateFunction, ready: updateFunction, watch: {
+						formatted: function(newValue) {
+							updateContent(newValue);
+						}
+					}});
 					formatted.$mount();
 					oldContent = formatted.$el.innerHTML;
 					content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<span variable='" + variable + "'>" + oldContent + "</span>");
 				}
 			});
-			return content;
+			return this.$services.page.translate(content);
 		}
 	}
 });
@@ -121,6 +138,11 @@ Vue.component("typography-variable-replacer", {
 		content: {
 			type: String,
 			required: false
+		},
+		// you can define a list of keys in a specific context
+		keys: {
+			type: Array,
+			required: false
 		}
 	},
 	created: function() {
@@ -134,6 +156,24 @@ Vue.component("typography-variable-replacer", {
 					Vue.set(self.container.fragments, x, {});
 				}
 			});
+		}
+	},
+	methods: {
+		getAllKeys: function(value) {
+			var keys = [];
+			if (this.keys && this.keys.length) {
+				nabu.utils.arrays.merge(keys, this.keys);
+			}
+			else {
+				nabu.utils.arrays.merge(keys, this.$services.page.getAllAvailableKeys(this.page, true));
+			}
+			if (value) {
+				keys = keys.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				});
+			}
+			keys.sort();
+			return keys;
 		}
 	}
 });
@@ -160,6 +200,12 @@ Vue.component("typography-core", {
 			required: true
 		}
 	},
+	created: function() {
+		this.elementPromise = this.$services.q.defer();
+	},
+	ready: function() {
+		this.elementPromise.resolve(this.$el);	
+	},
 	data: function() {
 		return {
 			timer: null
@@ -168,7 +214,7 @@ Vue.component("typography-core", {
 	methods: {
 		getContentWithVariables: function(content) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			return !content ? content : this.$services.typography.replaceVariables(pageInstance, this.cell.state, content);
+			return !content ? content : this.$services.typography.replaceVariables(pageInstance, this.cell.state, content, this.elementPromise);
 		},
 		getVariableValue: function(variable) {
 			console.log("getting value for", variable);
@@ -362,5 +408,4 @@ Vue.view("typography-blockquote", {
 			return "typography-blockquote-configure";
 		}
 	}
-})
-
+});

@@ -1,3 +1,6 @@
+// TODO: currently we repeat the content within, not the cell/row itself
+// it seems more natural to repeat the thing the renderer is _on_ rather than the content?
+
 // TODO: when in edit mode, still load the _first_ instance and set it as state in the local page
 // this will allow for visual editing
 
@@ -25,6 +28,7 @@ nabu.page.provide("page-renderer", {
 	getState: function(container, page, pageParameters, $services) {
 		var result = {};
 		if (container.repeat) {
+			result["recordIndex"] = {type: "int64"};
 			if (container.repeat.operation) {
 				var operation = $services.swagger.operations[container.repeat.operation];
 				if (operation && operation.responses && operation.responses["200"] && operation.responses["200"].schema) {
@@ -60,7 +64,7 @@ nabu.page.provide("page-renderer", {
 							}
 						});
 					}
-					result.filters = {properties:filters};
+					result.filter = {properties:filters};
 				}
 			}
 			else if (container.repeat.array) {
@@ -89,9 +93,28 @@ nabu.page.provide("page-renderer", {
 		}
 		return {properties:result};
 	},
+	getChildComponents: function(target) {
+		return [{
+			title: "Repeat Content",
+			name: "repeat-content",
+			component: target.rows ? "row" : "column"
+		}];
+	},
 	getSpecifications: function(target) {
 		// TODO: check that it is an operation _and_ it has limit/offset capabilities
-		return [];
+		//return [];
+		var specifications = [];
+		if (target.repeat && target.repeat.operation) {
+			var operation = application.services.swagger.operations[target.repeat.operation];
+			if (operation) {
+				var parameters = operation.parameters.map(function(x) { return x.name });
+				if (parameters.indexOf("limit") >= 0 && parameters.indexOf("offset") >= 0) {
+					specifications.push("pageable");
+					specifications.push("browseable");
+				}
+			}
+		}
+		return specifications;
 		//return ["pageable", "browseable"];
 	}
 });
@@ -110,6 +133,10 @@ Vue.component("renderer-repeat", {
 			type: Object,
 			required: true
 		},
+		parameters: {
+			type: Object,
+			required: false
+		},
 		// whether or not we are in edit mode (we can do things slightly different)
 		edit: {
 			type: Boolean,
@@ -125,20 +152,39 @@ Vue.component("renderer-repeat", {
 			records: [],
 			// the instance counter is used to manage our pages on the router
 			instanceCounter: $$rendererInstanceCounter++,
-			paging: {},
 			loading: false,
 			// the state in the original page, this can be used to write stuff like "limit" etc to
 			// note that the "record" will not actually be in this
-			state: {}
+			state: {
+				// if we don't define the fields AND we don't use Vue.set to update them, they are not reactive!
+				paging: {
+					current: 0,
+					total: 0,
+					pageSize: 0,
+					rowOffset: 0,
+					totalCount: 0
+				}
+			}
 		}
 	},
 	created: function() {
+		// the parameters that we pass in contain the bound values
+		nabu.utils.objects.merge(this.state, this.parameters);
+		
 		this.loadPage();
 		// note that this is NOT an activate, we can not stop the rendering until the call is done
 		// in the future we could add a "working" icon or a placeholder logic
 		this.loadData();
 	},
 	computed: {
+		// this is used to make it reactive to changes in the array
+		watchedArray: function() {
+			if (this.target.repeat.array) {
+				var result = this.$services.page.getPageInstance(this.page, this).get(this.target.repeat.array);
+				return result ? result : [];
+			}
+			return [];
+		},
 		alias: function() {
 			return "fragment-renderer-repeat-" + this.instanceCounter;
 		},
@@ -160,6 +206,10 @@ Vue.component("renderer-repeat", {
 		}
 	},
 	watch: {
+		watchedArray: function() {
+			console.log("watched updated!");
+			this.loadData();	
+		},
 		operationParameters: function() {
 			this.loadData();	
 		},
@@ -174,15 +224,26 @@ Vue.component("renderer-repeat", {
 		this.unloadPage();
 	},
 	methods: {
+		runAction: function(action, value) {
+			if (action == "jump-page") {
+				return this.loadData(value.page);
+			}
+			return this.$services.q.reject();
+		},
 		getRuntimeState: function() {
 			return this.state;	
 		},
 		getParameters: function(record) {
 			var result = {};
+			nabu.utils.objects.merge(result, this.getVariables());
 			if (this.target.runtimeAlias) {
-				result[this.target.runtimeAlias] = {record:record};
+				result[this.target.runtimeAlias] = {record:record, recordIndex: this.records.indexOf(record)};
 			}
 			return result;
+		},
+		getVariables: function() {
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			return pageInstance.variables;
 		},
 		unloadPage: function() {
 			this.$services.router.unregister("fragment-renderer-repeat-" + this.instanceCounter);
@@ -197,29 +258,39 @@ Vue.component("renderer-repeat", {
 			component.subscribe("$any", function(name, value) {
 				pageInstance.emit(name, value);
 			});
+			// keep track of the current page state as well
+			nabu.utils.objects.merge(component.variables, pageInstance.variables);
 		},
 		// in the future we can add a "load more" event support, we then listen to that event and load more data, this means we want to append
 		// currently we don't do anything special with limit and offset, you can fill them in in the bindings if you want
 		// we will just do the call as a whole, assuming it is a limited service result
 		// in the future we can hide the limit/offset inputs and instead expose them as state so you can directly write to them (?)
-		loadData: function(append) {
-			console.log("loading repeat", this.target);
+		loadData: function(page, append) {
 			var self = this;
 			// we want to call an operation
 			if (this.target.repeat && this.target.repeat.operation) {
 				var parameters = this.operationParameters;
 				// local state variables win from passed in ones!
-				Object.keys(this.state).forEach(function(key) {
-					// someone might still attempt to write to record?
-					// by default the state has no keys
-					// any key available is explicitly written by the user, so even a null value is an active decision
-					if (key != "record") {
-						parameters[key] = self.state[key];
+				if (this.state.filter) {
+					Object.keys(this.state.filter).forEach(function(key) {
+						// someone might still attempt to write to record?
+						// by default the state has no keys
+						// any key available is explicitly written by the user, so even a null value is an active decision
+						if (key != "record") {
+							parameters[key] = self.state.filter[key];
+						}
+					});
+				}
+				// if we want to load a certain page, we need a limit
+				if (page != null) {
+					if (parameters.limit == null) {
+						parameters.limit = 10;
 					}
-				});
+					parameters.offset = parameters.limit * page;
+				}
 				
 				this.loading = true;
-				this.$services.swagger.execute(this.target.repeat.operation, parameters).then(function(list) {
+				return this.$services.swagger.execute(this.target.repeat.operation, parameters).then(function(list) {
 					if (!append) {
 						self.records.splice(0);
 					}
@@ -250,7 +321,7 @@ Vue.component("renderer-repeat", {
 								if (typeof(root[field]) === "object" && root[field] != null && !pageFound) {
 									// these are the two fields we use and map, check if they exist
 									if (root[field].current != null && root[field].total != null) {
-										nabu.utils.objects.merge(self.paging, root[field]);
+										nabu.utils.objects.merge(self.state.paging, root[field]);
 										pageFound = true;
 									}
 									// recurse
@@ -272,10 +343,11 @@ Vue.component("renderer-repeat", {
 				if (!append) {
 					this.records.splice(0, this.records.length);
 				}
-				var records = this.$services.page.getPageInstance(this.page, this).get(this.target.repeat.array);
-				if (records) {
-					nabu.utils.arrays.merge(this.records, records);
-				}
+				//var records = this.$services.page.getPageInstance(this.page, this).get(this.target.repeat.array);
+				//if (records) {
+					nabu.utils.arrays.merge(this.records, this.watchedArray);
+				//}
+				return this.$services.q.resolve();
 			}
 		},
 		// create a custom route for rendering

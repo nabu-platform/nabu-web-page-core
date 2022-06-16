@@ -56,6 +56,7 @@ Vue.view("page-paging", {
 					page: page
 				});
 			}
+			return this.$services.q.reject();
 		},
 		configurator: function() {
 			return "page-paging-configure";

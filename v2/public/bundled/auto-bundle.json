@@ -489,7 +489,8 @@
 		"renderers": {
 			"form": {
 				"form.js": {
-					"url": "renderers/form/form.js"
+					"url": "renderers/form/form.js",
+					"template": true
 				},
 				"form.tpl": {
 					"url": "renderers/form/form.tpl"

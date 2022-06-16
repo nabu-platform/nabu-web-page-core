@@ -688,6 +688,11 @@ Vue.component("page-formatted", {
 			default: function() {
 				return {};
 			}
+		},
+		// called when we receive an update (?)
+		updater: {
+			required: false,
+			type: Function
 		}
 	},
 	computed: {
@@ -770,7 +775,7 @@ Vue.component("page-formatted", {
 			else {
 				var self = this;
 				var result = nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0]
-					.format(this.value, this.fragment, this.page, this.cell, this.state, this);
+					.format(this.value, this.fragment, this.page, this.cell, this.state, this, this.updater);
 				return result;
 			}
 		}

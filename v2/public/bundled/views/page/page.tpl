@@ -119,6 +119,11 @@
 											</n-form-section>
 										</n-form>
 									</div>
+									
+									<aris-editor 
+										:key="'cell_' + page.name + '_aris_editing'"
+										v-if="$services.page.useAris && $services.page.normalizeAris(page, page.content, 'page', getPageArisComponents())" :child-components="getPageArisComponents()" :container="page.content.aris"
+										/>
 								</n-collapsible>
 								<n-collapsible :only-one-open="true" title="Security" content-class="is-spacing-medium">
 									<p class="is-p is-size-small is-color-light">You can configure additional security on a page to limit access. If nothing is configured, everyone is allowed. You can use pseudo roles like $user and $guest.</p>
@@ -189,7 +194,7 @@
 												<li class="is-column"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="page.content.parameters.splice(page.content.parameters.indexOf(parameter), 1)"><icon name="times"/></button></li>
 											</ul>
 											<n-form-text v-model="parameter.name" :required="true" label="Name" :timeout="600"/>
-											<n-form-combo v-model="parameter.type" label="Type" :nillable="false" :filter="getParameterTypes"/>
+											<n-form-combo v-model="parameter.type" label="Type" :filter="getParameterTypes" :placeholder="parameter.default || parameter.defaultScript ? 'Calculated from default' : 'string'"/>
 											<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
 											<n-form-text v-model="parameter.default" label="Default Value" v-if="!parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
 											<n-form-ace mode="javascript" v-model="parameter.defaultScript" label="Default Value" v-if="parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
@@ -648,6 +653,7 @@
 		</n-sidebar>
 		
 		<n-page-rows v-if="page.content.rows" :rows="page.content.rows" :page="page" :edit="edit"
+			:class="getGridClasses()"
 			:depth="0"
 			:parameters="parameters"
 			:events="events"

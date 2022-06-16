@@ -586,7 +586,7 @@ window.addEventListener("load", function() {
 		
 		// formatters
 		nabu.page.provide("page-format", {
-			format: function(id, fragment, page, cell, record) {
+			format: function(id, fragment, page, cell, record, updater) {
 				var properties = null;
 				var self = this;
 				var pageInstance = $services.page.getPageInstance(page, this);
@@ -623,6 +623,9 @@ window.addEventListener("load", function() {
 						var updateFunction = function() {
 							if (pageInstance.retrieve(storageId) != component.$el.innerHTML) {
 								pageInstance.store(storageId, component.$el.innerHTML);
+							}
+							if (updater) {
+								updater(component.$el.innerHTML);
 							}
 						};
 						var component = new nabu.page.views.PageFields({ propsData: {

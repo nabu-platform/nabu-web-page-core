@@ -26,6 +26,15 @@ Vue.component("page-event-value", {
 		nameModifiable: {
 			type: Boolean,
 			default: true
+		},
+		// string list of keys
+		keys: {
+			type: Array,
+			required: false
+		},
+		allowFields: {
+			type: Boolean,
+			default: true
 		}
 	},
 	created: function() {
@@ -42,7 +51,9 @@ Vue.component("page-event-value", {
 				name: null
 			});
 		}
-			console.log("initializing", this.container);
+		else if (!this.container[this.name].eventFields) {
+			Vue.set(this.container[this.name], "eventFields", []);
+		}
 	},
 	methods: {
 		addEventField: function(target) {

@@ -83,6 +83,10 @@ Vue.component("renderer-form", {
 			type: Object,
 			required: true
 		},
+		parameters: {
+			type: Object,
+			required: false
+		},
 		childComponents: {
 			type: Object,
 			required: false
@@ -94,6 +98,7 @@ Vue.component("renderer-form", {
 		}
 	},
 	created: function() {
+		nabu.utils.objects.merge(this.state, this.parameters);
 		if (this.target.form && this.target.form.noInlineErrors) {
 			this.mode = null;
 		}
@@ -117,6 +122,7 @@ Vue.component("renderer-form", {
 	},
 	data: function() {
 		return {
+			messages: [],
 			state: {},
 			subscriptions: [],
 			mode: null
@@ -127,10 +133,58 @@ Vue.component("renderer-form", {
 			return this.state;		
 		},
 		runAction: function(name, input) {
+			var self = this;
 			if (name == "submit") {
 				// do an operation call
 				if (this.target.form.operation) {
-					console.log("TODO: form operation submit");
+					return this.$services.swagger.execute(this.target.form.operation, this.state).then(function() {
+						
+					}, function(error) {
+						self.error = "Form submission failed";
+						// if we get an XMLHTTPResponse thingy, parse it
+						if (error && error.responseText) {
+							error = JSON.parse(error.responseText);
+						}
+						// we get a (hopefully) standardized event back
+						if (error) {
+							if (!error.code) {
+								error.code = "HTTP-" + (error.status != null ? error.status : 500);
+							}
+							try {
+								if (self.target.form.errorEvent) {
+									var pageInstance = self.$services.page.getPageInstance(self.page, self);
+									pageInstance.emit(self.target.form.errorEvent, error);
+								}
+								// the default says nothing
+								if (error.title == "Internal Server Error") {
+									error.title = "%{Could not submit your form}";
+								}
+								var translated = self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message);
+								self.error = translated;
+								self.messages.push({
+									type: "request",
+									severity: "error",
+									title: translated
+								})
+							}
+							catch (exception) {
+								self.messages.push({
+									type: "request",
+									severity: "error",
+									title: self.$services.page.translateErrorCode(error.status ? "HTTP-" + error.status : "HTTP-500")
+								})
+							}
+						}
+						else {
+							self.messages.push({
+								type: "request",
+								severity: "error",
+								title: self.$services.page.translateErrorCode("HTTP-500")
+							});
+						}
+						self.doingIt = false;
+						stop(self.error);
+					});
 				}
 				else if (this.target.form.fields && this.target.form.fields.length) {
 					this.$services.page.applyRendererParameters(this.$services.page.getPageInstance(this.page, this), this.target, this.state);

@@ -1,11 +1,10 @@
 <template id="renderer-repeat">
 	<div>
 		<template v-if="!edit && !loading && records.length">
-			<div v-for="(record, index) in records" :record-index="index">
-				<div class="is-repeat-content" 
-					:key="'repeat_' + instanceCounter + '_rendered_' + index"
-					v-route-render="{ alias: alias, parameters: getParameters(record), mounted: mounted }"></div>
-			</div>
+			<div v-for="(record, index) in records" :record-index="index" class="is-repeat-content" 
+				:class="[target.rows ? 'is-page-row' : 'is-page-column', getChildComponentClasses('repeat-content')]"
+				:key="'repeat_' + instanceCounter + '_rendered_' + index"
+				v-route-render="{ alias: alias, parameters: getParameters(record), mounted: mounted }"></div>
 		</template>
 		<template v-else-if="!edit && !loading && !records.length">
 			<span class="is-text" v-if="target.repeat.emptyPlaceholder" v-html="$services.page.translate(target.repeat.emptyPlaceholder)"></span>
@@ -37,5 +36,6 @@
 			:to="operationParameters"
 			:from="{page:$services.page.getPageParameters(page)}" 
 			v-model="target.repeat.bindings"/>
+			
 	</div>
 </template>

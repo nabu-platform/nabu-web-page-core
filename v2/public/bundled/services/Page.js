@@ -21,6 +21,7 @@ nabu.services.VueService(Vue.extend({
 	services: ["swagger", "user", "cookies"],
 	data: function() {
 		return {
+			chosenRoute: null,
 			mouseX: 0,
 			mouseY: 0,
 			counter: 1,
@@ -337,7 +338,7 @@ nabu.services.VueService(Vue.extend({
 			});
 			this.getAvailableRenderers(pageInstance.page).forEach(function(target) {
 				var renderer = self.getRenderer(target.renderer);
-				if (renderer.getSpecifications && renderer.getSpecifications().indexOf(specification) >= 0) {
+				if (renderer.getSpecifications && renderer.getSpecifications(target).indexOf(specification) >= 0) {
 					targets.push(target);
 				}
 			});
@@ -836,20 +837,20 @@ nabu.services.VueService(Vue.extend({
 		
 		getCellComponents: function(page, cell) {
 			var components = [];
+			// we _do_ want the default cell component at this point
+			// the renderer might expose only additional targets
+			// and the styling is always set anyway on the cell itself
+			components.push({
+				title: "Cell",
+				name: "page-column",
+				component: "page-column",
+				defaultVariant: "page-column" + (cell.alias ? "-" + cell.alias : "")
+			});
 			if (cell.renderer) {
 				var renderer = this.getRenderer(cell.renderer);	
 				if (renderer && renderer.getChildComponents) {
 					nabu.utils.arrays.merge(components, renderer.getChildComponents(cell));
 				}
-			}
-			// push the cell itself if the renderer turned up nothing
-			if (components.length == 0) {
-				components.push({
-					title: "Cell",
-					name: "page-column",
-					component: "page-column",
-					defaultVariant: "page-column" + (cell.alias ? "-" + cell.alias : "")
-				});
 			}
 			var pageInstance = this.getPageInstance(page);
 			var component = pageInstance.getComponentForCell(cell.id);
@@ -877,20 +878,17 @@ nabu.services.VueService(Vue.extend({
 		},
 		getRowComponents: function(page, row) {
 			var components = [];
+			// push the cell itself
+			components.push({
+				title: "Row",
+				name: "page-row",
+				component: "page-row"
+			});
 			if (row.renderer) {
 				var renderer = this.getRenderer(row.renderer);	
 				if (renderer && renderer.getChildComponents) {
 					nabu.utils.arrays.merge(components, renderer.getChildComponents(row));
 				}
-			}
-			// only add the default component if we got nothing from the renderer
-			if (components.length == 0) {
-				// push the cell itself
-				components.push({
-					title: "Row",
-					name: "page-row",
-					component: "page-row"
-				});
 			}
 			return components;
 		},
@@ -2086,6 +2084,29 @@ nabu.services.VueService(Vue.extend({
 			});
 			return result;
 		},
+		// operations allowed in a trigger are both get and modify, but not downloads
+		getTriggerOperations: function(value) {
+			return this.getOperations(function(operation) {
+				return operation && (!operation.produces || !operation.produces.length || operation.produces.indexOf("application/octet-stream") < 0)
+					&& (!value || operation.id.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+			});
+		},
+		// operations that can be used to update state in the backend
+		getModifyOperations: function(value) {
+			// must not be a get
+			return this.getOperations(function(operation) {
+				return operation && operation.method != "get"
+					&& (!value || operation.id.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+			});
+		},
+		// operations where you can download data
+		getDownloadOperations: function(value) {
+			return this.getOperations(function(operation) {
+				return operation && operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream"
+					&& (!value || operation.id.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+			});
+		},
+		// operations where you can retrieve state (e.g. for initial state) from the backend
 		getStateOperations: function(value) {
 			var self = this;
 			return Object.keys(this.$services.swagger.operations).filter(function(operationId) {
@@ -2189,6 +2210,44 @@ nabu.services.VueService(Vue.extend({
 				console.error("Could not evaluate condition", condition, exception);
 				return false;
 			}
+		},
+		// you can pass in a schema that has to be enriched
+		getSchemaFromObject: function(object, schema) {
+			var self = this;
+			if (schema == null) {
+				schema = {};
+			}
+			if (typeof(object) === "string" || object instanceof String) {
+				schema.type = "string";
+			}
+			else if (object instanceof Date) {
+				schema.type = "string";
+				schema.format = "date-time";
+			}
+			else if (typeof(object) === "number" || object instanceof Number) {
+				schema.type = "int64";
+			}
+			else if (typeof(object) === "boolean" || object instanceof Boolean) {
+				schema.type = "boolean";
+			}
+			// we have an array of items, we merge the definitions from each instance in case they don't all have the same fields
+			else if (object instanceof Array) {
+				var items = {};
+				object.forEach(function(instance) {
+					self.getSchemaFromObject(instance, items);	
+				});
+				schema.type = "array";
+				schema.items = items;
+			}
+			// we assume it's an object
+			else {
+				schema.type = "object";
+				schema.properties = {};
+				Object.keys(object).forEach(function(key) {
+					schema.properties[key] = self.getSchemaFromObject(object[key]);
+				});
+			}
+			return schema;
 		},
 		getPageState: function(pageInstance) {
 			var state = {};
@@ -2998,6 +3057,13 @@ nabu.services.VueService(Vue.extend({
 			return routes;
 		},
 		getPageRoutes: function(newValue) {
+			// allow rules
+			if (newValue && newValue.indexOf("=") == 0) {
+				return [{
+					alias: newValue, 
+					name: "Calculated route"
+				}];
+			}
 			var routes = this.$services.router.list().filter(function(x) { return x.isPage && !x.defaultAnchor });
 			routes.sort(function(a, b) {
 				return a.name.localeCompare(b.name);
@@ -3542,6 +3608,7 @@ nabu.services.VueService(Vue.extend({
 				});
 			}
 			
+			var pageInstance = this.getPageInstance(page);
 			// you can set parameters much like swagger input parameters
 			// that means you can set a name
 			// you can also set a default value and other stuff
@@ -3556,12 +3623,11 @@ nabu.services.VueService(Vue.extend({
 					else {
 						parameters.properties[x.name] = self.$services.swagger.resolve(self.$services.swagger.definition(x.type))
 					}*/
-					parameters.properties[x.name] = self.getResolvedPageParameterType(x.type);
+					parameters.properties[x.name] = self.getResolvedPageParameterType(x.type, pageInstance ? pageInstance.get(x.name) : null);
 				});
 			}
 			
 //			parameters = {properties:{page: { properties: parameters.properties}}};
-			var pageInstance = this.getPageInstance(page);
 			
 			if (pageInstance) {
 				this.enrichWithRuntimeAliasDefinitions(parameters.properties, pageInstance);
@@ -3618,7 +3684,10 @@ nabu.services.VueService(Vue.extend({
 			}
 			return null;
 		},
-		getResolvedPageParameterType: function(type) {
+		getResolvedPageParameterType: function(type, instance) {
+			if (type == null && instance != null) {
+				return this.getSchemaFromObject(instance);
+			}
 			if (type == null || ['string', 'boolean', 'number', 'integer'].indexOf(type) >= 0) {
 				return {type:type == null ? "string" : type};
 			}

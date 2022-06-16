@@ -14,7 +14,8 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			+ "		<n-form-combo v-if='field.enumerationOperation' v-model='field.enumerationOperationQuery' label='Enumeration Query'"
 			+ "			:filter='function() { return getEnumerationParameters(field.enumerationOperation) }'/>"
 			+ "		<n-form-combo v-if='field.enumerationOperation && field.enumerationOperationValue' :filter='function() { return getEnumerationParameters(field.enumerationOperation) }' v-model='field.enumerationOperationResolve' label='Resolve Field'/>"
-			+ "		<page-fields-edit :allow-multiple='false' fields-name='enumerationFields' v-if='field.enumerationOperation && field.enumerationOperationLabelComplex' :cell='{state:field}' :page='page' :keys='getEnumerationFields(field.enumerationOperation)' :allow-editable='false'/>"
+			+ "		<n-form-text v-model='field.complexLabel' label='The complex text label' v-if='field.enumerationOperation && field.enumerationOperationLabelComplex'/>"
+			+ "		<typography-variable-replacer v-if='field.enumerationOperation && field.enumerationOperationLabelComplex && field.complexLabel' :content='field.complexLabel' :page='page' :container='field' :keys='getEnumerationFields(field.enumerationOperation)' />"
 			+ "		<n-form-text v-if='!field.showRadioView' v-model='field.emptyValue' label='Empty Value Text'/>"
 			+ "		<n-form-text v-if='!field.showRadioView' v-model='field.calculatingValue' label='Calculating Value Text' info='The text to show while the result is being calculated'/>"
 			+ "		<n-form-text v-if='!field.showRadioView' v-model='field.resetValue' label='Reset Value Text' info='The text to show to reset the current value'/>"
@@ -346,42 +347,9 @@ Vue.component("page-form-input-enumeration-operation", {
 			if (value == null) {
 				return null;
 			}
-			// we want complex labels
 			else if (this.field.enumerationOperationLabelComplex) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
-				var storageId = "enumerate." + this.field.enumerationOperation + "." + value[this.field.enumerationOperationValue];
-				if (this.field.enumerationCachingKey) {
-					storageId += "." + value[this.field.enumerationCachingKey];
-				}
-				storageId = storageId.replace(/\./g, "_");
-				
-				if (pageInstance.retrieve(storageId) != null) {
-					return pageInstance.retrieve(storageId);
-				}
-				
-				var self = this;
-				pageInstance.store(storageId, "");
-				
-				setTimeout(function() {
-					var parameters = nabu.utils.objects.deepClone({
-						page: self.page,
-						cell: {state: self.field},
-						edit: false,
-						data: value,
-						label: false,
-						fieldsName: "enumerationFields"
-					});
-					var onUpdate = function() {
-						var content = component.$el.innerHTML.replace(/<[^>]+>/g, "");
-						if (pageInstance.retrieve(storageId) != content) {
-							pageInstance.store(storageId, content);
-						}
-					};
-					var component = new nabu.page.views.PageFields({ propsData: parameters, updated: onUpdate, ready: onUpdate });
-					component.$mount();
-				}, 1);
-				//pageInstance.store(storageId, component.$el.innerHTML.replace(/<[^>]+>/g, ""));
-				return pageInstance.retrieve(storageId);
+				return !this.field.complexLabel ? this.field.complexLabel : this.$services.typography.replaceVariables(pageInstance, this.field, this.field.complexLabel, this.$services.q.reject(), value);
 			}
 			else if (this.field.enumerationFormatter) {
 				return this.field.enumerationFormatter(value);

@@ -19,10 +19,10 @@
 		<div class="is-column is-spacing-medium">
 			<n-form-text v-model="cell.state.icon" label="Icon"/>
 			<n-form-switch v-model="cell.state.stopPropagation" label="Stop click propagation"/>
-			<n-form-switch v-model="cell.state.emitClose" label="Emit close on click"/>
+			<n-form-switch v-model="cell.state.emitClose" label="Emit close on click" v-if="false"/>
 		</div>
 		
-		<page-triggerable-configure :page="page" :target="cell.state" :triggers="{'click': {}}"/>
+		<page-triggerable-configure :page="page" :target="cell.state" :triggers="{'click': {}}" :allow-closing="true"/>
 		
 		<div v-if="false">
 		<n-form-combo v-model="cell.state.route" v-if="(!cell.state.clickEvent || !cell.state.clickEvent.name) && !cell.state.url && !cell.state.action" 
