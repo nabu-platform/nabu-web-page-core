@@ -2,6 +2,9 @@
 // TODO: add support for executing arbitrary javascript
 // TODO: add support for resetting events (though this might be an action on the page itself?)
 
+// TODO: de confirmation moet een eigen actie zijn!
+// kan zijn dat je iets wilt doen, dan confirmatie voor een volgende actie
+
 
 Vue.service("triggerable", {
 	methods: {
