@@ -172,6 +172,18 @@ Vue.component("renderer-repeat", {
 		nabu.utils.objects.merge(this.state, this.parameters);
 		
 		this.loadPage();
+		
+		if (this.target.repeat.array) {
+			var self = this;
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			var targetArray = this.target.repeat.array;
+			var current = pageInstance.get(targetArray);
+			// if it does not exist yet, we create an empty one so we can watch it
+			if (current == null) {
+				pageInstance.set(targetArray, []);
+			}
+		}
+		
 		// note that this is NOT an activate, we can not stop the rendering until the call is done
 		// in the future we could add a "working" icon or a placeholder logic
 		this.loadData();
@@ -181,7 +193,7 @@ Vue.component("renderer-repeat", {
 		watchedArray: function() {
 			if (this.target.repeat.array) {
 				var result = this.$services.page.getPageInstance(this.page, this).get(this.target.repeat.array);
-				return result ? result : [];
+				return result;
 			}
 			return [];
 		},
@@ -207,7 +219,6 @@ Vue.component("renderer-repeat", {
 	},
 	watch: {
 		watchedArray: function() {
-			console.log("watched updated!");
 			this.loadData();	
 		},
 		operationParameters: function() {
@@ -258,8 +269,6 @@ Vue.component("renderer-repeat", {
 			component.subscribe("$any", function(name, value) {
 				pageInstance.emit(name, value);
 			});
-			// keep track of the current page state as well
-			nabu.utils.objects.merge(component.variables, pageInstance.variables);
 		},
 		// in the future we can add a "load more" event support, we then listen to that event and load more data, this means we want to append
 		// currently we don't do anything special with limit and offset, you can fill them in in the bindings if you want
@@ -345,7 +354,9 @@ Vue.component("renderer-repeat", {
 				}
 				//var records = this.$services.page.getPageInstance(this.page, this).get(this.target.repeat.array);
 				//if (records) {
+				if (this.watchedArray) {
 					nabu.utils.arrays.merge(this.records, this.watchedArray);
+				}
 				//}
 				return this.$services.q.resolve();
 			}

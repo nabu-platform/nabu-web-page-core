@@ -107,6 +107,10 @@
 						</div>
 					</div>
 					
+					<div v-else-if="action.type == 'javascript'">
+						<n-form-ace v-model="action.javascript" label="Javascript to execute"/>	
+					</div>
+					
 					<div v-else-if="action.type == 'operation'">
 						<n-form-combo :key="'operation' + page.content.actions.indexOf(action)" 
 							:formatter="function(x) { return x.id }"

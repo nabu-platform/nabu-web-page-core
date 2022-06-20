@@ -399,7 +399,7 @@ nabu.services.VueService(Vue.extend({
 				nabu.utils.arrays.merge(actions, component.getActions(target));
 			}
 			if (component.getSpecifications) {
-				var specifications = component.getSpecifications();
+				var specifications = component.getSpecifications(target);
 				var implemented = nabu.page.providers("page-specification").filter(function(x) {
 					return specifications.indexOf(x.name) >= 0;
 				});
@@ -408,6 +408,16 @@ nabu.services.VueService(Vue.extend({
 						nabu.utils.arrays.merge(actions, x.actions);
 					}
 				});
+			}
+			// we also want to scan renderers
+			if (component.target || component.cell || component.row) {
+				var rendererTarget = component.target ? component.target : (component.cell ? component.cell : component.row);
+				if (rendererTarget && rendererTarget.renderer) {
+					var renderer = this.getRenderer(rendererTarget.renderer);
+					if (renderer && renderer.getActions) {
+						nabu.utils.arrays.merge(actions, renderer.getActions(rendererTarget));
+					}
+				}
 			}
 			return actions;
 		},
@@ -1719,20 +1729,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		getBindingValue: function(pageInstance, bindingValue, context) {
 			var self = this;
-			// only useful if the binding value is a string
-			if (typeof(bindingValue) == "string") {
-				while (context && !context.localState) {
-					context = context.$parent;
-				}
-				if (context) {
-					var result = this.getValue(context.localState, bindingValue);
-					if (result) {
-						return result;
-					}
-				}
-			}
-			// if it has a label, we have a structure object
-			else if (bindingValue && bindingValue.label) {
+			if (bindingValue && bindingValue.label) {
 				if (bindingValue.label == "fixed") {
 					return bindingValue.value;
 				}

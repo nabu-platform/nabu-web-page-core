@@ -550,6 +550,32 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		// this works, but currently we can't get the events correctly
+		getTriggersForCell: function(cell) {
+			var component = this.components[cell.id];
+			if (component) {
+				// only works for component based actions
+				var actions = this.$services.page.getActions(component, cell);
+				// this works for renderer based
+				if ((!actions || !actions.length) && cell.renderer) {
+					var renderer = this.$services.page.getRenderer(cell.renderer);
+					actions = this.$services.page.getActions(renderer, cell);
+				}
+				if (!actions.length) {
+					return null;
+				}
+				var self = this;
+				var result = {};
+				actions.forEach(function(x) {
+					var actionInput = self.$services.page.getActionInput(self, cell.id, x.name);
+					var actionOutput = self.$services.page.getActionOutput(self, cell.id, x.name);
+					result[x.name + ":before"] = actionInput ? actionInput : {};
+					result[x.name + ":after"] = actionOutput ? actionOutput : {};
+					result[x.name + ":error"] = {};
+				});
+				return result;
+			}
+		},
 		getPageArisComponents: function() {
 			return [{
 				title: "Page Grid",
@@ -1194,14 +1220,24 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 			}
 			var self = this;
-			component.$on("hook:beforeDestroy", function() {
-				if (target.renderer && target.runtimeAlias && component.getRuntimeState && !target.retainState) {
-					Vue.set(self.variables, target.runtimeAlias, null);
-				}
-				if (target.renderer) {
-					self.components[target.id] = null;	
-				}
-			});
+			// when we exit edit mode, we don't actually destroy the parent page, but we do reroute all the children
+			// for whatever reason (possibly because this is asynchronous), it does not play well with the rerendering of the actual children
+//			if (!this.edit) {
+				component.$on("hook:beforeDestroy", function() {
+					// you may have already been replaced! at that point, we assume by an instance of the same thing
+					// this usually happens when switching between editing and not editing
+					// at that point, the new component should be registered already and we don't want to wipe that out
+					if (self.components[target.id] == self) {
+						if (target.renderer && target.runtimeAlias && component.getRuntimeState && !target.retainState) {
+							Vue.set(self.variables, target.runtimeAlias, null);
+						}
+						if (target.renderer) {
+							// only unset if it _is_ you, at some point we were unsetting other instances
+							self.components[target.id] = null;	
+						}
+					}
+				});
+//			}
 			// resolve anyone waiting for this component
 			if (this.waitingForMount[target.id] instanceof Array) {
 				this.waitingForMount[target.id].forEach(function(x) {
@@ -1325,13 +1361,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 				self.resetEvents();
 			});
 			
+			var self = this;
+			
+			/*
 			// we want to inject all the data into the component so it can be used easily
 			var data = {};
 			// shallow copy of the variables that exist
-			var self = this;
 			Object.keys(this.variables).map(function(key) {
 				data[key] = self.variables[key];
 			});
+			*/
 			
 			// actually, the state is not in the parents as rows and cells are not components
 			// state is sent in
@@ -1358,11 +1397,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			*/
 			
+			/*
 			if (state) {
 				Object.keys(state).map(function(key) {
 					data[key] = state[key];
 				})
 			}
+			*/
 			
 			// we want to inject all the necessary data into the cell so it can be referenced by components
 //			Vue.set(component, "state", data);
@@ -1664,6 +1705,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 					}
 					else {
 						handle(component);
+					}
+					// get potential trigger target
+					var triggerTarget = component.target ? component.target : (component.cell ? component.cell : component.row);
+					if (triggerTarget && triggerTarget.triggers) {
+						nabu.utils.objects.merge(events, self.$services.triggerable.getEvents(self.page, triggerTarget));
 					}
 				});
 				Object.keys(events).map(function(name) {
@@ -2501,7 +2547,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				result = this.variables[parts[0]];
 				
 				// we want a whole variable
-				if (result == null || parts.length == 1 || (parts.length == 2 && parts[1] == "$any")) {
+				if (result == null || parts.length == 1 || (parts.length == 2 && parts[1] == "$all")) {
 					return result;
 				}
 				

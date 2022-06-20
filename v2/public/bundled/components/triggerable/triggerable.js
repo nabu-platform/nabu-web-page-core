@@ -175,20 +175,71 @@ Vue.service("triggerable", {
 								var target = self.$services.page.getActionTarget(pageInstance, action.actionTarget);
 								// at this point it is a renderer or a component
 								if (target && target.runAction) {
-									var result = target.runAction(action.action, getBindings());
-									var promise = self.$services.q.defer();
-									if (result && result.then) {
-										result.then(function(answer) {
-											if (action.resultName) {
-												state[action.resultName] = answer;
-											}
-											promise.resolve(answer);
-										}, promise);
+									var runBefore = null;
+									var runAfter = null;
+									var runError = null;
+									// if the target has triggers of its own, we need to check
+									// a renderer uses a "target" which is either a cell or a row
+									// a regular component uses a cell (normally never a row?)
+									var targetConfiguration = target.target ? target.target : (target.cell ? target.cell : target.row);
+									if (targetConfiguration.triggers) {
+										runBefore = targetConfiguration.triggers.filter(function(x) {
+											return x.trigger == action.action + ":before";
+										});
+										runAfter = targetConfiguration.triggers.filter(function(x) {
+											return x.trigger == action.action + ":after";
+										});
+										runError = targetConfiguration.triggers.filter(function(x) {
+											return x.trigger == action.action + ":error";
+										});
+									}
+									var beforePromise = null;
+									if (runBefore && runBefore.length) {
+										beforePromise = self.$services.triggerable.trigger(targetConfiguration, action.action + ":before", null, target);
+									}
+									
+									var runTargetAction = function() {
+										var result = target.runAction(action.action, getBindings());
+										var promise = self.$services.q.defer();
+										if (result && result.then) {
+											result.then(function(answer) {
+												if (action.resultName) {
+													state[action.resultName] = answer;
+												}
+												if (runAfter && runAfter.length) {
+													self.$services.triggerable.trigger(targetConfiguration, action.action + ":after", null, target).then(function() {
+														promise.resolve(answer)
+													}, promise);
+												}
+												else {
+													promise.resolve(answer);
+												}
+											}, function(error) {
+												if (runError && runError.length) {
+													self.$services.triggerable.trigger(targetConfiguration, action.action + ":error", null, target).then(function() {
+														promise.reject(error)
+													}, promise);	
+												}
+												else {
+													promise.reject(error);
+												}
+											});
+										}
+										else {
+											promise.resolve();
+										}
+										return promise;
+									}
+									if (beforePromise) {
+										var overallPromise = self.$services.q.defer();
+										beforePromise.then(function() {
+											runTargetAction().then(overallPromise, overallPromise);
+										}, overallPromise);
+										return overallPromise;
 									}
 									else {
-										promise.resolve();
+										return runTargetAction();
 									}
-									return promise;
 								}
 							}
 						}
@@ -199,7 +250,24 @@ Vue.service("triggerable", {
 								if (action.resultName) {
 									state[action.resultName] = answer;
 								}
-							}, promise);
+							});
+						}
+						else if (action.type == "javascript" && action.javascript) {
+							var script = action.javascript;
+							// if we don't wrap it in a function, it might only execute the first line
+							// when dealing with formatting or conditions that might be wanted
+							// however, in this location we want to execute a full script, we are not assigning or conditioning
+							if (script.trim().indexOf("function") != 0) {
+								script = "function(){ " + script + "}";
+							}
+							var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
+							var result = self.$services.page.eval(script, pageInstance.variables, instance);
+							if (result && result.then) {
+								return result;
+							}
+							else {
+								return self.$services.q.resolve(result);
+							}
 						}
 					};
 					
@@ -218,7 +286,7 @@ Vue.service("triggerable", {
 							else if (promise) {
 								promise.then(function() {
 									runAction(index + 1, promise);
-								})
+								}, triggerPromise);
 							}
 							else {
 								runAction(index + 1, promise);
@@ -233,7 +301,7 @@ Vue.service("triggerable", {
 							if (result && result.then) {
 								// if we have a lastpromise and we are in immediate mode, we are actually in parallel
 								if (lastPromise && action.immediate) {
-									lastPromise = self.$services.q.all(lastPromise, result);
+									lastPromise = self.$services.q.all([lastPromise, result]);
 								}
 								// otherwise we just want the current promise
 								else {
@@ -354,6 +422,10 @@ Vue.component("page-triggerable-configure", {
 				name: "javascript"
 			});
 			types.push({
+				title: "Send notification to user",
+				name: "notification"
+			});
+			types.push({
 				title: "Reset other events",
 				name: "reset"
 			});
@@ -388,7 +460,7 @@ Vue.component("page-triggerable-configure", {
 		},
 		getAvailableParameters: function(trigger, action) {
 			var result = {};
-			nabu.utils.objects.merge(result, this.$services.page.getAvailableParameters(this.page));
+			nabu.utils.objects.merge(result, this.$services.page.getAllAvailableParameters(this.page));
 			nabu.utils.objects.merge(result, this.$services.triggerable.getInternalState(this.page, trigger, action));
 			return result;
 		},

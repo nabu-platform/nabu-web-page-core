@@ -1,6 +1,8 @@
 <template id="nabu-page">
-	<component :edit="edit" :is="pageTag()" :inline-all="true" class="is-page" :class="classes" :body-class="bodyClasses" :page="page.name" 
-			@drop="dropMenu($event)" @dragover="dragOver($event)">
+	<component :edit="edit" :is="pageTag()" :inline-all="true" class="is-page is-grid" :body-class="bodyClasses" :page="page.name" 
+			@drop="dropMenu($event)" @dragover="dragOver($event)"
+			:class="[classes, getGridClasses()]"
+			>
 		<div class="is-page-edit-menu" v-if="!page.content.readOnly && $services.page.canEdit() && $services.page.wantEdit && !embedded && !$services.page.editing" 
 				:draggable="true" 
 				@dragstart="dragMenu($event)"
@@ -542,6 +544,9 @@
 								
 							<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
 						</n-collapsible>
+						<n-collapsible :only-one-open="true" title="Triggers" key="cell-triggers" class="is-highlight-left" v-if="getTriggersForCell(cell)">
+							<page-triggerable-configure :page="page" :target="cell" :triggers="getTriggersForCell(cell)" :allow-closing="cell.target && cell.target != 'page'"/>
+						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Eventing" key="cell-events" content-class="is-spacing-medium" class="is-highlight-left">
 							<n-form-switch label="Closeable" v-model="cell.closeable" v-if="!cell.on"/>
 							<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents" v-if="!cell.closeable"
@@ -658,7 +663,6 @@
 				:row="row"
 				:page="page" 
 				:edit="edit"
-				:class="getGridClasses()"
 				:depth="0"
 				:parameters="parameters"
 				:events="events"

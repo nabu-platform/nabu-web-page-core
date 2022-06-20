@@ -5,9 +5,17 @@ nabu.page.provide("page-renderer", {
 	component: "renderer-form",
 	configuration: "renderer-form-configure",
 	// can inject state into the page so we can manipulate it
-	getState: function(container) {
+	getState: function(container, page, pageParameters, $services) {
 		if (container.form) {
-			if (container.form.operation) {
+			if (container.form.array && container.form.formType == "array") {
+				var array = container.form.array;
+				if (array.indexOf("page.") == 0) {
+					array = array.substring("page.".length);
+				}
+				var childDefinition = $services.page.getChildDefinition({properties:pageParameters}, array);
+				return childDefinition && childDefinition.items && childDefinition.items ? childDefinition.items : {};
+			}
+			else if (container.form.operation && container.form.formType == "operation") {
 				var operationId = container.form.operation;
 				return application.services.page.getSwaggerOperationInputDefinition(operationId);
 			}
@@ -98,6 +106,7 @@ Vue.component("renderer-form", {
 		}
 	},
 	created: function() {
+		console.log("created form!");
 		nabu.utils.objects.merge(this.state, this.parameters);
 		if (this.target.form && this.target.form.noInlineErrors) {
 			this.mode = null;
@@ -136,7 +145,7 @@ Vue.component("renderer-form", {
 			var self = this;
 			if (name == "submit") {
 				// do an operation call
-				if (this.target.form.operation) {
+				if (this.target.form.operation && this.target.form.formType == "operation") {
 					return this.$services.swagger.execute(this.target.form.operation, this.state).then(function() {
 						
 					}, function(error) {
@@ -186,7 +195,17 @@ Vue.component("renderer-form", {
 						stop(self.error);
 					});
 				}
-				else if (this.target.form.fields && this.target.form.fields.length) {
+				else if (this.target.form.array && this.target.form.formType == "array") {
+					var pageInstance = this.$services.page.getPageInstance(this.page, this);
+					var current = pageInstance.get(this.target.form.array);
+					if (current == null) {
+						pageInstance.set(this.target.form.array, []);
+						current = pageInstance.get(this.target.form.array);
+					}
+					console.log("pushing", this.state, current);
+					current.push(this.state);
+				}
+				else if (this.target.form.fields && this.target.form.fields.length && this.target.form.formType == "page") {
 					this.$services.page.applyRendererParameters(this.$services.page.getPageInstance(this.page, this), this.target, this.state);
 				}
 			}

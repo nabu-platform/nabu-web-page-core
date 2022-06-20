@@ -11,7 +11,7 @@
 		<n-form-radio 
 			name="form-type"
 			v-model="target.form.formType"
-			:items="[{name: 'page', title: 'Page form'}, {name:'operation', title: 'Operation Form'}]"
+			:items="[{name: 'page', title: 'Page form'}, {name:'operation', title: 'Operation Form'}, {name: 'array', title: 'Array form'}]"
 			:formatter="function(x) { return x.title }"
 			:extracter="function(x) { return x.name }"
 			label="What type of form do you want?"/>
@@ -34,8 +34,16 @@
 				<button class="is-button is-variant-close is-size-xsmall" @click="target.form.fields.splice(target.form.fields.indexOf(field), 1)"><icon name="times"/></button>
 			</div>
 		</div>
+		
+		<div v-else-if="target.form.formType == 'array'" class="is-column is-spacing-medium">
+			<n-form-combo 
+				label="Array" 
+				v-model="target.form.array"
+				:filter="function(value) { return $services.page.getAllArrays(page) }"
+				/>
+		</div>
 
-		<div v-if="target.form.formType == 'operation' || (target.form.formType == 'page' && target.form.submitType == 'staged')">
+		<div v-if="false && (target.form.formType == 'operation' || (target.form.formType == 'page' && target.form.submitType == 'staged'))">
 			<n-form-text v-model="target.form.submitEvent" label="Submit event" after="Emitted once the form has been submitted, the response at that point may still be positive or negative"/>
 			<n-form-text v-model="target.form.successEvent" label="Success event" after="Emitted once the form has been successfully submitted"/>
 			<n-form-text v-model="target.form.errorEvent" label="Error event" after="Emitted if the form could not be submitted correctly"/>
