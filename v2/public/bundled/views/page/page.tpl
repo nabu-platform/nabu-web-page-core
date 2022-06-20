@@ -652,84 +652,95 @@
 			</div>
 		</n-sidebar>
 		
-		<n-page-rows v-if="page.content.rows" :rows="page.content.rows" :page="page" :edit="edit"
-			:class="getGridClasses()"
-			:depth="0"
-			:parameters="parameters"
-			:events="events"
-			:ref="page.name + '_rows'"
-			:root="true"
-			:page-instance-id="pageInstanceId"
-			:stop-rerender="stopRerender"
-			@select="selectItem"
-			@viewComponents="viewComponents = edit"
-			@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(row), 1) }) }"/>
-			
+		<template v-if="page.content.rows">
+			<n-page-row 
+				v-for="row in page.content.rows"
+				:row="row"
+				:page="page" 
+				:edit="edit"
+				:class="getGridClasses()"
+				:depth="0"
+				:parameters="parameters"
+				:events="events"
+				:ref="page.name + '_rows'"
+				:root="true"
+				:page-instance-id="pageInstanceId"
+				:stop-rerender="stopRerender"
+				@select="selectItem"
+				@viewComponents="viewComponents = edit"
+				@removeRow="function(x) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(x), 1) }) }"/>
+		</template>
+		
 		<div class="page-menu n-page-menu" v-if="edit && false">
 			<button @click="viewComponents = !viewComponents"><span class="fa fa-cubes" title="Add Components"></span></button>
 		</div>
 	</component>
 </template>
 
-<template id="page-rows">
-	<component :is="rowsTag()" class="is-grid">
-		<component :is="rowTagFor(row)" v-for="row in getCalculatedRows()" class="is-page-row" :id="page.name + '_' + row.id" 
-				:class="$window.nabu.utils.arrays.merge(['page-row-' + row.cells.length, row.class ? row.class : null, {'collapsed': row.collapsed}, {'is-empty': edit && (!row.cells || !row.cells.length) } ], rowClasses(row))"  
-				:key="'page_' + pageInstanceId + '_row_' + row.id"
-				:row-key="'page_' + pageInstanceId + '_row_' + row.id"
-				v-if="edit || shouldRenderRow(row)"
-				:style="rowStyles(row)"
-				@drop="drop($event, row)" 
-				@dragend="$services.page.clearDrag($event)"
-				@dragover="dragOver($event, row)"
-				@dragexit="dragExit($event, row)"
-				@mouseout="mouseOut($event, row)"
-				@mouseover="mouseOver($event, row)"
-				@click.ctrl="goto($event, row)"
-				@click.meta="goto($event, row)"
-				@click.alt="$emit('select', row, null, 'row')"
-				:placeholder="row.name ? row.name : null"
-				:target="row"
-				:edit="edit"
-				:page="page"
-				:child-components="$services.page.calculateArisComponents(row.aris, row.renderer, $self)"
-				:parameters="getRendererParameters(row)">
-			<div v-if="false && (edit || $services.page.wantEdit || row.wantVisibleName) && row.name && !row.collapsed" :style="getRowEditStyle(row)" class="row-edit-label"
-				:class="'direction-' + (row.direction ? row.direction : 'horizontal')"><span>{{row.name}}</span></div>
-			<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
-				<button class="is-button is-variant-primary is-size-xsmall has-tooltip is-wrap-none" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-text">Configure row</span></button>
-			</div>
-			<div v-if="row.customId" class="is-anchor" :anchor="row.customId" :id="row.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-			
-			<template v-for="cell in getCalculatedCells(row)">
-				<template v-if="edit">
-					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
-							v-show="!edit || !row.collapsed"
-							:id="page.name + '_' + row.id + '_' + cell.id" 
-							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
-							:key="cellId(cell)"
-							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-							@click="clickOnCell(row, cell)"
-							@click.ctrl="goto($event, row, cell)"
-							@click.meta="goto($event, row, cell)"
-							@click.alt.prevent="pasteArisStyling($event, cell)"
-							@contextmenu.prevent.alt="copyArisStyling($event, cell)"
-							@mouseout="mouseOut($event, row, cell)"
-							@mouseover="mouseOver($event, row, cell)"
-							@dragend="$services.page.clearDrag($event)"
-							@dragover="dragOverCell($event, row, cell)"
-							@dragexit="dragExitCell($event, row, cell)"
-							@drop="dropCell($event, row, cell)"
-							:target="cell"
+<template id="page-row">
+	<component :is="rowTagFor(row)" class="is-page-row" :id="row.customId ? row.customId : page.name + '_' + row.id" 
+			:class="$window.nabu.utils.arrays.merge(['page-row-' + row.cells.length, row.class ? row.class : null, {'collapsed': row.collapsed}, {'is-empty': edit && (!row.cells || !row.cells.length) } ], rowClasses(row))"  
+			:key="'page_' + pageInstanceId + '_row_' + row.id"
+			:row-key="'page_' + pageInstanceId + '_row_' + row.id"
+			v-if="edit || shouldRenderRow(row)"
+			:style="rowStyles(row)"
+			@drop="drop($event, row)" 
+			@dragend="$services.page.clearDrag($event)"
+			@dragover="dragOver($event, row)"
+			@dragexit="dragExit($event, row)"
+			@mouseout="mouseOut($event, row)"
+			@mouseover="mouseOver($event, row)"
+			@click.ctrl="goto($event, row)"
+			@click.meta="goto($event, row)"
+			@click.alt="$emit('select', row, null, 'row')"
+			:placeholder="row.name ? row.name : null"
+			:target="row"
+			:edit="edit"
+			:page="page"
+			:child-components="$services.page.calculateArisComponents(row.aris, row.renderer, $self)"
+			:parameters="getRendererParameters(row)"
+			:anchor="row.customId"
+			>
+		<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
+			<button class="is-button is-variant-primary is-size-xsmall has-tooltip is-wrap-none" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-text">Configure row</span></button>
+		</div>
+		
+		<template v-for="cell in row.cells">
+			<template v-if="edit">
+				<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+						v-show="!edit || !row.collapsed"
+						:id="cell.customId ? cell.customId : page.name + '_' + row.id + '_' + cell.id" 
+						:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
+						:key="cellId(cell) + '_edit'"
+						:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+						@click="clickOnCell(row, cell)"
+						@click.ctrl="goto($event, row, cell)"
+						@click.meta="goto($event, row, cell)"
+						@click.alt.prevent="pasteArisStyling($event, cell)"
+						@contextmenu.prevent.alt="copyArisStyling($event, cell)"
+						@mouseout="mouseOut($event, row, cell)"
+						@mouseover="mouseOver($event, row, cell)"
+						@dragend="$services.page.clearDrag($event)"
+						@dragover="dragOverCell($event, row, cell)"
+						@dragexit="dragExitCell($event, row, cell)"
+						@drop="dropCell($event, row, cell)"
+						:target="cell"
+						:edit="edit"
+						:page="page"
+						:placeholder="cell.name ? cell.name : (cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : null)"
+						:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
+						:parameters="getRendererParameters(cell)"
+						v-route-render="{ alias: !cell.customId && !cell.rows.length ? cell.alias : null, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"
+						:anchor="cell.customId"
+						>
+					
+					<div class="is-column-content" v-if="cell.alias || cell.rows.length" :key="'page_' + pageInstanceId + '_edit_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
+					
+					<template v-if="!cell.customId">
+						<n-page-row v-for="row in cell.rows"
+							:row="row"
+							:page="page" 
 							:edit="edit"
-							:page="page"
-							:placeholder="cell.name ? cell.name : (cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : null)"
-							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
-							:parameters="getRendererParameters(cell)">
-						<div v-if="cell.customId" :anchor="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-						
-						<div class="is-column-content" v-if="cell.alias" :key="'page_' + pageInstanceId + '_edit_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
-						<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
 							:depth="depth + 1"
 							:parameters="parameters"
 							:events="events"
@@ -740,162 +751,208 @@
 							v-bubble:viewComponents
 							v-bubble:select
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
+					</template>
 					
-						<div class="is-column-menu is-layout is-align-main-center is-spacing-vertical-xsmall" @mouseenter="menuHover" @mouseleave="menuUnhover">
-							<button v-if="cell.alias" class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="configureCell($event, row, cell)"><icon name="cog"/><span class="is-text">Configure {{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
-							<button v-else class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="goto($event, row, cell)"><icon name="magic"/><span class="is-text">Configure {{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
-						</div>
+					<div class="is-column-menu is-layout is-align-main-center is-spacing-vertical-xsmall" @mouseenter="menuHover" @mouseleave="menuUnhover">
+						<button v-if="cell.alias" class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="configureCell($event, row, cell)"><icon name="cog"/><span class="is-text">Configure {{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
+						<button v-else class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="goto($event, row, cell)"><icon name="magic"/><span class="is-text">Configure {{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
+					</div>
+				</component>
+			</template>
+			<template v-else-if="shouldRenderCell(row, cell)">
+				<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)" :popout="false" :autocloseable="!cell.preventAutoClose" class="content-sidebar" :style="getSideBarStyles(cell)">
+					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							v-show="!edit || !row.collapsed"
+							:id="cell.customId ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
+							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
+							:key="cellId(cell)"
+							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+							@close="close(cell)"
+							@click="clickOnCell(row, cell)"
+							@click.ctrl="goto($event, row, cell)"
+							@click.meta="goto($event, row, cell)"
+							@mouseout="mouseOut($event, row, cell)"
+							@mouseover="mouseOver($event, row, cell)"
+							@dragend="$services.page.clearDrag($event)"
+							@dragover="dragOverCell($event, row, cell)"
+							@dragexit="dragExitCell($event, row, cell)"
+							@drop="dropCell($event, row, cell)"
+							:target="cell"
+							:edit="edit"
+							:page="page"
+							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
+							:parameters="getRendererParameters(cell)"
+							:anchor="cell.customId"
+							v-route-render="{ alias: !cell.customId && !cell.rows.length ? cell.alias : null, parameters: !cell.customId && !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							>
+						
+						<div class="is-column-content" v-if="cell.alias || cell.rows.length" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
+						<template v-if="!cell.customId">
+							<n-page-row v-for="row in cell.rows"
+								:row="row"
+								:page="page" 
+								:edit="edit"
+								:depth="depth + 1"
+								:parameters="parameters"
+								:events="events"
+								:ref="page.name + '_' + cell.id + '_rows'"
+								:local-state="getLocalState(row, cell)"
+								:page-instance-id="pageInstanceId"
+								:stop-rerender="stopRerender"
+								v-bubble:viewComponents
+								v-bubble:select
+								@close="close(cell)"
+								@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
+						</template>
+					</component>
+				</n-sidebar>
+				<n-prompt v-else-if="cell.target == 'prompt'" @close="close(cell)" :autoclose="cell.autoclose">
+					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							v-show="!edit || !row.collapsed"
+							:id="cell.customId ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
+							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
+							:key="cellId(cell)"
+							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+							@close="close(cell)"
+							@click="clickOnCell(row, cell)"
+							@click.ctrl="goto($event, row, cell)"
+							@click.meta="goto($event, row, cell)"
+							@mouseout="mouseOut($event, row, cell)"
+							@mouseover="mouseOver($event, row, cell)"
+							@dragend="$services.page.clearDrag($event)"
+							@dragover="dragOverCell($event, row, cell)"
+							@dragexit="dragExitCell($event, row, cell)"
+							@drop="dropCell($event, row, cell)"
+							:target="cell"
+							:edit="edit"
+							:page="page"
+							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
+							:parameters="getRendererParameters(cell)"
+							:anchor="cell.customId"
+							v-route-render="{ alias: !cell.customId && !cell.rows.length ? cell.alias : null, parameters: !cell.customId && !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							>
+						
+						<div class="is-column-content" v-if="cell.alias || cell.rows.length" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
+						<template v-if="!cell.customId">
+							<n-page-row v-for="row in cell.rows"
+								:row="row"
+								:page="page" 
+								:edit="edit"
+								:depth="depth + 1"
+								:parameters="parameters"
+								:events="events"
+								:ref="page.name + '_' + cell.id + '_rows'"
+								:local-state="getLocalState(row, cell)"
+								:page-instance-id="pageInstanceId"
+								:stop-rerender="stopRerender"
+								v-bubble:viewComponents
+								v-bubble:select
+								@close="close(cell)"
+								@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
+						</template>
+					</component>
+				</n-prompt>
+				<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right">          
+					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							v-show="!edit || !row.collapsed"
+							:id="cell.customId ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
+							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
+							:key="cellId(cell)"
+							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+							@close="close(cell)"
+							@click="clickOnCell(row, cell)"
+							@click.ctrl="goto($event, row, cell)"
+							@click.meta="goto($event, row, cell)"
+							@mouseout="mouseOut($event, row, cell)"
+							@mouseover="mouseOver($event, row, cell)"
+							@dragend="$services.page.clearDrag($event)"
+							@dragover="dragOverCell($event, row, cell)"
+							@dragexit="dragExitCell($event, row, cell)"
+							@drop="dropCell($event, row, cell)"
+							:target="cell"
+							:edit="edit"
+							:page="page"
+							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
+							:parameters="getRendererParameters(cell)"
+							:anchor="cell.customId"
+							v-route-render="{ alias: !cell.customId && !cell.rows.length ? cell.alias : null, parameters: !cell.customId && !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							>
+						
+						<div class="is-column-content" v-if="cell.alias || cell.rows.length" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
+						<template v-if="!cell.customId">
+							<n-page-row v-for="row in cell.rows"
+								:row="row"
+								:page="page" 
+								:edit="edit"
+								:depth="depth + 1"
+								:parameters="parameters"
+								:events="events"
+								:ref="page.name + '_' + cell.id + '_rows'"
+								:local-state="getLocalState(row, cell)"
+								:page-instance-id="pageInstanceId"
+								:stop-rerender="stopRerender"
+								v-bubble:viewComponents
+								v-bubble:select
+								@close="close(cell)"
+								@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
+						</template>
+					</component>
+				</n-absolute>
+				<template v-else>
+					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							v-show="!edit || !row.collapsed"
+							:id="cell.customId ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
+							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
+							:key="cellId(cell)"
+							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+							@close="close(cell)"
+							@click="clickOnCell(row, cell)"
+							@click.ctrl="goto($event, row, cell)"
+							@click.meta="goto($event, row, cell)"
+							@mouseout="mouseOut($event, row, cell)"
+							@mouseover="mouseOver($event, row, cell)"
+							@dragend="$services.page.clearDrag($event)"
+							@dragover="dragOverCell($event, row, cell)"
+							@dragexit="dragExitCell($event, row, cell)"
+							@drop="dropCell($event, row, cell)"
+							v-auto-close="cell.state.openTrigger ? function(inside) { autocloseCell(row, cell, inside) } : null"
+							:target="cell"
+							:edit="edit"
+							:page="page"
+							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
+							:parameters="getRendererParameters(cell)"
+							:anchor="cell.customId"
+							v-route-render="{ alias: !cell.customId && !cell.rows.length ? cell.alias : null, parameters: !cell.customId && !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							>
+						
+						<div class="is-column-content" v-if="cell.alias || cell.rows.length" @click="clickOnContentCell(row, cell)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
+						<template v-if="!cell.customId">
+							<n-page-row v-for="row in cell.rows"
+								:row="row"
+								:page="page" 
+								:edit="edit"
+								:depth="depth + 1"
+								:parameters="parameters"
+								:events="events"
+								:ref="page.name + '_' + cell.id + '_rows'"
+								:local-state="getLocalState(row, cell)"
+								:page-instance-id="pageInstanceId"
+								:stop-rerender="stopRerender"
+								v-bubble:viewComponents
+								v-bubble:select
+								@close="close(cell)"
+								@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
+						</template>
 					</component>
 				</template>
-				<template v-else-if="shouldRenderCell(row, cell)">
-					<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)" :popout="false" :autocloseable="!cell.preventAutoClose" class="content-sidebar" :style="getSideBarStyles(cell)">
-						<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
-								v-show="!edit || !row.collapsed"
-								:id="page.name + '_' + row.id + '_' + cell.id" 
-								:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
-								:key="cellId(cell)"
-								:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-								@close="close(cell)"
-								@click="clickOnCell(row, cell)"
-								@click.ctrl="goto($event, row, cell)"
-								@click.meta="goto($event, row, cell)"
-								@mouseout="mouseOut($event, row, cell)"
-								@mouseover="mouseOver($event, row, cell)"
-								@dragend="$services.page.clearDrag($event)"
-								@dragover="dragOverCell($event, row, cell)"
-								@dragexit="dragExitCell($event, row, cell)"
-								@drop="dropCell($event, row, cell)"
-								:target="cell"
-								:edit="edit"
-								:page="page"
-								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
-								:parameters="getRendererParameters(cell)">
-							<div v-if="cell.customId" :anchor="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-							
-							<div class="is-column-content" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
-							<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
-								:depth="depth + 1"
-								:parameters="parameters"
-								:events="events"
-								:ref="page.name + '_' + cell.id + '_rows'"
-								:local-state="getLocalState(row, cell)"
-								:page-instance-id="pageInstanceId"
-								:stop-rerender="stopRerender"
-								@close="close(cell)"/>
-						</component>
-					</n-sidebar>
-					<n-prompt v-else-if="cell.target == 'prompt'" @close="close(cell)" :autoclose="cell.autoclose">
-						<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
-								v-show="!edit || !row.collapsed"
-								:id="page.name + '_' + row.id + '_' + cell.id" 
-								:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
-								:key="cellId(cell)"
-								:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-								@close="close(cell)"
-								@click="clickOnCell(row, cell)"
-								@click.ctrl="goto($event, row, cell)"
-								@click.meta="goto($event, row, cell)"
-								@mouseout="mouseOut($event, row, cell)"
-								@mouseover="mouseOver($event, row, cell)"
-								@dragend="$services.page.clearDrag($event)"
-								@dragover="dragOverCell($event, row, cell)"
-								@dragexit="dragExitCell($event, row, cell)"
-								@drop="dropCell($event, row, cell)"
-								:target="cell"
-								:edit="edit"
-								:page="page"
-								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
-								:parameters="getRendererParameters(cell)">
-							<div v-if="cell.customId" :anchor="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-							
-							<div class="is-column-content" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
-							<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
-								:depth="depth + 1"
-								:parameters="parameters"
-								:events="events"
-								:ref="page.name + '_' + cell.id + '_rows'"
-								:local-state="getLocalState(row, cell)"
-								:page-instance-id="pageInstanceId"
-								:stop-rerender="stopRerender"
-								@close="close(cell)"/>
-						</component>
-					</n-prompt>
-					<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right">          
-						<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
-								v-show="!edit || !row.collapsed"
-								:id="page.name + '_' + row.id + '_' + cell.id" 
-								:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
-								:key="cellId(cell)"
-								:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-								@close="close(cell)"
-								@click="clickOnCell(row, cell)"
-								@click.ctrl="goto($event, row, cell)"
-								@click.meta="goto($event, row, cell)"
-								@mouseout="mouseOut($event, row, cell)"
-								@mouseover="mouseOver($event, row, cell)"
-								@dragend="$services.page.clearDrag($event)"
-								@dragover="dragOverCell($event, row, cell)"
-								@dragexit="dragExitCell($event, row, cell)"
-								@drop="dropCell($event, row, cell)"
-								:target="cell"
-								:edit="edit"
-								:page="page"
-								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
-								:parameters="getRendererParameters(cell)">
-							<div v-if="cell.customId" :anchor="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-							
-							<div class="is-column-content" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
-							<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
-								:depth="depth + 1"
-								:parameters="parameters"
-								:events="events"
-								:ref="page.name + '_' + cell.id + '_rows'"
-								:local-state="getLocalState(row, cell)"
-								:page-instance-id="pageInstanceId"
-								:stop-rerender="stopRerender"
-								@close="close(cell)"/>
-						</component>
-					</n-absolute>
-					<template v-else>
-						<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
-								v-show="!edit || !row.collapsed"
-								:id="page.name + '_' + row.id + '_' + cell.id" 
-								:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, {'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
-								:key="cellId(cell)"
-								:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-								@close="close(cell)"
-								@click="clickOnCell(row, cell)"
-								@click.ctrl="goto($event, row, cell)"
-								@click.meta="goto($event, row, cell)"
-								@mouseout="mouseOut($event, row, cell)"
-								@mouseover="mouseOver($event, row, cell)"
-								@dragend="$services.page.clearDrag($event)"
-								@dragover="dragOverCell($event, row, cell)"
-								@dragexit="dragExitCell($event, row, cell)"
-								@drop="dropCell($event, row, cell)"
-								v-auto-close="cell.state.openTrigger ? function(inside) { autocloseCell(row, cell, inside) } : null"
-								:target="cell"
-								:edit="edit"
-								:page="page"
-								:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
-								:parameters="getRendererParameters(cell)">
-							<div v-if="cell.customId" :anchor="cell.customId" class="is-anchor" :id="cell.customId"><!-- to render stuff in without disrupting the other elements here --></div>
-							
-							<div class="is-column-content" @click="clickOnContentCell(row, cell)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-if="cell.alias" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
-							<n-page-rows v-if="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" :edit="edit"
-								:depth="depth + 1"
-								:parameters="parameters"
-								:events="events"
-								:ref="page.name + '_' + cell.id + '_rows'"
-								:local-state="getLocalState(row, cell)"
-								:page-instance-id="pageInstanceId"
-								:stop-rerender="stopRerender"
-								@close="close(cell)"/>
-						</component>
-					</template>
-				</template>
 			</template>
-		</component>
+		</template>
+	</component>
+	
+</template>
+<template id="page-rows">
+	<component :is="rowsTag()" class="is-grid">
+		<n-page-row v-for="row in rows" :row="row" :page="page" :edit="edit" :parameters="parameters" :root="root" :stop-rerender="stopRerender" :depth="depth"/>
 	</component>
 </template>
 

@@ -2868,7 +2868,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 	}
 });
 
-nabu.page.views.PageRows = Vue.component("n-page-rows", {
+Vue.component("n-page-rows", {
 	template: "#page-rows",
 	props: {
 		page: {
@@ -2900,6 +2900,53 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		stopRerender: {
+			type: Boolean,
+			required: false,
+			default: false
+		},
+		depth: {
+			type: Number,
+			default: 0
+		}
+	},
+	methods: {
+		rowsTag: function() {
+			if (this.depth > 0 || !this.page.content.pageType || this.page.content.pageType == "page") {
+				return "div";	
+			}
+			var self = this;
+			var provider = nabu.page.providers("page-type").filter(function(x) {
+				return x.name == self.page.content.pageType;
+			})[0];
+			// special override for editing purposes
+			if (this.edit && provider && provider.pageContentTagEdit) {
+				return provider.pageContentTagEdit;
+			}
+			return provider && provider.pageContentTag ? provider.pageContentTag : "div";
+		}
+	}
+});
+
+Vue.component("n-page-row", {
+	template: "#page-row",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		row: {
+			type: Object,
+			required: true
+		},
+		edit: {
+			type: Boolean,
+			required: false
+		},
+		parameters: {
+			type: Object,
+			required: false
 		},
 		stopRerender: {
 			type: Boolean,
@@ -3221,20 +3268,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 		setRowConfiguring: function(id) {
 			this.configuring = id;	
 		},
-		rowsTag: function() {
-			if (this.depth > 0 || !this.page.content.pageType || this.page.content.pageType == "page") {
-				return "div";	
-			}
-			var self = this;
-			var provider = nabu.page.providers("page-type").filter(function(x) {
-				return x.name == self.page.content.pageType;
-			})[0];
-			// special override for editing purposes
-			if (this.edit && provider && provider.pageContentTagEdit) {
-				return provider.pageContentTagEdit;
-			}
-			return provider && provider.pageContentTag ? provider.pageContentTag : "div";
-		},
 		rowTagFor: function(row) {
 			var renderer = row.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == row.renderer })[0];
 			if (renderer == null) {
@@ -3329,79 +3362,6 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 				})
 			}
 			return state;
-		},
-		// can't be a computed cause we depend on the $parent to resolve some variables
-		// and that's not reactive...
-		getCalculatedRows: function() {
-			// if we are in edit mode, we don't actually calculate rows
-			if (this.edit) {
-				return this.rows;
-			}
-			else {
-				return this.mapCalculated(this.rows);
-			}
-		},
-		mapCalculated: function(list) {
-			var self = this;
-			var result = [];
-			var pageInstance = self.$services.page.getPageInstance(self.page, self);
-			if (!pageInstance) {
-				return result;
-			}
-			list.map(function(entry) {
-				// no local state, just push it
-				if (!entry.instances || !Object.keys(entry.instances).length) {
-					result.push(entry);
-				}
-				else {
-					var key = Object.keys(entry.instances)[0];
-					// it is possible that you have not yet filled in a field here
-					if (entry.instances[key]) {
-						var parts = entry.instances[key].split(".");
-						var parent = self.$parent;
-						var value = null;
-						var found = false;
-						while (parent) {
-							if (parent.data && parent.data[parts[0]]) {
-								found = true;
-								value = parent.data;
-								parts.map(function(single) {
-									if (value) {
-										value = value[single];
-									}
-								});
-								break;
-							}
-							parent = parent.$parent;
-						}
-						if (!found) {
-							value = pageInstance.get(entry.instances[key]);
-						}
-						if (value instanceof Array) {
-							var counter = 0;
-							value.map(function(single) {
-								var newEntry = {};
-								Object.keys(entry).map(function(key) {
-									newEntry[key] = entry[key];
-								});
-								newEntry.data = {};
-								newEntry.data[key] = single;
-								newEntry.id += "-" + counter++;
-								result.push(newEntry);
-							})
-						}
-					}
-				}
-			});
-			return result;
-		},
-		getCalculatedCells: function(row) {
-			if (this.edit) {
-				return row.cells;
-			}
-			else {
-				return this.mapCalculated(row.cells);
-			}
 		},
 		getSideBarStyles: function(cell) {
 			var styles = [];
@@ -3527,6 +3487,7 @@ nabu.page.views.PageRows = Vue.component("n-page-rows", {
 			}
 		},
 		shouldRenderRow: function(row) {
+			
 			if (this.edit) {
 				return true;
 			}
