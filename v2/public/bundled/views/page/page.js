@@ -404,10 +404,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 		this.$services.page.rendering--;
 		this.rendered = true;
 		this.postRender.splice(0).forEach(function(x) { x() });
+		this.emit("$load", {});
 	},
 	created: function() {
 		// we want to be able to push data to the page
-		nabu.utils.objects.merge(this.variables, this.parameters);
+		// was added for the repeat, but actually broke stuff in the repeat if we passed in all the information so we did it another way
+		// this may still be interesting for future purposes, but probably want to do a reactive set via Vue.set
+//		nabu.utils.objects.merge(this.variables, this.parameters);
 		this.$services.page.rendering++;
 		this.$services.page.setPageInstance(this.page, this);
 		var self = this;
@@ -1594,7 +1597,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 			if (!this.cachedEvents) {
 				var events = {
 					"$configure": {properties:{}},
-					"$clear": {properties:{}}
+					"$clear": {properties:{}},
+					"$load": {properties:{}}
 				};
 				
 				var self = this;
@@ -3775,7 +3779,7 @@ Vue.component("n-page-row", {
 				//state: pageInstance.variables,
 				// if we are in edit mode, the local state does not matter
 				// and if we add it, we retrigger a redraw everytime we change something
-				localState: this.edit ? null : this.getLocalState(row, cell),
+				//localState: this.edit ? null : this.getLocalState(row, cell),
 				pageInstanceId: this.pageInstanceId,
 				stopRerender: this.edit
 			};

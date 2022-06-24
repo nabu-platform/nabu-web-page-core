@@ -1,5 +1,5 @@
-<template id="page-button">
-	<button class="is-button" @click="handle($event)" :disabled="running || disabled" :class="[getChildComponentClasses('page-button'), {'is-active': active}]">
+<template id="page-badge">
+	<div class="is-badge" :class="getChildComponentClasses('page-badge')">
 		<img :src="cell.state.icon.indexOf('http') == 0 ? cell.state.icon : '${server.root()}resources/' + cell.state.icon" v-if="cell.state.icon && cell.state.icon.match(/^.*\.[^.]+$/)" class="is-icon"/>
 		<icon :name="cell.state.icon" v-if="cell.state.icon"/>
 		<span class="is-text" v-if="cell.state.content && !edit" v-html="$services.page.translate(getContentWithVariables($services.page.interpret(cell.state.content, $self)))"></span>
@@ -8,12 +8,11 @@
 			ref="editor"
 			@keyup="update" @blur="update" @input="update"
 			:contenteditable="true"
-			placeholder="Button label"></span>
-		<span class="is-badge" v-if="cell.state.badge" v-html="cell.state.badge"></span>
-	</button>
+			placeholder="Badge label"></span>
+	</div>
 </template>
 
-<template id="page-button-configure">
+<template id="page-badge-configure">
 	<div class="is-column">
 		
 		<div class="is-column is-spacing-medium">
@@ -22,8 +21,6 @@
 			<n-form-switch v-model="cell.state.emitClose" label="Emit close on click" v-if="false"/>
 			<n-form-ace mode="javascript" v-model="cell.state.disabled" label="Disabled if"/>
 		</div>
-		
-		<page-triggerable-configure :page="page" :target="cell.state" :triggers="{'click': {}}" :allow-closing="true"/>
 		
 		<typography-variable-replacer :content="cell.state.content" :container="cell.state" :page="page"/>
 	</div>

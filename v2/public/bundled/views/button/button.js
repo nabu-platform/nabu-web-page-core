@@ -50,6 +50,9 @@ Vue.view("page-button", {
 	computed: {
 		active: function() {
 			return this.$services.triggerable.getActiveRoutes(this.cell.state).indexOf(this.$services.vue.route) >= 0;
+		},
+		disabled: function() {
+			return this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, null, this);
 		}
 	},
 	methods: {
@@ -82,24 +85,26 @@ Vue.view("page-button", {
 			return result;
 		},
 		handle: function($event) {
-			var promise = this.$services.triggerable.trigger(this.cell.state, "click", null, this);
-			
-			if (this.cell.state.stopPropagation) {
-				$event.stopPropagation();
-				$event.preventDefault();
-			}
-			
-			this.running = true;
-			var self = this;
-			var unlock = function() {
-				self.running = false;
-				if (self.cell.state.emitClose) {
-					self.$emit("close");
+			if (!this.edit || !$event.ctrlKey) {
+				var promise = this.$services.triggerable.trigger(this.cell.state, "click", null, this);
+				
+				if (this.cell.state.stopPropagation) {
+					$event.stopPropagation();
+					$event.preventDefault();
 				}
+				
+				this.running = true;
+				var self = this;
+				var unlock = function() {
+					self.running = false;
+					if (self.cell.state.emitClose) {
+						self.$emit("close");
+					}
+				}
+				promise.then(unlock, unlock);
+				
+				return promise;
 			}
-			promise.then(unlock, unlock);
-			
-			return promise;
 			
 			// we don't always call this handler (immediately), so we separate the logic
 			var self = this;

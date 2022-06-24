@@ -73,10 +73,14 @@ Vue.component("basic-notification", {
 			type: Object
 		}
 	},
-	template: "<div class='basic-notification' :class='severity ? severity : \"info\"'><span class='notification-icon' v-if='icon' v-content=\"$services.page.getIconHtml(icon)\"/>"
-		+ "<div class='notification-content'><h3 class='title' v-if='title' v-content.sanitize.compile='title'/>"
-		+ "<p class='message' v-if='message' v-content.sanitize.compile='message'/>"
-		+ "<span class='close-icon' @click='close' v-if='closeable' v-content=\"$services.page.getIconHtml('times')\" /></div></div>",
+	template: "<div class='is-alert has-button-close is-spacing-large is-spacing-horizontal-right-xlarge' :class='\"is-color-\" + (severity ? severity : \"info\")'>"
+		+ "		<icon v-if='icon' :name='icon'/>"
+		+ "		<div class='is-text'>"
+		+ "			<h4 class='is-h4' v-if='title' v-content.sanitize.compile='title'/>"
+		+ "			<p class='is-p' v-if='message' v-content.sanitize.compile='message'/>"
+		+ "			<button class='is-button is-variant-close is-size-small' @click='close' v-if='closeable'><icon name='times'/></button>"
+		+ "		</div>"
+		+ "</div>",
 	methods: {
 		close: function() {
 			this.$el.parentNode.removeChild(this.$el);

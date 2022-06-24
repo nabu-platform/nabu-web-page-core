@@ -239,9 +239,12 @@ window.addEventListener("load", function() {
 		$services.router.register({
 			alias: "page-form-text",
 			enter: function(parameters) {
-				parameters.formComponent = "page-form-input-text";
-				parameters.configurationComponent = "page-form-input-text-configure";
-				return new nabu.page.views.FormComponent({propsData: parameters});
+				// do not modify parameters directly, this may lead to rerendering issues
+				var cloneParameters = {};
+				nabu.utils.objects.merge(cloneParameters, parameters);
+				cloneParameters.formComponent = "page-form-input-text";
+				cloneParameters.configurationComponent = "page-form-input-text-configure";
+				return new nabu.page.views.FormComponent({propsData: cloneParameters});
 			},
 			form: "text",
 			category: "Form",
@@ -252,9 +255,12 @@ window.addEventListener("load", function() {
 		$services.router.register({
 			alias: "page-form-checkbox",
 			enter: function(parameters) {
-				parameters.formComponent = "page-form-input-checkbox";
-				parameters.configurationComponent = "page-form-input-checkbox-configure";
-				return new nabu.page.views.FormComponent({propsData: parameters});
+				// do not modify parameters directly, this may lead to rerendering issues
+				var cloneParameters = {};
+				nabu.utils.objects.merge(cloneParameters, parameters);
+				cloneParameters.formComponent = "page-form-input-checkbox";
+				cloneParameters.configurationComponent = "page-form-input-checkbox-configure";
+				return new nabu.page.views.FormComponent({propsData: cloneParameters});
 			},
 			form: "checkbox",
 			category: "Form",
@@ -265,9 +271,12 @@ window.addEventListener("load", function() {
 		$services.router.register({
 			alias: "page-form-enumeration-operation",
 			enter: function(parameters) {
-				parameters.formComponent = "page-form-input-enumeration-operation";
-				parameters.configurationComponent = "page-form-input-enumeration-operation-configure";
-				return new nabu.page.views.FormComponent({propsData: parameters});
+				// do not modify parameters directly, this may lead to rerendering issues
+				var cloneParameters = {};
+				nabu.utils.objects.merge(cloneParameters, parameters);
+				cloneParameters.formComponent = "page-form-input-enumeration-operation";
+				cloneParameters.configurationComponent = "page-form-input-enumeration-operation-configure";
+				return new nabu.page.views.FormComponent({propsData: cloneParameters});
 			},
 			form: "enumerationOperation",
 			category: "Form",
@@ -278,9 +287,12 @@ window.addEventListener("load", function() {
 		$services.router.register({
 			alias: "page-form-enumeration-provider",
 			enter: function(parameters) {
-				parameters.formComponent = "page-form-input-enumeration-provider";
-				parameters.configurationComponent = "page-form-input-enumeration-provider-configure";
-				return new nabu.page.views.FormComponent({propsData: parameters});
+				// do not modify parameters directly, this may lead to rerendering issues
+				var cloneParameters = {};
+				nabu.utils.objects.merge(cloneParameters, parameters);
+				cloneParameters.formComponent = "page-form-input-enumeration-provider";
+				cloneParameters.configurationComponent = "page-form-input-enumeration-provider-configure";
+				return new nabu.page.views.FormComponent({propsData: cloneParameters});
 			},
 			form: "enumerationProvider",
 			category: "Form",
@@ -289,11 +301,30 @@ window.addEventListener("load", function() {
 			icon: "page/core/images/enumeration.png"
 		});
 		$services.router.register({
+			alias: "page-form-enumeration",
+			enter: function(parameters) {
+				// do not modify parameters directly, this may lead to rerendering issues
+				var cloneParameters = {};
+				nabu.utils.objects.merge(cloneParameters, parameters);
+				cloneParameters.formComponent = "page-form-input-enumeration";
+				cloneParameters.configurationComponent = "page-form-input-enumeration-configure";
+				return new nabu.page.views.FormComponent({propsData: cloneParameters});
+			},
+			form: "enumeration",
+			category: "Form",
+			name: "Enumeration (Basic)",
+			description: "An enumeration based on fixed values",
+			icon: "page/core/images/enumeration.png"
+		});
+		$services.router.register({
 			alias: "page-form-date",
 			enter: function(parameters) {
-				parameters.formComponent = "page-form-input-date";
-				parameters.configurationComponent = "page-form-input-date-configure";
-				return new nabu.page.views.FormComponent({propsData: parameters});
+				// do not modify parameters directly, this may lead to rerendering issues
+				var cloneParameters = {};
+				nabu.utils.objects.merge(cloneParameters, parameters);
+				cloneParameters.formComponent = "page-form-input-date";
+				cloneParameters.configurationComponent = "page-form-input-date-configure";
+				return new nabu.page.views.FormComponent({propsData: cloneParameters});
 			},
 			form: "date",
 			category: "Form",
@@ -304,9 +335,12 @@ window.addEventListener("load", function() {
 		$services.router.register({
 			alias: "page-form-switch",
 			enter: function(parameters) {
-				parameters.formComponent = "page-form-input-switch";
-				parameters.configurationComponent = "page-form-input-switch-configure";
-				return new nabu.page.views.FormComponent({propsData: parameters});
+				// do not modify parameters directly, this may lead to rerendering issues
+				var cloneParameters = {};
+				nabu.utils.objects.merge(cloneParameters, parameters);
+				cloneParameters.formComponent = "page-form-input-switch";
+				cloneParameters.configurationComponent = "page-form-input-switch-configure";
+				return new nabu.page.views.FormComponent({propsData: cloneParameters});
 			},
 			form: "switch",
 			category: "Form",
@@ -317,9 +351,12 @@ window.addEventListener("load", function() {
 		$services.router.register({
 			alias: "page-form-password",
 			enter: function(parameters) {
-				parameters.formComponent = "page-form-input-password";
-				parameters.configurationComponent = "page-form-input-password-configure";
-				return new nabu.page.views.FormComponent({propsData: parameters});
+				// do not modify parameters directly, this may lead to rerendering issues
+				var cloneParameters = {};
+				nabu.utils.objects.merge(cloneParameters, parameters);
+				cloneParameters.formComponent = "page-form-input-password";
+				cloneParameters.configurationComponent = "page-form-input-password-configure";
+				return new nabu.page.views.FormComponent({propsData: cloneParameters});
 			},
 			form: "password",
 			category: "Form",
@@ -330,9 +367,12 @@ window.addEventListener("load", function() {
 		$services.router.register({
 			alias: "page-form-richtext",
 			enter: function(parameters) {
-				parameters.formComponent = "page-form-input-richtext";
-				parameters.configurationComponent = "page-form-input-richtext-configure";
-				return new nabu.page.views.FormComponent({propsData: parameters});
+				// do not modify parameters directly, this may lead to rerendering issues
+				var cloneParameters = {};
+				nabu.utils.objects.merge(cloneParameters, parameters);
+				cloneParameters.formComponent = "page-form-input-richtext";
+				cloneParameters.configurationComponent = "page-form-input-richtext-configure";
+				return new nabu.page.views.FormComponent({propsData: cloneParameters});
 			},
 			form: "richtext",
 			category: "Form",
@@ -343,9 +383,12 @@ window.addEventListener("load", function() {
 		$services.router.register({
 			alias: "page-form-file",
 			enter: function(parameters) {
-				parameters.formComponent = "page-form-input-file";
-				parameters.configurationComponent = "page-form-input-file-configure";
-				return new nabu.page.views.FormComponent({propsData: parameters});
+				// do not modify parameters directly, this may lead to rerendering issues
+				var cloneParameters = {};
+				nabu.utils.objects.merge(cloneParameters, parameters);
+				cloneParameters.formComponent = "page-form-input-file";
+				cloneParameters.configurationComponent = "page-form-input-file-configure";
+				return new nabu.page.views.FormComponent({propsData: cloneParameters});
 			},
 			form: "file",
 			category: "Form",

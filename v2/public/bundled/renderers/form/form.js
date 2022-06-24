@@ -67,6 +67,10 @@ nabu.page.provide("page-renderer", {
 	},
 	getActions: function(container) {
 		var actions = [];
+		actions.push({
+			title: "Validate",
+			name: "validate"
+		});
 		if (container && container.form && (container.form.operation || (container.form.fields && container.form.fields.length > 0))) {
 			actions.push({
 				title: "Submit",
@@ -105,6 +109,11 @@ Vue.component("renderer-form", {
 			required: false
 		}
 	},
+	computed: {
+		mode: function() {
+			return !this.cell.state.noInlineErrors ? "component" : null;
+		}
+	},
 	created: function() {
 		console.log("created form!");
 		nabu.utils.objects.merge(this.state, this.parameters);
@@ -141,73 +150,117 @@ Vue.component("renderer-form", {
 		getRuntimeState: function() {
 			return this.state;		
 		},
-		runAction: function(name, input) {
-			var self = this;
-			if (name == "submit") {
-				// do an operation call
-				if (this.target.form.operation && this.target.form.formType == "operation") {
-					return this.$services.swagger.execute(this.target.form.operation, this.state).then(function() {
-						
-					}, function(error) {
-						self.error = "Form submission failed";
-						// if we get an XMLHTTPResponse thingy, parse it
-						if (error && error.responseText) {
-							error = JSON.parse(error.responseText);
+		submit: function() {
+			// do an operation call
+			if (this.target.form.operation && this.target.form.formType == "operation") {
+				return this.$services.swagger.execute(this.target.form.operation, this.state).then(function() {
+					// do something?
+				}, function(error) {
+					self.error = "Form submission failed";
+					// if we get an XMLHTTPResponse thingy, parse it
+					if (error && error.responseText) {
+						error = JSON.parse(error.responseText);
+					}
+					// we get a (hopefully) standardized event back
+					if (error) {
+						if (!error.code) {
+							error.code = "HTTP-" + (error.status != null ? error.status : 500);
 						}
-						// we get a (hopefully) standardized event back
-						if (error) {
-							if (!error.code) {
-								error.code = "HTTP-" + (error.status != null ? error.status : 500);
+						try {
+							if (self.target.form.errorEvent) {
+								var pageInstance = self.$services.page.getPageInstance(self.page, self);
+								pageInstance.emit(self.target.form.errorEvent, error);
 							}
-							try {
-								if (self.target.form.errorEvent) {
-									var pageInstance = self.$services.page.getPageInstance(self.page, self);
-									pageInstance.emit(self.target.form.errorEvent, error);
-								}
-								// the default says nothing
-								if (error.title == "Internal Server Error") {
-									error.title = "%{Could not submit your form}";
-								}
-								var translated = self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message);
-								self.error = translated;
-								self.messages.push({
-									type: "request",
-									severity: "error",
-									title: translated
-								})
+							// the default says nothing
+							if (error.title == "Internal Server Error") {
+								error.title = "%{Could not submit your form}";
 							}
-							catch (exception) {
-								self.messages.push({
-									type: "request",
-									severity: "error",
-									title: self.$services.page.translateErrorCode(error.status ? "HTTP-" + error.status : "HTTP-500")
-								})
-							}
-						}
-						else {
+							var translated = self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message);
+							self.error = translated;
 							self.messages.push({
 								type: "request",
 								severity: "error",
-								title: self.$services.page.translateErrorCode("HTTP-500")
-							});
+								title: translated
+							})
 						}
-						self.doingIt = false;
-						stop(self.error);
-					});
-				}
-				else if (this.target.form.array && this.target.form.formType == "array") {
-					var pageInstance = this.$services.page.getPageInstance(this.page, this);
-					var current = pageInstance.get(this.target.form.array);
-					if (current == null) {
-						pageInstance.set(this.target.form.array, []);
-						current = pageInstance.get(this.target.form.array);
+						catch (exception) {
+							self.messages.push({
+								type: "request",
+								severity: "error",
+								title: self.$services.page.translateErrorCode(error.status ? "HTTP-" + error.status : "HTTP-500")
+							})
+						}
 					}
-					console.log("pushing", this.state, current);
-					current.push(this.state);
+					else {
+						self.messages.push({
+							type: "request",
+							severity: "error",
+							title: self.$services.page.translateErrorCode("HTTP-500")
+						});
+					}
+					self.doingIt = false;
+					stop(self.error);
+				});
+			}
+			else if (this.target.form.array && this.target.form.formType == "array") {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				var current = pageInstance.get(this.target.form.array);
+				if (current == null) {
+					pageInstance.set(this.target.form.array, []);
+					current = pageInstance.get(this.target.form.array);
 				}
-				else if (this.target.form.fields && this.target.form.fields.length && this.target.form.formType == "page") {
-					this.$services.page.applyRendererParameters(this.$services.page.getPageInstance(this.page, this), this.target, this.state);
-				}
+				current.push(this.state);
+			}
+			else if (this.target.form.fields && this.target.form.fields.length && this.target.form.formType == "page") {
+				this.$services.page.applyRendererParameters(this.$services.page.getPageInstance(this.page, this), this.target, this.state);
+			}
+		},
+		runAction: function(name, input) {
+			var self = this;
+			if (name == "submit") {
+				var promise = this.$services.q.defer();
+				this.runAction("validate").then(function() {
+					var result = self.submit();
+					if (result && result.then) {
+						result.then(promise, promise);
+					}
+					else {
+						promise.resolve();
+					}
+				}, promise);
+				return promise;
+			}
+			else if (name == "validate") {
+				// you can set a custom component group to only validate those particular elements?
+				var componentGroup = this.target.form.componentGroup ? this.target.form.componentGroup : "default";
+				var promises = [];
+				var messages = [];
+				this.$el.querySelectorAll("[component-group='" + componentGroup + "']").forEach(function(x) {
+					var result = x.__vue__.validate();
+					// these are currently not compatible with the all() promises bundler... :(
+					if (result && result.then) {
+						var localPromise = self.$services.q.defer();
+						promises.push(localPromise);
+						result.then(function(x) {
+							nabu.utils.arrays.merge(messages, x);
+							localPromise.resolve(x);
+						}, localPromise);
+					}
+					else if (result instanceof Array) {
+						nabu.utils.arrays.merge(messages, result);
+					}
+				});
+				var promise = this.$services.q.defer();
+				this.$services.q.all(promises).then(function() {
+					console.log("all promises done", promises, messages);
+					if (messages.length == 0) {
+						promise.resolve();
+					}
+					else {
+						promise.reject(messages);
+					}
+				}, promise);
+				return promise;
 			}
 		}
 	}

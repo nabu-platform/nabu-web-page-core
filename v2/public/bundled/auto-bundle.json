@@ -332,6 +332,15 @@
 							"template": true
 						}
 					},
+					"badge": {
+						"badge.js": {
+							"url": "views/badge/badge.js"
+						}, 
+						"badge.tpl": {
+							"url": "views/badge/badge.tpl",
+							"template": true
+						}
+					},
 					"notifier": {
 						"notifier.js": {
 							"url": "views/notifier/notifier.js"

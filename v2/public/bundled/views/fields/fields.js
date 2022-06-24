@@ -769,6 +769,7 @@ Vue.component("page-formatted", {
 				// this allows us to evaluate against the actual record state in a data list
 				var fraggy = this.fragment ? nabu.utils.objects.clone(this.fragment) : {};
 				fraggy.state = this.state;
+				fraggy.$value = this.$value;
 				return this.$services.formatter.format(this.value, fraggy, this.page, this.cell, this.state, this);
 			}
 			// otherwise we are using a provider

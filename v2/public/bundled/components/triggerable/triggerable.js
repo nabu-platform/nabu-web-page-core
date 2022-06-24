@@ -124,7 +124,9 @@ Vue.service("triggerable", {
 									value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], instance);
 								}
 								if (value != null) {
-									parameters[key] = value;
+									// does not take into account "." separated field names which are received from the mapper
+									//parameters[key] = value;
+									self.$services.page.setValue(parameters, key, value);
 								}
 							}
 						});
@@ -167,6 +169,16 @@ Vue.service("triggerable", {
 							else {
 								window.location = url;
 							}
+						}
+						else if (action.type == "notification") {
+							var notification = {};
+							notification.duration = action.notificationDuration ? parseInt(action.notificationDuration) : null;
+							notification.title = action.notificationTitle ? self.$services.page.translate(self.$services.page.interpret(action.notificationTitle, instance)) : null;
+							notification.message = action.notificationMessage ? self.$services.page.translate(self.$services.page.interpret(action.notificationMessage, instance)) : null;
+							notification.severity = action.notificationColor;
+							notification.closeable = !!action.notificationCloseable;
+							notification.icon = action.notificationIcon;
+							self.$services.notifier.push(notification);
 						}
 						// we might want to run an action
 						else if (action.type == "action" && action.action) {
@@ -422,10 +434,6 @@ Vue.component("page-triggerable-configure", {
 				name: "javascript"
 			});
 			types.push({
-				title: "Send notification to user",
-				name: "notification"
-			});
-			types.push({
 				title: "Reset other events",
 				name: "reset"
 			});
@@ -433,6 +441,36 @@ Vue.component("page-triggerable-configure", {
 		}
 	},
 	methods: {
+		getAvailableColors: function(value) {
+			var variants = [];
+			this.$services.page.getArisComponentHierarchy("alert").forEach(function(component) {
+				if (component.dimensions) {
+					component.dimensions.forEach(function(x) {
+						if (x.name == "color") {
+							x.options.forEach(function(opt) {
+								if (variants.indexOf(opt) < 0) {
+									variants.push(opt);
+								}
+							})
+						}
+					})
+				}
+				/*
+				if (component.variants != null) {
+					component.variants.forEach(function(variant) {
+						if (variants.indexOf(variant.name) < 0) {
+							variants.push(variant.name);
+						}
+					});
+				}
+				*/
+			});
+			if (value != null) {
+				variants = variants.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+			}
+			variants.sort();
+			return variants;
+		},
 		getAnchors: function(value) {
 			var result = ["$blank", "$window"];
 			document.body.querySelectorAll("[anchor]").forEach(function(element) {

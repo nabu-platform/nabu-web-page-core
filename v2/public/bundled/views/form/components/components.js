@@ -32,6 +32,28 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				type: Boolean
 			}
 		},
+		computed: {
+			// not reactively updated it seems?
+			pageInstance: function() {
+				return this.$services.page.getPageInstance(this.page, this);
+			},
+			value: function() {
+				var instance = this.pageInstance;
+				return instance && this.cell.state.name ? instance.get('page.' + this.cell.state.name) : null;
+			},
+			parentValue: function() {
+				var instance = this.pageInstance;
+				return instance ? instance.variables : null;
+			},
+			disabled: function() {
+				var pageInstance = this.pageInstance;
+				if (!pageInstance) {
+					 return true;
+				}
+				var state = this.$services.page.getPageState(pageInstance);
+				return !!this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, state, this);
+			}
+		},
 		methods: {
 			getChildComponents: function() {
 				var result = [];
@@ -112,7 +134,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			},
 			validate: function () {
 				if (this.$refs && this.$refs.input) {
-					this.$refs.input.validate();
+					return this.$refs.input.validate();
 				}
 			},
 			blur: function() {

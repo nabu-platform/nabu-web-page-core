@@ -1,7 +1,8 @@
 Vue.component("page-form-input-enumeration-provider-configure", {
 	template: "<n-form-section><n-form-combo v-model='field.enumerationProvider' :filter='enumerationFilter' label='Enumeration Provider'/>"
-		+ " <n-form-switch v-model='field.showRadioView' label='Show radio visualisation'/>"
-		+ " <n-form-switch v-model='field.required' label='Required'/>"
+		+ " 	<n-form-switch v-model='field.showRadioView' v-if='!field.showCheckboxView' label='Show radio visualisation'/>"
+		+ " 	<n-form-switch v-model='field.showCheckboxView' v-if='!field.showRadioView && supportsMultiple' label='Show checkbox visualisation (allows multiselect)'/>"
+		+ " 	<n-form-switch v-model='field.required' label='Required'/>"
 		+ "		<n-form-text v-if='!field.showRadioView' v-model='field.emptyValue' label='Empty Value Text'/>"
 		+ "		<n-form-text v-if='!field.showRadioView' v-model='field.resetValue' label='Reset Value Text' info='The text to show to reset the current value'/>"
 		+ " 	<n-form-switch v-if='!field.showRadioView' v-model='field.readOnly' label='Read only' />"
@@ -29,6 +30,22 @@ Vue.component("page-form-input-enumeration-provider-configure", {
 		}
 	},
 	computed: {
+		supportsMultiple: function() {
+			if (this.cell.state.name) {
+				// this currently only works for page-based form fields
+				// in v2, all form fields "should" be page based though?
+				// only exception so far is inline form components in a data table
+				var result = this.$services.page.getPageParameters(this.page);
+				//var result = this.$services.page.getAvailableParameters(this.page, this.cell, true);
+				var name = this.cell.state.name;
+				if (name.indexOf("page.") == 0) {
+					name = name.substring("page.".length);
+				}
+				var childDefinition = this.$services.page.getChildDefinition(result, name);
+				return childDefinition ? childDefinition.type == "array" : false;
+			}
+			return false;
+		},
 		valueOptions: function() {
 			if (this.field.enumerationProvider != null) {
 				var self = this;
@@ -65,12 +82,29 @@ Vue.component("page-form-input-enumeration-provider-configure", {
 });
 
 Vue.component("page-form-input-enumeration-provider", {
-	template: "<div><n-form-radio v-if='field.showRadioView' :items='provider.enumerate()' ref='form'"
+	template: "<div>"
+			+ " <n-form-checkbox-list v-if='field.showCheckboxView' :items='provider.enumerate()' ref='form'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:formatter='enumerationFormatter'"
 			+ "		:label='label'"
+			+ "		:value='value'"
+			+ "		v-bubble:label"
+			+ "		:schema='schema'"
+			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
+			+ "		:descriptionType='field.descriptionType'"
+			+ "		:descriptionIcon='field.descriptionIcon'"
+			+ "		:required='field.required'"
+			+ "		:extracter='enumerationExtracter'"
+			+ "		:disabled='disabled'/>"
+			+ "	<n-form-radio v-else-if='field.showRadioView' :items='provider.enumerate()' ref='form'"
+			+ "		:edit='!readOnly'"
+			+ "		:placeholder='placeholder'"
+			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		:formatter='enumerationFormatter'"
+			+ "		:label='label'"
+			+ "		:name='name'"
 			+ "		:value='value'"
 			+ "		v-bubble:label"
 			+ "		:schema='schema'"
@@ -119,6 +153,10 @@ Vue.component("page-form-input-enumeration-provider", {
 			required: false
 		},
 		timeout: {
+			required: false
+		},
+		name: {
+			type: String,
 			required: false
 		},
 		disabled: {

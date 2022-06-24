@@ -307,10 +307,12 @@ nabu.services.VueService(Vue.extend({
 					return x.name == action;
 				}).length > 0;
 				if (hasAction) {
-					targets.push(component.$$cell);
+					targets.push(component.$$cell ? component.$$cell : component.target);
 				}
 			});
 			// we also need to check for renderers
+			// no longer necessary, they are included in the above loop (if they are rendered!)
+			/*
 			this.getAvailableRenderers(pageInstance.page).forEach(function(target) {
 				var renderer = self.getRenderer(target.renderer);
 				var hasAction = self.getActions(renderer, target).filter(function(x) {
@@ -320,6 +322,7 @@ nabu.services.VueService(Vue.extend({
 					targets.push(target);
 				}
 			});
+			*/
 			if (value) {
 				targets = targets.filter(function(x) {
 					return x.name && x.name.toLowerCase().indexOf(value.toLowerCase()) >= 0;
@@ -1942,7 +1945,9 @@ nabu.services.VueService(Vue.extend({
 					}
 					if (result == null && component.page) {
 						var pageInstance = this.getPageInstance(component.page, component);
-						result = this.getBindingValue(pageInstance, value);
+						// the whole "state" thing is deprecated, there is only page state
+						//result = this.getBindingValue(pageInstance, value);
+						result = this.eval(value, pageInstance.variables, component);
 					}
 				}
 				value = result;

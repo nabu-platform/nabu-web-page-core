@@ -70,9 +70,13 @@ nabu.page.provide("page-renderer", {
 			else if (container.repeat.array) {
 				var record = {};
 				var available = pageParameters;
-				var indexOfDot = container.repeat.array.indexOf(".");
-				var variable = indexOfDot < 0 ? container.repeat.array : container.repeat.array.substring(0, indexOfDot);
-				var rest = indexOfDot < 0 ? null : container.repeat.array.substring(indexOfDot + 1);
+				var arrayName = container.repeat.array;
+				if (arrayName.indexOf("page.") == 0) {
+					arrayName = arrayName.substring("page.".length);
+				}
+				var indexOfDot = arrayName.indexOf(".");
+				var variable = indexOfDot < 0 ? arrayName : arrayName.substring(0, indexOfDot);
+				var rest = indexOfDot < 0 ? null : arrayName.substring(indexOfDot + 1);
 				if (available[variable]) {
 					// we can have root arrays rather than part of something else
 					// for example from a multiselect event
@@ -173,30 +177,13 @@ Vue.component("renderer-repeat", {
 		
 		this.loadPage();
 		
-		if (this.target.repeat.array) {
-			var self = this;
-			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			var targetArray = this.target.repeat.array;
-			var current = pageInstance.get(targetArray);
-			// if it does not exist yet, we create an empty one so we can watch it
-			if (current == null) {
-				pageInstance.set(targetArray, []);
-			}
-		}
+		this.watchArray();
 		
 		// note that this is NOT an activate, we can not stop the rendering until the call is done
 		// in the future we could add a "working" icon or a placeholder logic
 		this.loadData();
 	},
 	computed: {
-		// this is used to make it reactive to changes in the array
-		watchedArray: function() {
-			if (this.target.repeat.array) {
-				var result = this.$services.page.getPageInstance(this.page, this).get(this.target.repeat.array);
-				return result;
-			}
-			return [];
-		},
 		alias: function() {
 			return "fragment-renderer-repeat-" + this.instanceCounter;
 		},
@@ -218,9 +205,6 @@ Vue.component("renderer-repeat", {
 		}
 	},
 	watch: {
-		watchedArray: function() {
-			this.loadData();	
-		},
 		operationParameters: function() {
 			this.loadData();	
 		},
@@ -235,6 +219,38 @@ Vue.component("renderer-repeat", {
 		this.unloadPage();
 	},
 	methods: {
+		watchArray: function() {
+			if (this.target.repeat.array) {
+				var self = this;
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				var targetArray = this.target.repeat.array;
+				var current = pageInstance.get(targetArray);
+				// if it doesn't exist yet, keep an eye on the page state
+				// we tried to be more specific and watch direct parents but this _somehow_ failed
+				if (current == null) {
+					var unwatch = pageInstance.$watch("variables", function(newValue) {
+						var result = pageInstance.get(self.target.repeat.array);
+						if (result != null) {
+							self.loadData();
+							unwatch();
+							self.watchArray();
+						}
+					}, {deep: true});
+				}
+				else {
+					if (targetArray.indexOf("page.") == 0) {
+						targetArray = targetArray.substring("page.".length);
+					}
+					var watchKey = "variables." + targetArray;
+					var unwatch = pageInstance.$watch(watchKey, function(newValue) {
+						self.loadData();
+						unwatch();
+						// may have unset to null, changed to a different array,...
+						self.watchArray();
+					}, {deep: true});
+				}
+			}
+		},
 		runAction: function(action, value) {
 			if (action == "jump-page") {
 				return this.loadData(value.page);
@@ -246,7 +262,12 @@ Vue.component("renderer-repeat", {
 		},
 		getParameters: function(record) {
 			var result = {};
-			nabu.utils.objects.merge(result, this.getVariables());
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			// whatever parameters we passed to the parent page are likely expected to the in the repeated page as well (?)
+			// not true, we want the _state_ of the parent page, but this may be due to rest calls etc, we don't want to replay that
+			// nabu.utils.objects.merge(result, pageInstance.parameters);
+			//nabu.utils.objects.merge(result, this.getVariables());
+			// we don't want to pass the entire state as parameters because this causes the repeats to be rerendered if anything changes
 			if (this.target.runtimeAlias) {
 				result[this.target.runtimeAlias] = {record:record, recordIndex: this.records.indexOf(record)};
 			}
@@ -352,17 +373,18 @@ Vue.component("renderer-repeat", {
 				if (!append) {
 					this.records.splice(0, this.records.length);
 				}
-				//var records = this.$services.page.getPageInstance(this.page, this).get(this.target.repeat.array);
-				//if (records) {
-				if (this.watchedArray) {
-					nabu.utils.arrays.merge(this.records, this.watchedArray);
+				var result = this.$services.page.getPageInstance(this.page, this).get(this.target.repeat.array);
+
+				if (result) {
+					nabu.utils.arrays.merge(this.records, result);
 				}
-				//}
-				return this.$services.q.resolve();
+				return this.$services.q.resolve(result);
 			}
 		},
 		// create a custom route for rendering
 		loadPage: function() {
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			
 			this.unloadPage();
 			if (this.target.runtimeAlias) {
 				var content = {
@@ -426,13 +448,52 @@ Vue.component("renderer-repeat", {
 				var route = {
 					alias: page.name,
 					enter: function(parameters, mask) {
-						return new nabu.page.views.Page({propsData: {
+						var mapVariables = function(target) {
+							Object.keys(pageInstance.variables).forEach(function(key) {
+								// not interested in changes to itself
+								if (key != self.target.runtimeAlias) {
+									if (target.set) {
+										if (target.variables[key] != pageInstance.variables[key]) {
+											console.log("updating page", target.pageInstanceId, key);
+											target.set(key, pageInstance.variables[key]);
+										}
+									}
+									else {
+										if (target[key] != pageInstance.variables[key]) {
+											console.log("changed", key);
+											Vue.set(target, key, pageInstance.variables[key]);
+										}
+									}
+								}
+							});
+						}
+						
+						// map variables initially to the parameters
+						// this _somehow_ breaks reactivity on the page
+//						mapVariables(parameters);
+						
+						var newPage = null;
+						// we want to keep the variables up to date without having the route-render continuously rerender the page
+						var unwatch = pageInstance.$watch("variables", function() {
+							if (newPage) {
+								mapVariables(newPage);
+							}
+						}, {deep: true});
+						
+						newPage = new nabu.page.views.Page({propsData: {
 							page: page, 
 							parameters: parameters, 
 							stopRerender: parameters ? parameters.stopRerender : false, 
 							pageInstanceId: self.$services.page.pageCounter++, 
 							masked: mask 
+						}, beforeDestroy: function() {
+							unwatch();
+						// the sweet spot to make sure rules etc are initialized correctly but not to interrupt other things
+						}, beforeMount: function() {
+							mapVariables(this);
 						}});
+						
+						return newPage;
 					},
 					// yes it's a page, but we don't want it treated as such
 					isPage: false,
@@ -479,7 +540,6 @@ Vue.component("renderer-repeat-configure", {
 	computed: {
 		operationParameters: function() {
 			var result = [];
-			console.log("operation", this.target.repeat.operation);
 			if (this.target.repeat.operation) {
 				// could be an invalid operation?
 				if (this.$services.swagger.operations[this.target.repeat.operation]) {

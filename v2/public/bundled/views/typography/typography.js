@@ -114,6 +114,8 @@ Vue.service("typography", {
 						formatted: function(newValue) {
 							updateContent(newValue);
 						}
+					}, methods: {
+						$value: pageInstance.$value
 					}});
 					formatted.$mount();
 					oldContent = formatted.$el.innerHTML;

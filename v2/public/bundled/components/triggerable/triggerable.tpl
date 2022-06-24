@@ -76,6 +76,16 @@
 							@input="resetEvents"/>
 					</div>
 					
+					<div v-else-if="action.type == 'notification'">
+						<n-form-text v-model="action.notificationDuration" label="Duration" :timeout="600" info="How long the notification should stay up (in ms)"/>
+						<n-form-text v-model="action.notificationTitle" label="Title" :timeout="600" info="An optional title for this notification, it can include variables from the originating event using the {{}} syntax"/>
+						<n-form-text v-model="action.notificationMessage" label="Message" :timeout="600" info="An optional title for this notification, it can include variables from the originating event using the {{}} syntax"/>
+						<n-form-combo v-model="action.notificationColor" label="Color" :filter="getAvailableColors" />
+						<n-form-combo v-model="action.notificationSeverity" label="Severity" :timeout="600" :items="['success', 'warning', 'error', 'info', 'danger']" :placeholder="info" v-if="false"/>
+						<n-form-text v-model="action.notificationIcon" label="Icon" :timeout="600" info="The correct value for this depends on your icon provider"/>
+						<n-form-switch v-model="action.notificationCloseable" label="Closeable" info="Can the user explicitly close the notification?"/>
+					</div>
+					
 					<div v-else-if="action.type == 'action'">
 						<n-form-combo v-model="action.action"
 							label="Action to run"
