@@ -60,7 +60,7 @@ Vue.service("triggerable", {
 								result[nabu.page.event.getName(action, "event")] = internalState[action.eventContent];
 							}
 							else {
-								var type = nabu.page.event.getType(action, "event");
+								var type = nabu.page.event.getType(action, "event", page);
 								result[nabu.page.event.getName(action, "event")] = type;
 							}
 						}
@@ -124,7 +124,7 @@ Vue.service("triggerable", {
 									value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], instance);
 								}
 								if (value != null) {
-									// does not take into account "." separated field names which are received from the mapper
+									// does not take into account "." separated field names which are received
 									//parameters[key] = value;
 									self.$services.page.setValue(parameters, key, value);
 								}
@@ -272,8 +272,9 @@ Vue.service("triggerable", {
 							if (script.trim().indexOf("function") != 0) {
 								script = "function(){ " + script + "}";
 							}
-							var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
-							var result = self.$services.page.eval(script, pageInstance.variables, instance);
+							//var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
+							//var result = self.$services.page.eval(script, pageInstance.variables, instance);
+							var result = self.$services.page.eval(script, state, instance);
 							if (result && result.then) {
 								return result;
 							}
@@ -436,6 +437,10 @@ Vue.component("page-triggerable-configure", {
 			types.push({
 				title: "Reset other events",
 				name: "reset"
+			});
+			types.push({
+				title: "Call a function",
+				name: "function"
 			});
 			return types;
 		}

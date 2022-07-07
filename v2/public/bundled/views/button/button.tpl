@@ -21,6 +21,7 @@
 			<n-form-switch v-model="cell.state.stopPropagation" label="Stop click propagation"/>
 			<n-form-switch v-model="cell.state.emitClose" label="Emit close on click" v-if="false"/>
 			<n-form-ace mode="javascript" v-model="cell.state.disabled" label="Disabled if"/>
+			<n-form-ace mode="javascript" v-model="cell.state.active" label="Active if"/>
 		</div>
 		
 		<page-triggerable-configure :page="page" :target="cell.state" :triggers="{'click': {}}" :allow-closing="true"/>

@@ -1,9 +1,9 @@
 <template id="page-image-configure">
 	<div>
 		<n-collapsible title="Image Settings">
-			<n-form-text v-model="cell.state.href" v-if="false" label="Link"/>
 			<n-form-text v-model="cell.state.title" label="Title"/>
-			<n-form-text v-model="cell.state.imagePath" label="Image Path"/>
+			<n-form-text v-model="cell.state.href" label="Full Link" v-if="!cell.state.imagePath"/>
+			<n-form-text v-model="cell.state.imagePath" label="Image path to search" v-if="!cell.state.href"/>
 			<n-form-switch v-model="cell.state.absolute" label="Absolute" v-if="!cell.state.inline"/>
 			<n-form-switch v-model="cell.state.inline" label="Inline Rendering" v-if="cell.state.href && cell.state.href.match(/.*\.svg$/)">
 		</n-collapsible>

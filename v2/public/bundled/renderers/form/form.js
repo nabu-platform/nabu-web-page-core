@@ -19,6 +19,9 @@ nabu.page.provide("page-renderer", {
 				var operationId = container.form.operation;
 				return application.services.page.getSwaggerOperationInputDefinition(operationId);
 			}
+			else if (container.form.formType == "function" && container.form.function) {
+				return $services.page.getFunctionInput(container.form.function);
+			}
 			else if (container.form.fields) {
 				var result = {};
 				container.form.fields.forEach(function(x) {
@@ -65,13 +68,14 @@ nabu.page.provide("page-renderer", {
 			component: "form-section"
 		}];
 	},
+	// TODO: add the output definition!
 	getActions: function(container) {
 		var actions = [];
 		actions.push({
 			title: "Validate",
 			name: "validate"
 		});
-		if (container && container.form && (container.form.operation || (container.form.fields && container.form.fields.length > 0))) {
+		if (container && container.form && (container.form.operation || container.form.function || (container.form.fields && container.form.fields.length > 0))) {
 			actions.push({
 				title: "Submit",
 				name: "submit"
@@ -115,13 +119,22 @@ Vue.component("renderer-form", {
 		}
 	},
 	created: function() {
-		console.log("created form!");
-		nabu.utils.objects.merge(this.state, this.parameters);
+		var self = this;
+		if (this.parameters) {
+			Object.keys(this.parameters).forEach(function(key) {
+				Vue.set(self.state, key, self.parameters[key]);
+			});
+		}
 		if (this.target.form && this.target.form.noInlineErrors) {
 			this.mode = null;
 		}
 		else {
 			this.mode = "component";
+		}
+		// if we have a form on an operation, we likely have a "body" in our state
+		// we want to be able to pass that around by reference
+		if (this.target.form && this.target.form.formType == "operation") {
+			Vue.set(this.state, "body", {});
 		}
 	},
 	mounted: function() {
@@ -151,6 +164,8 @@ Vue.component("renderer-form", {
 			return this.state;		
 		},
 		submit: function() {
+			var self = this;
+			this.messages.splice(0);
 			// do an operation call
 			if (this.target.form.operation && this.target.form.formType == "operation") {
 				return this.$services.swagger.execute(this.target.form.operation, this.state).then(function() {
@@ -210,6 +225,28 @@ Vue.component("renderer-form", {
 					current = pageInstance.get(this.target.form.array);
 				}
 				current.push(this.state);
+			}
+			else if (this.target.form.function && this.target.form.formType == "function") {
+				var func = this.$services.page.getRunnableFunction(this.target.form.function);
+				if (!func) {
+					throw "Could not find function: " + action.function; 
+				}
+				var promise = this.$services.q.defer();
+				var result = this.$services.page.runFunction(func, this.state, this, promise);
+				// not yet used
+				if (this.target.form.functionOutputEvent) {
+					var def = this.$services.page.getFunctionDefinition(this.target.form.function);
+					var pageInstance = this.$services.page.getPageInstance(this.page, this);
+					if (def.async) {
+						promise.then(function(asyncResult) {
+							pageInstance.emit(self.target.form.functionOutputEvent, asyncResult ? asyncResult : {});
+						});
+					}
+					else {
+						pageInstance.emit(this.target.form.functionOutputEvent, result ? result : {});
+					}
+				}
+				return promise;
 			}
 			else if (this.target.form.fields && this.target.form.fields.length && this.target.form.formType == "page") {
 				this.$services.page.applyRendererParameters(this.$services.page.getPageInstance(this.page, this), this.target, this.state);

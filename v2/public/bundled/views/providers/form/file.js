@@ -43,7 +43,7 @@ Vue.component("page-form-input-file-configure", {
 });
 
 Vue.component("page-form-input-file", {
-	template: "<n-input-file :types='field.fileTypes' ref='form' :amount='1'"
+	template: "<n-form-file :types='field.fileTypes' ref='form' :amount='1'"
 			+ "		:edit='!readOnly'"
 			+ "		:schema='schema'"
 			+ "		@change='changed'"

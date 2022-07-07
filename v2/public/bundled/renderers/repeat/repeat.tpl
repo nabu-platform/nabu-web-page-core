@@ -1,10 +1,15 @@
 <template id="renderer-repeat">
-	<div>
+	<component :is="getComponent()">
 		<template v-if="!edit && !loading && records.length">
-			<div v-for="(record, index) in records" :record-index="index" class="is-repeat-content" 
-				:class="[target.rows ? 'is-page-row' : 'is-page-column', getChildComponentClasses('repeat-content')]"
+			<n-page :page="fragmentPage"
+				v-for="(record, index) in records" :record-index="index" class="is-repeat-content" 
+				:draggable="target.repeat.enableDrag"
+				@dragstart="onDragStart($event, record)"
+				:class="getChildComponentClasses('repeat-content')"
 				:key="'repeat_' + instanceCounter + '_rendered_' + index"
-				v-route-render="{ alias: alias, parameters: getParameters(record), mounted: mounted }"></div>
+				:parameters="getParameters(record)"
+				:page-instance-id="$services.page.pageCounter++"
+				@ready="mounted"/>
 		</template>
 		<template v-else-if="!edit && !loading && !records.length">
 			<span class="is-text" v-if="target.repeat.emptyPlaceholder" v-html="$services.page.translate(target.repeat.emptyPlaceholder)"></span>
@@ -15,7 +20,7 @@
 		<template v-else>
 			<slot></slot>
 		</template>
-	</div>
+	</component>
 </template>
 
 <template id="renderer-repeat-configure">
@@ -31,6 +36,9 @@
 			
 		<n-form-text v-model="target.repeat.emptyPlaceholder" label="Empty Place Holder"/>
 		<n-form-text v-model="target.repeat.loadingPlaceholder" label="Loading Place Holder" v-if="target.repeat.operation"/>
+		
+		<n-form-switch v-model="target.repeat.enableDrag" label="Enable dragging"/>
+		<n-form-text v-model="target.repeat.dragName" label="Drag source name" v-if="target.repeat.enableDrag" placeholder="default"/>
 			
 		<n-page-mapper v-if="target.repeat.operation && operationParameters.length > 0 && Object.keys($services.page.getPageParameters(page)).length" 
 			:to="operationParameters"

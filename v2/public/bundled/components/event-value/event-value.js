@@ -70,11 +70,12 @@ if (!nabu.page) { nabu.page = {}; }
 if (!nabu.page.event) { nabu.page.event = {}; }
 
 nabu.page.event = {
-	getType: function(container, name) {
+	getType: function(container, name, page) {
 		var result = {};
 		if (container[name] && container[name].eventFields) {
+			var parameters = page ? application.services.page.getAllAvailableParameters(page) : {};
 			container[name].eventFields.forEach(function(x) {
-				result[x.name] = {
+				result[x.name] = !x.isFixed && parameters ? application.services.page.getChildDefinition({properties:parameters}, x.stateValue) : {
 					type: "string"
 				};
 			});

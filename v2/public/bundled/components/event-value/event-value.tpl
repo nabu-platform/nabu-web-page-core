@@ -5,7 +5,7 @@
 			<div v-for="eventField in container[name].eventFields" class="has-button-close is-column is-color-body is-spacing-medium  is-border-full">
 				<n-form-text v-model="eventField.name" label="Field Name" :timeout="600"/>
 				<n-form-combo v-model="eventField.stateValue" v-if="!eventField.isFixed" label="State Value"
-					:filter="function(value) { return (keys ? keys : $services.page.getSimpleKeysFor({properties:$services.page.getAllAvailableParameters(page, null, true)}, false)).filter(function(x) { return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0 }) }"/>
+					:filter="function(value) { return (keys ? keys : $services.page.getSimpleKeysFor({properties:$services.page.getAllAvailableParameters(page, null, true)}, true)).filter(function(x) { return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0 }) }"/>
 				<n-form-text v-model="eventField.fixedValue" v-else label="Fixed Value" :timeout="600"/>
 				<n-form-switch v-model="eventField.isFixed" label="Fixed?"/>
 				<button @click="container[name].eventFields.splice(container[name].eventFields.indexOf(eventField), 1) & $updateEvents()" class="is-button is-variant-close is-size-small"><icon name="times"/></button>

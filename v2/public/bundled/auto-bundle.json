@@ -520,6 +520,14 @@
 				"repeat.tpl": {
 					"url": "renderers/repeat/repeat.tpl"
 				}
+			},
+			"table": {
+				"table.js": {
+					"url": "renderers/table/table.js"
+				},
+				"table.tpl": {
+					"url": "renderers/table/table.tpl"
+				}
 			}
 		},
 		"specifications": {

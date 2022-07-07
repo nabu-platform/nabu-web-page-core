@@ -49,7 +49,11 @@ Vue.view("page-button", {
 	},
 	computed: {
 		active: function() {
-			return this.$services.triggerable.getActiveRoutes(this.cell.state).indexOf(this.$services.vue.route) >= 0;
+			var active = false;
+			if (this.cell.state.active) {
+				active = this.$services.page.isCondition(this.cell.state.active, null, this);
+			}
+			return active || this.$services.triggerable.getActiveRoutes(this.cell.state).indexOf(this.$services.vue.route) >= 0;
 		},
 		disabled: function() {
 			return this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, null, this);
@@ -85,7 +89,9 @@ Vue.view("page-button", {
 			return result;
 		},
 		handle: function($event) {
-			if (!this.edit || !$event.ctrlKey) {
+			// if you are in edit mode, you have to explicitly click alt to enable the button
+			// it seems that vue also intercepts spaces and sends it as a click event, meaning when you type in the rich text, it can trigger
+			if (!this.edit || $event.altKey) {
 				var promise = this.$services.triggerable.trigger(this.cell.state, "click", null, this);
 				
 				if (this.cell.state.stopPropagation) {

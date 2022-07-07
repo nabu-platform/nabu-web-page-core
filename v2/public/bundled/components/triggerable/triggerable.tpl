@@ -134,6 +134,17 @@
 						<n-form-text v-model="action.resultName" label="Local variable name of the operation output" v-if="action.operation && $window.Object.keys($services.page.getSwaggerOperationOutputDefinition(action.operation)).length > 0"
 							after="You can capture the output of this service to use in further actions"/>
 					</div>
+					
+					<div v-else-if="action.type == 'function'">
+						<n-form-combo v-model="action.function" label="Function" :filter="$services.page.listFunctions" />
+						<n-form-text v-if="action.function && $services.page.hasFunctionOutput(action.function)" v-model="action.resultName" label="Local variable name of the function output"/>
+						
+						<n-page-mapper v-if="action.function" 
+							:to="$services.page.getFunctionInput(action.function)"
+							:from="$services.page.getAvailableParameters(page, cell)" 
+							key="button-function-mapper"
+							v-model="action.bindings"/>
+					</div>
 						
 				</div>
 				

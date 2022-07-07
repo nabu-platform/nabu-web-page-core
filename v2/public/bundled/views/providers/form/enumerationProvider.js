@@ -83,7 +83,7 @@ Vue.component("page-form-input-enumeration-provider-configure", {
 
 Vue.component("page-form-input-enumeration-provider", {
 	template: "<div>"
-			+ " <n-form-checkbox-list v-if='field.showCheckboxView' :items='provider.enumerate()' ref='form'"
+			+ " <n-form-checkbox-list v-if='field.showCheckboxView' :items='enumerationFilter()' ref='form'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
@@ -98,7 +98,7 @@ Vue.component("page-form-input-enumeration-provider", {
 			+ "		:required='field.required'"
 			+ "		:extracter='enumerationExtracter'"
 			+ "		:disabled='disabled'/>"
-			+ "	<n-form-radio v-else-if='field.showRadioView' :items='provider.enumerate()' ref='form'"
+			+ "	<n-form-radio v-else-if='field.showRadioView' :items='enumerationFilter()' ref='form'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""

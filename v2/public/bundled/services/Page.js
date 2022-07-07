@@ -208,6 +208,62 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		watchField: function(pageInstance, field, handler) {
+			if (field.indexOf("page.") == 0) {
+				field = field.substring("page.".length);
+			}
+			var self = this;
+			var unwatch = null;
+			var current = pageInstance.get(field);
+			handler(current);
+			var parentField = field;
+			while (current == null && parentField.indexOf(".") >= 0) {
+				var index = parentField.lastIndexOf(".");
+				if (index > 0) {
+					parentField = parentField.substring(0, index);
+					current = pageInstance.get(parentField);
+				}
+			}
+			// if it doesn't exist yet, keep an eye on the page state
+			// we tried to be more specific and watch direct parents but this _somehow_ failed
+			if (current == null) {
+				unwatch = pageInstance.$watch("variables", function(newValue) {
+					var result = pageInstance.get("page." + field);
+					if (result != null) {
+						handler(result);
+					}
+					unwatch();
+					self.watchField(pageInstance, field, handler);
+				}, {deep: true});
+			}
+			// we are not watching the field, but rather a parent
+			else if (parentField != field) {
+				unwatch = pageInstance.$watch("variables." + parentField, function(newValue) {
+					var result = pageInstance.get("page." + field);
+					if (result != null) {
+						handler(result);
+					}
+					// always unwatch and restart, not sure how it evolves
+					unwatch();
+					self.watchField(pageInstance, field, handler);
+				}, {deep: true});
+			}
+			else {
+				var watchKey = "variables." + field;
+				unwatch = pageInstance.$watch(watchKey, function(newValue) {
+					handler(newValue);
+					unwatch();
+					// may have unset to null, changed to a different array,...
+					self.watchField(pageInstance, field, handler);
+				}, {deep: true});
+			}
+			// return a function to stop watching
+			return function() {
+				if (unwatch != null) {
+					unwatch();
+				}
+			}
+		}, 
 		getSwaggerOperationInputDefinition: function(operationId) {
 			var result = {properties: {}};
 			var self = this;
@@ -419,6 +475,17 @@ nabu.services.VueService(Vue.extend({
 					var renderer = this.getRenderer(rendererTarget.renderer);
 					if (renderer && renderer.getActions) {
 						nabu.utils.arrays.merge(actions, renderer.getActions(rendererTarget));
+					}
+					if (renderer && renderer.getSpecifications) {
+						var specifications = renderer.getSpecifications(rendererTarget);
+						var implemented = nabu.page.providers("page-specification").filter(function(x) {
+							return specifications.indexOf(x.name) >= 0;
+						});
+						implemented.forEach(function(x) {
+							if (x.actions) {
+								nabu.utils.arrays.merge(actions, x.actions);
+							}
+						});
 					}
 				}
 			}
@@ -3698,7 +3765,7 @@ nabu.services.VueService(Vue.extend({
 					return this.$services.swagger.resolve(this.$services.swagger.definition(type));
 				}
 				catch (exception) {
-					this.notify("error", "Could not resolve type: " + type);
+					console.error("Could not resolve type: " + type);
 					return {type: "string"};
 				}
 			}

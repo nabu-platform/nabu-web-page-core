@@ -405,6 +405,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		this.rendered = true;
 		this.postRender.splice(0).forEach(function(x) { x() });
 		this.emit("$load", {});
+		this.$emit("ready", this);
 	},
 	created: function() {
 		// we want to be able to push data to the page
@@ -553,9 +554,26 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		// slots can only be accessed in the direct parent, this means we have a renderer that has specific slots
+		getSlots: function(target) {
+			var path = this.$services.page.getTargetPath(this.page.content, target.id);
+			path.reverse();
+			// the first entry is now the target itself, we want the second
+			if (path.length >= 2) {
+				if (path[1].renderer) {
+					var renderer = this.$services.page.getRenderer(path[1].renderer);
+					if (renderer.getSlots) {
+						return renderer.getSlots(path[1]);
+					}
+				}
+			}
+		},
 		// this works, but currently we can't get the events correctly
 		getTriggersForCell: function(cell) {
 			var component = this.components[cell.id];
+			var result = {};
+			// always have a click trigger
+			result.click = {};
 			if (component) {
 				// only works for component based actions
 				var actions = this.$services.page.getActions(component, cell);
@@ -564,20 +582,18 @@ nabu.page.views.Page = Vue.component("n-page", {
 					var renderer = this.$services.page.getRenderer(cell.renderer);
 					actions = this.$services.page.getActions(renderer, cell);
 				}
-				if (!actions.length) {
-					return null;
+				if (actions.length > 0) {
+					var self = this;
+					actions.forEach(function(x) {
+						var actionInput = self.$services.page.getActionInput(self, cell.id, x.name);
+						var actionOutput = self.$services.page.getActionOutput(self, cell.id, x.name);
+						result[x.name + ":before"] = actionInput ? actionInput : {};
+						result[x.name + ":after"] = actionOutput ? actionOutput : {};
+						result[x.name + ":error"] = {};
+					});
 				}
-				var self = this;
-				var result = {};
-				actions.forEach(function(x) {
-					var actionInput = self.$services.page.getActionInput(self, cell.id, x.name);
-					var actionOutput = self.$services.page.getActionOutput(self, cell.id, x.name);
-					result[x.name + ":before"] = actionInput ? actionInput : {};
-					result[x.name + ":after"] = actionOutput ? actionOutput : {};
-					result[x.name + ":error"] = {};
-				});
-				return result;
 			}
+			return result;
 		},
 		getPageArisComponents: function() {
 			return [{
@@ -3081,11 +3097,17 @@ Vue.component("n-page-row", {
 				return ["is-empty", "is-hover-top", "is-hover-bottom", "is-hover-left", "is-hover-right", "is-hovering"].indexOf(x) < 0;
 			});
 		},
+		getCellById: function(row, cell) {
+			return cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? document.getElementById(cell.customId) : document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
+		},
+		getRowById: function(row) {
+			return row.customId && !row.renderer ? document.getElementById(row.customId) : document.getElementById(this.page.name + "_" + row.id);
+		},
 		dropCell: function(event, row, cell) {
 			if (!cell.alias) {
 				var self = this;
 				var data = this.$services.page.getDragData(event, "component-alias");
-				var cellTarget = document.getElementById(self.page.name + '_' + row.id + '_' + cell.id);
+				var cellTarget = this.getCellById(row, cell);
 				if (data) {
 					cell.alias = data;
 					event.preventDefault();
@@ -3321,12 +3343,13 @@ Vue.component("n-page-row", {
 		rowTagFor: function(row) {
 			var renderer = row.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == row.renderer })[0];
 			if (renderer == null) {
-				if (!this.page.content.pageType || this.page.content.pageType == "page") {
+				var pageType = this.getPageType(row);
+				if (!pageType || pageType == "page") {
 					return "div";	
 				}
 				var self = this;
 				var provider = nabu.page.providers("page-type").filter(function(x) {
-					return x.name == self.page.content.pageType;
+					return x.name == pageType;
 				})[0];
 				// if it is a function, we can do more stuff
 				if (provider && provider.rowTag instanceof Function) {
@@ -3342,6 +3365,27 @@ Vue.component("n-page-row", {
 				return renderer.component;
 			}
 		},
+		getPageType: function(target) {
+			var self = this;
+			var pageType = null;
+				
+			// we check if there is a renderer in the path to this target
+			// if so, that renderer can modify how we render the content
+			var path = this.$services.page.getTargetPath(this.page.content, target.id);
+			path.reverse();
+			path.forEach(function(x) {
+				if (x.renderer && !pageType) {
+					var renderer = self.$services.page.getRenderer(x.renderer);
+					if (renderer && renderer.getPageType) {
+						pageType = renderer.getPageType(x);
+					}
+				}
+			});
+			if (pageType == null) {
+				pageType = this.page.content.pageType;
+			}
+			return pageType;
+		},
 		cellTagFor: function(row, cell) {
 			var renderer = cell.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == cell.renderer })[0];
 			// once we have a cell.alias, we can not use a renderer!
@@ -3351,12 +3395,13 @@ Vue.component("n-page-row", {
 			// where we keep track of the possibility that both exist etc
 			// it is an unlikely usecase...
 			if (renderer == null || cell.alias) {
-				if (!this.page.content.pageType || this.page.content.pageType == "page") {
+				var pageType = this.getPageType(cell);
+				if (!pageType || pageType == "page") {
 					return "div";	
 				}
 				var self = this;
 				var provider = nabu.page.providers("page-type").filter(function(x) {
-					return x.name == self.page.content.pageType;
+					return x.name == pageType;
 				})[0];
 				// if it is a function, we can do more stuff
 				if (provider && provider.cellTag instanceof Function) {
@@ -3578,7 +3623,38 @@ Vue.component("n-page-row", {
 			return cellId;
 		},
 		cellClasses: function(cell) {
+			var self = this;
 			var classes = [];
+			if (cell.renderer) {
+				var renderer = this.$services.page.getRenderer(cell.renderer);
+				if (renderer && renderer.component) {
+					classes.push("is-" + renderer.component);
+				}
+			}
+			else {
+				var pageType = this.getPageType(cell);
+				if (pageType) {
+					var provider = nabu.page.providers("page-type").filter(function(x) {
+						return x.name == pageType;
+					})[0];
+					if (provider && provider.cellComponent instanceof Function) {
+						classes.push("is-" + provider.cellComponent(cell));
+					}
+					else if (provider && provider.cellComponent) {
+						classes.push("is-" + provider.cellComponent);
+					}
+				}
+			}
+			// only a page column if we don't have a component yet
+			if (classes.length == 0) {
+				if (this.edit || !cell.target || cell.target == "page") {
+					classes.push("is-page-column");
+				}
+				else if (cell.target == "prompt" || cell.target == "sidebar" || cell.target == "absolute") {
+					classes.push("is-page-prompt");
+				}
+				//{'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }
+			}
 			if (this.$services.page.useAris && cell.aris && cell.aris.components) {
 				var children = this.$services.page.calculateArisComponents(cell.aris, cell.alias, this);
 				if (children["page-column"] && children["page-column"].classes) {
@@ -3586,7 +3662,6 @@ Vue.component("n-page-row", {
 				}
 			}
 			if (cell.styles) {
-				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				// if we use state here, it does not get modified as we send out new events
 				// so let's watch the variables instead
@@ -3600,7 +3675,32 @@ Vue.component("n-page-row", {
 			return classes;
 		},
 		rowClasses: function(row) {
+			var self = this;
 			var classes = [];
+			if (row.renderer) {
+				var renderer = this.$services.page.getRenderer(row.renderer);
+				if (renderer && renderer.component) {
+					classes.push("is-" + renderer.component);
+				}
+			}
+			else {
+				var pageType = this.getPageType(row);
+				if (pageType) {
+					var provider = nabu.page.providers("page-type").filter(function(x) {
+						return x.name == pageType;
+					})[0];
+					if (provider && provider.rowComponent instanceof Function) {
+						classes.push("is-" + provider.rowComponent(row));
+					}
+					else if (provider && provider.rowComponent) {
+						classes.push("is-" + provider.rowComponent);
+					}
+				}
+			}
+			// only a page row if we don't have a component yet
+			if (classes.length == 0) {
+				classes.push("is-page-row");
+			}
 			if (this.$services.page.useAris && row.aris && row.aris.components) {
 				var children = this.$services.page.calculateArisComponents(row.aris, row.renderer, this);
 				if (children["page-row"] && children["page-row"].classes) {
@@ -3608,7 +3708,6 @@ Vue.component("n-page-row", {
 				}
 			}
 			if (row.styles) {
-				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				// if we use state here, it does not get modified as we send out new events
 				// so let's watch the variables instead
@@ -3810,12 +3909,9 @@ Vue.component("n-page-row", {
 			pageInstance.resetEvents();	
 		},
 		clickOnCell: function(row, cell) {
-			if (nabu.page.event.getName(cell, "clickEvent") && !this.edit) {
-				var pageInstance = this.$services.page.getPageInstance(this.page, this);
-				pageInstance.emit(
-					nabu.page.event.getName(cell, "clickEvent"),
-					nabu.page.event.getInstance(cell, "clickEvent", this.page, this)
-				);
+			if (!this.edit) {
+				var promise = this.$services.triggerable.trigger(cell, "click", null, this);
+				return promise;
 			}
 		},
 		clickOnContentCell: function(row, cell) {
@@ -4268,7 +4364,7 @@ Vue.component("page-sidemenu", {
 			}
 		},
 		configureRow: function(row) {
-			var target = document.getElementById(this.page.name + "_" + row.id);
+			var target = this.getRowById(row);
 			var parent = target.parentNode;
 			while (parent != null && (!parent.__vue__ || !parent.__vue__.setRowConfiguring)) {
 				parent = parent.parentNode;
@@ -4283,8 +4379,14 @@ Vue.component("page-sidemenu", {
 			this.$emit("select", row, cell, "cell");
 			this.configureCell(row, cell);
 		},
+		getCellById: function(row, cell) {
+			return cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? document.getElementById(cell.customId) : document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
+		},
+		getRowById: function(row) {
+			return row.customId && !row.renderer ? document.getElementById(row.customId) : document.getElementById(this.page.name + "_" + row.id);
+		},
 		configureCell: function(row, cell) {
-			var target = document.getElementById(this.page.name + "_" + row.id + "_" + cell.id);
+			var target = this.getCellById(row, cell);
 			if (target != null) {
 				//target.parentNode.parentNode.__vue__.configuring = cell.id;
 				var parent = target.parentNode;

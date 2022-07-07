@@ -27,6 +27,23 @@ Vue.view("page-image", {
 		edit: {
 			type: Boolean,
 			required: true
+		}, 
+		contentType: {
+			type: String,
+			required: false
+		},
+		// you can map the bytes
+		content: {
+			type: Object,
+			required: false
+		},
+		// the "content" can be a blob
+		// however, a blob/file/... is not stringifiable and will end up as an empty object in the JSON
+		// that means, when you dynamically change the blob based on state, the router can not determine that it is a _different_ blob and nothing will rerender
+		// specifically for that, you can add an id here (like an attachment id) which identifies the blob
+		contentId: {
+			type: Object,
+			required: false
 		}
 	},
 	created: function() {
@@ -53,13 +70,28 @@ Vue.view("page-image", {
 				self.inlineContent = response.responseText;
 			});
 		}
+		// we want to convert it to base64
+		if (this.content) {
+			var blob = this.content instanceof Blob ? this.content : nabu.utils.binary.blob(this.content, this.contentType ? this.contentType : "image/jpeg");
+			var reader = new FileReader();
+			reader.readAsDataURL(blob);
+			var promise = new nabu.utils.promise();
+			promises.push(promise);
+			reader.onload = function() {
+				var result = reader.result;
+				var index = result.indexOf(",");
+				self.encodedData = result;// result.substring(index + 1);
+				promise.resolve();
+			};
+		}
 		this.$services.q.all(promises).then(done, done);
 	},
 	data: function() {
 		return {
 			images: [],
 			files: [],
-			inlineContent: null
+			inlineContent: null,
+			encodedData: null
 		}
 	},
 	computed: {
@@ -100,6 +132,9 @@ Vue.view("page-image", {
 			// on mobile we don't want absolute paths starting with "/", otherwise it won't fetch from the file system
 			else if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && ${environment("mobile") == true} && href.indexOf("/") == 0) {
 				href = href.substring(1);
+			}
+			if (!href && this.content) {
+				href = this.encodedData;
 			}
 			return href;
 		},

@@ -11,11 +11,10 @@
 		<n-form-radio 
 			name="form-type"
 			v-model="target.form.formType"
-			:items="[{name: 'page', title: 'Page form'}, {name:'operation', title: 'Operation Form'}, {name: 'array', title: 'Array form'}]"
+			:items="[{name: 'page', title: 'Page form'}, {name:'operation', title: 'Operation Form'}, {name: 'array', title: 'Array form'}, {name: 'function', title: 'Function form'}]"
 			:formatter="function(x) { return x.title }"
 			:extracter="function(x) { return x.name }"
 			label="What type of form do you want?"/>
-		
 		
 		<div v-if="target.form.formType == 'operation'">
 			<n-form-combo label="Operation" v-model="target.form.operation" 
@@ -41,6 +40,10 @@
 				v-model="target.form.array"
 				:filter="function(value) { return $services.page.getAllArrays(page) }"
 				/>
+		</div>
+		
+		<div v-else-if="target.form.formType == 'function'" class="is-column is-spacing-medium">
+			<n-form-combo v-model="target.form.function" label="Function" :filter="$services.page.listFunctions" />
 		</div>
 
 		<div v-if="false && (target.form.formType == 'operation' || (target.form.formType == 'page' && target.form.submitType == 'staged'))">

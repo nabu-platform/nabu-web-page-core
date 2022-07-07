@@ -157,6 +157,7 @@ Vue.component("renderer-repeat", {
 			// the instance counter is used to manage our pages on the router
 			instanceCounter: $$rendererInstanceCounter++,
 			loading: false,
+			fragmentPage: null,
 			// the state in the original page, this can be used to write stuff like "limit" etc to
 			// note that the "record" will not actually be in this
 			state: {
@@ -171,6 +172,13 @@ Vue.component("renderer-repeat", {
 			}
 		}
 	},
+	/*
+	render: function(f) {
+		console.log("rendering repeat", f);
+		console.log("slots are", this.$slots);
+		return f("div2", this.$slots.default);
+	},
+	*/
 	created: function() {
 		// the parameters that we pass in contain the bound values
 		nabu.utils.objects.merge(this.state, this.parameters);
@@ -219,6 +227,62 @@ Vue.component("renderer-repeat", {
 		this.unloadPage();
 	},
 	methods: {
+		getPageType: function() {
+			var self = this;
+			var pageType = null;
+			if (this.parameters.pageType) {
+				this.pageType = this.parameters.pageType;
+			}
+			else {
+				// we check if there is a renderer in the path to this repeat
+				// if so, that renderer can modify how we render the pages (e.g. a table)
+				var path = this.$services.page.getTargetPath(this.page.content, this.target.id);
+				path.reverse();
+				path.forEach(function(x) {
+					if (x.renderer && !pageType) {
+						var renderer = self.$services.page.getRenderer(x.renderer);
+						if (renderer && renderer.getPageType) {
+							pageType = renderer.getPageType(x);
+						}
+					}
+				})
+			}
+			return pageType;
+		},
+		getComponent: function() {
+			var self = this;
+			var pageType = this.getPageType();
+			if (pageType) {
+				var provider = nabu.page.providers("page-type").filter(function(x) {
+					return x.name == pageType;
+				})[0];
+				if (provider && provider.repeatTag instanceof Function) {
+					return provider.repeatTag(this.target);
+				}
+				else if (provider && provider.repeatTag) {
+					return provider.repeatTag;
+				}
+				// if we are a cell, check if we have a celltag
+				else if (provider && this.target.rows && provider.cellTag instanceof Function) {
+					return provider.cellTag(this.target);
+				}
+				else if (provider && this.target.rows && provider.cellTag) {
+					return provider.cellTag;
+				}
+				// if we are a row, check if we have a celltag
+				else if (provider && this.target.cells && provider.rowTag instanceof Function) {
+					return provider.rowTag(this.target);
+				}
+				else if (provider && this.target.cells && provider.rowTag) {
+					return provider.rowTag;
+				}
+			}
+			return "div";
+		},
+		onDragStart: function(event, record) {
+			var name = this.target.repeat.dragName ? this.target.repeat.dragName : "default";
+			this.$services.page.setDragData(event, "data-" + name, JSON.stringify(record));
+		},
 		watchArray: function() {
 			if (this.target.repeat.array) {
 				var self = this;
@@ -281,6 +345,7 @@ Vue.component("renderer-repeat", {
 			this.$services.router.unregister("fragment-renderer-repeat-" + this.instanceCounter);
 		},
 		mounted: function(component) {
+			console.log("calling mounted", component);
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			// TODO: subscribe to all events and emit them to this page
 			component.$on("hook:beforeDestroy", function() {
@@ -402,7 +467,11 @@ Vue.component("renderer-repeat", {
 					"slow": false,
 					"name": this.alias,
 					"parameters": [],
-					"readOnly": true
+					"readOnly": true,
+					"pageType": this.getPageType(),
+					// you can optimze the rows by throwing away the page wrapper
+					// currently this also throws away edit mode so we can only globally enable this once we have moved the editing outside of the page!
+					"optimizeRows": true
 				};
 				// add our local value
 				content.parameters.push({
@@ -444,6 +513,7 @@ Vue.component("renderer-repeat", {
 					name: content.name,
 					content: content
 				}
+				this.fragmentPage = page;
 				var self = this;
 				var route = {
 					alias: page.name,
@@ -454,13 +524,11 @@ Vue.component("renderer-repeat", {
 								if (key != self.target.runtimeAlias) {
 									if (target.set) {
 										if (target.variables[key] != pageInstance.variables[key]) {
-											console.log("updating page", target.pageInstanceId, key);
 											target.set(key, pageInstance.variables[key]);
 										}
 									}
 									else {
 										if (target[key] != pageInstance.variables[key]) {
-											console.log("changed", key);
 											Vue.set(target, key, pageInstance.variables[key]);
 										}
 									}
