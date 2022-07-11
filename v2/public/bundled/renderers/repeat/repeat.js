@@ -52,6 +52,7 @@ nabu.page.provide("page-renderer", {
 						});
 					}
 					result.record = {properties:properties};
+					result.records = {type: "array", items: {properties:record}};	
 					
 					var filters = {};
 					// we also want to expose the parameters as input
@@ -93,6 +94,7 @@ nabu.page.provide("page-renderer", {
 					}
 				}
 				result.record = {properties:record};
+				result.records = {type: "array", items: {properties:record}};
 			}
 		}
 		return {properties:result};
@@ -153,7 +155,6 @@ Vue.component("renderer-repeat", {
 	},
 	data: function() {
 		return {
-			records: [],
 			// the instance counter is used to manage our pages on the router
 			instanceCounter: $$rendererInstanceCounter++,
 			loading: false,
@@ -161,6 +162,8 @@ Vue.component("renderer-repeat", {
 			// the state in the original page, this can be used to write stuff like "limit" etc to
 			// note that the "record" will not actually be in this
 			state: {
+				filter: {},
+				records: [],
 				// if we don't define the fields AND we don't use Vue.set to update them, they are not reactive!
 				paging: {
 					current: 0,
@@ -181,7 +184,13 @@ Vue.component("renderer-repeat", {
 	*/
 	created: function() {
 		// the parameters that we pass in contain the bound values
-		nabu.utils.objects.merge(this.state, this.parameters);
+		var self = this;
+		var blacklist = ["records", "paging"];
+		Object.keys(this.parameters).forEach(function(key) {
+			if (blacklist.indexOf(key) < 0 && self.parameters[key] != null) {
+				Vue.set(self.state, key, self.parameters[key]);
+			}
+		});
 		
 		this.loadPage();
 		
@@ -216,7 +225,13 @@ Vue.component("renderer-repeat", {
 		operationParameters: function() {
 			this.loadData();	
 		},
-		state: {
+		"state.paging": {
+			deep: true,
+			handler: function(newValue) {
+				this.loadData();
+			}
+		},
+		"state.filter": {
 			deep: true,
 			handler: function(newValue) {
 				this.loadData();
@@ -333,7 +348,7 @@ Vue.component("renderer-repeat", {
 			//nabu.utils.objects.merge(result, this.getVariables());
 			// we don't want to pass the entire state as parameters because this causes the repeats to be rerendered if anything changes
 			if (this.target.runtimeAlias) {
-				result[this.target.runtimeAlias] = {record:record, recordIndex: this.records.indexOf(record)};
+				result[this.target.runtimeAlias] = {record:record, recordIndex: this.state.records.indexOf(record)};
 			}
 			return result;
 		},
@@ -353,7 +368,9 @@ Vue.component("renderer-repeat", {
 			});
 			// we don't need to explicitly unsubscribe? once the page gets destroyed, its gone anyway
 			component.subscribe("$any", function(name, value) {
-				pageInstance.emit(name, value);
+				if (name != "$load") {
+					pageInstance.emit(name, value);
+				}
 			});
 		},
 		// in the future we can add a "load more" event support, we then listen to that event and load more data, this means we want to append
@@ -387,7 +404,7 @@ Vue.component("renderer-repeat", {
 				this.loading = true;
 				return this.$services.swagger.execute(this.target.repeat.operation, parameters).then(function(list) {
 					if (!append) {
-						self.records.splice(0);
+						self.state.records.splice(0);
 					}
 					if (list) {
 						var arrayFound = false;
@@ -399,7 +416,7 @@ Vue.component("renderer-repeat", {
 											x.$position = i;
 										}
 									});
-									nabu.utils.arrays.merge(self.records, root[field]);
+									nabu.utils.arrays.merge(self.state.records, root[field]);
 									arrayFound = true;
 								}
 								if (!arrayFound && typeof(root[field]) === "object" && root[field] != null) {
@@ -436,12 +453,12 @@ Vue.component("renderer-repeat", {
 			}
 			else if (this.target.repeat && this.target.repeat.array) {
 				if (!append) {
-					this.records.splice(0, this.records.length);
+					this.state.records.splice(0, this.state.records.length);
 				}
 				var result = this.$services.page.getPageInstance(this.page, this).get(this.target.repeat.array);
 
 				if (result) {
-					nabu.utils.arrays.merge(this.records, result);
+					nabu.utils.arrays.merge(this.state.records, result);
 				}
 				return this.$services.q.resolve(result);
 			}

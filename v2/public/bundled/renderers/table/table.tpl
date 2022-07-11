@@ -1,5 +1,5 @@
 <template id="renderer-table">
-	<table>
+	<table class="is-table">
 		<thead>
 			<slot name="header"></slot>
 		</thead>

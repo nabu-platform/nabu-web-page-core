@@ -8,7 +8,7 @@ nabu.page.provide("page-type", {
 	rowTag: function(row, depth, editing) {
 		return "tr";
 	},
-	cellTag: function(row, depth, editing) {
+	cellTag: function(cell, depth, editing) {
 		return "td";
 	},
 	repeatTag: function(target) {

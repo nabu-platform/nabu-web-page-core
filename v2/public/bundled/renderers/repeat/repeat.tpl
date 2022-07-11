@@ -1,8 +1,8 @@
 <template id="renderer-repeat">
 	<component :is="getComponent()">
-		<template v-if="!edit && !loading && records.length">
+		<template v-if="!edit && !loading && state.records.length">
 			<n-page :page="fragmentPage"
-				v-for="(record, index) in records" :record-index="index" class="is-repeat-content" 
+				v-for="(record, index) in state.records" :record-index="index" class="is-repeat-content" 
 				:draggable="target.repeat.enableDrag"
 				@dragstart="onDragStart($event, record)"
 				:class="getChildComponentClasses('repeat-content')"
@@ -11,7 +11,7 @@
 				:page-instance-id="$services.page.pageCounter++"
 				@ready="mounted"/>
 		</template>
-		<template v-else-if="!edit && !loading && !records.length">
+		<template v-else-if="!edit && !loading && !state.records.length">
 			<span class="is-text" v-if="target.repeat.emptyPlaceholder" v-html="$services.page.translate(target.repeat.emptyPlaceholder)"></span>
 		</template>
 		<template v-else-if="!edit && loading">

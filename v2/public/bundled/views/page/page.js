@@ -4972,7 +4972,7 @@ Vue.component("renderer-bindings", {
 			if (this.target.renderer) {
 				var state = this.$services.page.getRendererState(this.target.renderer, this.target, this.page, this.$services.page.getAllAvailableParameters(this.page));
 				if (state) {
-					nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor(state));
+					nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor(state, true, true));
 				}
 			}
 			console.log("fields are", fields);
