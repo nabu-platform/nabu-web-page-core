@@ -19,6 +19,9 @@ nabu.page.provide("page-type", {
 	},
 	rowComponent: function(cell) {
 		return "table-row";
+	},
+	repeatComponent: function(target) {
+		return "table-body"
 	}
 });
 
@@ -33,6 +36,7 @@ nabu.page.provide("page-renderer", {
 	type: ["cell"],
 	component: "renderer-table",
 	configuration: "renderer-table-configure",
+	cssComponent: "table",
 	getChildComponents: function(target) {
 		return [{
 			title: "Table",

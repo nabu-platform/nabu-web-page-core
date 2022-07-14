@@ -352,6 +352,20 @@ Vue.view("typography-paragraph", {
 		}
 	}
 })
+Vue.view("typography-fragment", {
+	template: "#typography-template",
+	mixins: [Vue.component("typography-core")],
+	icon: "paragraph",
+	description: "A short fragment of text",
+	name: "Fragment",
+	category: "Typography",
+	data: function() {
+		return {
+			tag: "span",
+			placeholder: "Fragment"
+		}
+	}
+})
 
 Vue.component("typography-blockquote-configure", {
 	template: "#typography-template-configure",	

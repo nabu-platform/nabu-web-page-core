@@ -133,7 +133,7 @@ Vue.component("renderer-form", {
 		}
 		// if we have a form on an operation, we likely have a "body" in our state
 		// we want to be able to pass that around by reference
-		if (this.target.form && this.target.form.formType == "operation") {
+		if (this.target.form && this.target.form.formType == "operation" && this.state.body == null) {
 			Vue.set(this.state, "body", {});
 		}
 	},

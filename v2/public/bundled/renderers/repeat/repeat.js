@@ -155,10 +155,13 @@ Vue.component("renderer-repeat", {
 	},
 	data: function() {
 		return {
+			loadCounter: 0,
 			// the instance counter is used to manage our pages on the router
 			instanceCounter: $$rendererInstanceCounter++,
 			loading: false,
 			fragmentPage: null,
+			// position counter to make each record unique
+			position: 0,
 			// the state in the original page, this can be used to write stuff like "limit" etc to
 			// note that the "record" will not actually be in this
 			state: {
@@ -242,6 +245,9 @@ Vue.component("renderer-repeat", {
 		this.unloadPage();
 	},
 	methods: {
+		getCounter: function() {
+			return this.$services.page.pageCounter++;
+		},
 		getPageType: function() {
 			var self = this;
 			var pageType = null;
@@ -317,17 +323,36 @@ Vue.component("renderer-repeat", {
 					}, {deep: true});
 				}
 				else {
+					var stringified = JSON.stringify(current);
 					if (targetArray.indexOf("page.") == 0) {
 						targetArray = targetArray.substring("page.".length);
 					}
 					var watchKey = "variables." + targetArray;
 					var unwatch = pageInstance.$watch(watchKey, function(newValue) {
-						self.loadData();
-						unwatch();
-						// may have unset to null, changed to a different array,...
-						self.watchArray();
+						if (JSON.stringify(pageInstance.get(targetArray)) != stringified) {
+							self.loadData();
+							unwatch();
+							// may have unset to null, changed to a different array,...
+							self.watchArray();
+						}
 					}, {deep: true});
 				}
+			}
+		},
+		// TODO: allow the user to choose their own key in the record
+		getKey: function(record) {
+			if (record && record.id) {
+				return record.id;
+			}
+			// sometimes we have arrays of uuids
+			else if (record && typeof(record) == "string") {
+				return record;
+			}
+			else if (record && record.hasOwnProperty("$position")) {
+				return record["$position"];
+			}
+			else {
+				return this.records.indexOf(record);
 			}
 		},
 		runAction: function(action, value) {
@@ -359,8 +384,29 @@ Vue.component("renderer-repeat", {
 		unloadPage: function() {
 			this.$services.router.unregister("fragment-renderer-repeat-" + this.instanceCounter);
 		},
+		beforeMount: function(component) {
+			this.mapVariables(component);
+		},
+		mapVariables: function(target) {
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			var self = this;
+			Object.keys(pageInstance.variables).forEach(function(key) {
+				// not interested in changes to itself
+				if (key != self.target.runtimeAlias) {
+					if (target.set) {
+						if (target.variables[key] != pageInstance.variables[key]) {
+							target.set(key, pageInstance.variables[key]);
+						}
+					}
+					else {
+						if (target[key] != pageInstance.variables[key]) {
+							Vue.set(target, key, pageInstance.variables[key]);
+						}
+					}
+				}
+			});
+		},
 		mounted: function(component) {
-			console.log("calling mounted", component);
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			// TODO: subscribe to all events and emit them to this page
 			component.$on("hook:beforeDestroy", function() {
@@ -372,12 +418,35 @@ Vue.component("renderer-repeat", {
 					pageInstance.emit(name, value);
 				}
 			});
+			var self = this;
+			// map variables initially to the parameters
+			// this _somehow_ breaks reactivity on the page
+//						mapVariables(parameters);
+			// we want to keep the variables up to date without having the route-render continuously rerender the page
+			var unwatch = pageInstance.$watch("variables", function() {
+				if (component) {
+					self.mapVariables(component);
+				}
+			}, {deep: true});
+			
+			component.$on("hook:beforeDestroy", function() {
+				unwatch();
+			});
+		},
+		uniquify: function() {
+			var self = this;
+			this.state.records.forEach(function(record) {
+				if (!record.hasOwnProperty("$position") && typeof(record) != "string" && !(record instanceof String)) {
+					record["$position"] = self.position++;
+				}
+			});
 		},
 		// in the future we can add a "load more" event support, we then listen to that event and load more data, this means we want to append
 		// currently we don't do anything special with limit and offset, you can fill them in in the bindings if you want
 		// we will just do the call as a whole, assuming it is a limited service result
 		// in the future we can hide the limit/offset inputs and instead expose them as state so you can directly write to them (?)
 		loadData: function(page, append) {
+			this.loadCounter++;
 			var self = this;
 			// we want to call an operation
 			if (this.target.repeat && this.target.repeat.operation) {
@@ -445,6 +514,7 @@ Vue.component("renderer-repeat", {
 						}
 						findPage(list);
 					}
+					self.uniquify();
 					self.loading = false;
 				}, function(error) {
 					// TODO: what in case of error?
@@ -460,6 +530,7 @@ Vue.component("renderer-repeat", {
 				if (result) {
 					nabu.utils.arrays.merge(this.state.records, result);
 				}
+				self.uniquify();
 				return this.$services.q.resolve(result);
 			}
 		},

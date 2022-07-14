@@ -119,7 +119,7 @@ Vue.component("page-form-input-file", {
 			}
 			if (this.field.fileName) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
-				pageInstance.set(this.field.contentType, file ? file.name : null);
+				pageInstance.set(this.field.fileName, file ? file.name : null);
 			}
 			// only emit this _after_ we set the previous
 			// otherwise forms with "submit on change" might trigger before the above values are set

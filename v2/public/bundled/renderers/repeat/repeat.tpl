@@ -4,11 +4,11 @@
 			<n-page :page="fragmentPage"
 				v-for="(record, index) in state.records" :record-index="index" class="is-repeat-content" 
 				:draggable="target.repeat.enableDrag"
-				@dragstart="onDragStart($event, record)"
+				@dragstart.native="onDragStart($event, record)"
 				:class="getChildComponentClasses('repeat-content')"
-				:key="'repeat_' + instanceCounter + '_rendered_' + index"
+				:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record)"
 				:parameters="getParameters(record)"
-				:page-instance-id="$services.page.pageCounter++"
+				@beforeMount="beforeMount"
 				@ready="mounted"/>
 		</template>
 		<template v-else-if="!edit && !loading && !state.records.length">

@@ -67,7 +67,7 @@ Vue.service("triggerable", {
 					});
 					// no content currently
 					if (trigger.errorEvent) {
-						result[trigger.errorEvent] = {};
+						result[trigger.errorEvent] = self.$services.swagger.resolve("#/definitions/StructuredErrorResponse");
 					}
 				});
 			}

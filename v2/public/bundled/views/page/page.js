@@ -142,6 +142,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		pageInstanceId: {
+			type: String,
+			required: true,
+			default: function() {
+				return application.services.page.pageCounter++;
+			}
 		}
 	},
 	activate: function(done) {
@@ -439,6 +446,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		// no longer needed? @2021-06-10: it seems this was only for the initial rerender
 		// which has long since been deprecated
 		//this.lastParameters = JSON.stringify(this.parameters);
+		this.$emit("beforeMount", this);
 	},
 	destroyed: function() {
 		this.$services.page.destroyPageInstance(this.page, this);
@@ -3249,7 +3257,6 @@ Vue.component("n-page-row", {
 			}
 		},
 		dragOverCell: function($event, row, cell) {
-			console.log("dragging over cell");
 			// can only accept drags if there is nothing in the cell yet
 			if (!cell.alias && this.edit) {
 				var data = this.$services.page.hasDragData($event, "component-alias");
@@ -3627,17 +3634,23 @@ Vue.component("n-page-row", {
 			var classes = [];
 			if (cell.renderer) {
 				var renderer = this.$services.page.getRenderer(cell.renderer);
-				if (renderer && renderer.component) {
-					classes.push("is-" + renderer.component);
+				if (renderer && renderer.cssComponent) {
+					classes.push("is-" + renderer.cssComponent);
 				}
 			}
-			else {
+			if (classes.length == 0) {
 				var pageType = this.getPageType(cell);
 				if (pageType) {
 					var provider = nabu.page.providers("page-type").filter(function(x) {
 						return x.name == pageType;
 					})[0];
-					if (provider && provider.cellComponent instanceof Function) {
+					if (provider && cell.renderer && provider[cell.renderer + "Component"] instanceof Function) {
+						classes.push("is-" + provider[cell.renderer + "Component"](cell));
+					}
+					else if (provider && cell.renderer && provider[cell.renderer + "Component"]) {
+						classes.push("is-" + provider[cell.renderer + "Component"]);
+					}
+					else if (provider && provider.cellComponent instanceof Function) {
 						classes.push("is-" + provider.cellComponent(cell));
 					}
 					else if (provider && provider.cellComponent) {
@@ -3679,17 +3692,23 @@ Vue.component("n-page-row", {
 			var classes = [];
 			if (row.renderer) {
 				var renderer = this.$services.page.getRenderer(row.renderer);
-				if (renderer && renderer.component) {
-					classes.push("is-" + renderer.component);
+				if (renderer && renderer.cssComponent) {
+					classes.push("is-" + renderer.cssComponent);
 				}
 			}
-			else {
+			if (classes.length == 0) {
 				var pageType = this.getPageType(row);
 				if (pageType) {
 					var provider = nabu.page.providers("page-type").filter(function(x) {
 						return x.name == pageType;
 					})[0];
-					if (provider && provider.rowComponent instanceof Function) {
+					if (provider && row.renderer && provider[row.renderer + "Component"] instanceof Function) {
+						classes.push("is-" + provider[row.renderer + "Component"](row));
+					}
+					else if (provider && row.renderer && provider[row.renderer + "Component"]) {
+						classes.push("is-" + provider[row.renderer + "Component"]);
+					}
+					else if (provider && provider.rowComponent instanceof Function) {
 						classes.push("is-" + provider.rowComponent(row));
 					}
 					else if (provider && provider.rowComponent) {
@@ -3872,7 +3891,8 @@ Vue.component("n-page-row", {
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			var result = {
 				page: this.page,
-				parameters: this.parameters,
+				// does not seem to serve a purpose, they end up in "parameters.parameters" from the perspective of a child page
+//				parameters: this.parameters,
 				cell: cell,
 				edit: this.edit,
 				//state: pageInstance.variables,
