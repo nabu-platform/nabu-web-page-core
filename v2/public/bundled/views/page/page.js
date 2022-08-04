@@ -1084,6 +1084,20 @@ nabu.page.views.Page = Vue.component("n-page", {
 					return x.icon && x.name;	
 				});
 			}
+			
+			var applicableGenerators = nabu.page.providers("page-generator").filter(function(generator) {
+				if (generator.accept) {
+					console.log("found generator", generator.name);
+				}
+				return generator.accept && generator.accept("operation", content);
+			});
+			// the necessary fields for these two are in sync:
+			// - icon
+			// - name
+			// - description
+			// we don't have an alias in generators which is what we use to distinguish between the two
+			nabu.utils.arrays.merge(acceptedRoutes, applicableGenerators);
+
 			var runRoute = function(route) {
 				var row = rowGenerator();
 				var cell = cellGenerator(row);
@@ -1101,13 +1115,23 @@ nabu.page.views.Page = Vue.component("n-page", {
 			console.log("accepted routes are", acceptedRoutes);
 			// if there is only one, execute it immediately
 			if (acceptedRoutes.length == 1) {
-				runRoute(acceptedRoutes[0]);
+				if (acceptedRoutes[0].alias) {
+					runRoute(acceptedRoutes[0]);
+				}
+				else if (acceptedRoutes[0].initialize) {
+					acceptedRoutes[0].initialize("operation", content, self, rowGenerator, cellGenerator);
+				}
 			}
 			// if we have multiple, show a popup
 			else if (acceptedRoutes.length > 1) {
 				this.$prompt("page-components-selector", {components: acceptedRoutes}).then(function(chosen) {
 					if (chosen) {
-						runRoute(chosen);
+						if (chosen.alias) {
+							runRoute(chosen);
+						}
+						else if (chosen.initialize) {
+							chosen.initialize("operation", content, self, rowGenerator, cellGenerator);
+						}
 					}	
 				});
 			}

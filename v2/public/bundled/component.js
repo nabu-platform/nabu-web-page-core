@@ -106,6 +106,7 @@ window.addEventListener("load", function() {
 			description: "This is a form container that encapsulates simple forms",
 			icon: "page/core/images/form.svg",
 			accept: function(type, value) {
+				return false;
 				if (type == "operation") {
 					var operation = $services.swagger.operations[value];
 					return (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "post" || operation.method.toLowerCase() == "patch");         
@@ -567,6 +568,375 @@ window.addEventListener("load", function() {
 			configure: "page-form-list-input-predefined-configure", 
 			name: "predefined",
 			namespace: "nabu.page"
+		});
+		
+		// -------------------------- generators
+		nabu.page.provide("page-generator", {
+			name: "Form",
+			description: "Generates a form that calls this operation",
+			icon: "page/core/images/form.svg",
+			accept: function(type, content) {
+				if (type == "operation") {
+					var operation = $services.swagger.operations[content];
+					return (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "post" || operation.method.toLowerCase() == "patch");
+				}
+			},
+			automap: function(target, pageInstance, mapFrom) {
+				
+			},
+			generateFields: function(type, content, pageInstance, runtimeAlias, fields, rowGenerator, cellGenerator) {
+				// if it is not a row, add it as a row
+				if (!fields.cells) {
+					fields = rowGenerator(fields);
+				}
+				var definition = null;
+				if (type == "operation") {
+					definition = application.services.page.getSwaggerOperationInputDefinition(content);
+				}
+				else if (type == "array") {
+					var pageParameters = null;
+					throw "Not implemented page parameter resolving yet";
+					var childDefinition = application.services.page.getChildDefinition({properties:pageParameters}, content);
+					definition = childDefinition && childDefinition.items && childDefinition.items ? childDefinition.items : {};
+				}
+				else if (type == "function") {
+					definition = application.sservices.page.getFunctionInput(content);
+				}
+				var keys = application.services.page.getSimpleKeysFor(definition);
+				keys.forEach(function(key) {
+					var cell = cellGenerator(fields);
+					var child = application.services.page.getChildDefinition(definition, key);
+					cell.alias = "page-form-text";
+					// try to find a more specific alias
+					if (child) {
+						if (child.type == "integer") {
+							cell.state.textType = "number";
+						}
+						else if (child.type == "boolean") {
+							cell.alias = "page-form-switch";
+						}
+						else if (child.format && child.format.indexOf("date") >= 0) {
+							cell.alias = "page-form-date";
+						}
+						else if (child.format == "uuid") {
+							cell.alias = "page-form-enumeration-operation";
+						}
+						// if we see a "password" field, use that type
+						else if (key.toLowerCase().indexOf("password") >= 0) {
+							cell.alias = "page-form-password";
+						}
+					}
+					cell.state.name = runtimeAlias + "." + key;
+					cell.name = application.services.page.prettify(key.replace(/^.*\.([^.]+)$/, "$1"));
+					cell.state.label = "%" + "{" + cell.name + "}";
+				});
+			},
+			// generate into a cell or row
+			generate: function(type, content, pageInstance, root, rowGenerator, cellGenerator) {
+				var generator = nabu.page.providers("page-generator").filter(function(x) {
+					return x.name.toLowerCase() == "form";
+				})[0];
+				
+				var operation = $services.swagger.operations[content];
+				var name = $services.page.guessNameFromOperation(content);
+				if (name != null) {
+					name = name.substring(0, 1).toUpperCase() + name.substring(1);
+				}
+				
+				// we must find the cells that contain the things we want to configure
+				var formTitle = null;
+				var buttonSubmit = null;
+				var buttonCancel = null;
+				var buttonClose = null;
+				var formFields = null;
+				var search = function(target) {
+					if (target.name) {
+						if (target.name.toLowerCase() == "form title") {
+							formTitle = target;	
+						}
+						else if (target.name.toLowerCase() == "submit button") {
+							buttonSubmit = target;
+						}
+						else if (target.name.toLowerCase() == "cancel button") {
+							buttonCancel = target;
+						}
+						else if (target.name.toLowerCase() == "close button") {
+							buttonCancel = target;
+						}
+						else if (target.name.toLowerCase() == "form fields") {
+							formFields = target;
+						}
+					}
+					if (target.cells) {
+						target.cells.forEach(search);
+					}
+					else if (target.rows) {
+						target.rows.forEach(search);
+					}
+				};
+				search(root);
+				
+				root.renderer = "form";
+				root.form = {
+					formType: "operation",
+					operation: content
+				};
+				
+				var title = (name ? name : "");
+				if (operation.method.toLowerCase() == "post") {
+					root.runtimeAlias = "formCreate" + title;
+					title = "Create " + title;
+					if (buttonSubmit) {
+						buttonSubmit.state.content = "%" + "{Create}";
+					}
+				}
+				else if (operation.method.toLowerCase() == "delete") {
+					root.runtimeAlias = "formDelete" + title;
+					title = "Delete " + title;
+					if (buttonSubmit) {
+						buttonSubmit.state.content = "%" + "{Remove}";
+					}
+				}
+				else {
+					root.runtimeAlias = "formUpdate" + title;
+					title = "Update " + title;
+					if (buttonSubmit) {
+						buttonSubmit.state.content = "%" + "{Update}";
+					}
+				}
+				// set the root name if there isn't one yet
+				if (root.name == null) {
+					root.name = title + "Form";
+				}
+				
+				if (formTitle != null ){
+					formTitle.state.content = "%" + "{" + title + "}";
+				}
+				
+				// generate the fields for this form
+				// this is likely to be reused later in other settings!
+				generator.generateFields(type, content, pageInstance, root.runtimeAlias, formFields, rowGenerator, cellGenerator);
+				
+				// update the submit button so it triggers the submit
+				if (buttonSubmit) {
+					if (buttonSubmit.state.triggers.length == 0) {
+						buttonSubmit.state.triggers.push({
+							trigger: "click",
+							closeEvent: true,
+							actions: []
+						})
+					}
+					var trigger = buttonSubmit.state.triggers[0];
+					var submit = trigger.actions.filter(function(x) { return x.action == "submit" })[0];
+					// if we don't have a submit action yet, add it
+					if (!submit) {
+						trigger.actions.push({
+							type: "action",
+							actionTarget: root.id,
+							action: "submit",
+							bindings: {}
+						})
+					}
+					// otherwise, update the id to be in sync
+					else {
+						submit.actionTarget = root.id;
+					}
+					trigger.closeEvent = true;
+				}
+
+				// remove the last bit, for example if we have demo.rest.company.create, we want to find an operation
+				// that starts with demo.rest.company, for example "demo.rest.company.list"
+				var shared = content.replace(/\.[^.]+$/, "");
+				var getDataComponent = function(targets) {
+					for (var i = 0; i < targets.length; i++) {
+						var target = targets[i];
+						// do a minimalistic check
+						if (target.renderer == "repeat" && target.repeat && target.repeat.operation) {
+							if (target.repeat.operation.indexOf(shared) == 0) {
+								return [target];
+							}
+						}
+						if (target.rows) {
+							var dataComponent = getDataComponent(target.rows);
+							if (dataComponent != null) {
+								dataComponent.push(target);
+								return dataComponent;
+							}
+						}
+						else if (target.cells) {
+							var dataComponent = getDataComponent(target.cells);
+							if (dataComponent != null) {
+								dataComponent.push(target);
+								return dataComponent;
+							}
+						}
+					}
+					return null;
+				}
+				
+				// we scan the current page to see if there is a data component where we can add something
+				var page = pageInstance.page;
+				if (page.content.rows) {
+					var dataComponent = getDataComponent(page.content.rows);
+					// we are looking for a repeat within a table renderer
+					// and it must not have a slot header or footer (if you for some reason put a repeat on that...?)
+					if (dataComponent != null && dataComponent.length >= 2 && dataComponent[1].renderer == "table" && ["header", "footer"].indexOf(dataComponent[0].slot) < 0) {
+						var table = dataComponent[1];
+						var repeat = dataComponent[0];
+						nabu.utils.vue.confirm({message:"Do you want to add this form to the existing table?"}).then(function() {
+							var eventName = null;
+
+							var buttonCell = null;
+							
+							if (operation.method.toLowerCase() == "post") {
+								// find a footer child that has the name "Global Actions"
+								var buttons = table.rows.filter(function(x) {
+									return x.name == "Global Actions" && x.slot == "footer";
+								})[0];
+								if (!buttons) {
+									buttons = rowGenerator(table);
+								}
+								eventName = "create" + (name ? name : "");
+								buttonCell = cellGenerator(buttons);
+
+								buttonCell.name = "Create" + (name ? " " + name : "");
+								
+								// make sure we send out a created event once done
+/*								dataComponent.state.actions.push({
+									name: "create" + (name ? name : ""),
+									global: true,
+									label: "%" + "{Create}",
+									type: "button",
+									class: "primary"
+								});
+								if (!dataComponent.state.refreshOn) {
+									Vue.set(dataComponent.state, "refreshOn", []);
+								}
+								// make sure we refresh on create
+								dataComponent.state.refreshOn.push("created" + (name ? name : ""));*/
+							}
+							else if (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "patch") {
+								// find a repeat column that has the name "Local Actions"
+								var buttons = repeat.cells.filter(function(x) {
+									return x.name == "Local Actions";
+								})[0];
+								
+								if (!buttons) {
+									buttons = cellGenerator(repeat);
+									buttons.name = "Local Actions";
+									// if we add a new column for the buttons, we also need to add it to the header
+									var headers = table.rows.filter(function(x) {
+										return x.slot == "header";
+									});
+									headers.forEach(function(x) {
+										var cell = cellGenerator(x);
+										cell.name = "Local Actions";
+									})
+								}
+								
+								eventName = "update" + (name ? name : "");
+								buttonCell.name = "Update" + (name ? " " + name : "");
+								root.form.synchronize = true;
+								
+								// make sure we synchronize changes so we don't need to refresh
+								// allow for some time to stabilize events etc so we have correct definitions
+								// not very clean, i know...
+								if (formFields) {
+									setTimeout(function() {
+										// generate an automatic mapping for the inputs
+										generator.automap(root, pageInstance, eventName);
+									}, 300);
+								}
+							}
+							
+							if (buttonSubmit) {
+								buttonSubmit.state.triggers[0].actions.push({
+									type: "action",
+									action: "refresh",
+									actionTarget: repeat.id,
+									bindings: {}
+								});
+							}
+							
+							if (eventName) {
+								root.on = eventName;
+								// we want the form in a prompt
+								root.target = "prompt";
+								
+								// reset events so it gets picked up
+								pageInstance.resetEvents();
+							}
+							
+							if (buttonCell) {
+								buttonCell.alias = "page-button";
+								buttonCell.state = {
+									content: operation.method.toLowerCase() == "post" ? "%" + "{" + buttonCell.name + "}" : null,
+									icon: operation.method.toLowerCase() == "post" ? "plus" : "pencil-alt",
+									triggers: [{
+										trigger: "click",
+										actions: [{
+											type: "event",
+											event: {
+												name: eventName,
+												eventFields: []
+											}
+										}]
+									}]
+								}
+							}
+						});
+					}
+				}
+			},
+			initialize: function(type, content, pageInstance, rowGenerator, cellGenerator) {
+				var generator = nabu.page.providers("page-generator").filter(function(x) {
+					return x.name.toLowerCase() == "form";
+				})[0];
+				
+				
+				// TODO: we check all the available templates for forms
+				// there should be at least one that is distributed with the core
+				// if there is only one, we use immediately, otherwise we let the user choose which templates to use
+				// we inject the templates and expect certain cells (with certain names) to be present where we inject stuff
+				
+				var availableTemplates = application.services.page.templates.filter(function(x) {
+					var content = JSON.parse(x.content);
+					console.log("is it though?", content);
+					// in this case we always work cell based
+					return content.type == "page-cell"
+						&& content.content.renderer == "form";
+				});
+				
+				var applyTemplate = function(template) {
+					// row at the root of the page
+					var row = rowGenerator();
+					// the cell that contains the actual form
+					// we use a cell because you might want to show it in a popup etc
+					var root = cellGenerator(row);
+					var templateContent = JSON.parse(template.content).content;
+					application.services.page.renumber(pageInstance.page, templateContent);
+					// do a reactive merge
+					Object.keys(templateContent).forEach(function(key) {
+						Vue.set(root, key, templateContent[key]);
+					});
+					generator.generate(type, content, pageInstance, root, rowGenerator, cellGenerator);
+				}
+				
+				if (availableTemplates.length == 0) {
+					nabu.utils.vue.confirm({message:"There are no applicable form templates available, add at least one to generate a form"});
+					return;
+				}
+				// just apply it
+				else if (availableTemplates.length == 1) {
+					applyTemplate(availableTemplates[0]);
+				}
+				else {
+					this.$prompt("page-components-selector", {components: availableTemplates }).then(function(chosen) {
+						applyTemplate(chosen);
+					});
+				}
+				
+			}
 		});
 		
 		// renderers, not used up to this point, specification has been made much more powerful

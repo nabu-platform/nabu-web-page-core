@@ -16,6 +16,8 @@
 			:extracter="function(x) { return x.name }"
 			label="What type of form do you want?"/>
 		
+		<n-form-switch v-model="target.form.synchronize" label="Synchronize changes back to binding" v-if="target.form.formType != 'page'"/>
+		
 		<div v-if="target.form.formType == 'operation'">
 			<n-form-combo label="Operation" v-model="target.form.operation" 
 				:filter="getOperations"

@@ -106,6 +106,33 @@ nabu.page.provide("page-renderer", {
 			component: target.rows ? "row" : "column"
 		}];
 	},
+	getActions: function(target) {
+		var actions = [];
+		// can only refresh if there is an operation
+		if (target.repeat && target.repeat.operation) {
+			var action = {
+				title: "Refresh",
+				name: "refresh",
+				input: {
+				},
+				output: {
+				}
+			};
+			// check if we are browseable
+			var renderer = nabu.page.providers("page-renderer").filter(function(x) { return x.name == "repeat" })[0];
+			if (renderer && renderer.getSpecifications(target).indexOf("pageable") >= 0) {
+				// usually you refresh because something changed/was added/removed/...
+				// in that case, the page you are on is unlikely to have the current details
+				// so you want to reset the page count to 0
+				// however, sometimes you want to refresh because some internal state was updated on the current page (e.g. task reprocessing)
+				action.input.retainOffset = {
+					type: "boolean"
+				};
+			}
+			actions.push(action);
+		}
+		return actions;
+	},
 	getSpecifications: function(target) {
 		// TODO: check that it is an operation _and_ it has limit/offset capabilities
 		//return [];
@@ -358,6 +385,10 @@ Vue.component("renderer-repeat", {
 		runAction: function(action, value) {
 			if (action == "jump-page") {
 				return this.loadData(value.page);
+			}
+			else if (action == "refresh") {
+				var retainOffset = value && value.retainOffset;
+				return this.loadData(retainOffset ? this.state.paging.page : 0);
 			}
 			return this.$services.q.reject();
 		},

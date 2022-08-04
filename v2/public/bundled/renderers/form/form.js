@@ -169,7 +169,10 @@ Vue.component("renderer-form", {
 			// do an operation call
 			if (this.target.form.operation && this.target.form.formType == "operation") {
 				return this.$services.swagger.execute(this.target.form.operation, this.state).then(function() {
-					// do something?
+					// synchronize the changes back to the binding if relevant
+					if (self.target.form.synchronize) {
+						self.$services.page.applyRendererParameters(self.$services.page.getPageInstance(self.page, self), self.target, self.state);
+					}
 				}, function(error) {
 					self.error = "Form submission failed";
 					// if we get an XMLHTTPResponse thingy, parse it
@@ -225,6 +228,10 @@ Vue.component("renderer-form", {
 					current = pageInstance.get(this.target.form.array);
 				}
 				current.push(this.state);
+				// synchronize the changes back to the binding if relevant
+				if (self.target.form.synchronize) {
+					self.$services.page.applyRendererParameters(self.$services.page.getPageInstance(self.page, self), self.target, self.state);
+				}
 			}
 			else if (this.target.form.function && this.target.form.formType == "function") {
 				var func = this.$services.page.getRunnableFunction(this.target.form.function);
@@ -233,8 +240,16 @@ Vue.component("renderer-form", {
 				}
 				var promise = this.$services.q.defer();
 				var result = this.$services.page.runFunction(func, this.state, this, promise);
+				
+				// synchronize the changes back to the binding if relevant
+				if (self.target.form.synchronize) {
+					promise.then(function(x) {
+						self.$services.page.applyRendererParameters(self.$services.page.getPageInstance(self.page, self), self.target, self.state);
+					})
+				}
+				
 				// not yet used
-				if (this.target.form.functionOutputEvent) {
+				if (this.target.form.functionOutputEvent && false) {
 					var def = this.$services.page.getFunctionDefinition(this.target.form.function);
 					var pageInstance = this.$services.page.getPageInstance(this.page, this);
 					if (def.async) {
