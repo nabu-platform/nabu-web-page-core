@@ -582,7 +582,42 @@ window.addEventListener("load", function() {
 				}
 			},
 			automap: function(target, pageInstance, mapFrom) {
-				
+				var parameters = application.services.page.getAllAvailableParameters(pageInstance.page, pageInstance);
+				console.log("parameters are", parameters, mapFrom);
+				var source = application.services.page.getChildDefinition({properties:parameters}, mapFrom);
+				console.log("source is", source);
+				var definition = null;
+				if (target.form.formType == "operation") {
+					definition = application.services.page.getSwaggerOperationInputDefinition(target.form.operation);
+				}
+				else if (target.form.formType == "array") {
+					var pageParameters = null;
+					throw "Not implemented page parameter resolving yet";
+					var childDefinition = application.services.page.getChildDefinition({properties:pageParameters}, target.form.array);
+					definition = childDefinition && childDefinition.items && childDefinition.items ? childDefinition.items : {};
+				}
+				else if (target.form.formType == "function") {
+					definition = application.services.page.getFunctionInput(target.form.function);
+				}
+				var sourceKeys = application.services.page.getSimpleKeysFor(source);
+				var keys = application.services.page.getSimpleKeysFor(definition);
+				console.log("checking", keys, sourceKeys, definition, target);
+				if (!target.rendererBindings) {
+					Vue.set(target, "rendererBindings", {});
+				}
+				keys.forEach(function(key) {
+					// if we don't have a binding yet, try to find one in the source
+					if (target.rendererBindings[key] == null) {
+						var name = key.replace(/^.*\.([^.]+)$/, "$1");
+						var match = sourceKeys.filter(function(x) {
+							return x.indexOf("." + name) == x.length - name.length - 1;
+						})[0];
+						if (match) {
+							console.log("match is", match);
+							Vue.set(target.rendererBindings, key, mapFrom + "." + match);
+						}
+					}
+				});
 			},
 			generateFields: function(type, content, pageInstance, runtimeAlias, fields, rowGenerator, cellGenerator) {
 				// if it is not a row, add it as a row
@@ -600,35 +635,39 @@ window.addEventListener("load", function() {
 					definition = childDefinition && childDefinition.items && childDefinition.items ? childDefinition.items : {};
 				}
 				else if (type == "function") {
-					definition = application.sservices.page.getFunctionInput(content);
+					definition = application.services.page.getFunctionInput(content);
 				}
 				var keys = application.services.page.getSimpleKeysFor(definition);
 				keys.forEach(function(key) {
-					var cell = cellGenerator(fields);
-					var child = application.services.page.getChildDefinition(definition, key);
-					cell.alias = "page-form-text";
-					// try to find a more specific alias
-					if (child) {
-						if (child.type == "integer") {
-							cell.state.textType = "number";
+					// we don't generate a field for the id by default
+					// this should only be available in updates mostly unless you have weird naming conventions
+					if (key != "id") {
+						var cell = cellGenerator(fields);
+						var child = application.services.page.getChildDefinition(definition, key);
+						cell.alias = "page-form-text";
+						// try to find a more specific alias
+						if (child) {
+							if (child.type == "integer") {
+								cell.state.textType = "number";
+							}
+							else if (child.type == "boolean") {
+								cell.alias = "page-form-switch";
+							}
+							else if (child.format && child.format.indexOf("date") >= 0) {
+								cell.alias = "page-form-date";
+							}
+							else if (child.format == "uuid") {
+								cell.alias = "page-form-enumeration-operation";
+							}
+							// if we see a "password" field, use that type
+							else if (key.toLowerCase().indexOf("password") >= 0) {
+								cell.alias = "page-form-password";
+							}
 						}
-						else if (child.type == "boolean") {
-							cell.alias = "page-form-switch";
-						}
-						else if (child.format && child.format.indexOf("date") >= 0) {
-							cell.alias = "page-form-date";
-						}
-						else if (child.format == "uuid") {
-							cell.alias = "page-form-enumeration-operation";
-						}
-						// if we see a "password" field, use that type
-						else if (key.toLowerCase().indexOf("password") >= 0) {
-							cell.alias = "page-form-password";
-						}
+						cell.state.name = runtimeAlias + "." + key;
+						cell.name = application.services.page.prettify(key.replace(/^.*\.([^.]+)$/, "$1"));
+						cell.state.label = "%" + "{" + cell.name + "}";
 					}
-					cell.state.name = runtimeAlias + "." + key;
-					cell.name = application.services.page.prettify(key.replace(/^.*\.([^.]+)$/, "$1"));
-					cell.state.label = "%" + "{" + cell.name + "}";
 				});
 			},
 			// generate into a cell or row
@@ -833,6 +872,10 @@ window.addEventListener("load", function() {
 										cell.name = "Local Actions";
 									})
 								}
+								// if we don't have a row yet, add it
+								var buttonRow = buttons.rows.length ? buttons.rows[0] : rowGenerator(buttons);
+								
+								buttonCell = cellGenerator(buttonRow);
 								
 								eventName = "update" + (name ? name : "");
 								buttonCell.name = "Update" + (name ? " " + name : "");
@@ -849,7 +892,9 @@ window.addEventListener("load", function() {
 								}
 							}
 							
-							if (buttonSubmit) {
+							// when creating (or deleting), we want to do a refresh
+							// because of potential (and likely) paging, we can't simply add the result (even if we got it back)
+							if (buttonSubmit && operation.method.toLowerCase() == "post") {
 								buttonSubmit.state.triggers[0].actions.push({
 									type: "action",
 									action: "refresh",
@@ -882,6 +927,14 @@ window.addEventListener("load", function() {
 											}
 										}]
 									}]
+								}
+								// we do need to add the current record
+								if (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "patch") {
+									var action = buttonCell.state.triggers[0].actions[0];
+									action.event.eventFields.push({
+										name: "record",
+										stateValue: repeat.runtimeAlias + ".record"
+									});
 								}
 							}
 						});
