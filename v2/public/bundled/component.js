@@ -572,6 +572,154 @@ window.addEventListener("load", function() {
 		
 		// -------------------------- generators
 		nabu.page.provide("page-generator", {
+			name: "Table",
+			description: "Generate a table",
+			icon: "table",
+			accept: function(type, content) {
+				return type == "operation" && application.services.page.getArrayOperations().filter(function(x){
+					return x.id == content;
+				}).length > 0;
+			},
+			initialize: function(type, content, pageInstance, rowGenerator, cellGenerator) {
+				var generator = nabu.page.providers("page-generator").filter(function(x) {
+					return x.name.toLowerCase() == "table";
+				})[0];
+				
+				
+				var availableTemplates = application.services.page.templates.filter(function(x) {
+					var content = JSON.parse(x.content);
+					return content.type == "page-cell"
+						&& content.content.renderer == "table";
+				});
+				
+				var name = $services.page.guessNameFromOperation(content);
+				if (name != null) {
+					name = name.substring(0, 1).toUpperCase() + name.substring(1);
+				}
+				
+				var applyTemplate = function(template) {
+					// row at the root of the page
+					var row = rowGenerator();
+					// the cell that contains the actual form
+					// we use a cell because you might want to show it in a popup etc
+					var root = cellGenerator(row);
+					var templateContent = JSON.parse(template.content).content;
+					application.services.page.renumber(pageInstance.page, templateContent);
+					// do a reactive merge
+					Object.keys(templateContent).forEach(function(key) {
+						Vue.set(root, key, templateContent[key]);
+					});
+					
+					var tableTitle = null;
+					var tableHeader = null;
+					var tableBody = null;
+
+					var search = function(target) {
+						if (target.name && target.name.toLowerCase() == "table title") {
+							tableTitle = target;	
+						}
+						if (target.renderer == "repeat" && ["header", "footer"].indexOf(target.rendererSlot) < 0) {
+							tableBody = target;
+						}
+						// in a typical scenario the "last" header row is the one that has the most granular columns that likely match the data columns
+						// so we don't want to target all headers, just the last one if there are multiple
+						if (target.rendererSlot == "header") {
+							tableHeader = target;
+						}
+						if (target.cells) {
+							target.cells.forEach(search);
+						}
+						else if (target.rows) {
+							target.rows.forEach(search);
+						}
+					};
+					search(root);
+					
+					root.renderer = "table";
+					root.name = name + " Table";
+					
+					if (tableBody) {
+						// not a thing (yet?)
+						//tableBody.repeat.repeatType = "operation";
+						tableBody.repeat.operation = content;
+						tableBody.runtimeAlias = "repeat" + name;
+						tableBody.name = "Table Body " + name;
+						generator.generateFields(type, content, pageInstance, root, tableBody, tableHeader, rowGenerator, cellGenerator);
+					}
+				}
+				
+				if (availableTemplates.length == 0) {
+					nabu.utils.vue.confirm({message:"There are no applicable form templates available, add at least one to generate a form"});
+					return;
+				}
+				// just apply it
+				else if (availableTemplates.length == 1) {
+					applyTemplate(availableTemplates[0]);
+				}
+				else {
+					nabu.utils.vue.prompt("page-components-selector", {components: availableTemplates }).then(function(chosen) {
+						applyTemplate(chosen);
+					});
+				}
+			},
+			generateFields: function(type, content, pageInstance, root, body, header, rowGenerator, cellGenerator) {
+				var definition = null;
+				if (type == "operation") {
+					definition = application.services.page.getSwaggerOperationOutputDefinition(content);
+					var arrays = application.services.page.getArrays(definition);
+					var childDefinition = application.services.page.getChildDefinition(definition, arrays[0]);
+					console.log("arrays are", arrays, childDefinition);
+					definition = childDefinition && childDefinition.items && childDefinition.items ? childDefinition.items : {};
+				}
+				else if (type == "array") {
+					var pageParameters = null;
+					throw "Not implemented page parameter resolving yet";
+					var childDefinition = application.services.page.getChildDefinition({properties:pageParameters}, content);
+					definition = childDefinition && childDefinition.items && childDefinition.items ? childDefinition.items : {};
+				}
+				var keys = application.services.page.getSimpleKeysFor(definition);
+				keys.forEach(function(key) {
+					// we don't generate a field for the id by default
+					if (key != "id") {
+						var name = key.replace(/^.*\.([^.]+)$/, "$1");
+						var cell = cellGenerator(body);
+						var child = application.services.page.getChildDefinition(definition, key);
+						cell.alias = "typography-fragment";
+						cell.state.content = "{" + name + "}";
+						Vue.set(cell.state, "fragments", {});
+						Vue.set(cell.state.fragments, name, {
+							key: null,
+							format: null
+						});
+						
+						cell.state.fragments[name].key = body.runtimeAlias + ".record." + key;
+						
+						// try to find a more specific alias
+						if (child) {
+							if (child.type == "integer") {
+								cell.state.fragments[name].format = "number";
+							}
+							else if (child.type == "boolean") {
+								cell.state.fragments[name].format = "checkbox";
+							}
+							else if (child.format && child.format.indexOf("date") >= 0) {
+								cell.state.fragments[name].format = "date";
+							}
+							else if (child.format == "uuid") {
+								cell.state.fragments[name].format = "resolve";
+							}
+						}
+						cell.name = application.services.page.prettify(name);
+						
+						var headerCell = cellGenerator(header);
+						headerCell.name = cell.name;
+						headerCell.alias = "typography-fragment";
+						headerCell.state.content = "%" + "{" + cell.name + "}";
+					}
+				});
+			}
+		});
+		nabu.page.provide("page-generator", {
 			name: "Form",
 			description: "Generates a form that calls this operation",
 			icon: "page/core/images/form.svg",
@@ -601,7 +749,6 @@ window.addEventListener("load", function() {
 				}
 				var sourceKeys = application.services.page.getSimpleKeysFor(source);
 				var keys = application.services.page.getSimpleKeysFor(definition);
-				console.log("checking", keys, sourceKeys, definition, target);
 				if (!target.rendererBindings) {
 					Vue.set(target, "rendererBindings", {});
 				}
@@ -819,7 +966,7 @@ window.addEventListener("load", function() {
 					var dataComponent = getDataComponent(page.content.rows);
 					// we are looking for a repeat within a table renderer
 					// and it must not have a slot header or footer (if you for some reason put a repeat on that...?)
-					if (dataComponent != null && dataComponent.length >= 2 && dataComponent[1].renderer == "table" && ["header", "footer"].indexOf(dataComponent[0].slot) < 0) {
+					if (dataComponent != null && dataComponent.length >= 2 && dataComponent[1].renderer == "table" && ["header", "footer"].indexOf(dataComponent[0].rendererSlot) < 0) {
 						var table = dataComponent[1];
 						var repeat = dataComponent[0];
 						nabu.utils.vue.confirm({message:"Do you want to add this form to the existing table?"}).then(function() {
@@ -830,7 +977,7 @@ window.addEventListener("load", function() {
 							if (operation.method.toLowerCase() == "post") {
 								// find a footer child that has the name "Global Actions"
 								var buttons = table.rows.filter(function(x) {
-									return x.name == "Global Actions" && x.slot == "footer";
+									return x.name.toLowerCase() == "global actions" && x.rendererSlot == "footer";
 								})[0];
 								if (!buttons) {
 									buttons = rowGenerator(table);
@@ -857,19 +1004,19 @@ window.addEventListener("load", function() {
 							else if (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "patch") {
 								// find a repeat column that has the name "Local Actions"
 								var buttons = repeat.cells.filter(function(x) {
-									return x.name == "Local Actions";
+									return x.name && x.name.toLowerCase() == "local actions";
 								})[0];
 								
 								if (!buttons) {
 									buttons = cellGenerator(repeat);
-									buttons.name = "Local Actions";
+									buttons.name = "Local actions";
 									// if we add a new column for the buttons, we also need to add it to the header
 									var headers = table.rows.filter(function(x) {
-										return x.slot == "header";
+										return x.rendererSlot == "header";
 									});
 									headers.forEach(function(x) {
 										var cell = cellGenerator(x);
-										cell.name = "Local Actions";
+										cell.name = "Local actions header";
 									})
 								}
 								// if we don't have a row yet, add it
@@ -954,7 +1101,6 @@ window.addEventListener("load", function() {
 				
 				var availableTemplates = application.services.page.templates.filter(function(x) {
 					var content = JSON.parse(x.content);
-					console.log("is it though?", content);
 					// in this case we always work cell based
 					return content.type == "page-cell"
 						&& content.content.renderer == "form";
@@ -984,7 +1130,7 @@ window.addEventListener("load", function() {
 					applyTemplate(availableTemplates[0]);
 				}
 				else {
-					this.$prompt("page-components-selector", {components: availableTemplates }).then(function(chosen) {
+					nabu.utils.vue.confirm("page-components-selector", {components: availableTemplates }).then(function(chosen) {
 						applyTemplate(chosen);
 					});
 				}

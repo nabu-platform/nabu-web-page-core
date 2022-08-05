@@ -1,3 +1,13 @@
+nabu.page.provide("page-renumberer", {
+	component: "page-paging",
+	renumber: function(target, mapping) {
+		// update the action target
+		if (target.state.target != null && mapping[target.state.target] != null) {
+			target.state.target = mapping[target.state.target];	
+		}
+	}
+});
+
 Vue.view("page-paging", {
 	props: {
 		page: {
@@ -48,6 +58,14 @@ Vue.view("page-paging", {
 		}
 	},
 	methods: {
+		getChildComponents: function() {
+			return [{
+				title: "Button",
+				name: "paging-button",
+				description: "The button used for paging",
+				component: "button"
+			}];
+		},
 		load: function(page) {
 			if (this.component) {
 				var self = this;
