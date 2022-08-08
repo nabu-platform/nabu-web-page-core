@@ -547,6 +547,11 @@
 							<n-collapsible :only-one-open="true" title="Rendering" content-class="is-spacing-medium" class="is-highlight-left">
 								<n-form-combo label="Target slot in renderer" v-if="getSlots(cell)" v-model="cell.rendererSlot" :items="getSlots(cell)"/>
 								
+								<component v-if="getParentConfig(cell)" :is="getParentConfig(cell)"
+									:cell="cell"
+									:row="row"
+									:page="page"/>
+								
 								<n-form-combo label="Cell Renderer" v-if="!cell.alias" v-model="cell.renderer" :items="$services.page.getRenderers('cell')" 
 									after="You can set a custom renderer for this cell"
 									empty-value="No renderers found"

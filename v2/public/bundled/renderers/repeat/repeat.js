@@ -145,6 +145,9 @@ nabu.page.provide("page-renderer", {
 					specifications.push("pageable");
 					specifications.push("browseable");
 				}
+				if (parameters.indexOf("orderBy") >= 0) {
+					specifications.push("orderable");
+				}
 			}
 		}
 		return specifications;
@@ -389,6 +392,12 @@ Vue.component("renderer-repeat", {
 			else if (action == "refresh") {
 				var retainOffset = value && value.retainOffset;
 				return this.loadData(retainOffset ? this.state.paging.page : 0);
+			}
+			else if (action == "list-available") {
+				
+			}
+			else if (action == "order-by") {
+				
 			}
 			return this.$services.q.reject();
 		},

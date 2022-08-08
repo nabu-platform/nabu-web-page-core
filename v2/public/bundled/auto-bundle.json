@@ -332,6 +332,15 @@
 							"template": true
 						}
 					},
+					"button-sort": {
+						"button-sort.js": {
+							"url": "views/button-sort/button-sort.js"
+						}, 
+						"button-sort.tpl": {
+							"url": "views/button-sort/button-sort.tpl",
+							"template": true
+						}
+					},
 					"badge": {
 						"badge.js": {
 							"url": "views/badge/badge.js"
@@ -536,6 +545,9 @@
 			},
 			"browseable.js": {
 				"url": "specifications/browseable.js"
+			},
+			"orderable.js": {
+				"url": "specifications/orderable.js"
 			}
 		}
 	}

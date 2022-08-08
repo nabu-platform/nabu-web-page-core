@@ -9,7 +9,7 @@ nabu.page.provide("page-type", {
 		return "tr";
 	},
 	cellTag: function(cell, depth, editing) {
-		return "td";
+		return "renderer-table-body-cell";
 	},
 	repeatTag: function(target) {
 		return "tbody";
@@ -49,6 +49,12 @@ nabu.page.provide("page-renderer", {
 	},
 	getSlots: function(target) {
 		return ["header", "footer"];
+	},
+	// cells can have colspans!
+	getChildConfig: function(target, child, path) {
+		if (child.rows) {
+			return "renderer-table-cell-configure";
+		}
 	}
 });
 
@@ -60,4 +66,60 @@ Vue.component("renderer-table", {
 
 Vue.component("renderer-table-configure", {
 	template: "#renderer-table-configure"	
+});
+
+Vue.component("renderer-table-cell-configure", {
+	template: "#renderer-table-cell-configure",
+	props: {
+		cell: {
+			type: Object
+		},
+		row: {
+			type: Object
+		},
+		page: {
+			type: Object
+		}
+	},
+	created: function() {
+		if (this.cell && !this.cell.table) {
+			Vue.set(this.cell, "table", {});
+		}
+	}
+});
+
+Vue.component("renderer-table-body-cell", {
+	template: "#renderer-table-body-cell",
+	props: {
+		target: {
+			type: Object
+		},
+		page: {
+			type: Object
+		}
+	},
+	computed: {
+		// TODO: if colspan is 0, calculate the amount of columns!
+		colspan: function() {
+			return this.target && this.target.table ? this.target.table.colspan : null;
+		}
+	}
+});
+
+
+Vue.component("renderer-table-header-cell", {
+	template: "#renderer-table-header-cell",
+	props: {
+		target: {
+			type: Object
+		},
+		page: {
+			type: Object
+		}
+	},
+	computed: {
+		colspan: function() {
+			return this.target && this.target.table ? this.target.table.colspan : null;
+		}
+	}
 });

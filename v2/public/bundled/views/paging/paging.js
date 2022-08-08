@@ -60,6 +60,11 @@ Vue.view("page-paging", {
 	methods: {
 		getChildComponents: function() {
 			return [{
+				title: "Menu",
+				name: "paging-menu",
+				description: "The menu that contains the paging buttons",
+				component: "menu"
+			}, {
 				title: "Button",
 				name: "paging-button",
 				description: "The button used for paging",

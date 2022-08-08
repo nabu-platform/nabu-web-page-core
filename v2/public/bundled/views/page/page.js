@@ -576,6 +576,22 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 			}
 		},
+		getParentConfig: function(target) {
+			var path = this.$services.page.getTargetPath(this.page.content, target.id);
+			path.reverse();
+			// the first entry is now the target itself, we want from there onwards
+			for (var i = 1; i < path.length; i++) {
+				if (path[i].renderer) {
+					var renderer = this.$services.page.getRenderer(path[i].renderer);
+					if (renderer.getChildConfig) {
+						var config = renderer.getChildConfig(path[i], target, path);
+						if (config) {
+							return config;
+						}
+					}
+				}
+			}
+		},
 		// this works, but currently we can't get the events correctly
 		getTriggersForCell: function(cell) {
 			var component = this.components[cell.id];
