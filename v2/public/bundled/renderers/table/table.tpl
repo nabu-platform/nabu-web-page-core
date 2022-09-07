@@ -1,12 +1,8 @@
 <template id="renderer-table">
 	<table class="is-table">
-		<thead>
-			<slot name="header"></slot>
-		</thead>
+		<thead><slot name="header"></slot></thead>
 		<slot></slot>
-		<tfoot>
-			<slot name="footer"></slot>
-		</tfoot>
+		<tfoot><slot name="footer"></slot></tfoot>
 	</table>
 </template>
 

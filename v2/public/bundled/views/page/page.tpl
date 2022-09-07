@@ -513,6 +513,31 @@
 						<n-form class="is-variant-floating-labels" key="cell-form">
 							<h2 class="is-h4 is-color-primary-outline is-spacing-medium">Cell Configuration</h2>
 							<p class="is-p is-size-small is-color-light is-spacing-medium">Here you can configure cell settings that are available to all cells in the grid regardless of the content type.</p>
+							<n-collapsible :only-one-open="true" :title="cell.renderer ? $services.page.getRenderer(cell.renderer).title : 'Rendering'" :class="{'is-color-primary-light': cell.renderer}" content-class="is-spacing-medium" class="is-highlight-left">
+								<n-form-combo label="Target slot in renderer" v-if="getSlots(cell)" v-model="cell.rendererSlot" :items="getSlots(cell)"/>
+								
+								<component v-if="getParentConfig(cell)" :is="getParentConfig(cell)"
+									:cell="cell"
+									:row="row"
+									:page="page"/>
+								
+								<n-form-combo label="Cell Renderer" v-if="!cell.alias" v-model="cell.renderer" :items="$services.page.getRenderers('cell')" 
+									after="You can set a custom renderer for this cell"
+									empty-value="No renderers found"
+									:formatter="function(x) { return x.name }" 
+									:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
+									
+								<div v-if="cell.renderer && $services.page.getRendererState(cell.renderer, cell, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
+									<n-form-text v-model="cell.runtimeAlias" label="Runtime alias for renderer state"/>
+									<n-form-switch v-model="cell.retainState" label="Retain state once cell is destroyed" v-if="cell.runtimeAlias"/>
+									<renderer-bindings :target="cell" :page="page"/>
+								</div>
+								<div v-if="cell.renderer && $services.page.getRendererConfiguration(cell.renderer)">
+									<component :is="$services.page.getRendererConfiguration(cell.renderer)" :target="cell" :page="page"/>
+								</div>
+									
+								<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
+							</n-collapsible>
 							<n-collapsible :only-one-open="true" title="Cell Settings" key="cell-settings" content-class="is-spacing-medium">
 								<n-form-combo label="Route" :filter="$services.page.getRoutes" v-model="cell.alias"
 									:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
@@ -543,31 +568,6 @@
 										</div>
 									</div>
 								</div>
-							</n-collapsible>
-							<n-collapsible :only-one-open="true" title="Rendering" content-class="is-spacing-medium" class="is-highlight-left">
-								<n-form-combo label="Target slot in renderer" v-if="getSlots(cell)" v-model="cell.rendererSlot" :items="getSlots(cell)"/>
-								
-								<component v-if="getParentConfig(cell)" :is="getParentConfig(cell)"
-									:cell="cell"
-									:row="row"
-									:page="page"/>
-								
-								<n-form-combo label="Cell Renderer" v-if="!cell.alias" v-model="cell.renderer" :items="$services.page.getRenderers('cell')" 
-									after="You can set a custom renderer for this cell"
-									empty-value="No renderers found"
-									:formatter="function(x) { return x.name }" 
-									:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
-									
-								<div v-if="cell.renderer && $services.page.getRendererState(cell.renderer, cell, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
-									<n-form-text v-model="cell.runtimeAlias" label="Runtime alias for renderer state"/>
-									<n-form-switch v-model="cell.retainState" label="Retain state once cell is destroyed" v-if="cell.runtimeAlias"/>
-									<renderer-bindings :target="cell" :page="page"/>
-								</div>
-								<div v-if="cell.renderer && $services.page.getRendererConfiguration(cell.renderer)">
-									<component :is="$services.page.getRendererConfiguration(cell.renderer)" :target="cell" :page="page"/>
-								</div>
-									
-								<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
 							</n-collapsible>
 							<n-collapsible :only-one-open="true" title="Triggers" key="cell-triggers" class="is-highlight-left" v-if="getTriggersForCell(cell)">
 								<page-triggerable-configure :page="page" :target="cell" :triggers="getTriggersForCell(cell)" :allow-closing="cell.target && cell.target != 'page'"/>
@@ -623,6 +623,19 @@
 					<div v-else-if="activeTab == 'selected' && row && selectedType == 'row'" :key="'page_' + pageInstanceId + '_row_' + row.id + '_configuration'">
 						<n-form class="is-variant-floating-labels" key="cell-form">
 							<h2 class="is-h4 is-color-primary-outline is-spacing-medium">Row Configuration</h2>
+							<n-collapsible :title="row.renderer ? $services.page.getRenderer(row.renderer).title : 'Rendering'" :class="{'is-color-primary-light': row.renderer}">
+								<n-form-combo label="Target slot in renderer" v-if="getSlots(row)" v-model="row.rendererSlot" :items="getSlots(row)"/>
+								
+								<n-form-combo label="Row Renderer" v-model="row.renderer" :items="$services.page.getRenderers('row')"  :formatter="function(x) { return x.title ? x.title : x.name }" :extracter="function(x) { return x.name }"/>
+								<div v-if="row.renderer && $services.page.getRendererState(row.renderer, row, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
+									<n-form-text v-model="row.runtimeAlias" label="Runtime alias for renderer state"/>
+									<n-form-switch v-model="row.retainState" label="Retain state once row is destroyed" v-if="row.runtimeAlias"/>
+									<renderer-bindings :target="row" :page="page"/>	
+								</div>
+								<div v-if="row.renderer && $services.page.getRendererConfiguration(row.renderer)">
+									<component :is="$services.page.getRendererConfiguration(row.renderer)" :target="row" :page="page"/>
+								</div>
+							</n-collapsible>
 							<n-collapsible title="Row Settings" content-class="is-spacing-medium">
 								<n-form-text label="Row Name" v-model="row.name" info="A descriptive name" :timeout="600"/>
 								<h2>Rendering<span class="subscript">Choose how this row will be rendered</span></h2>
@@ -641,19 +654,6 @@
 											<button class="is-button is-variant-close" @click="row.devices.splice(row.devices.indexOf(device), 1)"><icon name="times"/></button>
 										</div>
 									</div>
-								</div>
-							</n-collapsible>
-							<n-collapsible title="Rendering">
-								<n-form-combo label="Target slot in renderer" v-if="getSlots(row)" v-model="row.rendererSlot" :items="getSlots(row)"/>
-								
-								<n-form-combo label="Row Renderer" v-model="row.renderer" :items="$services.page.getRenderers('row')"  :formatter="function(x) { return x.title ? x.title : x.name }" :extracter="function(x) { return x.name }"/>
-								<div v-if="row.renderer && $services.page.getRendererState(row.renderer, row, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
-									<n-form-text v-model="row.runtimeAlias" label="Runtime alias for renderer state"/>
-									<n-form-switch v-model="row.retainState" label="Retain state once row is destroyed" v-if="row.runtimeAlias"/>
-									<renderer-bindings :target="row" :page="page"/>	
-								</div>
-								<div v-if="row.renderer && $services.page.getRendererConfiguration(row.renderer)">
-									<component :is="$services.page.getRendererConfiguration(row.renderer)" :target="row" :page="page"/>
 								</div>
 							</n-collapsible>
 							<n-collapsible title="Eventing" content-class="is-spacing-medium">
@@ -753,6 +753,11 @@
 						@click.meta="goto($event, row, cell)"
 						@click.alt.prevent="pasteArisStyling($event, cell)"
 						@contextmenu.prevent.alt="copyArisStyling($event, cell)"
+						@click.native="clickOnCell(row, cell)"
+						@click.ctrl.native="goto($event, row, cell)"
+						@click.meta.native="goto($event, row, cell)"
+						@click.alt.prevent.native="pasteArisStyling($event, cell)"
+						@contextmenu.prevent.alt.native="copyArisStyling($event, cell)"
 						@mouseout="mouseOut($event, row, cell)"
 						@mouseover="mouseOver($event, row, cell)"
 						@dragend="$services.page.clearDrag($event)"
@@ -1072,7 +1077,7 @@
 <template id="page-sidemenu">
 	<div class="is-column is-pattern-basic-alternating">
 		<div v-for="row in rows" class="is-column is-spacing-small is-spacing-horizontal-right-none is-spacing-vertical-gap-small" :class="{'is-selected': selected && selected.id == row.id}">
-			<div class="is-row">
+			<div class="is-row" :class="{'is-color-primary-outline':row.renderer}">
 				<div @mouseout="mouseOut($event, row)"
 						@dragover="acceptDragRow($event, row)"
 						@dragend="$services.page.clearDrag($event)"
@@ -1090,7 +1095,7 @@
 						@dragstart="dragRow($event, row)"
 						:draggable="true" 
 						v-else
-						@click.ctrl="scrollIntoView(row)">{{row.name ? row.name : ($services.page.getRenderer(row.renderer) ? $services.page.getRenderer(row.renderer).title : row.id)}}</span>
+						@click.ctrl="scrollIntoView(row)">{{formatPageItem(row)}}</span>
 				</div>
 				<ul class="is-menu is-variant-toolbar is-position-right is-spacing-horizontal-right-small">
 					<li class="is-column" v-if="$services.page.useAris"><button class="is-button is-variant-warning-outline is-size-xsmall has-tooltip" @click="rotate(row)"><icon name="undo"/><span class="is-tooltip is-position-bottom">Rotate row</span></button></li>
@@ -1106,7 +1111,7 @@
 			</div>
 			<div v-show="row.cells && row.cells.length && opened.indexOf(row.id) >= 0" class="is-column is-pattern-basic-alternating">
 				<div v-for="cell in row.cells" class="is-column is-spacing-small is-sidemenu-cell is-spacing-horizontal-right-none" :class="{'is-selected': selected && selected.id == cell.id}">
-					<div class="is-row">
+					<div class="is-row" :class="{'is-color-primary-outline':cell.renderer}">
 						<div class="page-sideentry" @mouseout="mouseOut($event, row, cell)" 
 								:key="'sidemenu-' + row.id + '_' + cell.id"
 								@dragend="$services.page.clearDrag($event)"
@@ -1140,14 +1145,14 @@
 								@keydown.escape="function() { aliasing = null; requestFocusCell(cell) }" 
 								@input="$services.page.slowNormalizeAris(page, cell)"/>
 							<span v-if="editing != cell.id && aliasing != cell.id" class="is-content is-size-xsmall is-position-cross-center" @click="selectCell(row, cell)" 
-								>{{cell.name ? cell.name : (cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : ($services.page.getRenderer(cell.renderer) ? $services.page.getRenderer(cell.renderer).title : cell.id))}}</span>
+								>{{formatPageItem(cell)}}</span>
 							<button class="is-button is-size-xxsmall is-variant-ghost is-position-cross-center" @click="function() { aliasing = null; editing = cell.id }" v-if="false && aliasing != cell.id && editing != cell.id"><icon name="pencil-alt"/></button>
 						</div>
 						<ul class="is-menu is-variant-toolbar is-position-right is-spacing-horizontal-right-small">
 							<li class="is-column"><button class="is-button is-variant-warning-outline is-size-xsmall has-tooltip" @click="wrapCell(row, cell)"><icon name="chevron-circle-right"/><span class="is-tooltip is-position-bottom">Wrap cell</span></button></li>
 							<li class="is-column"><button class="is-button is-color-secondary-outline is-size-xsmall has-tooltip" @click="left(row, cell)" v-if="row.cells.length >= 2"><icon name="chevron-circle-up"/></button></li>
 							<li class="is-column"><button class="is-button is-color-secondary-outline is-size-xsmall has-tooltip" @click="right(row, cell)" v-if="row.cells.length >= 2"><icon name="chevron-circle-down"/></button></li>
-							<li class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall has-tooltip" @click="addRow(cell)"><icon name="plus"/><span class="is-tooltip">Add Row</span></button></li>
+							<li class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall has-tooltip" @click="addRow(cell)" :disabled="cell.alias"><icon name="plus"/><span class="is-tooltip">Add Row</span></button></li>
 							<li class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall has-tooltip" @click="copyCell(cell)"><icon name="copy"/><span class="is-tooltip">Copy Cell</span></button></li>
 							<li class="is-column"><button class="is-button is-color-warning is-size-xsmall has-tooltip" @click="pasteRow(cell)" v-if="$services.page.copiedRow"><icon name="paste"/><span class="is-tooltip">Paste Row</span></button></li>
 							<li class="is-column" v-if="false && hasConfigure(cell)"><button class="is-button is-color-primary-outline is-size-xsmall has-tooltip" @click="configure(cell)"><icon name="cog"/><icon name="paste"/><span class="is-tooltip">Configure></span></button></li>

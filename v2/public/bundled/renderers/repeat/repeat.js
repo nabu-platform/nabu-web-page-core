@@ -19,6 +19,11 @@
 // we don't need to specifically define the events
 // if you define an event inside a repeat (e.g. a button), it will already exist in the page and be known
 // all we need to do is make sure we shuttle the events from our page fragments to this page
+
+
+// TO BE CHECKED: if we expose all the operation parameters as a filter
+// and you can bind to the state
+// why do we need operation binding? do we need it? it seems redundant
 nabu.page.provide("page-renderer", {
 	title: "Repeat",
 	name: "repeat",
@@ -185,6 +190,7 @@ Vue.component("renderer-repeat", {
 	},
 	data: function() {
 		return {
+			created: false,
 			loadCounter: 0,
 			// the instance counter is used to manage our pages on the router
 			instanceCounter: $$rendererInstanceCounter++,
@@ -219,11 +225,22 @@ Vue.component("renderer-repeat", {
 		// the parameters that we pass in contain the bound values
 		var self = this;
 		var blacklist = ["records", "paging"];
+		
+		// the problem is, we want to do an initial load always
+		// however, by the act of modifying the state if you have bindings, we trigger the watcher for state.filter which will also do a reload
+		// so we want behavior that if we don't do any state mappings, we do an initial load
+		// if a filter change comes in because of initial mapping, we ignore it
+		var stateModified = false;
 		Object.keys(this.parameters).forEach(function(key) {
 			if (blacklist.indexOf(key) < 0 && self.parameters[key] != null) {
 				Vue.set(self.state, key, self.parameters[key]);
+				stateModified = true;
 			}
 		});
+		
+		if (!stateModified) {
+			this.created = true;
+		}
 		
 		this.loadPage();
 		
@@ -255,19 +272,20 @@ Vue.component("renderer-repeat", {
 		}
 	},
 	watch: {
+		// we don't want to watch paging, it is the output
+		// TODO: we want to add a new field that serves as input to manipulate the limit!
 		operationParameters: function() {
 			this.loadData();	
-		},
-		"state.paging": {
-			deep: true,
-			handler: function(newValue) {
-				this.loadData();
-			}
 		},
 		"state.filter": {
 			deep: true,
 			handler: function(newValue) {
-				this.loadData();
+				if (this.created) {
+					this.loadData();
+				}
+				else {
+					this.created = true;
+				}
 			}
 		}
 	},
@@ -511,6 +529,9 @@ Vue.component("renderer-repeat", {
 				}
 				
 				this.loading = true;
+				if (!append) {
+					self.state.records.splice(0);
+				}
 				return this.$services.swagger.execute(this.target.repeat.operation, parameters).then(function(list) {
 					if (!append) {
 						self.state.records.splice(0);

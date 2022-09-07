@@ -4254,6 +4254,11 @@ Vue.component("page-sidemenu", {
 		}	
 	},
 	methods: {
+		formatPageItem: function(target) {
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			return this.$services.page.formatPageItem(pageInstance, target);
+		},
 		requestFocusCell: function(cell) {
 			if (this.$refs["cell_" + cell.id] && this.$refs["cell_" + cell.id].length) {
 				this.$refs["cell_" + cell.id][0].focus();

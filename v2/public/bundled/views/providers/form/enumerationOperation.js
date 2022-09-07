@@ -76,6 +76,11 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 		}
 	},
 	methods: {
+		searchPossible: function(value) {
+			return this.possibleFields.filter(function(x) {
+				return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+			});
+		},
 		enumerationFilter: function(value) {
 			var providers = nabu.page.providers("page-enumerate").map(function(x) { return x.name });
 			if (value) {
@@ -194,7 +199,7 @@ Vue.component("page-form-input-enumeration-operation", {
 			+ "<n-form-combo v-else ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter' :resolver='enumerationResolver'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
-			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		@input=\"function(newValue, label, rawValue, selectedLabel) { $emit('input', newValue, label, rawValue, selectedLabel) }\""
 			+ "		v-bubble:label"
 			+ "		:timeout='600'"
 			+ "		v-bubble:blur"

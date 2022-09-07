@@ -1,5 +1,6 @@
 <template id="typography-template">
 	<component :is="tag" class="is-content is-typography" :class="['is-' + tag, getChildComponentClasses('typography')]">
+		<slot name="before"></slot>
 		<img :src="cell.state.icon.indexOf('http') == 0 ? cell.state.icon : '${server.root()}resources/' + cell.state.icon" v-if="cell.state.icon && cell.state.icon.match(/^.*\.[^.]+$/)" class="is-icon"/>
 		<icon :name="cell.state.icon" v-if="cell.state.icon"/>
 		<span class="is-inline-editor" v-if="false && edit && !cell.state.highlight" :contenteditable="true"
@@ -9,6 +10,7 @@
 		<n-form-text type="area" v-else-if="edit && cell.state.highlight" v-model="cell.state.content"/>
 		<span class="is-text" v-else-if="cell.state.content" 
 			v-html="cell.state.highlight ? highlight(getContentWithVariables($services.page.translate($services.page.interpret(cell.state.content, $self)))) : getContentWithVariables($services.page.translate($services.page.interpret(cell.state.content, $self)))"></span>
+		<slot name="after"></slot>
 	</component>
 </template>
 

@@ -52,12 +52,12 @@
 
 
 <template id="page-components-selector">
-	<div class="is-column is-spacing-medium">
+	<div class="is-column is-spacing-large is-color-background">
 		<h2 class="is-h2">Select Component</h2>
 		<div class="is-column is-pattern-underline">
 			<div class="is-row is-height-min-4 is-spacing-medium is-cursor-pointer is-highlight-light" v-for="component in components" @click="$resolve(component)">
-				<img :src="'${server.root()}resources/' + component.icon" class="component-icon" v-if="component.icon"
-					class="is-image is-ratio-square is-width-min-2"/>
+				<img :draggable="false" :src="'${server.root()}resources/' + component.icon" class="is-image is-ratio-square is-width-min-2" v-if="component.icon && component.icon.match(/^.*\.[^.]+$/)"/>
+				<icon v-else-if="component.icon" :name="component.icon" class="is-column is-width-column-1"/>
 				<div class="about">
 					<h4 class="is-h4">{{ component.name }}</h4>
 					<p class="is-p is-size-small" v-if="component.description">{{ component.description }}</p>

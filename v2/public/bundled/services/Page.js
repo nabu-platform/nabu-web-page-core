@@ -1,3 +1,6 @@
+// TODO the page.content.properties don't seem to serve a function currently
+// i _think_ the idea was to use it as <meta> tags in the header when the page is routed
+
 if (!nabu) { var nabu = {} };
 if (!nabu.page) { nabu.page = {}}
 
@@ -914,7 +917,28 @@ nabu.services.VueService(Vue.extend({
 				
 			}
 		},
-		
+		// format a row or cell for human consumption
+		formatPageItem: function(pageInstance, target) {
+			var component = target.id != null ? pageInstance.getComponentForCell(target.id) : null; 
+			// if you explicitly gave it a name, use that
+			if (target.name) {
+				return target.name;
+			}
+			// if we can somehow calculate a name for this specific instance, it would be better than other alternatives
+			else if (target.id && component != null && component.getPrettyName != null && component.getPrettyName(target) != null) {
+				return component.getPrettyName(target);
+			}
+			// if you have routed content, use a prettified version of the alias
+			else if (target.alias) {
+				return this.prettifyRouteAlias(target.alias);
+			}
+			// if you have a renderer, use that
+			else if (target.renderer && this.getRenderer(target.renderer)) {
+				return this.getRenderer(target.renderer).title;
+			}
+			// if all else fails, we use the id
+			return target.id;
+		},
 		getCellComponents: function(page, cell) {
 			var components = [];
 			// we _do_ want the default cell component at this point
@@ -1281,7 +1305,7 @@ nabu.services.VueService(Vue.extend({
 				var promises = [];
 				if (self.canEdit()) {
 					if (self.useAris) {
-						promises.push(nabu.utils.ajax({url: "${server.root()}page/v1/api/aris-definitions"}).then(function(response) {
+						promises.push(nabu.utils.ajax({url: "${server.root()}page/v2/api/aris-definitions"}).then(function(response) {
 							self.aris = {};
 							JSON.parse(response.responseText).forEach(function(component) {
 								self.aris[component.name] = component;
@@ -1709,7 +1733,7 @@ nabu.services.VueService(Vue.extend({
 			this.reloadSwagger();
 			var self = this;
 			if (!self.disableReload) {
-				nabu.utils.ajax({url:"${server.root()}page/v1/api/css-modified"}).then(function(response) {
+				nabu.utils.ajax({url:"${server.root()}page/v2/api/css-modified"}).then(function(response) {
 					if (response.responseText != null && !self.disableReload) {
 						var date = new Date(response.responseText);
 						if (!self.cssLastModified) {

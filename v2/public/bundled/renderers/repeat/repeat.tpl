@@ -40,7 +40,7 @@
 		<n-form-switch v-model="target.repeat.enableDrag" label="Enable dragging"/>
 		<n-form-text v-model="target.repeat.dragName" label="Drag source name" v-if="target.repeat.enableDrag" placeholder="default"/>
 			
-		<n-page-mapper v-if="target.repeat.operation && operationParameters.length > 0 && Object.keys($services.page.getPageParameters(page)).length" 
+		<n-page-mapper v-if="false && target.repeat.operation && operationParameters.length > 0 && Object.keys($services.page.getPageParameters(page)).length" 
 			:to="operationParameters"
 			:from="{page:$services.page.getPageParameters(page)}" 
 			v-model="target.repeat.bindings"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <webModule>
-    <path>/page/v1/api</path>
+    <path>/page/v2/api</path>
     <webFragments>nabu.web.page.core.rest.page.update</webFragments>
     <webFragments>nabu.web.page.core.rest.page.delete</webFragments>
     <webFragments>nabu.web.page.core.rest.configuration.get</webFragments>

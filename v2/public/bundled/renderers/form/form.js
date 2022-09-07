@@ -122,7 +122,8 @@ Vue.component("renderer-form", {
 		var self = this;
 		if (this.parameters) {
 			Object.keys(this.parameters).forEach(function(key) {
-				Vue.set(self.state, key, self.parameters[key]);
+				Vue.set(self.state, key, !self.target.form.bindingByReference ? JSON.parse(JSON.stringify(self.parameters[key])) : self.parameters[key]);
+				//Vue.set(self.state, key, self.parameters[key]);
 			});
 		}
 		if (this.target.form && this.target.form.noInlineErrors) {
@@ -236,7 +237,7 @@ Vue.component("renderer-form", {
 			else if (this.target.form.function && this.target.form.formType == "function") {
 				var func = this.$services.page.getRunnableFunction(this.target.form.function);
 				if (!func) {
-					throw "Could not find function: " + action.function; 
+					throw "Could not find function: " + this.target.form.function; 
 				}
 				var promise = this.$services.q.defer();
 				var result = this.$services.page.runFunction(func, this.state, this, promise);

@@ -574,7 +574,7 @@ window.addEventListener("load", function() {
 		nabu.page.provide("page-generator", {
 			name: "Table",
 			description: "Generate a table",
-			icon: "table",
+			icon: "th",
 			accept: function(type, content) {
 				return type == "operation" && application.services.page.getArrayOperations().filter(function(x){
 					return x.id == content;
@@ -649,7 +649,7 @@ window.addEventListener("load", function() {
 				}
 				
 				if (availableTemplates.length == 0) {
-					nabu.utils.vue.confirm({message:"There are no applicable form templates available, add at least one to generate a form"});
+					nabu.utils.vue.confirm({message:"There are no applicable table templates available, add at least one to generate a table"});
 					return;
 				}
 				// just apply it
@@ -657,7 +657,12 @@ window.addEventListener("load", function() {
 					applyTemplate(availableTemplates[0]);
 				}
 				else {
-					nabu.utils.vue.prompt("page-components-selector", {components: availableTemplates }).then(function(chosen) {
+					var selector = Vue.component("page-components-selector");
+					nabu.utils.vue.prompt(function() {
+						return new selector({propsData: {
+							components: availableTemplates
+						}});
+					}).then(function(chosen) {
 						applyTemplate(chosen);
 					});
 				}
@@ -1130,7 +1135,12 @@ window.addEventListener("load", function() {
 					applyTemplate(availableTemplates[0]);
 				}
 				else {
-					nabu.utils.vue.confirm("page-components-selector", {components: availableTemplates }).then(function(chosen) {
+					var selector = Vue.component("page-components-selector");
+					nabu.utils.vue.prompt(function() {
+						return new selector({propsData: {
+							components: availableTemplates
+						}});
+					}).then(function(chosen) {
 						applyTemplate(chosen);
 					});
 				}

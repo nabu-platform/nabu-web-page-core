@@ -87,12 +87,16 @@ Vue.service("triggerable", {
 			}) : [];
 			
 			var promises = triggers.map(function(x) {
+				var state = {};
+				
+				// TODO: don't pre-filter actions, but instead filter them as we go further into the pipeline
+				// if we then pass in the "state" (rather than the value), we can evaluate to the local pipeline state
+				
 				var actions = x.actions.filter(function(y) {
 					return !y.condition || self.$services.page.isCondition(y.condition, value, instance);
 				});
 				
 				// local state we have built up, we can get variables from there
-				var state = {};
 				
 				// we start a new promise for the full trigger
 				var triggerPromise = self.$services.q.defer();
@@ -281,6 +285,15 @@ Vue.service("triggerable", {
 							else {
 								return self.$services.q.resolve(result);
 							}
+						}
+						else if (action.type == "function" && action.function) {
+							var func = self.$services.page.getRunnableFunction(action.function);
+							if (!func) {
+								throw "Could not find function: " + action.function; 
+							}
+							var promise = self.$services.q.defer();
+							var result = self.$services.page.runFunction(func, getBindings(), self, promise);
+							return promise;
 						}
 					};
 					

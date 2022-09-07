@@ -514,6 +514,15 @@
 					"url": "renderers/form/form.tpl"
 				}
 			},
+			"collapsible": {
+				"collapsible.js": {
+					"url": "renderers/collapsible/collapsible.js",
+					"template": true
+				},
+				"collapsible.tpl": {
+					"url": "renderers/collapsible/collapsible.tpl"
+				}
+			},
 			"menu": {
 				"menu.js": {
 					"url": "renderers/menu/menu.js"
