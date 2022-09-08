@@ -268,6 +268,55 @@ Vue.service("triggerable", {
 								}
 							});
 						}
+						else if (action.type == "download" && action.operation) {
+							var operation = self.$services.swagger.operations[action.operation];
+							if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
+								var parameters = getBindings();
+								if (action.anchor != "$window") {
+									self.$services.page.download(self.$services.swagger.parameters(action.operation, parameters).url, function() {
+										// download failed, but there is no equivalent for when it is successful, hard to put it in a promise
+									});
+								}
+								else {
+									window.location = self.$services.swagger.parameters(action.operation, parameters).url;
+								}
+							}
+							else if (operation["x-downloadable"] == "true") {
+								var contentType = null;
+								if (action.downloadAs == "excel") {
+									contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+								}
+								else if (action.downloadAs == "csv") {
+									contentType = "text/csv";
+								}
+								else if (action.downloadAs == "json") {
+									contentType = "application/json";
+								}
+								else if (action.downloadAs == "xml") {
+									contentType = "application/xml";
+								}
+								var parameters = getBindings();
+								var url = self.$services.swagger.parameters(action.operation, parameters).url;
+								var separator = url.indexOf("?") < 0 ? "?" : "&";
+								if (contentType != null) {
+									url += separator + "header:Accept=" + contentType;
+									separator = "&";
+								}
+								url += separator + "header:Accept-Content-Disposition=attachment";
+								if (action.fileName) {
+									url += ";fileName=" + self.$services.page.interpret(action.fileName, instance);
+								}
+								if (action.anchor != "$window") {
+									self.$services.page.download(url, function() {
+										// nothing yet
+									});
+								}
+								else {
+									window.location = url;
+								}
+							}
+							return self.$services.q.resolve();
+						}
 						else if (action.type == "javascript" && action.javascript) {
 							var script = action.javascript;
 							// if we don't wrap it in a function, it might only execute the first line
@@ -293,6 +342,11 @@ Vue.service("triggerable", {
 							}
 							var promise = self.$services.q.defer();
 							var result = self.$services.page.runFunction(func, getBindings(), self, promise);
+							return promise;
+						}
+						else if (action.type == "confirmation" && action.confirmation) {
+							var promise = self.$services.q.defer();
+							self.$confirm({message:self.$services.page.translate(self.$services.page.interpret(action.confirmation, instance))}).then(promise, promise);
 							return promise;
 						}
 					};
@@ -454,6 +508,10 @@ Vue.component("page-triggerable-configure", {
 			types.push({
 				title: "Call a function",
 				name: "function"
+			});
+			types.push({
+				title: "Ask for confirmation",
+				name: "confirmation"
 			});
 			return types;
 		}

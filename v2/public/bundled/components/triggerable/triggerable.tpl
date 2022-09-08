@@ -121,6 +121,10 @@
 						<n-form-ace v-model="action.javascript" label="Javascript to execute"/>	
 					</div>
 					
+					<div v-else-if="action.type == 'confirmation'">
+						<n-form-text v-model="action.confirmation" label="Confirmation message"/>
+					</div>
+					
 					<div v-else-if="action.type == 'operation'">
 						<n-form-combo :key="'operation' + page.content.actions.indexOf(action)" 
 							:formatter="function(x) { return x.id }"
@@ -133,6 +137,24 @@
 							
 						<n-form-text v-model="action.resultName" label="Local variable name of the operation output" v-if="action.operation && $window.Object.keys($services.page.getSwaggerOperationOutputDefinition(action.operation)).length > 0"
 							after="You can capture the output of this service to use in further actions"/>
+					</div>
+					
+					<div v-else-if="action.type == 'download'">
+						<n-form-combo :key="'operation' + page.content.actions.indexOf(action)" 
+							:formatter="function(x) { return x.id }"
+							:extracter="function(x) { return x.id }"
+							v-model="action.operation" label="Operation" :filter="$services.page.getDownloadOperations" />
+						
+						<n-form-text label="File name" v-model="action.fileName"/>
+						
+						<n-page-mapper v-if="action.operation" :to="$services.page.getSimpleKeysFor($services.page.getSwaggerOperationInputDefinition(action.operation), true)"
+							:from="getAvailableParameters(trigger, action)" 
+							v-model="action.bindings"/>
+							
+						<n-form-combo v-if="action.operation && $services.swagger.operations[action.operation]['x-downloadable'] == 'true'"
+							label="Download as"
+							v-model="action.downloadAs"
+							:items="['excel', 'csv', 'json', 'xml']"/>
 					</div>
 					
 					<div v-else-if="action.type == 'function'">

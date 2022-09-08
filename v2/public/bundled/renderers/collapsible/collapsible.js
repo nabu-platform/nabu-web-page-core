@@ -59,6 +59,14 @@ Vue.component("page-collapsible", {
 			toggleable: true
 		}
 	},
+	computed: {
+		iconOpen: function() {
+			return this.target.collapsible && this.target.collapsible.iconOpen ? this.target.collapsible.iconOpen  : 'chevron-up';
+		},
+		iconClosed: function() {
+			return this.target.collapsible && this.target.collapsible.iconClosed ? this.target.collapsible.iconClosed  : 'chevron-down';
+		}
+	},
 	created: function() {
 		if (this.target.collapsible.startOpen) {
 			this.show = true;
