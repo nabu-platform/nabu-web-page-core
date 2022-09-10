@@ -1085,7 +1085,7 @@
 						@mouseover="mouseOver($event, row)" 
 						@keydown.f2.prevent="function() { editing = null; aliasing = row.id }"
 						class="is-row is-fill-normal"
-						tabindex="0">
+						tabindex="-10">
 					<button class="is-button is-variant-ghost is-size-xsmall" @click="toggleRow(row)"><icon :name="opened.indexOf(row.id) >= 0 ? 'chevron-down' : 'chevron-right'"/></button>
 					<n-form-text v-if="aliasing == row.id" v-model="row.name" class="is-variant-inline is-size-xsmall" :placeholder="row.name ? row.name : ($services.page.getRenderer(row.renderer) ? $services.page.getRenderer(row.renderer).title : (row.class ? row.class : row.id))" :autofocus="true"
 						:commit="true"
@@ -1129,7 +1129,7 @@
 								@keydown.ctrl.up="left(row, cell)"
 								@keydown.ctrl.down="right(row, cell)"
 								:ref="'cell_' + cell.id"
-								tabindex="0">
+								tabindex="-10">
 							<icon name="cube" class="is-size-xsmall is-position-cross-center" @click.native="function() { editing = null; aliasing = aliasing == cell.id ? null : cell.id }" v-if="false"/>
 							<icon name="cube" class="is-size-xsmall is-position-cross-center" />
 							<n-form-text v-if="editing == cell.id" v-model="cell.name" class="is-variant-inline is-size-xsmall" :placeholder="cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : cell.id" :autofocus="true"

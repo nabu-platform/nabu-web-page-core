@@ -1,1 +1,8 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?><node artifactManager="be.nabu.eai.module.services.iface.ServiceInterfaceManager" created="2018-10-09T14:58:22.230+02:00" lastModified="2018-10-09T15:18:34.419+02:00" leaf="true" version="10"><environmentId>hyperion</environmentId><hidden>false</hidden><properties/><references>java.lang.String</references><references>nabu.web.page.core.rest.configuration.content</references></node>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<node artifactManager="be.nabu.eai.module.services.iface.ServiceInterfaceManager" created="2018-10-09T14:58:22.230+02:00" deprecated="2022-09-10T10:22:45.567+02:00" lastModified="2018-10-09T15:18:34.419+02:00" leaf="true" version="10">
+    <environmentId>hyperion</environmentId>
+    <hidden>false</hidden>
+    <properties/>
+    <references>java.lang.String</references>
+    <references>nabu.web.page.core.rest.configuration.content</references>
+</node>
