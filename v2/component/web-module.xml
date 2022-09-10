@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<webModule>
+    <path>/page/v2/api</path>
+    <webFragments>nabu.web.page.core.rest.page.update</webFragments>
+    <webFragments>nabu.web.page.core.rest.page.delete</webFragments>
+    <webFragments>nabu.web.page.core.v2.rest.configuration.get</webFragments>
+    <webFragments>nabu.web.page.core.rest.configuration.update</webFragments>
+    <webFragments>nabu.web.page.core.rest.resource.create</webFragments>
+    <webFragments>nabu.web.page.core.rest.resource.list</webFragments>
+    <webFragments>nabu.web.page.core.rest.feature.get</webFragments>
+    <webFragments>nabu.web.page.core.rest.templates.list</webFragments>
+    <webFragments>nabu.web.page.core.v2.rest.aris.variant.update</webFragments>
+</webModule>

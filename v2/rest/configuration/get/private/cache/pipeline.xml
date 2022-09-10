@@ -1,0 +1,7 @@
+<structure interface="nabu.web.page.core.v2.rest.configuration.get:implementation" name="pipeline">
+    <structure name="input"/>
+    <structure name="output"/>
+    <field name="etag" type="java.lang.String"/>
+    <field minOccurs="0" name="lastModified" type="java.util.Date"/>
+    <field minOccurs="0" name="featuresLastModified" type="java.util.Date"/>
+</structure>

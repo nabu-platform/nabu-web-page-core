@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<node artifactManager="be.nabu.eai.module.services.vm.VMServiceManager" created="2020-06-26T08:27:54.125+02:00" lastModified="2022-09-10T13:31:35.828+02:00" leaf="true" version="26">
+    <environmentId>apollo</environmentId>
+    <hidden>false</hidden>
+    <properties/>
+    <references>nabu.web.page.core.types.configuration</references>
+    <references>nabu.utils.List.add</references>
+    <references>java.util.Date</references>
+    <references>nabu.web.page.core.types.rest.configuration</references>
+    <references>nabu.web.page.core.types.environmentConfiguration</references>
+    <references>nabu.web.page.core.types.rest.page</references>
+    <references>java.lang.Integer</references>
+    <references>nabu.utils.Resource.list</references>
+    <references>nabu.web.page.core.services.getLastModifiedPage</references>
+    <references>nabu.web.application.Services.configuration</references>
+    <references>nabu.utils.String.replace</references>
+    <references>nabu.web.page.core.types.translation</references>
+    <references>java.lang.String</references>
+    <references>nabu.utils.Resource.read</references>
+    <references>be.nabu.libs.resources.api.ResourceProperties</references>
+</node>

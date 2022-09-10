@@ -1,67 +1,137 @@
-# Templates
+# Changes
 
-During template design, the question was:
+## Globalized state
 
-- do we want template "instances" to keep a "live" link to the original template? This means if we update the original template, all instances immediately reflect the changes
-- do we want to copy the full template, allowing fully custom local modifications. updating the template instance is a manual process
-- 
-The decision was made to make full copies of the templates because it aligns with the nabu philosophy of stability.
-Messing with templates should not automatically update potentially ancient applications simply because they have a reference. This might break (too far) down the line before it is noticed.
+Instead of state being encapsulated in components (e.g. data.js, form engine,...) everything is exposed at the global level.
+This allows you to for instance modify directly the state of a form or read from it.
 
-However, once a template is updated, having to revisit every single instance and pressing "update" is equally annoying, so instead we offer batch modification. You can view (per template that is used in your project) which pages are using them and how up to date they are. You can then do batch updates if you want.
-The key factor is that it is a conscious decision to update to the latest template.
+## Component decapsulation
 
-## Versions
+In v1, there were a number of "large" components that encapsulated a lot of logic. for instance a data.js component did filtering, paging, data management, titles, buttons,... they were "easy" to use but inflexible to create truly arbitrary applications. The component page-arbitrary tried to add some flexibility but was not always predictable state-wise and had other issues.
 
-Templates have versions, you might spend weeks tweaking a particular template before you decide that it is ready for further use. At that point you can "release" it and other instances of the template will be able to update to the new template.
+Data cards with embedded pages was the "default" go-to to create lists.
 
-We need to be able to tinker with a template without interrupting people working with them.
-We do need to keep a copy of the last stable version, we should do this in the root of the template. On dragging, we check for a "stable" version and drag that if possible.
+For instance creating complex filters for data objects was very hard without just writing a dedicated solution. Complex wizards used a combination of multiple forms on a single page together with (eternally buggy) page-based forms.
+Tables were very limited in how headers were set up (colspans, filters in headers,...) and things like an additional footer with a "total" for invoices etc.
+Adding complex content (inline graphs etc) was done with page arbitrary which again had other issues.
+Accessing state from the table (or any data component) had to be done with events. Etc.
 
-Additionally it needs to be visible that a template has changed with regards to its last "stable" release so you know when there are pending changes.
+If you want a subtitle on your data component...tough luck.
+If you wanted more variable layout for your page actions, you had to combine multiple page actions.
 
-## Copies
+CSS could be used to "fix" a number of these issues, but sometimes even that was not enough.
 
-A template should be able to deal with the fact that parts of it are duplicated. For instance if your template contains one button, an instance of the template might duplicate that button. Both buttons (unless set up differently) should be in sync with that master button.
-This is done by having every cell/row of a template instance reference its counterpart in the master. If you then choose to copy such a "linked" instance, the new instance is also linked. 
+Additionally in v1, because you had a smaller number of "large" components, they had equally large configuration, requiring you to sometimes dig deep into a configuration subset to find a particular thing.
 
-We can visually stress this.
-This also makes it easy to "decouple" from the master template if you want by simply removing the reference.
+In v2, all these concerns are split up, for example the form "engine" no longer has a "submit" button, instead you can add it however and wherever you want.
+The data js component no longer provides filtering out of the box nor tagging or paging. These are all separate components now that can be plugged in in any combination that is needed.
 
-## Renumbering
+This allows you to use the full power of the grid-based page builder to build your solution, rather than trying to shoehorn an existing component into a particular layout with very aggressive css (and even then sometimes failing).
 
-Template instances are renumbered to match the page they are inserted into. However, some components (e.g. button) reference other components by their cell id.
-This requires a new specification where components can hook into the renumbering process and update any state as needed.
+This does mean building the end result will require more components, but generators and templates can be used to automate common usecases.
 
-## Uniqueness
+## Renderers
 
-A template has to be uniquely identifiable.
-Every cell and row already has an id that is unique within a page. Combine that with the page name which is required to be unique and you have a good identifier.
+There are still concerns that need to be managed cross component. For instance if you have a form that should call an operation, you want to collect all the state into a single resultset that can be sent in one go to the backend.
+But on the other hand, you want to use the full power of page builder to layout your form however you wish.
 
-However, this does limit "movability" of the templates because if you were to copy paste your template to another page, it would be renumbered _and_ belong to another page.
-We could add another identifier to the template (e.g. a unique name) and have its own numbering system independent of the cell numbering etc but that boils down to reinventing the wheel.
+In v1, there was already the concept of a "renderer" where you could choose to render your row or cell with something else than a plain "div". This can for instance be used to implement foundation emails by switching out the divs with tables.
+It was also used in a testcase for an image slider where a row renderer would cycle through the cells rather than display them all.
 
-Currently we will reuse the system of pages+ids, if you want to keep your templates mobile, I suggest wrapping them in their own page rather than combining multiple templates on a single page.
+But in the end, the renderers in v1 were barely used and underpowered.
 
-## Showcase
+In v2 we have taken this concept and taken it to the next level. Renderers can be set on rows and cells and within them you can use the full power of page builder to build more rows and cells to get exactly the layout you want.
+The renderer can then do whatever it wants to actually visualize this grid.
 
-To enable you to create a good showcase for your template, you might want to add content that is not actually part of the template.
-Anything inside the template is considered a part unless you specifically check that it is not a part of it. Anything inside something that is not a part of a template can not be made part of the template.
-You could theoretically nest templates this way, not sure if that's a good idea.
+For example the repeat renderer will display the same content multiple times with different state.
+The form renderer is more lightweight from a frontend perspective and simply wraps a "<form>" tag around everything else. But on the javascript side of things, it does a ton more like state management.
 
-## Properties
+## Actions
 
-The root of the template is marked with "isTemplate: true"
-Any part of the hierarchy that is specifically not a part of the template has "excludeFromTemplate: true"
+In v1, everything was coupled together via events. If a button wanted to trigger a REST call, it had to emit an event and a page trigger would subscribe to it to do the REST call.
+While events are a good tool for 1-* subscriptions, they make it harder to understand 1-1 interactions which are more often used.
 
+In v2, components can expose "actions". This allows a button for instance to call a "submit" action on a form. Together with the globalized state, this exposes components in a way that was not possible in v1.
+For example a form might expose a "submit" action. A button can then be added to the page that simply calls that submit action directly on the form component. This bypasses events completely.
 
-TODO:
-- when you release a template, you need to refresh for page builder to pick it up, should add logic to immediately update the available templates
-- be able to update to the latest version of the template, this should copy over the aris styling for all elements and add "new" elements. it should not remove elements that no longer exist but they should be updated to reflect that they are no longer part of the template
-	not entirely sure if we want to automatically move parts of the template
+## Specifications
 
-possilibities:
-- visually mark in the tree when a cell/row is linked to a template (use the ref)
-- would be cool to "relink" to part of a template, but this might be hard
-- you want templates to be usable with the automated operation drag/drop system
-	-> maybe you can mark an empty cell/row as receiving a certain "type" of content, for example mark a cell as receiving "form content", at that point it can be included in the form popups
+Actions and state can be combined into specifications where for instance the "repeat" might implement the "pageable" specification which can be used by any component that is somehow pageable.
+The paging component can be coupled to any component that implements this specification.
+
+This approach allows not only for direct coupling rather than indirect eventing but it also allows for autodiscovery to make contextual suggestions.
+
+## Templates
+
+Templates already existed in v1, but in v2 they have gotten a massive upgrade.
+The templates as they existed in v1 are still supported and used, but a whole different type of template has been added. You can now template parts of a page in your application (or a shared repository).
+If you add a copy of the template to your pages in other locations, you can make local modifications but (as far as possible), it retains a component-by-component link to the original template. 
+The original template can be updated and released with a new version at which point other instances of the template can optionally receive an update.
+
+This allows for centralized management of recurring usecases within an application or set of applications with the ability to evolve those templates as time goes on.
+
+## Style
+
+In page builder v1 we mostly used plato to style our applications. However, this was fully separate from page builder. In v1 there was some light css scraping that tried to perform some autosuggestions but most of the time it required knowledgeable style gurus to make everything work correctly.
+Sometimes weird combinations of classes in just the right position had to be used to get a particular desired effect. Other developers were afraid to touch anything because they might break it. This sometimes ended in massive copy pasting with nasty work arounds.
+
+The v2 release of page builder actually started with aris, the new styling framework. Because of possibilities that aris offered that weren't available before, the encapsulation of v1 components was a major downside because it prevented full use of the power of aris.
+The styling framework is written from the ground up to be "easy" to understand (no complex scss going on), with simple predictable selectors that had predictable overriding. 
+And most importantly, aris was written specifically to be inspectable by page builder so it could offer up suggestions and finally work towards a theme builder.
+
+Because of these changes to how styling works, the style section available in v1 where you could write scss in the frontend has been removed in v2.
+
+## Functions
+
+Functions are a useful construct, mostly for components to add logic to the application (e.g. the CMS with the login function).
+In v1 you could also add functions from the frontend, but this was rarely used. Over time page builder also added better support for executing javascript in the page which was often enough to solve the minor issues where the javascript was needed.
+
+In v2 I have decided to remove the frontend function editing part but will obviously retain functions as a concept.
+If you still need to add a function, you can always add one in javascript as the other modules do.
+And if the usecase is big enough, frontend function editing might be reintroduced, but even if it is, it will be in a separate opt-in module and not distributed in the page core.
+
+## Typography
+
+Page fields in v1 was used in a lot of places as it allowed the user to write complex combinations of copy and variables with full dropdown capabilities (so no need to guess variable names etc).
+However, there was often a lot of click work involved in opening and closing everything to edit it. Understanding what was there again required a lot of clicking.
+
+I think page fields is probably THE most complained about component in v1. So I'm happy to report it is fully deprecated in v2.
+
+Instead v2 comes with inline editing capabilities (using content editable) where you can use placeholders to denote variable positions. These variables can be bound in the same way as was available in v1, allowing for the same advantages.
+This combines the best of all worlds, not only is it a ton easier to understand and modify what there is, the translations are also a lot cleaner now.
+
+## Triggerable
+
+In v1, some logic was "duplicated" (sometimes only partially). For instance page-actions could do _some_ of the stuff of page triggers but not everything. If you wanted to call a rest service, page actions had to emit an event that could be used by a page trigger.
+But routing could be done directly in the button. And at the page level. With different codebases that were manually kept in sync.
+Spread throughout page builder were "click" events, some available on cells or fragments or... These were usually late additions that did not follow a common theme.
+
+In v2, these instances are replaced with a central concept of "triggerable".
+Not only does it centralize all the logic in one place that can be easily reused, it adds a few neat tricks of its own.
+
+No longer can you do just one action, you can chain them together. In fact you can have multiple chains.
+These chains are linked together by promises, guaranteeing correct execution and will keep internal state when relevant. For instance if you perform a rest call, you can capture the return value in a variable that exists only inside the triggerable and can be used to map to the next step in the action chain.
+Of course, global state is a primary motivation of v2 so triggers can obviously expose this state as well, though currently this exchange is done through events.
+
+## Speed
+
+The configuration get in v1 was generally slow after a reboot. Caching kicked in to make subsequent calls much faster, but it still provided a bottleneck.
+This bottleneck was down to two issues:
+
+- page builder tried to load SPECIFIC translations. so it scraped all the pages for translatable content and translated it, this could easily take 5-10s without a cache
+- page builder wants to tell the frontend about active features. however, it does this by calling the service that lists ALL features, including the disabled. calculating all the disabled features requires a ton of I/O overhead because a lot of files that are not yet in memory need to be scraped in order to figure out all the features. this call has been known to last over a minute in extreme cases.
+
+### Translations
+
+For translations it was decided that these generally do not contain "state secrets" so it is (in general) OK to just stream all available translations for a particular language to the frontend. This makes it one select instead of hundreds.
+NOTE: this does not work well with operational translations! Need ability to ignore those.
+
+Page builder will also no longer have a backend-link to any translation provider. Instead it will look in the frontend for a translation service. Not only does this further decouple the backend (e.g. with specs and implementations as was the case in v1), but it allows the user to more easily plug in a custom variant of the translation service to provide a different kind of translation.
+
+Together with another optimization done the page loop, this brought a particular example of load time for common configuration down from 4.9s to 280ms.
+
+### Features
+
+Calculating active features can be done much easier because only a very limited set of artifacts can change the state of a feature from disabled to enabled.
+The overhead of calculting all the features is still necessary for edit mode, but this can be done asynchronously, only for editors, rather than for everyone.
+
