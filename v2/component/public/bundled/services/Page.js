@@ -1335,7 +1335,10 @@ nabu.services.VueService(Vue.extend({
 					self.scanPagesForTemplates();
 				}
 				if (self.canTest()) {
-					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.feature.get").then(function(features) {
+					// this call can take long (lots of I/O to be done)
+					// so we don't include it in the blocking promises array
+					// loading this does not change the application, it simply gives the tester more options in case he specifically wants to test features (which is very rare)
+					self.$services.swagger.execute("nabu.web.page.core.rest.feature.get").then(function(features) {
 						if (features) {
 							if (features.enabled) {
 								nabu.utils.arrays.merge(self.availableFeatures,
@@ -1352,7 +1355,7 @@ nabu.services.VueService(Vue.extend({
 									features.disabled.map(function(x) { x.enabled = false; return x }));
 							}
 						}
-					}));
+					});
 				}
 				if (self.applicationState) {
 					self.applicationState.forEach(function(state) {
