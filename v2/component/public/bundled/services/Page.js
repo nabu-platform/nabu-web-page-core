@@ -1915,44 +1915,56 @@ nabu.services.VueService(Vue.extend({
 			return value;
 		},
 		translateErrorCode: function(value, defaultValue) {
-			var translations = !value ? [] : this.translations.filter(function(x) {
-				// this is not actually a translation, fall back to defaults
-				if (x.translation == x.name) {
+			// if you have a standardized translator service available
+			if (this.$services.translator && this.$services.translator.translate) {
+				return this.$services.translator.translate(value, this.$services.translator.translate("%{An error has occurred while trying to complete your action}"));
+			}
+			else {
+				var translations = !value ? [] : this.translations.filter(function(x) {
+					// this is not actually a translation, fall back to defaults
+					if (x.translation == x.name) {
+						return false;
+					}
+					if (value.toLowerCase() == x.name.toLowerCase()) {
+						return true;
+					}
+					else {
+						// if we try to cast something to a regex that is not meant as a regex, it may error out
+						// we don't care at that point, just ignore it
+						// the backend already allows for generalization through regex, not sure if this is necessary in the translations
+						// might also require for example that a * is present before actually attempting this?
+						try {
+							return value.match(new RegExp(x.name.replace(/\*/g, ".*")));
+						}
+						catch (exception) {
+							// not a regex!
+						}
+					}
 					return false;
-				}
-				if (value.toLowerCase() == x.name.toLowerCase()) {
-					return true;
-				}
-				else {
-					// if we try to cast something to a regex that is not meant as a regex, it may error out
-					// we don't care at that point, just ignore it
-					// the backend already allows for generalization through regex, not sure if this is necessary in the translations
-					// might also require for example that a * is present before actually attempting this?
-					try {
-						return value.match(new RegExp(x.name.replace(/\*/g, ".*")));
-					}
-					catch (exception) {
-						// not a regex!
-					}
-				}
-				return false;
-			});
-			var translation = null;
-			if (translations.length > 1) {
-				translations.forEach(function(x) {
-					if (translation == null || translation.name.length < x.name.length)	 {
-						translation = x;
-					}
 				});
+				var translation = null;
+				if (translations.length > 1) {
+					translations.forEach(function(x) {
+						if (translation == null || translation.name.length < x.name.length)	 {
+							translation = x;
+						}
+					});
+				}
+				else if (translations.length == 1) {
+					translation = translations[0];
+				}
+				return translation && translation.translation 
+					? translation.translation 
+					: (defaultValue ? defaultValue : "%{An error has occurred while trying to complete your action}");
 			}
-			else if (translations.length == 1) {
-				translation = translations[0];
-			}
-			return translation && translation.translation 
-				? translation.translation 
-				: (defaultValue ? defaultValue : "%{An error has occurred while trying to complete your action}");
 		},
 		translate: function(value, component) {
+			// if you have a standardized translator service available
+			if (this.$services.translator && this.$services.translator.translate) {
+				return this.$services.translator.translate(value);
+			}
+			// otherwise we do best effort local translations, but that requires that someone pushed translations to this
+			// in v1, page builder was itself responsible for loading translations but that is no longer the case
 			if (value && value.indexOf) {
 				while (value.indexOf("%" + "{") >= 0) {
 					var start = value.indexOf("%" + "{");

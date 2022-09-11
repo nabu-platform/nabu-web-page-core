@@ -14,5 +14,6 @@ for (component : aris/components)
 		extends: component/component,
 		dimensions: dimensions,
 		variants: variants))
-	
-echo(json.stringify(components, pretty:true))
+
+response.content(json.stringify(components, pretty: true), "application/json")	
+#echo(json.stringify(components, pretty:true))
