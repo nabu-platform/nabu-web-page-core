@@ -34,7 +34,7 @@ window.addEventListener("load", function() {
 			enter: function(parameters) {
 				// if you have not overridden this alias (home) but you have added a route at "/", let's look for that
 				// it takes presedence over the pages here
-				var hasHomeRoute = $services.router.router.findRoute("${server.root()}");
+				var hasHomeRoute = $services.router.router.findRoute(application && application.configuration ? application.configuration.root : "/");
 				// it must not have the alias home, to prevent circular refreshes etc
 				if (hasHomeRoute && hasHomeRoute.route && hasHomeRoute.route.alias != "home") {
 					setTimeout(function() {

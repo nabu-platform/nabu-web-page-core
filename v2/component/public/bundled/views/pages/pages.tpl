@@ -2,12 +2,12 @@
 	<div class="nabu-pages">
 		<ul class="is-row is-menu is-variant-toolbar is-dark is-main-top is-primary-highlight is-content-width-large is-height-min-3">
 			<li class="is-column"><button @click="selectedTab = 'pages'" class="is-button is-variant-ghost-light is-size-small is-wrap-none"><img class="is-icon" src="${server.root()}resources/images/branding/nabu-logo.svg"/><span class="is-text">Page Builder</span></button></li>
-			<li class="is-column is-position-right" @click="selectedTab = 'pages'"><button :class="{'is-active': selectedTab == 'pages' }"class="is-button is-variant-ghost-light is-size-small"><icon name="file-alt"/><span class="is-text">Pages</span></li>
+			<li class="is-column is-position-right" @click="selectedTab = 'pages'"><button :class="{'is-active': selectedTab == 'pages' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-alt"/><span class="is-text">Pages</span></button></li>
 			<li class="is-column" @click="selectedTab = 'settings'"><button :class="{'is-active': selectedTab == 'settings' }" class="is-button is-variant-ghost-light is-size-small"><icon name="cogs"/><span class="is-text">Settings</span></button></li>
-			<li v-if="false" class="is-column" @click="selectedTab = 'bundles'"><button :class="{'is-active': selectedTab == 'bundles' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-cube"/><span class="is-text">Bundles</span></li>
+			<li v-if="false" class="is-column" @click="selectedTab = 'bundles'"><button :class="{'is-active': selectedTab == 'bundles' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-cube"/><span class="is-text">Bundles</span></button></li>
 			<li v-for="entry in getAdditionalSettings()" class="is-column" @click="selectedTab = entry.route"><button :class="[{'is-active': selectedTab == entry.route }, 'setting-' + entry.name]" class="is-button is-variant-ghost-light is-size-small"><icon v-if="entry.icon" :name="entry.icon"/><span class="is-text">{{entry.title}}</span></button></li>
 		</ul>
-		<div class="is-row is-content-width-large is-direction-vertical is-height-max-3 is-overflow-auto">
+		<div class="is-row is-content-width-large is-direction-vertical is-height-max-3 is-overflow-auto" v-if="$services.page.canEdit">
 			<n-prompt v-if="showing" class="is-modal">
 				<n-form class="is-color-background is-spacing-large is-shadow-xsmall is-variant-vertical">
 					<h3 class="is-h3">Page properties</h3>
@@ -183,7 +183,7 @@
 						<n-collapsible v-for="category in templateCategories" :title="$services.page.prettify(category)" content-class="is-pattern-underline">
 							<div class="is-row is-height-min-4 is-align-cross-center is-spacing-horizontal-medium is-spacing-vertical-small is-highlight-light is-cursor-pointer" v-for="template in getTemplateCategory(category)" :class="{'is-selected': selectedTemplates.indexOf(template) >= 0 }" :draggable="true" 
 									@dragstart="dragTemplate($event, template)">
-								<img :draggable="false" :src="'${server.root()}resources/' + template.icon" class="component-icon" v-if="template.icon && template.icon.match(/^.*\.[^.]+$/)" class="is-column is-width-column-1"/>
+								<img :draggable="false" :src="'${server.root()}resources/' + template.icon" v-if="template.icon && template.icon.match(/^.*\.[^.]+$/)" class="is-column is-width-column-1"/>
 								<icon v-else-if="template.icon" :name="template.icon" class="is-column is-width-column-1"/>
 								<div class="is-column is-width-column-11">
 									<h5 class="is-h5 is-size-medium">{{ template.name }}</h5>

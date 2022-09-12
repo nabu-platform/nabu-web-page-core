@@ -65,6 +65,7 @@ if (environment("url") != null)
 		<meta name="referrer" content="${referrer}">
 		<script src="${javascript}?version=${environment('version')}&build=${buildTime}${when(language() == null, '', '&language=' + language())}"></script>
 		<link rel="stylesheet" type="text/css" href="${css}?version=${environment('version')}&build=${buildTime}${when(language() == null, '', '&language=' + language())}">
+		<base href="${server.root()}"/>
 		${additional}
 		<title>${title}</title>
 ${{

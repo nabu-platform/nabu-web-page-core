@@ -620,7 +620,8 @@ Vue.component("renderer-repeat", {
 					"pageType": this.getPageType(),
 					// you can optimze the rows by throwing away the page wrapper
 					// currently this also throws away edit mode so we can only globally enable this once we have moved the editing outside of the page!
-					"optimizeRows": true
+					// no longer needed, vue was complaining about two roots so made an optimized derivative component
+					"optimizeRows": false
 				};
 				// add our local value
 				content.parameters.push({
@@ -696,8 +697,8 @@ Vue.component("renderer-repeat", {
 								mapVariables(newPage);
 							}
 						}, {deep: true});
-						
-						newPage = new nabu.page.views.Page({propsData: {
+						console.log("--------------> wtf???");
+						newPage = new nabu.page.views.Page({template: "n-page-optimized", propsData: {
 							page: page, 
 							parameters: parameters, 
 							stopRerender: parameters ? parameters.stopRerender : false, 
@@ -709,7 +710,7 @@ Vue.component("renderer-repeat", {
 						}, beforeMount: function() {
 							mapVariables(this);
 						}});
-						
+						console.log("newpag is",newPage);
 						return newPage;
 					},
 					// yes it's a page, but we don't want it treated as such

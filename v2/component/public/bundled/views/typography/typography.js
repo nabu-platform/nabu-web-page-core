@@ -105,8 +105,8 @@ Vue.service("typography", {
 					//content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<page-formatted :page='page' :cell='cell' :value=\"getVariableValue('" + variable + "')\" :fragment=\"getVariableFragment('" + variable + "')\"/>");
 					var div = document.createElement("div");
 					formatted = new component({propsData: {
-						page: self.page,
-						cell: self.cell,
+						page: pageInstance.page,
+						cell: {state: container},
 						value: state ? self.$services.page.getValue(state, container.fragments[variable].key) : pageInstance.get(container.fragments[variable].key),
 						fragment: container.fragments[variable],
 						updater: updateFunction

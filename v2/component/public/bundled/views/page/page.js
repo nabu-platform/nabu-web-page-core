@@ -144,8 +144,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			default: false
 		},
 		pageInstanceId: {
-			type: String,
-			required: true,
+			required: false,
 			default: function() {
 				return application.services.page.pageCounter++;
 			}
@@ -2996,6 +2995,11 @@ Vue.component("n-page-rows", {
 	}
 });
 
+nabu.page.views.PageOptimized = Vue.component("n-page-optimized", {
+	mixins: [Vue.component("n-page")],
+	template: "#nabu-optimized-page"
+});
+
 Vue.component("n-page-row", {
 	template: "#page-row",
 	props: {
@@ -3023,6 +3027,11 @@ Vue.component("n-page-row", {
 		depth: {
 			type: Number,
 			default: 0
+		},
+		root: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	data: function() {
