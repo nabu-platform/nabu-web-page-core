@@ -4,7 +4,7 @@
 			<li class="is-column"><button @click="selectedTab = 'pages'" class="is-button is-variant-ghost-light is-size-small is-wrap-none"><img class="is-icon" src="${server.root()}resources/images/branding/nabu-logo.svg"/><span class="is-text">Page Builder</span></button></li>
 			<li class="is-column is-position-right" @click="selectedTab = 'pages'"><button :class="{'is-active': selectedTab == 'pages' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-alt"/><span class="is-text">Pages</span></button></li>
 			<li class="is-column" @click="selectedTab = 'settings'"><button :class="{'is-active': selectedTab == 'settings' }" class="is-button is-variant-ghost-light is-size-small"><icon name="cogs"/><span class="is-text">Settings</span></button></li>
-			<li v-if="false" class="is-column" @click="selectedTab = 'bundles'"><button :class="{'is-active': selectedTab == 'bundles' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-cube"/><span class="is-text">Bundles</span></button></li>
+			<li class="is-column" @click="selectedTab = 'script'"><button :class="{'is-active': selectedTab == 'script' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-code"/><span class="is-text">Script</span></button></li>
 			<li v-for="entry in getAdditionalSettings()" class="is-column" @click="selectedTab = entry.route"><button :class="[{'is-active': selectedTab == entry.route }, 'setting-' + entry.name]" class="is-button is-variant-ghost-light is-size-small"><icon v-if="entry.icon" :name="entry.icon"/><span class="is-text">{{entry.title}}</span></button></li>
 		</ul>
 		<div class="is-row is-content-width-large is-direction-vertical is-height-max-3 is-overflow-auto" v-if="$services.page.canEdit">
@@ -154,7 +154,7 @@
 											v-model="page.content.defaultAnchor" label="Default Content Anchor" :timeout="600" @input="save(page)" placeholder="No content anchor"
 											after="The content anchor is where child pages will automatically be routed as needed"/>
 										<n-form-switch after="Set this page as a default common root to all other pages that don't have any parent specified"
-											v-if="page.content.defaultAnchor" label="Is default parent page" v-model="page.content.initial" @input="save(page)"/>
+											v-if="false && page.content.defaultAnchor" label="Is default parent page" v-model="page.content.initial" @input="save(page)"/>
 										<!-- support for pages with input values -->
 									</n-form>
 									<div class="is-column is-spacing-vertical-gap-medium is-fill-normal">
@@ -192,6 +192,62 @@
 							</div>
 						</n-collapsible>
 					</n-sidebar>
+				</div>
+				
+				<div v-else-if="selectedTab == 'script'">
+					<div class="odd-block">
+						<div class="panes">
+							<div class="pane">
+								<h4 class="category">Devices</h4>
+								<p class="subscript category-subscript">You can define a device based on the width (in pixels). You can use these devices to conditionally render content both in page builder and in scss.</p>
+								<div class="padded-content">
+									<div class="list-actions">
+										<button @click="$services.page.devices.push({name:null,width:0})"><span class="fa fa-plus"></span>Device</button>
+									</div>
+									<div class="padded-content">
+										<div class="list-row">
+											<n-form-text :value="'phone'" :required="true" label="Device Name" :disabled="true"/>
+											<n-form-text v-model="getDevice('phone').width" type="number" label="Width" :timeout="600" @input="$services.page.saveConfiguration" placeholder="512"/>
+										</div>
+										<div class="list-row">
+											<n-form-text :value="'tablet'" :required="true" label="Device Name" :disabled="true"/>
+											<n-form-text v-model="getDevice('tablet').width" type="number" label="Width" :timeout="600" @input="$services.page.saveConfiguration" placeholder="960"/>
+										</div>
+										<div class="list-row">
+											<n-form-text :value="'desktop'" :required="true" label="Device Name" :disabled="true"/>
+											<n-form-text v-model="getDevice('desktop').width" type="number" label="Width" :timeout="600" @input="$services.page.saveConfiguration" placeholder="1280"/>
+										</div>
+										<div class="list-row">
+											<n-form-text :value="'wide'" :required="true" label="Device Name" :disabled="true"/>
+											<n-form-text v-model="getDevice('wide').width" type="number" label="Width" :timeout="600" @input="$services.page.saveConfiguration" placeholder="2560"/>
+										</div>
+										<div class="list-row" v-for="device in $services.page.devices.filter(function(x) { return x.name != 'phone' && x.name != 'tablet' && x.name != 'desktop' && x.name != 'wide' })">
+											<n-form-text v-model="device.name" :required="true" label="Device Name" :timeout="600" @input="$services.page.saveConfiguration"/>
+											<n-form-text v-model="device.width" type="number" label="Width" :timeout="600" @input="$services.page.saveConfiguration"/>
+											<span @click="$services.page.devices.splice($services.page.devices.indexOf(device), 1); $services.page.saveConfiguration()" class="fa fa-times"></span>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="pane">
+								<h4 class="category">Imports</h4>
+								<p class="subscript category-subscript">Import scripts from external providers like google maps. If you made an application variable called for example 'myApiKey', you can use it in your import url with this syntax: <code v-pre>https://example.com?apikey={{ application.myApiKey }}</code></p>
+								<div class="padded-content">
+									<div class="list-actions">
+										<button @click="$services.page.imports.push({link:null, type: 'javascript', async: true})"><span class="fa fa-plus"></span>Import</button>
+									</div>
+									<div class="padded-content">
+										<div class="list-row" v-for="single in $services.page.imports">
+											<n-form-text v-model="single.link" :required="true" label="Link" :timeout="600" @input="$services.page.saveConfiguration"/>
+											<n-form-combo v-if="false" v-model="single.type" :items="['javascript', 'css']" label="Type" :timeout="600" @input="$services.page.saveConfiguration"/>
+											<n-form-switch v-model="single.async" label="Asynchronous" :timeout="600" @input="$services.page.saveConfiguration"/>
+											<span @click="$services.page.imports.splice($services.page.imports.indexOf(single), 1); $services.page.saveConfiguration()" class="fa fa-times"></span>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 				
 				<div v-else v-route-render="{alias: selectedTab}"></div>

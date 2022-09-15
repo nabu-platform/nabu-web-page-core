@@ -123,6 +123,15 @@
 				<from>input/webApplicationId</from>
 				<to>id</to>
 			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="d16bd255-8c95-48e3-a94f-a977e41be8b9"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>true</from>
+				<to>enabledOnly</to>
+			</steps>
 		</steps>
 		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 				disabled="false"

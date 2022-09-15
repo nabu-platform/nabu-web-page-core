@@ -27,10 +27,14 @@
 			<n-form-text v-model="cell.state.iconAsc" label="Icon when ascending" placeholder="sort-up"/>
 			<n-form-text v-model="cell.state.iconDesc" label="Icon when descending" placeholder="sort-down"/>
 			<n-form-switch v-model="cell.state.hideNoneIcon" label="Hide icon if no sorting is active"/>
+			<n-form-switch v-model="cell.state.reverse" label="Reverse cycling, by default it is: asc, desc, none"/>
 			<n-form-text v-if="!cell.state.hideNoneIcon" v-model="cell.state.iconNone" label="Icon when no sorting" placeholder="sort"/>
 			<div v-for="(sortField, index) in cell.state.sortFields" class="has-button-close">
-				<n-form-combo v-model="sortFields[index]" :filter="getAvailableFields" placeholder="Sort by field" />
+				<n-form-combo v-model="sortField.name" :filter="getAvailableFields" placeholder="Sort by"/>
 				<button class="is-button is-variant-close is-size-small is-spacing-horizontal-right-large" @click="cell.state.sortFields.splice(index, 1)"><icon name="times"/></button>
+			</div>
+			<div class="is-row is-align-end">
+				<button @click="cell.state.sortFields.push({name:null, direction: null, nullsLast: null})" class="is-button is-size-small"><icon name="plus"/><span class="is-title">Order by</span></button>
 			</div>
 			<n-form-ace mode="javascript" v-model="cell.state.disabled" label="Disabled if"/>
 			<n-form-ace mode="javascript" v-model="cell.state.active" label="Active if"/>

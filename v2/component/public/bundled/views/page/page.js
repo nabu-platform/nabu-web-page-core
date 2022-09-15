@@ -497,6 +497,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 		},
 		plugins: function() {
 			return nabu.page.providers("page-plugin").filter(function(x) { return x.target == "page" });
+		},
+		selectedItemPath: function() {
+			return this.selectedType ? this.$services.page.getTargetPath(this.page.content, this.selectedType == "cell" ? this.cell.id : this.row.id) : [];
 		}
 	},
 	data: function() {
@@ -822,6 +825,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 					}
 				});
+			}
+		},
+		selectTarget: function(target) {
+			if (target.cells) {
+				this.selectItem(target, null, "row");
+			}
+			else if (target.rows) {
+				var path = this.$services.page.getTargetPath(this.page.content, target.id);
+				this.selectItem(path[path.length - 2], target, "cell");
 			}
 		},
 		selectItem: function(row, cell, type) {

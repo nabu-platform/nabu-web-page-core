@@ -51,6 +51,17 @@
 		<n-form-switch v-model="target.repeat.enableDrag" label="Enable dragging"/>
 		<n-form-text v-model="target.repeat.dragName" label="Drag source name" v-if="target.repeat.enableDrag" placeholder="default"/>
 			
+		<div v-for="(defaultOrderBy, index) in target.repeat.defaultOrderBy" class="has-button-close">
+			<div class="is-row">
+				<n-form-combo v-model="defaultOrderBy.name" :filter="getOrderByFields" placeholder="Order by field"/>
+				<n-form-combo v-model="defaultOrderBy.direction" :items="['asc', 'desc']" placeholder="Direction"/>
+			</div>
+			<button class="is-button is-variant-close is-size-small is-spacing-horizontal-right-large" @click="target.repeat.defaultOrderBy.splice(index, 1)"><icon name="times"/></button>
+		</div>
+		<div class="is-row is-align-end" v-if="getOrderByFields()">
+			<button @click="target.repeat.defaultOrderBy.push({name: null, direction: 'asc'})" class="is-button is-size-small"><icon name="plus"/><span class="is-title">Order by</span></button>
+		</div>
+			
 		<n-page-mapper v-if="false && target.repeat.operation && operationParameters.length > 0 && Object.keys($services.page.getPageParameters(page)).length" 
 			:to="operationParameters"
 			:from="{page:$services.page.getPageParameters(page)}" 

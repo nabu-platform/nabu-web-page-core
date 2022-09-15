@@ -201,6 +201,9 @@ Vue.component("renderer-repeat", {
 			// the state in the original page, this can be used to write stuff like "limit" etc to
 			// note that the "record" will not actually be in this
 			state: {
+				order: {
+					by: []
+				},
 				filter: {},
 				records: [],
 				// if we don't define the fields AND we don't use Vue.set to update them, they are not reactive!
@@ -226,6 +229,13 @@ Vue.component("renderer-repeat", {
 		var self = this;
 		var blacklist = ["records", "paging"];
 		
+		// first map the default order by, we might overwrite it with the input mappings
+		if (this.target.repeat.defaultOrderBy) {
+			nabu.utils.arrays.merge(this.state.order.by, this.target.repeat.defaultOrderBy.map(function(x) {
+				return x.name + " " + (x.direction ? x.direction : "asc");
+			}));
+		}
+		
 		// the problem is, we want to do an initial load always
 		// however, by the act of modifying the state if you have bindings, we trigger the watcher for state.filter which will also do a reload
 		// so we want behavior that if we don't do any state mappings, we do an initial load
@@ -237,6 +247,8 @@ Vue.component("renderer-repeat", {
 				stateModified = true;
 			}
 		});
+		
+		console.log("state", this.state.order.by, this.parameters);
 		
 		if (!stateModified) {
 			this.created = true;
@@ -283,9 +295,13 @@ Vue.component("renderer-repeat", {
 				if (this.created) {
 					this.loadData();
 				}
-				else {
-					this.created = true;
-				}
+			}
+		},
+		// if we have changed the order by, rerun it!
+		// same however as with filters, not if it's an initial one
+		"state.order.by": function() {
+			if (this.created) {
+				this.loadData();
 			}
 		}
 	},
@@ -293,6 +309,30 @@ Vue.component("renderer-repeat", {
 		this.unloadPage();
 	},
 	methods: {
+		getOrderByFields: function() {
+			var result = [];
+			if (this.target.repeat && this.target.repeat.operation) {
+				var operation = this.$services.swagger.operation(this.target.repeat.operation);	
+				var self = this;
+				if (operation && operation.parameters) {
+					var orderBy = operation.parameters.filter(function(x) {
+						return x.name == "orderBy";
+					})[0];
+					// if we have an order by field, we can order by all the outputs (by default)
+					if (orderBy && operation.responses["200"] && operation.responses["200"].schema) {
+						var definition = self.$services.swagger.resolve(operation.responses["200"].schema);
+						var arrays = self.$services.page.getArrays(definition);
+						if (arrays.length > 0) {
+							var childDefinition = self.$services.page.getChildDefinition(definition, arrays[0]);
+							if (childDefinition && childDefinition.items && childDefinition.items.properties) {
+								nabu.utils.arrays.merge(result, Object.keys(childDefinition.items.properties));
+							}
+						}
+					}
+				}
+			}
+			return result;
+		},
 		getCounter: function() {
 			return this.$services.page.pageCounter++;
 		},
@@ -412,10 +452,31 @@ Vue.component("renderer-repeat", {
 				return this.loadData(retainOffset ? this.state.paging.page : 0);
 			}
 			else if (action == "list-available") {
-				
+				return this.$services.q.resolve({available: this.getOrderByFields()});
 			}
 			else if (action == "order-by") {
-				
+				if (!value.append) {
+					this.state.order.by.splice(0);
+				}
+				var self = this;
+				if (value.by) {
+					// for example "name desc". we want a list of all the fields involved, e.g. "name" so we can remove any other mentions of this field
+					value.by.map(function(x) {
+						return x.replace(/[\s]+.*$/, "");
+					}).forEach(function(field) {
+						var toRemove = self.state.order.by.filter(function(x) {
+							return x == field || x.indexOf(field + " ") == 0;
+						});
+						toRemove.forEach(function(x) {
+							self.state.order.by.splice(self.state.order.by.indexOf(x), 1);
+						});
+					});
+					// you can explicitly set "name none" to UNSET an order by
+					this.state.order.by.unshift.apply(this.state.order.by, value.by.filter(function(x) {
+						return x.indexOf(" none") < 0;
+					}));
+				}
+				console.log("orderin by", this.state.order.by);
 			}
 			return this.$services.q.reject();
 		},
@@ -520,6 +581,9 @@ Vue.component("renderer-repeat", {
 						}
 					});
 				}
+				if (this.state.order.by.length) {
+					parameters["orderBy"] = this.state.order.by;
+				}
 				// if we want to load a certain page, we need a limit
 				if (page != null) {
 					if (parameters.limit == null) {
@@ -577,9 +641,11 @@ Vue.component("renderer-repeat", {
 					}
 					self.uniquify();
 					self.loading = false;
+					self.created = true;
 				}, function(error) {
 					// TODO: what in case of error?
 					self.loading = false;
+					self.created = true;
 				})
 			}
 			else if (this.target.repeat && this.target.repeat.array) {
@@ -754,6 +820,9 @@ Vue.component("renderer-repeat-configure", {
 		if (!this.target.repeat.bindings) {
 			Vue.set(this.target.repeat, "bindings", {});
 		}	
+		if (!this.target.repeat.defaultOrderBy) {
+			Vue.set(this.target.repeat, "defaultOrderBy", []);
+		}
 	},
 	computed: {
 		operationParameters: function() {
@@ -768,6 +837,34 @@ Vue.component("renderer-repeat-configure", {
 				}
 			}
 			return result;
+		}
+	},
+	methods: {
+		getOrderByFields: function(value) {
+			var result = [];
+			if (this.target.repeat && this.target.repeat.operation) {
+				var operation = this.$services.swagger.operation(this.target.repeat.operation);	
+				var self = this;
+				if (operation && operation.parameters) {
+					var orderBy = operation.parameters.filter(function(x) {
+						return x.name == "orderBy";
+					})[0];
+					// if we have an order by field, we can order by all the outputs (by default)
+					if (orderBy && operation.responses["200"] && operation.responses["200"].schema) {
+						var definition = self.$services.swagger.resolve(operation.responses["200"].schema);
+						var arrays = self.$services.page.getArrays(definition);
+						if (arrays.length > 0) {
+							var childDefinition = self.$services.page.getChildDefinition(definition, arrays[0]);
+							if (childDefinition && childDefinition.items && childDefinition.items.properties) {
+								nabu.utils.arrays.merge(result, Object.keys(childDefinition.items.properties));
+							}
+						}
+					}
+				}
+			}
+			return result.filter(function(x) {
+				return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+			});
 		}
 	}
 });

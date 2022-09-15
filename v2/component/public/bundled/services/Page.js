@@ -535,7 +535,9 @@ nabu.services.VueService(Vue.extend({
 				var self = this;
 				// note that we also explicitly set null values to allow you to unset
 				Object.keys(target.rendererBindings).forEach(function(key) {
-					pageInstance.set(target.rendererBindings[key], self.$services.page.getValue(state, key));
+					if (target.rendererBindings[key] != null) {
+						pageInstance.set(target.rendererBindings[key], self.$services.page.getValue(state, key));
+					}
 				});
 			}
 		},

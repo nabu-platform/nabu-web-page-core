@@ -41,7 +41,7 @@
 			<button class="is-button is-variant-ghost is-size-xsmall" v-else @click="$services.page.disableReload = true"><icon name="ban"/></button>
 		</div>
 		
-		<n-sidebar v-if="edit && page.content.rows" position="left" class="is-size-large is-header-size-large" :inline="true" :autocloseable="false" ref="sidemenu"
+		<n-sidebar v-if="edit && page.content.rows" position="left" class="is-size-large is-header-size-xlarge" :inline="true" :autocloseable="false" ref="sidemenu"
 				@close="stopEdit">
 			<div class="is-column is-spacing-medium is-align-left is-spacing-vertical-gap-small" slot="header">
 				<h3 class="is-h3 is-color-neutral">
@@ -52,13 +52,20 @@
 						</ul>
 					</div>
 				</h3>
-				<p class="is-p is-color-light is-size-xsmall">Last saved: {{saved ? $services.formatter.date(saved, 'HH:mm:ss') : 'never' }}</p>
+				<p class="is-p is-size-xsmall">Last saved: {{saved ? $services.formatter.date(saved, 'HH:mm:ss') : 'never' }}</p>
+				
+				<div class="is-row is-spacing-vertical-small is-spacing-gap-small" v-if="selectedItemPath.length">
+					<button v-for="single in selectedItemPath" class="is-button is-size-xsmall" :class="{'is-variant-primary': single.renderer}"
+						@click="selectTarget(single)">{{$services.page.formatPageItem($self, single)}}</button>
+				</div>
+				
 				<ul class="is-menu is-variant-toolbar">
 					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'layout'" :class="{'is-active': activeTab == 'layout'}"><icon name="align-left"/><span class="is-text">Layout</span></button></li>
 					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'settings'" :class="{'is-active': activeTab == 'settings'}"><icon name="cog"/><span class="is-text">Settings</span></button></li>
 					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'components'" :class="{'is-active': activeTab == 'components'}"><icon name="cubes"/><span class="is-text">Content</span></button></li>
 					<li class="is-column" v-if="cell || row"><button class="is-button is-variant-primary-outline is-size-small is-border-underline" @click="activeTab = 'selected'" :class="{'is-active': activeTab == 'selected'}"><icon name="cube"/>
-						<span class="is-text" v-if="selectedType == 'cell' && cell && cell.name">{{cell.name}}</span>
+						<span class="is-text" v-if="true">{{$services.page.formatPageItem($self, selectedType == 'cell' ? cell : row)}}</span>
+						<span class="is-text" v-else-if="selectedType == 'cell' && cell && cell.name">{{cell.name}}</span>
 						<span class="is-text" v-else-if="selectedType == 'cell' && cell && cell.alias">{{$services.page.prettifyRouteAlias(cell.alias)}}</span>
 						<span class="is-text" v-else-if="selectedType == 'row' && row && row.name">{{row.name}}</span>
 						<span class="is-text" v-else>Selected {{selectedType == 'cell' ? "cell" : "row"}}</span></button>
@@ -512,30 +519,32 @@
 					<n-form class="is-variant-floating-labels" key="cell-form">
 						<h2 class="is-h4 is-color-primary-outline is-spacing-medium">Cell Configuration</h2>
 						<p class="is-p is-size-small is-color-light is-spacing-medium">Here you can configure cell settings that are available to all cells in the grid regardless of the content type.</p>
-						<n-collapsible :only-one-open="true" :title="cell.renderer ? $services.page.getRenderer(cell.renderer).title : 'Rendering'" :class="{'is-color-primary-light': cell.renderer}" content-class="is-spacing-medium" class="is-highlight-left">
-							<n-form-combo label="Target slot in renderer" v-if="getSlots(cell)" v-model="cell.rendererSlot" :items="getSlots(cell)"/>
-							
-							<component v-if="getParentConfig(cell)" :is="getParentConfig(cell)"
-								:cell="cell"
-								:row="row"
-								:page="page"/>
-							
-							<n-form-combo label="Cell Renderer" v-if="!cell.alias" v-model="cell.renderer" :items="$services.page.getRenderers('cell')" 
-								after="You can set a custom renderer for this cell"
-								empty-value="No renderers found"
-								:formatter="function(x) { return x.name }" 
-								:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
+						<n-collapsible :only-one-open="true" :title="cell.renderer ? $services.page.getRenderer(cell.renderer).title : 'Rendering'" :class="{'is-color-primary-light': cell.renderer}" class="is-highlight-left">
+							<div class="is-column is-spacing-medium">
+								<n-form-combo label="Target slot in renderer" v-if="getSlots(cell)" v-model="cell.rendererSlot" :items="getSlots(cell)"/>
 								
-							<div v-if="cell.renderer && $services.page.getRendererState(cell.renderer, cell, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
-								<n-form-text v-model="cell.runtimeAlias" label="Runtime alias for renderer state"/>
-								<n-form-switch v-model="cell.retainState" label="Retain state once cell is destroyed" v-if="cell.runtimeAlias"/>
-								<renderer-bindings :target="cell" :page="page"/>
-							</div>
-							<div v-if="cell.renderer && $services.page.getRendererConfiguration(cell.renderer)">
-								<component :is="$services.page.getRendererConfiguration(cell.renderer)" :target="cell" :page="page"/>
-							</div>
+								<component v-if="getParentConfig(cell)" :is="getParentConfig(cell)"
+									:cell="cell"
+									:row="row"
+									:page="page"/>
 								
-							<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
+								<n-form-combo label="Cell Renderer" v-if="!cell.alias" v-model="cell.renderer" :items="$services.page.getRenderers('cell')" 
+									after="You can set a custom renderer for this cell"
+									empty-value="No renderers found"
+									:formatter="function(x) { return x.name }" 
+									:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
+									
+								<div v-if="cell.renderer && $services.page.getRendererState(cell.renderer, cell, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
+									<n-form-text v-model="cell.runtimeAlias" label="Runtime alias for renderer state"/>
+									<n-form-switch v-model="cell.retainState" label="Retain state once cell is destroyed" v-if="cell.runtimeAlias"/>
+								</div>
+								<div v-if="cell.renderer && $services.page.getRendererConfiguration(cell.renderer)">
+									<component :is="$services.page.getRendererConfiguration(cell.renderer)" :target="cell" :page="page"/>
+								</div>
+									
+								<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
+							</div>
+							<renderer-bindings :target="cell" :page="page"/>
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Cell Settings" key="cell-settings" content-class="is-spacing-medium">
 							<n-form-combo label="Route" :filter="$services.page.getRoutes" v-model="cell.alias"
@@ -623,17 +632,19 @@
 					<n-form class="is-variant-floating-labels" key="cell-form">
 						<h2 class="is-h4 is-color-primary-outline is-spacing-medium">Row Configuration</h2>
 						<n-collapsible :title="row.renderer ? $services.page.getRenderer(row.renderer).title : 'Rendering'" :class="{'is-color-primary-light': row.renderer}">
-							<n-form-combo label="Target slot in renderer" v-if="getSlots(row)" v-model="row.rendererSlot" :items="getSlots(row)"/>
-							
-							<n-form-combo label="Row Renderer" v-model="row.renderer" :items="$services.page.getRenderers('row')"  :formatter="function(x) { return x.title ? x.title : x.name }" :extracter="function(x) { return x.name }"/>
-							<div v-if="row.renderer && $services.page.getRendererState(row.renderer, row, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
-								<n-form-text v-model="row.runtimeAlias" label="Runtime alias for renderer state"/>
-								<n-form-switch v-model="row.retainState" label="Retain state once row is destroyed" v-if="row.runtimeAlias"/>
-								<renderer-bindings :target="row" :page="page"/>	
+							<div class="is-column is-spacing-medium">
+								<n-form-combo label="Target slot in renderer" v-if="getSlots(row)" v-model="row.rendererSlot" :items="getSlots(row)"/>
+								
+								<n-form-combo label="Row Renderer" v-model="row.renderer" :items="$services.page.getRenderers('row')"  :formatter="function(x) { return x.title ? x.title : x.name }" :extracter="function(x) { return x.name }"/>
+								<div v-if="row.renderer && $services.page.getRendererState(row.renderer, row, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
+									<n-form-text v-model="row.runtimeAlias" label="Runtime alias for renderer state"/>
+									<n-form-switch v-model="row.retainState" label="Retain state once row is destroyed" v-if="row.runtimeAlias"/>
+								</div>
+								<div v-if="row.renderer && $services.page.getRendererConfiguration(row.renderer)">
+									<component :is="$services.page.getRendererConfiguration(row.renderer)" :target="row" :page="page"/>
+								</div>
 							</div>
-							<div v-if="row.renderer && $services.page.getRendererConfiguration(row.renderer)">
-								<component :is="$services.page.getRendererConfiguration(row.renderer)" :target="row" :page="page"/>
-							</div>
+							<renderer-bindings :target="row" :page="page"/>	
 						</n-collapsible>
 						<n-collapsible title="Row Settings" content-class="is-spacing-medium">
 							<n-form-text label="Row Name" v-model="row.name" info="A descriptive name" :timeout="600"/>
@@ -1163,11 +1174,11 @@
 </template>
 
 <template id="renderer-bindings">
-	<div>
+	<n-collapsible :title="'Data Binding'" class="is-color-primary-light" content-class="is-spacing-medium">
 		<n-page-mapper :to="fields"
 			:from="$services.page.getAvailableParameters(page, null, true)"
 			v-model="target.rendererBindings"/>
-	</div>
+	</n-collapsible>
 </template>
 
 <template id="template-manager">

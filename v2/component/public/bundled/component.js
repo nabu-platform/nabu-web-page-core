@@ -585,11 +585,29 @@ window.addEventListener("load", function() {
 					return x.name.toLowerCase() == "table";
 				})[0];
 				
+				var searchTableRenderer = function(target) {
+					if (target.renderer == "table") {
+						return target;
+					}
+					else if (target.cells) {
+						return target.cells.filter(function(x) {
+							return !!searchTableRenderer(x);
+						})[0];
+					}
+					else if (target.rows) {
+						return target.rows.filter(function(x) {
+							return !!searchTableRenderer(x);
+						})[0];
+					}
+				}
 				
 				var availableTemplates = application.services.page.templates.filter(function(x) {
 					var content = JSON.parse(x.content);
+					return !!searchTableRenderer(content.content);
+					/*
 					return content.type == "page-cell"
 						&& content.content.renderer == "table";
+					*/
 				});
 				
 				var name = $services.page.guessNameFromOperation(content);
@@ -600,9 +618,25 @@ window.addEventListener("load", function() {
 				var applyTemplate = function(template) {
 					// row at the root of the page
 					var row = rowGenerator();
-					// the cell that contains the actual form
-					// we use a cell because you might want to show it in a popup etc
-					var root = cellGenerator(row);
+					var root = null;
+					console.log("applying table template", template);
+					if (template.type == "row") {
+						root = row;
+						application.services.page.normalizeAris(pageInstance.page, row, "row");
+						row.name = "Cards";
+						row.aris.components["page-row"].variant = "cards";
+						var cellContainer = cellGenerator(row);
+						cellContainer.name = "Card";
+						application.services.page.normalizeAris(pageInstance.page, cellContainer, "cell");
+						cellContainer.aris.components["page-column"].variant = "card";
+						cellContainer.aris.components["page-column"].options.push("fill_normal");
+						root = rowGenerator(cellContainer);
+					}
+					else {
+						// the cell that contains the actual form
+						// we use a cell because you might want to show it in a popup etc
+						root = cellGenerator(row);
+					}
 					var templateContent = JSON.parse(template.content).content;
 					application.services.page.renumber(pageInstance.page, templateContent);
 					// do a reactive merge
@@ -613,10 +647,18 @@ window.addEventListener("load", function() {
 					var tableTitle = null;
 					var tableHeader = null;
 					var tableBody = null;
+					var tableFilters = null;
+					var tableTags = null;
 
 					var search = function(target) {
 						if (target.name && target.name.toLowerCase() == "table title") {
 							tableTitle = target;	
+						}
+						if (target.name && target.name.toLowerCase() == "table filters") {
+							tableFilters = target;
+						}
+						if (target.name && target.name.toLowerCase() == "table tags") {
+							tableTags = target;
 						}
 						if (target.renderer == "repeat" && ["header", "footer"].indexOf(target.rendererSlot) < 0) {
 							tableBody = target;
@@ -635,8 +677,13 @@ window.addEventListener("load", function() {
 					};
 					search(root);
 					
-					root.renderer = "table";
+					//root.renderer = "table";
 					root.name = name + " Table";
+					
+					if (tableTitle) {
+						// this assumes some kind of typography that stores the data in the "content" field or a component compliant with that layout
+						tableTitle.state.content = "%" + "{" + name + "}";
+					}
 					
 					if (tableBody) {
 						// not a thing (yet?)
@@ -645,6 +692,64 @@ window.addEventListener("load", function() {
 						tableBody.runtimeAlias = "repeat" + name;
 						tableBody.name = "Table Body " + name;
 						generator.generateFields(type, content, pageInstance, root, tableBody, tableHeader, rowGenerator, cellGenerator);
+					}
+					
+					var operation = $services.swagger.operations[content];
+					var blacklist = ["limit", "offset", "orderBy", "id"];
+					if (tableFilters && operation) {
+						var row = tableFilters.cells ? tableFilters : rowGenerator(tableFilters);
+						if (operation.parameters) {
+							var formGenerator = nabu.page.providers("page-generator").filter(function(x) {
+								return x.name.toLowerCase() == "form";
+							})[0];
+							formGenerator.generateFields("operation", content, pageInstance, "repeat" + name + ".filter", row, rowGenerator, cellGenerator,
+								blacklist, 600);
+							
+							// for search, we want a placeholder instead of label and (at least for text input) a search icon suffix
+							row.cells.forEach(function(cell) {
+								cell.state.placeholder = cell.state.label == "%" + "{Q}" ? "%" + "{Search...}" : cell.state.label;
+								cell.state.label = null;
+								if (cell.alias == "page-form-text") {
+									cell.state.suffixIcon = "search";
+								}
+							});
+						}
+					}
+					
+					if (tableTags) {
+						var row = tableTags.cells ? tableTags : rowGenerator(tableTags);
+						var tagTemplates = row.cells.filter(function(x) {
+							return x.alias == "page-tag";
+						});
+						// remove them
+						tagTemplates.forEach(function(x) {
+							row.cells.splice(row.cells.indexOf(x), 1);
+						});
+						// if there are already cells in the row of the type "page-tag", we remove them
+						// they are assumed to be a template of what you want to do with the styling
+						if (operation.parameters) {
+							operation.parameters.forEach(function(x) {
+								if (blacklist.indexOf(x.name) < 0) {
+									var cell = cellGenerator(row);
+									cell.alias = "page-tag";
+									cell.state.field = "repeat" + name + ".filter." + x.name;
+									cell.state.content = "%" + "{" + x.name.substring(0, 1).toUpperCase() + x.name.substring(1).replace(/([A-Z]+)/g, " $1") + "}";
+									
+									if (tagTemplates.length == 0) {
+										application.services.page.normalizeAris(pageInstance.page, cell, "cell");
+										// not rendered yet so we can't read it "live"
+										application.services.page.normalizeAris(pageInstance.page, cell, "cell", [{name:"page-tag"}]);
+										var options = cell.aris.components["page-tag"].options;
+										cell.aris.components["page-tag"].variant = "primary-dark-outline";
+										options.push("direction_reverse");
+										options.push("decoration_emphasis");
+									}
+									else {
+										cell.aris = tagTemplates[0].aris;
+									}
+								}
+							});
+						}
 					}
 				}
 				
@@ -673,7 +778,6 @@ window.addEventListener("load", function() {
 					definition = application.services.page.getSwaggerOperationOutputDefinition(content);
 					var arrays = application.services.page.getArrays(definition);
 					var childDefinition = application.services.page.getChildDefinition(definition, arrays[0]);
-					console.log("arrays are", arrays, childDefinition);
 					definition = childDefinition && childDefinition.items && childDefinition.items ? childDefinition.items : {};
 				}
 				else if (type == "array") {
@@ -682,46 +786,102 @@ window.addEventListener("load", function() {
 					var childDefinition = application.services.page.getChildDefinition({properties:pageParameters}, content);
 					definition = childDefinition && childDefinition.items && childDefinition.items ? childDefinition.items : {};
 				}
+				var sortTemplates = header == null ? [] : header.cells.filter(function(x) {
+					return x.alias == "page-button-sort";
+				});
+				// remove from the header
+				sortTemplates.forEach(function(x) {
+					header.cells.splice(header.cells.indexOf(x), 1);
+				});
 				var keys = application.services.page.getSimpleKeysFor(definition);
-				keys.forEach(function(key) {
-					// we don't generate a field for the id by default
-					if (key != "id") {
-						var name = key.replace(/^.*\.([^.]+)$/, "$1");
-						var cell = cellGenerator(body);
-						var child = application.services.page.getChildDefinition(definition, key);
-						cell.alias = "typography-fragment";
-						cell.state.content = "{" + name + "}";
-						Vue.set(cell.state, "fragments", {});
-						Vue.set(cell.state.fragments, name, {
-							key: null,
-							format: null
-						});
-						
-						cell.state.fragments[name].key = body.runtimeAlias + ".record." + key;
-						
-						// try to find a more specific alias
-						if (child) {
-							if (child.type == "integer") {
-								cell.state.fragments[name].format = "number";
+				
+				var chosen = [];
+				new nabu.utils.vue.prompt(function() {
+					var component = Vue.component("data-field-picker");
+					return new component({
+						propsData: {
+							value: chosen,
+							fields: keys
+						}
+					});
+					
+				}).then(function() {
+					chosen.forEach(function(key) {
+						// we don't generate a field for the id by default
+						if (key != "id") {
+							var name = key.replace(/^.*\.([^.]+)$/, "$1");
+							var cell = cellGenerator(body);
+							var child = application.services.page.getChildDefinition(definition, key);
+							cell.alias = "typography-fragment";
+							cell.state.content = "{" + name + "}";
+							Vue.set(cell.state, "fragments", {});
+							Vue.set(cell.state.fragments, name, {
+								key: null,
+								format: null
+							});
+							
+							cell.state.fragments[name].key = body.runtimeAlias + ".record." + key;
+							
+							// try to find a more specific alias
+							if (child) {
+								if (child.type == "integer") {
+									cell.state.fragments[name].format = "number";
+								}
+								else if (child.type == "boolean") {
+									cell.state.fragments[name].format = "checkbox";
+								}
+								else if (child.format && child.format.indexOf("date") >= 0) {
+									cell.state.fragments[name].format = "date";
+								}
+								else if (child.format == "uuid") {
+									cell.state.fragments[name].format = "resolve";
+									var generator = nabu.page.providers("page-generator").filter(function(x) {
+										return x.name.toLowerCase() == "form";
+									})[0];
+									var operationId = generator.guessListServiceForField(name);
+									if (operationId) {
+										cell.state.fragments[name].resolveOperation = operationId;
+										// we assume some reasonable defaults
+										cell.state.fragments[name].resolveOperationId = "id";
+										// TODO: verify that there IS a field name, if not, take the first string field or fall back to the id
+										cell.state.fragments[name].resolveOperationLabel = "name";
+									}
+									else {
+										cell.state.fragments[name].resolveOperation = "nabu.cms.core.rest.masterdata.entry.resolve";
+										cell.state.fragments[name].resolveOperationId = "id";
+										cell.state.fragments[name].resolveOperationLabel = "label";
+										cell.state.fragments[name].resolveOperationIds = "entryId";
+									}
+								}
 							}
-							else if (child.type == "boolean") {
-								cell.state.fragments[name].format = "checkbox";
+							cell.name = application.services.page.prettify(name);
+							
+							var headerCell = cellGenerator(header);
+							// names are automatically generated from the content these days
+							//headerCell.name = cell.name;
+							
+							//headerCell.alias = "typography-fragment";
+							headerCell.alias = "page-button-sort";
+							headerCell.state.content = "%" + "{" + cell.name + "}";
+							headerCell.state.sortFields = [{
+								name: name
+							}];
+							headerCell.state.target = body.id;
+							
+							if (sortTemplates.length == 0) {
+								application.services.page.normalizeAris(pageInstance.page, headerCell, "cell");
+								// not rendered yet so we can't read it "live"
+								application.services.page.normalizeAris(pageInstance.page, headerCell, "cell", [{name:"page-button-sort"}]);
+								var options = headerCell.aris.components["page-button-sort"].options;
+								options.push("direction_reverse");
+								headerCell.aris.components["page-button-sort"].variant = "ghost";
 							}
-							else if (child.format && child.format.indexOf("date") >= 0) {
-								cell.state.fragments[name].format = "date";
-							}
-							else if (child.format == "uuid") {
-								cell.state.fragments[name].format = "resolve";
+							else {
+								headerCell.aris = sortTemplates[0].aris;
 							}
 						}
-						cell.name = application.services.page.prettify(name);
-						
-						var headerCell = cellGenerator(header);
-						headerCell.name = cell.name;
-						headerCell.alias = "typography-fragment";
-						headerCell.state.content = "%" + "{" + cell.name + "}";
-					}
-				});
+					});
+				})
 			}
 		});
 		nabu.page.provide("page-generator", {
@@ -736,9 +896,7 @@ window.addEventListener("load", function() {
 			},
 			automap: function(target, pageInstance, mapFrom) {
 				var parameters = application.services.page.getAllAvailableParameters(pageInstance.page, pageInstance);
-				console.log("parameters are", parameters, mapFrom);
 				var source = application.services.page.getChildDefinition({properties:parameters}, mapFrom);
-				console.log("source is", source);
 				var definition = null;
 				if (target.form.formType == "operation") {
 					definition = application.services.page.getSwaggerOperationInputDefinition(target.form.operation);
@@ -765,13 +923,19 @@ window.addEventListener("load", function() {
 							return x.indexOf("." + name) == x.length - name.length - 1;
 						})[0];
 						if (match) {
-							console.log("match is", match);
 							Vue.set(target.rendererBindings, key, mapFrom + "." + match);
 						}
 					}
 				});
 			},
-			generateFields: function(type, content, pageInstance, runtimeAlias, fields, rowGenerator, cellGenerator) {
+			guessListServiceForField: function(name) {
+				name = name.replace(/^.*\.([^.]+)$/, "$1");
+				name = name.replace(/^([^.]+)Id$/, "$1");
+				return Object.keys(application.services.swagger.operations).filter(function(operationId) {
+					return operationId.indexOf("." + name + ".") >= 0 && operationId.indexOf(".list") == operationId.length - ".list".length;
+				})[0];
+			},
+			generateFields: function(type, content, pageInstance, runtimeAlias, fields, rowGenerator, cellGenerator, blacklist, timeout) {
 				// if it is not a row, add it as a row
 				if (!fields.cells) {
 					fields = rowGenerator(fields);
@@ -789,11 +953,17 @@ window.addEventListener("load", function() {
 				else if (type == "function") {
 					definition = application.services.page.getFunctionInput(content);
 				}
+				
+				var generator = nabu.page.providers("page-generator").filter(function(x) {
+					return x.name.toLowerCase() == "form";
+				})[0];
+				
+				
 				var keys = application.services.page.getSimpleKeysFor(definition);
 				keys.forEach(function(key) {
 					// we don't generate a field for the id by default
 					// this should only be available in updates mostly unless you have weird naming conventions
-					if (key != "id") {
+					if (key != "id" && (!blacklist || blacklist.indexOf(key) < 0)) {
 						var cell = cellGenerator(fields);
 						var child = application.services.page.getChildDefinition(definition, key);
 						cell.alias = "page-form-text";
@@ -810,6 +980,13 @@ window.addEventListener("load", function() {
 							}
 							else if (child.format == "uuid") {
 								cell.alias = "page-form-enumeration-operation";
+								var operationId = generator.guessListServiceForField(key);
+								if (operationId) {
+									cell.state.enumerationOperation = operationId;
+									// we assume some reasonable defaults
+									cell.state.enumerationOperationValue = "id";
+									cell.state.enumerationOperationLabel = "name";
+								}
 							}
 							// if we see a "password" field, use that type
 							else if (key.toLowerCase().indexOf("password") >= 0) {
@@ -819,6 +996,9 @@ window.addEventListener("load", function() {
 						cell.state.name = runtimeAlias + "." + key;
 						cell.name = application.services.page.prettify(key.replace(/^.*\.([^.]+)$/, "$1"));
 						cell.state.label = "%" + "{" + cell.name + "}";
+						if (timeout) {
+							cell.state.timeout = timeout;
+						}
 					}
 				});
 			},
@@ -1022,15 +1202,33 @@ window.addEventListener("load", function() {
 									headers.forEach(function(x) {
 										var cell = cellGenerator(x);
 										cell.name = "Local actions header";
-									})
+									});
+									
+									// by default we generate no header content
+									// and we set the borders to be disabled on the local actions, that gives it a floaty feeling
+									application.services.page.normalizeAris(pageInstance.page, buttons, "cell");
+									buttons.aris.components["page-column"].options.push("border_none");
 								}
+								var buttonRow = null;
 								// if we don't have a row yet, add it
-								var buttonRow = buttons.rows.length ? buttons.rows[0] : rowGenerator(buttons);
+								if (buttons.rows.length == 0) {
+									buttonRow = rowGenerator(buttons);
+									application.services.page.normalizeAris(pageInstance.page, buttonRow, "row");
+									buttonRow.aris.components["page-row"].options.push("gap_small");
+								}
+								else {
+									buttonRow = buttons.rows[0];
+								}
 								
 								buttonCell = cellGenerator(buttonRow);
 								
 								eventName = "update" + (name ? name : "");
 								buttonCell.name = "Update" + (name ? " " + name : "");
+								application.services.page.normalizeAris(pageInstance.page, buttonCell, "cell");
+								application.services.page.normalizeAris(pageInstance.page, buttonCell, "cell", [{name:"page-button"}]);
+								console.log("buttonCell aris", buttonCell);
+								buttonCell.aris.components["page-button"].options.push("size_small");
+								buttonCell.aris.components["page-button"].variant = "ghost";
 								root.form.synchronize = true;
 								
 								// make sure we synchronize changes so we don't need to refresh

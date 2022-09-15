@@ -60,7 +60,27 @@ nabu.page.provide("page-renderer", {
 
 
 Vue.component("renderer-table", {
-	template: "#renderer-table"	
+	template: "#renderer-table",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		// the target (cell or row)
+		target: {
+			type: Object,
+			required: true
+		},
+		// whether or not we are in edit mode (we can do things slightly different)
+		edit: {
+			type: Boolean,
+			required: false
+		},
+		childComponents: {
+			type: Object,
+			required: false
+		}
+	}
 });
 
 

@@ -323,6 +323,15 @@
 							"url": "views/actions/actions.tpl"
 						}
 					},
+					"tag": {
+						"tag.js": {
+							"url": "views/tag/tag.js",
+							"template": true
+						}, 
+						"tag.tpl": {
+							"url": "views/tag/tag.tpl"
+						}
+					},
 					"button": {
 						"button.js": {
 							"url": "views/button/button.js"
@@ -545,6 +554,12 @@
 				},
 				"table.tpl": {
 					"url": "renderers/table/table.tpl"
+				},
+				"fieldPicker.js": {
+					"url": "renderers/table/fieldPicker.js"
+				},
+				"fieldPicker.tpl": {
+					"url": "renderers/table/fieldPicker.tpl"
 				}
 			}
 		},

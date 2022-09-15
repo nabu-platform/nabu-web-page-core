@@ -6,9 +6,9 @@
 </template>
 
 <template id="renderer-form-configure">
-	<div class="renderer-form-configure">
+	<div class="renderer-form-configure is-column is-spacing-gap-medium">
 		
-		<n-form-radio 
+		<n-form-combo 
 			name="form-type"
 			v-model="target.form.formType"
 			:items="[{name: 'page', title: 'Page form'}, {name:'operation', title: 'Operation Form'}, {name: 'array', title: 'Array form'}, {name: 'function', title: 'Function form'}]"
@@ -16,8 +16,6 @@
 			:extracter="function(x) { return x.name }"
 			label="What type of form do you want?"/>
 		
-		<n-form-switch v-model="target.form.synchronize" label="Synchronize changes back to binding" v-if="target.form.formType != 'page'"/>
-		<n-form-switch v-model="target.form.bindingByReference" label="Perform input parameter binding by reference"/>
 		
 		<div v-if="target.form.formType == 'operation'">
 			<n-form-combo label="Operation" v-model="target.form.operation" 
@@ -54,6 +52,9 @@
 			<n-form-text v-model="target.form.successEvent" label="Success event" after="Emitted once the form has been successfully submitted"/>
 			<n-form-text v-model="target.form.errorEvent" label="Error event" after="Emitted if the form could not be submitted correctly"/>
 		</div>
+		
+		<n-form-switch v-model="target.form.synchronize" label="Synchronize changes back to binding" v-if="target.form.formType != 'page'"/>
+		<n-form-switch v-model="target.form.bindingByReference" label="Perform input parameter binding by reference"/>
 		
 		<div v-if="target.form.formType">
 			<n-form-switch v-model="target.form.noInlineErrors" label="Disable inline error message" after="By default, validation errors will be shown inline."/>
