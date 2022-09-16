@@ -1224,8 +1224,9 @@ window.addEventListener("load", function() {
 									
 									// by default we generate no header content
 									// and we set the borders to be disabled on the local actions, that gives it a floaty feeling
-									application.services.page.normalizeAris(pageInstance.page, buttons, "cell");
-									buttons.aris.components["page-column"].options.push("border_none");
+									application.services.page.normalizeAris(pageInstance.page, buttons, "cell", [{name:"table-column"}]);
+									buttons.aris.components["table-column"].options.push("border_none");
+									buttons.aris.components["table-column"].modifiers.push("small");
 								}
 								var buttonRow = null;
 								// if we don't have a row yet, add it
@@ -1233,6 +1234,7 @@ window.addEventListener("load", function() {
 									buttonRow = rowGenerator(buttons);
 									application.services.page.normalizeAris(pageInstance.page, buttonRow, "row");
 									buttonRow.aris.components["page-row"].options.push("gap_small");
+									buttonRow.aris.components["page-row"].options.push("wrap_none");
 								}
 								else {
 									buttonRow = buttons.rows[0];

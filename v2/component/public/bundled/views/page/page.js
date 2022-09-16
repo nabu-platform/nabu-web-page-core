@@ -1654,9 +1654,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 				devices: [],
 				clickEvent: null
 			};
-			this.$services.page.normalizeAris(this.page, cell);
 			if (!skipInject) {
 				target.cells.push(cell);
+				this.$services.page.normalizeAris(this.page, cell);
 			}
 			return cell;
 		},
@@ -1678,9 +1678,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 				collapsed: false,
 				name: null
 			};
-			this.$services.page.normalizeAris(this.page, row, "row");
 			if (!skipInject) {
 				target.rows.push(row);
+				this.$services.page.normalizeAris(this.page, row, "row");
 			}
 			return row;
 		},
@@ -3714,6 +3714,7 @@ Vue.component("n-page-row", {
 					classes.push("is-" + renderer.cssComponent);
 				}
 			}
+			var resultingComponent = null;
 			if (classes.length == 0) {
 				var result = this.getPageType(cell);
 				var pageType = result ? result.pageType : null;
@@ -3721,7 +3722,6 @@ Vue.component("n-page-row", {
 					var provider = nabu.page.providers("page-type").filter(function(x) {
 						return x.name == pageType;
 					})[0];
-					var resultingComponent = null;
 					if (provider && cell.renderer && provider[cell.renderer + "Component"] instanceof Function) {
 						resultingComponent = provider[cell.renderer + "Component"](cell);
 					}
@@ -3741,6 +3741,7 @@ Vue.component("n-page-row", {
 			}
 			// only a page column if we don't have a component yet
 			if (classes.length == 0) {
+				resultingComponent = "page-column";
 				if (this.edit || !cell.target || cell.target == "page") {
 					classes.push("is-page-column");
 				}
@@ -3751,8 +3752,8 @@ Vue.component("n-page-row", {
 			}
 			if (this.$services.page.useAris && cell.aris && cell.aris.components) {
 				var children = this.$services.page.calculateArisComponents(cell.aris, cell.alias, this);
-				if (children["page-column"] && children["page-column"].classes) {
-					nabu.utils.arrays.merge(classes, children["page-column"].classes);
+				if (children[resultingComponent] && children[resultingComponent].classes) {
+					nabu.utils.arrays.merge(classes, children[resultingComponent].classes);
 				}
 			}
 			if (cell.styles) {
@@ -3777,6 +3778,7 @@ Vue.component("n-page-row", {
 					classes.push("is-" + renderer.cssComponent);
 				}
 			}
+			var resultingComponent = null;
 			if (classes.length == 0) {
 				var result = this.getPageType(row);
 				var pageType = result ? result.pageType : null;
@@ -3784,7 +3786,6 @@ Vue.component("n-page-row", {
 					var provider = nabu.page.providers("page-type").filter(function(x) {
 						return x.name == pageType;
 					})[0];
-					var resultingComponent = null;
 					if (provider && row.renderer && provider[row.renderer + "Component"] instanceof Function) {
 						resultingComponent = provider[row.renderer + "Component"](row);
 					}
@@ -3804,12 +3805,13 @@ Vue.component("n-page-row", {
 			}
 			// only a page row if we don't have a component yet
 			if (classes.length == 0) {
+				resultingComponent = "page-row";
 				classes.push("is-page-row");
 			}
 			if (this.$services.page.useAris && row.aris && row.aris.components) {
 				var children = this.$services.page.calculateArisComponents(row.aris, row.renderer, this);
-				if (children["page-row"] && children["page-row"].classes) {
-					nabu.utils.arrays.merge(classes, children["page-row"].classes);
+				if (children[resultingComponent] && children[resultingComponent].classes) {
+					nabu.utils.arrays.merge(classes, children[resultingComponent].classes);
 				}
 			}
 			if (row.styles) {
@@ -4098,10 +4100,10 @@ Vue.component("n-page-row", {
 				devices: [],
 				clickEvent: null
 			};
-			this.$services.page.normalizeAris(this.page, cell);
 			if (!target.cells) {
 				Vue.set(target, "cells", []);
 			}
+			this.$services.page.normalizeAris(this.page, cell);
 			target.cells.push(cell);
 			return cell;
 		},
@@ -4123,9 +4125,9 @@ Vue.component("n-page-row", {
 				collapsed: false,
 				name: null
 			};
-			this.$services.page.normalizeAris(this.page, row, "row");
 			if (!skipInject) {
 				target.rows.push(row);
+				this.$services.page.normalizeAris(this.page, row, "row");
 			}
 			return row;
 		},
@@ -4594,9 +4596,9 @@ Vue.component("page-sidemenu", {
 				devices: [],
 				clickEvent: null
 			};
-			this.$services.page.normalizeAris(this.page, cell);
 			if (!skipInject) {
 				target.cells.push(cell);
+				this.$services.page.normalizeAris(this.page, cell);
 			}
 			return cell;
 		},
