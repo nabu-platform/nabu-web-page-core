@@ -101,6 +101,15 @@ nabu.page.provide("page-renderer", {
 				result.record = {properties:record};
 				result.records = {type: "array", items: {properties:record}};
 			}
+			if (result.record && container.repeat.selectable) {
+				result["selected"] = {
+					type: "array",
+					items: {
+						type: "object",
+						properties: result.record.properties
+					}
+				}
+			}
 		}
 		return {properties:result};
 	},
@@ -111,7 +120,7 @@ nabu.page.provide("page-renderer", {
 			component: target.rows ? "row" : "column"
 		}];
 	},
-	getActions: function(target) {
+	getActions: function(target, pageInstance, $services) {
 		var actions = [];
 		// can only refresh if there is an operation
 		if (target.repeat && target.repeat.operation) {
@@ -134,6 +143,28 @@ nabu.page.provide("page-renderer", {
 					type: "boolean"
 				};
 			}
+			actions.push(action);
+		}
+		if (pageInstance && target && target.runtimeAlias && target.repeat && target.repeat.selectable) {
+			// we need the definition for this
+			var parameters = $services.page.getAllAvailableParameters(pageInstance.page);
+			var action = {
+				title: "Select",
+				name: "select",
+				input: {
+					items: {
+						type: "array",
+						items: {
+							type: "object",
+							properties: parameters[target.runtimeAlias].properties.record.properties
+						}
+					},
+					append: {
+						type: "boolean"
+					}
+				},
+				output: {}
+			};
 			actions.push(action);
 		}
 		return actions;
@@ -201,6 +232,8 @@ Vue.component("renderer-repeat", {
 			// the state in the original page, this can be used to write stuff like "limit" etc to
 			// note that the "record" will not actually be in this
 			state: {
+				// the selected
+				selected: [],
 				order: {
 					by: []
 				},
@@ -247,8 +280,6 @@ Vue.component("renderer-repeat", {
 				stateModified = true;
 			}
 		});
-		
-		console.log("state", this.state.order.by, this.parameters);
 		
 		if (!stateModified) {
 			this.created = true;
@@ -373,7 +404,7 @@ Vue.component("renderer-repeat", {
 				}
 				// if we are a cell, check if we have a celltag
 				else if (provider && this.target.rows && provider.cellTag instanceof Function) {
-					return provider.cellTag(this.target);
+					return provider.cellTag(null, this.target);
 				}
 				else if (provider && this.target.rows && provider.cellTag) {
 					return provider.cellTag;
@@ -443,6 +474,14 @@ Vue.component("renderer-repeat", {
 				return this.records.indexOf(record);
 			}
 		},
+		handleClick: function(event, record) {
+			if (this.target.repeat && this.target.repeat.selectable) {
+				this.runAction("select", {
+					items: [record],
+					append: event.metaKey || event.ctrlKey
+				});
+			}
+		},
 		runAction: function(action, value) {
 			if (action == "jump-page") {
 				return this.loadData(value.page);
@@ -476,12 +515,24 @@ Vue.component("renderer-repeat", {
 						return x.indexOf(" none") < 0;
 					}));
 				}
-				console.log("orderin by", this.state.order.by);
+			}
+			else if (action == "select") {
+				if (this.target.repeat && this.target.repeat.selectable) {
+					if (!value.append || !this.target.repeat.multiSelectable) {
+						this.state.selected.splice(0);
+					}
+					if (value.items) {
+						nabu.utils.arrays.merge(this.state.selected, value.items);
+					}
+				}
 			}
 			return this.$services.q.reject();
 		},
 		getRuntimeState: function() {
 			return this.state;	
+		},
+		getPageInstance: function() {
+			return this.$services.page.getPageInstance(this.page, this);
 		},
 		getParameters: function(record) {
 			var result = {};
@@ -722,6 +773,9 @@ Vue.component("renderer-repeat", {
 						collapsed: false,
 						name: null
 					};
+					// inherit triggers
+					// we want to be able to do it contextually
+					row.triggers = this.target.triggers;
 					nabu.utils.arrays.merge(row.cells, this.target.cells);
 					content.rows.push(row);
 				}
@@ -763,7 +817,6 @@ Vue.component("renderer-repeat", {
 								mapVariables(newPage);
 							}
 						}, {deep: true});
-						console.log("--------------> wtf???");
 						newPage = new nabu.page.views.Page({template: "n-page-optimized", propsData: {
 							page: page, 
 							parameters: parameters, 
@@ -776,7 +829,6 @@ Vue.component("renderer-repeat", {
 						}, beforeMount: function() {
 							mapVariables(this);
 						}});
-						console.log("newpag is",newPage);
 						return newPage;
 					},
 					// yes it's a page, but we don't want it treated as such

@@ -117,6 +117,12 @@ nabu.page.mixins.renderer = {
 nabu.page.views.Page = Vue.component("n-page", {
 	template: "#nabu-page",
 	props: {
+		// especially for page fragments, we can link a parent page
+		// in a lot of cases, the fragment page needs the parent page for some additional resolving (e.g. state, components...)
+		fragmentParent: {
+			type: Object,
+			required: false
+		},
 		page: {
 			type: Object,
 			required: true
@@ -497,13 +503,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 		},
 		plugins: function() {
 			return nabu.page.providers("page-plugin").filter(function(x) { return x.target == "page" });
-		},
-		selectedItemPath: function() {
-			return this.selectedType ? this.$services.page.getTargetPath(this.page.content, this.selectedType == "cell" ? this.cell.id : this.row.id) : [];
 		}
 	},
 	data: function() {
 		return {
+			selectedItemPath: [],
 			autoRefreshTimeout: null,
 			refs: {},
 			edit: false,
@@ -560,10 +564,20 @@ nabu.page.views.Page = Vue.component("n-page", {
 			initialStateLoaded: [],
 			activeTab: "layout",
 			// anything waiting for a mount
-			waitingForMount: {}
+			waitingForMount: {},
+			// in most cases we write conditions on cells to hide themselves or show themselves
+			// however, in some cases only the content IN a cell can determine whether it should be shown or not, but this can only be deduced AFTER it is rendered
+			// we use the v-show toggle to do that
+			hidden: {}
 		}
 	},
 	methods: {
+		isContentHidden: function(target) {
+			if (this.hidden[target.id] == null) {
+				Vue.set(this.hidden, target.id, false);
+			}
+			return this.hidden[target.id];
+		},
 		// slots can only be accessed in the direct parent, this means we have a renderer that has specific slots
 		getSlots: function(target) {
 			var path = this.$services.page.getTargetPath(this.page.content, target.id);
@@ -594,19 +608,38 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 			}
 		},
+		getClickTrigger: function() {
+			return {
+				click: {
+					properties: {
+						shift: {
+							type: "boolean"
+						},
+						ctrl: {
+							type: "boolean"
+						},
+						alt: {
+							type: "boolean"
+						},
+						meta: {
+							type: "boolean"
+						}
+					}
+				}
+			};
+		},
 		// this works, but currently we can't get the events correctly
 		getTriggersForCell: function(cell) {
 			var component = this.components[cell.id];
-			var result = {};
 			// always have a click trigger
-			result.click = {};
+			var result = this.getClickTrigger();
 			if (component) {
 				// only works for component based actions
-				var actions = this.$services.page.getActions(component, cell);
+				var actions = this.$services.page.getActions(component, cell, this);
 				// this works for renderer based
 				if ((!actions || !actions.length) && cell.renderer) {
 					var renderer = this.$services.page.getRenderer(cell.renderer);
-					actions = this.$services.page.getActions(renderer, cell);
+					actions = this.$services.page.getActions(renderer, cell, this);
 				}
 				if (actions.length > 0) {
 					var self = this;
@@ -840,6 +873,27 @@ nabu.page.views.Page = Vue.component("n-page", {
 			Vue.set(this, 'row', row);
 			Vue.set(this, 'cell', cell);
 			Vue.set(this, 'selectedType', type);
+
+			// if we set something, calculate a new path
+			if (type) {
+				var path = this.$services.page.getTargetPath(this.page.content, this.selectedType == "cell" ? this.cell.id : this.row.id);
+				var samePath = false;
+				// if our current path is shorter than the one we already have selected (so basically we selected a parent)
+				// we keep the longer path! this allows you to switch to a parent and then back to the child you were working on
+				if (path.length < this.selectedItemPath.length) {
+					samePath = true;
+					var self = this;
+					path.forEach(function(x, index) {
+						if (samePath && self.selectedItemPath[index].id != x.id) {
+							samePath = false;
+						}
+					});
+				}
+				if (!samePath) {
+					this.selectedItemPath.splice(0);
+					nabu.utils.arrays.merge(this.selectedItemPath, path);
+				}
+			}
 		},
 		stopEdit: function() {
 			if (this.edit && !this.closing) {
@@ -1348,6 +1402,18 @@ nabu.page.views.Page = Vue.component("n-page", {
 					component.$parent.$emit("close");
 				}
 			});
+			
+			// we set the initial state
+			if (component.isCellHidden) {
+				Vue.set(self.hidden, cell.id, component.isCellHidden());
+				// and we listen for updates
+				component.$on("hide", function() {
+					Vue.set(self.hidden, cell.id, true);	
+				});
+				component.$on("show", function() {
+					Vue.set(self.hidden, cell.id, false);	
+				});
+			}
 			
 			// assign a page instance counter for unique temporary reference
 			component.$$pageInstanceCounter = this.instanceCounter++;
@@ -3058,6 +3124,10 @@ Vue.component("n-page-row", {
 		});
 	},
 	methods: {
+		isContentHidden: function(target) {
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			return pageInstance.isContentHidden(target);
+		},
 		getRendererParameters: function(target) {
 			var result = {};
 			if (target && target.rendererBindings) {
@@ -3364,7 +3434,8 @@ Vue.component("n-page-row", {
 		rowTagFor: function(row) {
 			var renderer = row.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == row.renderer })[0];
 			if (renderer == null) {
-				var pageType = this.getPageType(row);
+				var result = this.getPageType(row);
+				var pageType = result ? result.pageType : null;
 				if (!pageType || pageType == "page") {
 					return "div";	
 				}
@@ -3372,40 +3443,26 @@ Vue.component("n-page-row", {
 				var provider = nabu.page.providers("page-type").filter(function(x) {
 					return x.name == pageType;
 				})[0];
+				var rowTag = null;
 				// if it is a function, we can do more stuff
 				if (provider && provider.rowTag instanceof Function) {
-					return provider.rowTag(row, this.depth, this.edit);
+					rowTag = provider.rowTag(row, this.depth, this.edit, result.path);
 				}
 				// special override for editing purposes
 				else if (this.edit && provider && provider.rowTagEdit) {
-					return provider.rowTagEdit;
+					rowTag = provider.rowTagEdit;
 				}
-				return provider && provider.rowTag ? provider.rowTag : "div";
+				else if (provider && provider.rowTag) {
+					rowTag = provider.rowTag;
+				}
+				return rowTag ? rowTag : "div";
 			}
 			else {
 				return renderer.component;
 			}
 		},
 		getPageType: function(target) {
-			var self = this;
-			var pageType = null;
-				
-			// we check if there is a renderer in the path to this target
-			// if so, that renderer can modify how we render the content
-			var path = this.$services.page.getTargetPath(this.page.content, target.id);
-			path.reverse();
-			path.forEach(function(x) {
-				if (x.renderer && !pageType) {
-					var renderer = self.$services.page.getRenderer(x.renderer);
-					if (renderer && renderer.getPageType) {
-						pageType = renderer.getPageType(x);
-					}
-				}
-			});
-			if (pageType == null) {
-				pageType = this.page.content.pageType;
-			}
-			return pageType;
+			return this.$services.page.getPageType(this.page, target);
 		},
 		cellTagFor: function(row, cell) {
 			var renderer = cell.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == cell.renderer })[0];
@@ -3416,7 +3473,8 @@ Vue.component("n-page-row", {
 			// where we keep track of the possibility that both exist etc
 			// it is an unlikely usecase...
 			if (renderer == null || cell.alias) {
-				var pageType = this.getPageType(cell);
+				var result = this.getPageType(cell);
+				var pageType = result ? result.pageType : null;
 				if (!pageType || pageType == "page") {
 					return "div";	
 				}
@@ -3424,15 +3482,19 @@ Vue.component("n-page-row", {
 				var provider = nabu.page.providers("page-type").filter(function(x) {
 					return x.name == pageType;
 				})[0];
+				var cellTag = null;
 				// if it is a function, we can do more stuff
 				if (provider && provider.cellTag instanceof Function) {
-					return provider.cellTag(row, cell, this.depth, this.edit);
+					cellTag = provider.cellTag(row, cell, this.depth, this.edit, result.path);
 				}
 				// special override for editing purposes
 				else if (this.edit && provider && provider.cellTagEdit) {
-					return provider.cellTagEdit;
+					cellTag = provider.cellTagEdit;
 				}
-				return provider && provider.cellTag ? provider.cellTag : "div";
+				else if (provider && provider.cellTag) {
+					cellTag = provider.cellTag;
+				}
+				return cellTag ? cellTag : "div";
 			}
 			else {
 				return renderer.component;
@@ -3653,22 +3715,27 @@ Vue.component("n-page-row", {
 				}
 			}
 			if (classes.length == 0) {
-				var pageType = this.getPageType(cell);
+				var result = this.getPageType(cell);
+				var pageType = result ? result.pageType : null;
 				if (pageType) {
 					var provider = nabu.page.providers("page-type").filter(function(x) {
 						return x.name == pageType;
 					})[0];
+					var resultingComponent = null;
 					if (provider && cell.renderer && provider[cell.renderer + "Component"] instanceof Function) {
-						classes.push("is-" + provider[cell.renderer + "Component"](cell));
+						resultingComponent = provider[cell.renderer + "Component"](cell);
 					}
 					else if (provider && cell.renderer && provider[cell.renderer + "Component"]) {
-						classes.push("is-" + provider[cell.renderer + "Component"]);
+						resultingComponent = provider[cell.renderer + "Component"];
 					}
 					else if (provider && provider.cellComponent instanceof Function) {
-						classes.push("is-" + provider.cellComponent(cell));
+						resultingComponent = provider.cellComponent(cell, result.path);
 					}
 					else if (provider && provider.cellComponent) {
-						classes.push("is-" + provider.cellComponent);
+						resultingComponent = provider.cellComponent;
+					}
+					if (resultingComponent) {
+						classes.push("is-" + resultingComponent);
 					}
 				}
 			}
@@ -3711,22 +3778,27 @@ Vue.component("n-page-row", {
 				}
 			}
 			if (classes.length == 0) {
-				var pageType = this.getPageType(row);
+				var result = this.getPageType(row);
+				var pageType = result ? result.pageType : null;
 				if (pageType) {
 					var provider = nabu.page.providers("page-type").filter(function(x) {
 						return x.name == pageType;
 					})[0];
+					var resultingComponent = null;
 					if (provider && row.renderer && provider[row.renderer + "Component"] instanceof Function) {
-						classes.push("is-" + provider[row.renderer + "Component"](row));
+						resultingComponent = provider[row.renderer + "Component"](row);
 					}
 					else if (provider && row.renderer && provider[row.renderer + "Component"]) {
-						classes.push("is-" + provider[row.renderer + "Component"]);
+						resultingComponent = provider[row.renderer + "Component"];
 					}
 					else if (provider && provider.rowComponent instanceof Function) {
-						classes.push("is-" + provider.rowComponent(row));
+						resultingComponent = provider.rowComponent(row, result.path);
 					}
 					else if (provider && provider.rowComponent) {
-						classes.push("is-" + provider.rowComponent);
+						resultingComponent = provider.rowComponent;
+					}
+					if (resultingComponent) {
+						classes.push("is-" + resultingComponent);
 					}
 				}
 			}
@@ -3942,9 +4014,31 @@ Vue.component("n-page-row", {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			pageInstance.resetEvents();	
 		},
-		clickOnCell: function(row, cell) {
-			if (!this.edit) {
-				var promise = this.$services.triggerable.trigger(cell, "click", null, this);
+		getClickParameters: function($event) {
+			var result = {};
+			result.ctrl = !!$event.ctrlKey;
+			result.shift = !!$event.shiftKey;
+			result.alt = !!$event.altKey;
+			result.meta = !!$event.metaKey;
+			return result;
+		},
+		clickOnCell: function(row, cell, $event) {
+			if (!this.edit && this.$services.triggerable.canTrigger(cell, "click")) {
+				if ($event) {
+					$event.preventDefault();
+					$event.stopPropagation();
+				}
+				var promise = this.$services.triggerable.trigger(cell, "click", this.getClickParameters($event), this);
+				return promise;
+			}
+		},
+		clickOnRow: function(row, $event) {
+			if (!this.edit && this.$services.triggerable.canTrigger(row, "click")) {
+				if ($event) {
+					$event.preventDefault();
+					$event.stopPropagation();
+				}
+				var promise = this.$services.triggerable.trigger(row, "click", this.getClickParameters($event), this);
 				return promise;
 			}
 		},

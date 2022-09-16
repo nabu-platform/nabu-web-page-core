@@ -41,7 +41,7 @@
 			<button class="is-button is-variant-ghost is-size-xsmall" v-else @click="$services.page.disableReload = true"><icon name="ban"/></button>
 		</div>
 		
-		<n-sidebar v-if="edit && page.content.rows" position="left" class="is-size-large is-header-size-xlarge" :inline="true" :autocloseable="false" ref="sidemenu"
+		<n-sidebar v-if="edit && page.content.rows" position="left" class="is-size-large is-header-size-large" :inline="true" :autocloseable="false" ref="sidemenu"
 				@close="stopEdit">
 			<div class="is-column is-spacing-medium is-align-left is-spacing-vertical-gap-small" slot="header">
 				<h3 class="is-h3 is-color-neutral">
@@ -54,10 +54,6 @@
 				</h3>
 				<p class="is-p is-size-xsmall">Last saved: {{saved ? $services.formatter.date(saved, 'HH:mm:ss') : 'never' }}</p>
 				
-				<div class="is-row is-spacing-vertical-small is-spacing-gap-small" v-if="selectedItemPath.length">
-					<button v-for="single in selectedItemPath" class="is-button is-size-xsmall" :class="{'is-variant-primary': single.renderer}"
-						@click="selectTarget(single)">{{$services.page.formatPageItem($self, single)}}</button>
-				</div>
 				
 				<ul class="is-menu is-variant-toolbar">
 					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-small is-border-underline" @click="activeTab = 'layout'" :class="{'is-active': activeTab == 'layout'}"><icon name="align-left"/><span class="is-text">Layout</span></button></li>
@@ -73,6 +69,11 @@
 				</ul>
 			</div>
 			<div>
+				<div class="is-row is-spacing-vertical-small is-spacing-medium is-spacing-gap-xsmall is-wrap-wrap" v-if="selectedItemPath.length">
+					<button v-for="(single, singleIndex) in selectedItemPath" class="is-button is-size-xsmall" :class="{'is-variant-primary': single.renderer, 'is-active': (selectedType == 'cell' && cell == single) || (selectedType == 'row' && row == single)}"
+						@click="selectTarget(single)"><span class="is-text">{{$services.page.formatPageItem($self, single)}}</span><span class="is-tag is-size-xxsmall" :class="{'is-variant-primary': single.renderer, 'is-variant-primary-outline': !single.renderer}">{{singleIndex + 1}}</span></button>
+				</div>
+				
 				<ul class="is-menu is-variant-toolbar is-align-center is-spacing-medium" v-if="false">
 					<li class="is-column"><button class="is-button is-variant-success is-size-small" @click="configuring = true"><icon name="cog"/><span class="is-text">Configure</span></button></li>
 					<li class="is-column"><button class="is-button is-variant-success-outline is-size-small" @click="addRow(page.content)"><icon name="plus"/><span class="is-text">Row</span></button></li>
@@ -230,7 +231,7 @@
 												<h4 class="is-h4">Default Values</h4>
 												<p class="is-p is-size-small is-color-light">You can set separate default values for particular fields.</p>
 												<div class="is-row is-align-end">
-													<button @click="parameter.defaults ? parameter.defaults.push({query:null,value:null}) : $window.Vue.set(parameter, 'defaults', [{query:null,value:null}])"><icon name="plus"/>Default Value</button>
+													<button class="is-button is-variant-primary-outline is-size-xsmall" @click="parameter.defaults ? parameter.defaults.push({query:null,value:null}) : $window.Vue.set(parameter, 'defaults', [{query:null,value:null}])"><icon name="plus"/>Default Value</button>
 												</div>
 												<div v-if="parameter.defaults">
 													<n-form-section class="is-column is-spacing-medium has-button-close is-color-body" v-for="defaultValue in parameter.defaults">
@@ -669,10 +670,13 @@
 						<n-collapsible title="Eventing" content-class="is-spacing-medium">
 							<n-form-combo label="Show On" v-model="row.on" :filter="getAvailableEvents"/>
 						</n-collapsible>
+						<n-collapsible :only-one-open="true" title="Triggers" key="row-triggers" class="is-highlight-left" v-if="getTriggersForCell(row)">
+							<page-triggerable-configure :page="page" :target="row" :triggers="getTriggersForCell(row)" :allow-closing="row.target && row.target != 'page'"/>
+						</n-collapsible>
 						<n-collapsible title="Styling">
 							<div class="padded-content">
-								<n-form-text label="Class" v-model="row.class" v-if="false"/>
-								<n-form-combo label="Class" v-model="row.class" :filter="suggesPageRowClasses" :timeout="600"/>
+								<n-form-text label="Class" v-model="row.class" />
+								<n-form-combo label="Class" v-model="row.class" :filter="suggesPageRowClasses" :timeout="600" v-if="false"/>
 							</div>
 							<div class="is-row is-align-end">
 								<button @click="row.styles == null ? $window.Vue.set(row, 'styles', [{class:null,condition:null}]) : row.styles.push({class:null,condition:null})">Add Style</button>
@@ -734,6 +738,8 @@
 			@click.ctrl="goto($event, row)"
 			@click.meta="goto($event, row)"
 			@click.alt="$emit('select', row, null, 'row')"
+			@click="clickOnRow(row, $event)"
+			@click.native="clickOnRow(row, $event)"
 			:placeholder="row.name ? row.name : null"
 			:target="row"
 			:edit="edit"
@@ -741,8 +747,9 @@
 			:child-components="$services.page.calculateArisComponents(row.aris, row.renderer, $self)"
 			:parameters="getRendererParameters(row)"
 			:anchor="row.customId && !row.renderer ? row.customId : null"
+			class="page-row"
 			>
-		<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
+		<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit && false" @mouseenter="menuHover" @mouseleave="menuUnhover">
 			<button class="is-button is-variant-primary is-size-xsmall has-tooltip is-wrap-none" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-text">Configure row</span></button>
 		</div>
 		
@@ -756,18 +763,20 @@
 						:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 						:key="cellId(cell) + '_edit' + '_' + cell.alias"
 						:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-						@click="clickOnCell(row, cell)"
+						@click="clickOnCell(row, cell, $event)"
 						@click.ctrl="goto($event, row, cell)"
 						@click.meta="goto($event, row, cell)"
 						@click.alt.prevent="pasteArisStyling($event, cell)"
 						@contextmenu.prevent.alt="copyArisStyling($event, cell)"
-						@click.native="clickOnCell(row, cell)"
+						@click.native="clickOnCell(row, cell, $event)"
 						@click.ctrl.native="goto($event, row, cell)"
 						@click.meta.native="goto($event, row, cell)"
 						@click.alt.prevent.native="pasteArisStyling($event, cell)"
 						@contextmenu.prevent.alt.native="copyArisStyling($event, cell)"
 						@mouseout="mouseOut($event, row, cell)"
+						@mouseout.native="mouseOut($event, row, cell)"
 						@mouseover="mouseOver($event, row, cell)"
+						@mouseover.native="mouseOver($event, row, cell)"
 						@dragend="$services.page.clearDrag($event)"
 						@dragover="dragOverCell($event, row, cell)"
 						@dragexit="dragExitCell($event, row, cell)"
@@ -781,6 +790,7 @@
 						v-route-render="{ alias: !cell.customId && !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"
 						:anchor="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : null"
 						:slot="cell.rendererSlot"
+						class="page-column"
 						>
 					
 					<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.customId || cell.rows.length)" :key="'page_' + pageInstanceId + '_edit_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
@@ -801,7 +811,7 @@
 						:slot="row.rendererSlot"
 						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					
-					<div class="is-column-menu is-layout is-align-main-center is-spacing-vertical-xsmall" @mouseenter="menuHover" @mouseleave="menuUnhover">
+					<div class="is-column-menu is-layout is-align-main-center is-spacing-vertical-xsmall" @mouseenter="menuHover" @mouseleave="menuUnhover" v-if="false">
 						<button v-if="cell.alias" class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="configureCell($event, row, cell)"><icon name="cog"/><span class="is-text">Configure {{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
 						<button v-else class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="goto($event, row, cell)"><icon name="magic"/><span class="is-text">Configure {{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
 					</div>
@@ -949,7 +959,7 @@
 				</n-absolute>
 				<template v-else>
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
-							v-show="!edit || !row.collapsed"
+							v-show="!isContentHidden(cell)"
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"

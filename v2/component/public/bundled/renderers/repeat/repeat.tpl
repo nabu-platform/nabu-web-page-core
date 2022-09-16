@@ -1,11 +1,13 @@
 <template id="renderer-repeat">
-	<component :is="getComponent()">
+	<component :is="getComponent()" :class="{'is-selectable': target.repeat.selectable}">
 		<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
 			<n-page :page="fragmentPage"
+				@click.native="handleClick($event, record)"
+				:fragment-parent="getPageInstance()"
 				v-for="(record, index) in state.records" :record-index="index" class="is-repeat-content" 
 				:draggable="target.repeat.enableDrag"
 				@dragstart.native="onDragStart($event, record)"
-				:class="getChildComponentClasses('repeat-content')"
+				:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }]"
 				:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record)"
 				:parameters="getParameters(record)"
 				@beforeMount="beforeMount"
@@ -13,10 +15,12 @@
 		</template>
 		<template v-else-if="!edit && !loading && state.records.length">
 			<n-page-optimized :page="fragmentPage"
+				@click.native="handleClick($event, record)"
+				:fragment-parent="getPageInstance()"
 				v-for="(record, index) in state.records" :record-index="index" class="is-repeat-content" 
 				:draggable="target.repeat.enableDrag"
 				@dragstart.native="onDragStart($event, record)"
-				:class="getChildComponentClasses('repeat-content')"
+				:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }]"
 				:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record)"
 				:parameters="getParameters(record)"
 				@beforeMount="beforeMount"
@@ -50,6 +54,9 @@
 		
 		<n-form-switch v-model="target.repeat.enableDrag" label="Enable dragging"/>
 		<n-form-text v-model="target.repeat.dragName" label="Drag source name" v-if="target.repeat.enableDrag" placeholder="default"/>
+		
+		<n-form-switch v-model="target.repeat.selectable" label="Enable item selection"/>
+		<n-form-switch v-model="target.repeat.multiSelectable" v-if="target.repeat.selectable" label="Enable multiselect"/>
 			
 		<div v-for="(defaultOrderBy, index) in target.repeat.defaultOrderBy" class="has-button-close">
 			<div class="is-row">

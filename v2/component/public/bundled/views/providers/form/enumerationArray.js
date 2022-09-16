@@ -13,7 +13,7 @@ Vue.component("page-form-input-enumeration-array-configure", {
 			+ "		<n-form-combo v-if='field.enumerationArray && !field.enumerationArrayLabelComplex' v-model='field.enumerationArrayLabel' label='Enumeration Label'"
 			+ "			:filter='function() { return getEnumerationFields(field.enumerationArray) }'/>"
 			+ "		<n-form-combo v-if='field.enumerationArray' v-model='field.enumerationArrayValue' label='Enumeration Value'"
-			+ "			:filter='function() { return getEnumerationFields(field.enumerationArray) }'/>"
+			+ "			:filter='function() { return getEnumerationFields(field.enumerationArray) }' info='If nothing is selected, the entire document becomes the value'/>"
 			+ "		<page-fields-edit :allow-multiple='false' fields-name='enumerationFields' v-if='field.enumerationArray && field.enumerationArrayLabelComplex' :cell='{state:field}' :page='page' :keys='getEnumerationFields(field.enumerationArray)' :allow-editable='false'/>"
 			+ "		<n-form-combo v-if='field.enumerationArray' :filter='function() { return getEnumerationFields(field.enumerationArray) }' v-model='field.enumerationCachingKey' label='Enumeration Caching Key'/>"    
 			+ "		<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"

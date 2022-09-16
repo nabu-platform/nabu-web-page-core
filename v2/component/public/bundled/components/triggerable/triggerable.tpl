@@ -10,7 +10,7 @@
 				</ul>
 				<n-form-combo v-model="trigger.trigger" v-if="getTriggerNames().length >= 2" :filter="getTriggerNames" label="Trigger On"/>
 				<n-form-text v-model="trigger.condition" label="Condition" after="You can configure an additional condition that must evaluate to true before the trigger is activated"/>
-				<n-form-text v-model="trigger.confirmation" label="Confirmation message" after="You can prompt the user for additional confirmation before executing the trigger"/>
+				<n-form-text v-if="false" v-model="trigger.confirmation" label="Confirmation message" after="You can prompt the user for additional confirmation before executing the trigger"/>
 				<n-form-switch v-model="trigger.closeEvent" label="Send close event once done" after="We can emit a close once our trigger is done, closing any window it is in" v-if="allowClosing"/>
 				<n-form-text v-model="trigger.errorEvent" label="Error event name" after="You can choose to emit an event if this trigger fails" :timeout="600"/>
 				<div v-for="(action, actionIndex) in trigger.actions" class="is-column is-spacing-medium is-color-body">
@@ -106,7 +106,7 @@
 							
 						<n-page-mapper v-if="action.action && action.actionTarget && $services.page.getActionInput($services.page.getPageInstance(page, $self), action.actionTarget, action.action)" 
 							:to="{properties:$services.page.getActionInput($services.page.getPageInstance(page, $self), action.actionTarget, action.action)}"
-							:from="$services.page.getAvailableParameters(page, cell)" 
+							:from="getAvailableParameters(trigger, action)" 
 							key="button-action-mapper"
 							v-model="action.bindings"/>
 							
@@ -163,7 +163,7 @@
 						
 						<n-page-mapper v-if="action.function" 
 							:to="$services.page.getFunctionInput(action.function)"
-							:from="$services.page.getAvailableParameters(page, cell)" 
+							:from="getAvailableParameters(trigger, action)" 
 							key="button-function-mapper"
 							v-model="action.bindings"/>
 					</div>

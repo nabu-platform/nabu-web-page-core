@@ -5,20 +5,52 @@
 
 nabu.page.provide("page-type", {
 	name: "table-page",
-	rowTag: function(row, depth, editing) {
-		return "tr";
+	rowTag: function(row, depth, editing, reversePath) {
+		// it must be inside the table, this goes for header, footer & body, for example for body depth:
+		// <column> <repeat> <table>
+		var isRow = reversePath.length >= 2 && reversePath[1].renderer == "table";
+		// in a repeat (e.g. the body), you are in a page fragment
+		// to be a valid cell INSIDE a table, you need at least 3 levels
+		// the repeat spins off a fragment page with the correct page type (e.g. table), but not the necessary depth
+		isRow |= reversePath.length == 1;
+		if (isRow) {
+			return "tr";
+		}
+		else {
+			return null;
+		}
 	},
-	cellTag: function(cell, depth, editing) {
-		return "renderer-table-body-cell";
+	cellTag: function(row, cell, depth, editing, reversePath) {
+		// it must be inside the table, this goes for header, footer & body, for example for body depth:
+		// <column> <repeat> <table>
+		var isColumn = reversePath.length >= 3 && reversePath[2].renderer == "table";
+		// in a repeat (e.g. the body), you are in a page fragment
+		// to be a valid cell INSIDE a table, you need at least 3 levels
+		// the repeat spins off a fragment page with the correct page type (e.g. table), but not the necessary depth
+		isColumn |= reversePath.length == 2;
+		var isHeader = isColumn && reversePath.length >= 2 && reversePath[1].rendererSlot == "header";
+		if (isHeader) {
+			return "renderer-table-header-cell";
+		}
+		else if (isColumn) {
+			return "renderer-table-body-cell";
+		}
+		else {
+			return null;
+		}
 	},
 	repeatTag: function(target) {
 		return "tbody";
 	},
-	cellComponent: function(cell) {
-		return "table-column";
+	cellComponent: function(cell, reversePath) {
+		var isColumn = reversePath.length >= 3 && reversePath[2].renderer == "table";
+		isColumn |= reversePath.length == 2;
+		return isColumn ? "table-column" : null;
 	},
-	rowComponent: function(cell) {
-		return "table-row";
+	rowComponent: function(cell, reversePath) {
+		var isRow = reversePath.length >= 2 && reversePath[1].renderer == "table";
+		isRow |= reversePath.length == 1;
+		return isRow ? "table-row" : null;
 	},
 	repeatComponent: function(target) {
 		return "table-body"

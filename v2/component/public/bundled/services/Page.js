@@ -313,14 +313,14 @@ nabu.services.VueService(Vue.extend({
 			// at that point we have the exact definition of the action
 			var available = {};
 			this.getSingularComponents(pageInstance).forEach(function(component) {
-				self.getActions(component).forEach(function(action) {
+				self.getActions(component, null, pageInstance).forEach(function(action) {
 					available[action.name] = action;
 				});
 			});
 			// we also need to check for renderers
 			this.getAvailableRenderers(pageInstance.page).forEach(function(target) {
 				var renderer = self.getRenderer(target.renderer);
-				self.getActions(renderer, target).forEach(function(action) {
+				self.getActions(renderer, target, pageInstance).forEach(function(action) {
 					available[action.name] = action;
 				});	
 			});
@@ -362,7 +362,7 @@ nabu.services.VueService(Vue.extend({
 			var targets = [];
 			var self = this;
 			this.getSingularComponents(pageInstance).forEach(function(component) {
-				var hasAction = self.getActions(component).filter(function(x) {
+				var hasAction = self.getActions(component, null, pageInstance).filter(function(x) {
 					return x.name == action;
 				}).length > 0;
 				if (hasAction) {
@@ -374,7 +374,7 @@ nabu.services.VueService(Vue.extend({
 			/*
 			this.getAvailableRenderers(pageInstance.page).forEach(function(target) {
 				var renderer = self.getRenderer(target.renderer);
-				var hasAction = self.getActions(renderer, target).filter(function(x) {
+				var hasAction = self.getActions(renderer, target, pageInstance).filter(function(x) {
 					return x.name == action;
 				}).length > 0;
 				if (hasAction) {
@@ -410,12 +410,16 @@ nabu.services.VueService(Vue.extend({
 		// can't combine cell renderers with cell content for now, there is only one id
 		// though we do keep an additional reference under instance_<id> to the actual content...
 		getActionTarget: function(pageInstance, actionTarget) {
-			return pageInstance.components[actionTarget];
+			var target = pageInstance.components[actionTarget];
+			if (!target && pageInstance.fragmentParent) {
+				target = this.getActionTarget(pageInstance.fragmentParent, actionTarget);
+			}
+			return target;
 		},
 		getActionOutput: function(pageInstance, actionTarget, action) {
 			var target = this.getActionTarget(pageInstance, actionTarget);
 			if (target) {
-				var result = this.getActions(target).filter(function(x) {
+				var result = this.getActions(target, null, pageInstance).filter(function(x) {
 					return x.name == action;
 				})[0];
 				if (result && result.output && Object.keys(result.output).length > 0) {
@@ -427,7 +431,7 @@ nabu.services.VueService(Vue.extend({
 		getActionInput: function(pageInstance, actionTarget, action) {
 			var target = this.getActionTarget(pageInstance, actionTarget);
 			if (target) {
-				var result = this.getActions(target).filter(function(x) {
+				var result = this.getActions(target, null, pageInstance).filter(function(x) {
 					return x.name == action;
 				})[0];
 				if (result && result.input && Object.keys(result.input).length > 0) {
@@ -455,10 +459,10 @@ nabu.services.VueService(Vue.extend({
 			}
 		},
 		// combine all the actions a component supports (including specifications)
-		getActions: function(component, target) {
+		getActions: function(component, target, pageInstance) {
 			var actions = [];
 			if (component.getActions) {
-				nabu.utils.arrays.merge(actions, component.getActions(target));
+				nabu.utils.arrays.merge(actions, component.getActions(target, pageInstance, this.$services));
 			}
 			if (component.getSpecifications) {
 				var specifications = component.getSpecifications(target);
@@ -477,7 +481,7 @@ nabu.services.VueService(Vue.extend({
 				if (rendererTarget && rendererTarget.renderer) {
 					var renderer = this.getRenderer(rendererTarget.renderer);
 					if (renderer && renderer.getActions) {
-						nabu.utils.arrays.merge(actions, renderer.getActions(rendererTarget));
+						nabu.utils.arrays.merge(actions, renderer.getActions(rendererTarget, pageInstance, this.$services));
 					}
 					if (renderer && renderer.getSpecifications) {
 						var specifications = renderer.getSpecifications(rendererTarget);
@@ -941,17 +945,60 @@ nabu.services.VueService(Vue.extend({
 			// if all else fails, we use the id
 			return target.id;
 		},
+		getPageType: function(page, target) {
+			var self = this;
+			var pageType = null;
+				
+			// we check if there is a renderer in the path to this target
+			// if so, that renderer can modify how we render the content
+			var path = this.$services.page.getTargetPath(page.content, target.id);
+			path.reverse();
+			path.forEach(function(x) {
+				if (x.renderer && !pageType) {
+					var renderer = self.getRenderer(x.renderer);
+					if (renderer && renderer.getPageType) {
+						pageType = renderer.getPageType(x);
+					}
+				}
+			});
+			// fallback to something set on the page (e.g. the repeat does this!)
+			if (pageType == null) {
+				pageType = page.content.pageType;
+			}
+			var provider = pageType == null ? null : nabu.page.providers("page-type").filter(function(x) {
+				return x.name == pageType;
+			})[0];
+			return {
+				pageType: pageType,
+				path: path,
+				provider: provider
+			};	
+		},
 		getCellComponents: function(page, cell) {
 			var components = [];
 			// we _do_ want the default cell component at this point
 			// the renderer might expose only additional targets
 			// and the styling is always set anyway on the cell itself
-			components.push({
-				title: "Cell",
-				name: "page-column",
-				component: "page-column",
-				defaultVariant: "page-column" + (cell.alias ? "-" + cell.alias : "")
-			});
+			
+			var pageType = this.getPageType(page, cell);
+			if (pageType && pageType.provider && pageType.provider.cellComponent instanceof Function) {
+				var component = pageType.provider.cellComponent(cell, pageType.path);
+				if (component) {
+					components.push({
+						title: "Cell",
+						name: component,
+						component: component
+					});
+				}
+			}
+			if (components.length == 0) {
+				components.push({
+					title: "Cell",
+					name: "page-column",
+					component: "page-column",
+					defaultVariant: "page-column" + (cell.alias ? "-" + cell.alias : "")
+				});
+			}
 			if (cell.renderer) {
 				var renderer = this.getRenderer(cell.renderer);	
 				if (renderer && renderer.getChildComponents) {
@@ -984,12 +1031,26 @@ nabu.services.VueService(Vue.extend({
 		},
 		getRowComponents: function(page, row) {
 			var components = [];
-			// push the cell itself
-			components.push({
-				title: "Row",
-				name: "page-row",
-				component: "page-row"
-			});
+			
+			var pageType = this.getPageType(page, row);
+			if (pageType && pageType.provider && pageType.provider.rowComponent instanceof Function) {
+				var component = pageType.provider.rowComponent(row, pageType.path);
+				if (component) {
+					components.push({
+						title: "Row",
+						name: component,
+						component: component
+					});
+				}
+			}
+			if (components.length == 0) {
+				// push the row itself
+				components.push({
+					title: "Row",
+					name: "page-row",
+					component: "page-row"
+				});
+			}
 			if (row.renderer) {
 				var renderer = this.getRenderer(row.renderer);	
 				if (renderer && renderer.getChildComponents) {

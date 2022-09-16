@@ -10,7 +10,7 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			+ "		<n-form-combo v-if='field.enumerationOperation && !field.enumerationOperationLabelComplex' v-model='field.enumerationOperationLabel' label='Enumeration Label'"
 			+ "			:filter='function() { return getEnumerationFields(field.enumerationOperation) }'/>"
 			+ "		<n-form-combo v-if='field.enumerationOperation' v-model='field.enumerationOperationValue' label='Enumeration Value'"
-			+ "			:filter='function() { return getEnumerationFields(field.enumerationOperation) }'/>"
+			+ "			:filter='function() { return getEnumerationFields(field.enumerationOperation) }' info='If nothing is selected, the entire document becomes the value'/>"
 			+ "		<n-form-combo v-if='field.enumerationOperation' v-model='field.enumerationOperationQuery' label='Enumeration Query'"
 			+ "			:filter='function() { return getEnumerationParameters(field.enumerationOperation) }'/>"
 			+ "		<n-form-combo v-if='field.enumerationOperation && field.enumerationOperationValue' :filter='function() { return getEnumerationParameters(field.enumerationOperation) }' v-model='field.enumerationOperationResolve' label='Resolve Field'/>"

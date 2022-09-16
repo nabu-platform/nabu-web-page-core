@@ -286,6 +286,22 @@ window.addEventListener("load", function() {
 			icon: "page/core/images/enumeration.png"
 		});
 		$services.router.register({
+			alias: "page-form-enumeration-array",
+			enter: function(parameters) {
+				// do not modify parameters directly, this may lead to rerendering issues
+				var cloneParameters = {};
+				nabu.utils.objects.merge(cloneParameters, parameters);
+				cloneParameters.formComponent = "page-form-input-enumeration-array";
+				cloneParameters.configurationComponent = "page-form-input-enumeration-array-configure";
+				return new nabu.page.views.FormComponent({propsData: cloneParameters});
+			},
+			form: "enumerationArray",
+			category: "Form",
+			name: "Enumeration (Array)",
+			description: "An enumeration based on an array",
+			icon: "page/core/images/enumeration.png"
+		});
+		$services.router.register({
 			alias: "page-form-enumeration-provider",
 			enter: function(parameters) {
 				// do not modify parameters directly, this may lead to rerendering issues
@@ -689,6 +705,8 @@ window.addEventListener("load", function() {
 						// not a thing (yet?)
 						//tableBody.repeat.repeatType = "operation";
 						tableBody.repeat.operation = content;
+						// by default we allow selection
+						tableBody.repeat.selectable = true;
 						tableBody.runtimeAlias = "repeat" + name;
 						tableBody.name = "Table Body " + name;
 						generator.generateFields(type, content, pageInstance, root, tableBody, tableHeader, rowGenerator, cellGenerator);

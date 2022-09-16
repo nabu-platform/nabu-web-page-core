@@ -29,8 +29,11 @@ Vue.service("triggerable", {
 			}
 			return routes;
 		},
-		getInternalState: function(page, trigger, action) {
+		getInternalState: function(page, trigger, action, triggers) {
 			var result = {};
+			if (trigger.trigger && triggers && triggers[trigger.trigger]) {
+				result[trigger.trigger] = triggers[trigger.trigger]; 
+			}
 			// depending on where you are in the action chain, you may have additional state
 			var pageInstance = this.$services.page.getPageInstance(page);
 			var index = action ? trigger.actions.indexOf(action) : trigger.actions.length;
@@ -73,6 +76,12 @@ Vue.service("triggerable", {
 			}
 			return result;
 		},
+		// check if we can trigger on this one
+		canTrigger: function(target, trigger) {
+			return target.triggers ? target.triggers.filter(function(x) {
+				return x.trigger == trigger;
+			}).length > 0 : false;
+		},
 		// the target we want to trigger on (cell, row,..)
 		// the name of the trigger (e.g. click)
 		// any value we received for the trigger, for instance an action or event might have data attached to it
@@ -89,6 +98,9 @@ Vue.service("triggerable", {
 			var promises = triggers.map(function(x) {
 				var state = {};
 				
+				// the initial state
+				state[trigger] = value;
+				
 				// TODO: don't pre-filter actions, but instead filter them as we go further into the pipeline
 				// if we then pass in the "state" (rather than the value), we can evaluate to the local pipeline state
 				
@@ -104,7 +116,6 @@ Vue.service("triggerable", {
 				// actions can be immediately run or chained
 				var runAction = function(index, lastPromise) {
 					var action = actions[index];
-					
 					var getBindings = function() {
 						var parameters = {};
 						var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
@@ -575,7 +586,7 @@ Vue.component("page-triggerable-configure", {
 		getAvailableParameters: function(trigger, action) {
 			var result = {};
 			nabu.utils.objects.merge(result, this.$services.page.getAllAvailableParameters(this.page));
-			nabu.utils.objects.merge(result, this.$services.triggerable.getInternalState(this.page, trigger, action));
+			nabu.utils.objects.merge(result, this.$services.triggerable.getInternalState(this.page, trigger, action, this.triggers));
 			return result;
 		},
 		addAction: function(target) {

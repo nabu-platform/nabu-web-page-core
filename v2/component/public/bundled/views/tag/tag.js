@@ -31,6 +31,11 @@ Vue.view("page-tag", {
 	ready: function() {
 		this.elementPromise.resolve(this.$el);	
 	},
+	data: function() {
+		return {
+			requiresPagePrefix: false
+		}
+	},
 	computed: {
 		icon: function() {
 			var icon = this.cell.state.icon;
@@ -38,11 +43,16 @@ Vue.view("page-tag", {
 		}
 	},
 	methods: {
+		isCellHidden: function() {
+			return this.getValue() == null;	
+		},
 		reset: function() {
-			console.log("resetting!", this.cell.state.field);
 			if (this.cell.state.field) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				pageInstance.set(this.cell.state.field, null);
+				if (this.requiresPagePrefix) {
+					pageInstance.set("page." + this.cell.state.field, null);	
+				}
 			}	
 		},
 		getValue: function() {
@@ -52,8 +62,20 @@ Vue.view("page-tag", {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			var value = pageInstance.getLabel(this.cell.state.field);
 			if (!value) {
-				console.log("could not find label for", this.cell.state.field);
+				value = pageInstance.getLabel("page." + this.cell.state.field);
+				if (value) {
+					this.requiresPagePrefix = true;
+				}
+			}
+			if (!value) {
 				value = pageInstance.get(this.cell.state.field);
+			}
+			// toggle the cell
+			if (!!value) {
+				this.$emit("show");
+			}
+			else {
+				this.$emit("hide");
 			}
 			return value;
 		},

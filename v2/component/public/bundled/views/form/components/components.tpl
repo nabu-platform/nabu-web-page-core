@@ -29,6 +29,7 @@
 			<n-form-text v-model="cell.state.disabled" label="Disable if" />
 			<n-form-switch v-model="cell.state.validateOnBlur" label="Validate on blur"/>
 		</div>
-		<component :is="configurationComponent" :page="page" :cell="cell" :field="cell.state" :possible-fields="availableFields()"/>
+		<component :is="configurationComponent" :page="page" :cell="cell" :field="cell.state" :possible-fields="availableFields()"
+			class="is-column is-spacing-medium"/>
 	</div>
 </template>
