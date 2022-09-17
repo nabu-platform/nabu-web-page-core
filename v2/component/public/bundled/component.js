@@ -101,10 +101,10 @@ window.addEventListener("load", function() {
 				var component = Vue.component("page-form");
 				return new component({propsData: parameters});
 			},
-			name: "Form",
-			category: "Form",
-			description: "This is a form container that encapsulates simple forms",
-			icon: "page/core/images/form.svg",
+			//name: "Form",
+			//category: "Form",
+			//description: "This is a form container that encapsulates simple forms",
+			//icon: "page/core/images/form.svg",
 			accept: function(type, value) {
 				return false;
 				if (type == "operation") {

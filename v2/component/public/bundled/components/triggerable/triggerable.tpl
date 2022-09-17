@@ -28,7 +28,7 @@
 						:formatter="function(x) { return x.title }"
 						:extracter="function(x) { return x.name }"/>
 					
-					<div v-if="action.type == 'route'">
+					<div v-if="action.type == 'route'" class="is-column is-spacing-gap-medium">
 						<n-form-combo v-model="action.route" v-if="!action.url && !action.routeAsFormula" 
 							:filter="$services.page.getPageRoutes" 
 							:formatter="function(x) { return $services.page.prettifyRouteAlias(x.alias) }" 
@@ -41,7 +41,7 @@
 							
 						<n-page-mapper v-if="action.route && $services.router.get(action.route)" :to="$services.page.getRouteParameters($services.router.get(action.route))"
 							:from="getAvailableParameters(trigger, action)" 
-							key="button-route-mapper"
+							:key="action.route + '-mapper'"
 							v-model="action.bindings"/>
 							
 						<n-form-text v-model="action.url" label="Route to an external URL" v-if="!action.route && !action.routeFormula" :timeout="600"/>
@@ -67,16 +67,18 @@
 						</div>
 						
 						<n-form-switch v-model="action.mask" label="Mask the routing" v-if="action.route || action.routeFormula"/>
+						
+						<div class="is-alert is-variant-danger-outline is-size-small"><span class="is-text">A route action is the final action, anything after this might not get executed</span></div>
 					</div>
 					
-					<div v-else-if="action.type == 'event'">
+					<div v-else-if="action.type == 'event'" class="is-column is-spacing-gap-medium">
 						<page-event-value :page="page" :container="action" title="Event to emit" name="event" @resetEvents="resetEvents" :inline="true" :allow-fields="!action.eventContent"/>
 						<n-form-combo v-model="action.eventContent" :items="$window.Object.keys($services.triggerable.getInternalState(page, trigger, action))" label="Event content" after="Choose the event content from the available state"
 							v-if="!action.event || !action.event.eventFields || !action.event.eventFields.length"
 							@input="resetEvents"/>
 					</div>
 					
-					<div v-else-if="action.type == 'notification'">
+					<div v-else-if="action.type == 'notification'" class="is-column is-spacing-gap-medium">
 						<n-form-text v-model="action.notificationDuration" label="Duration" :timeout="600" info="How long the notification should stay up (in ms)"/>
 						<n-form-text v-model="action.notificationTitle" label="Title" :timeout="600" info="An optional title for this notification, it can include variables from the originating event using the {{}} syntax"/>
 						<n-form-text v-model="action.notificationMessage" label="Message" :timeout="600" info="An optional title for this notification, it can include variables from the originating event using the {{}} syntax"/>
@@ -86,7 +88,7 @@
 						<n-form-switch v-model="action.notificationCloseable" label="Closeable" info="Can the user explicitly close the notification?"/>
 					</div>
 					
-					<div v-else-if="action.type == 'action'">
+					<div v-else-if="action.type == 'action'" class="is-column is-spacing-gap-medium">
 						<n-form-combo v-model="action.action"
 							label="Action to run"
 							:filter="$services.page.getAvailableActions.bind($self, $services.page.getPageInstance(page, $self))"
@@ -117,21 +119,22 @@
 						</div>
 					</div>
 					
-					<div v-else-if="action.type == 'javascript'">
+					<div v-else-if="action.type == 'javascript'" class="is-column is-spacing-gap-medium">
 						<n-form-ace v-model="action.javascript" label="Javascript to execute"/>	
 					</div>
 					
-					<div v-else-if="action.type == 'confirmation'">
+					<div v-else-if="action.type == 'confirmation'" class="is-column is-spacing-gap-medium">
 						<n-form-text v-model="action.confirmation" label="Confirmation message"/>
 					</div>
 					
-					<div v-else-if="action.type == 'operation'">
+					<div v-else-if="action.type == 'operation'" class="is-column is-spacing-gap-medium">
 						<n-form-combo :key="'operation' + page.content.actions.indexOf(action)" 
 							:formatter="function(x) { return x.id }"
 							:extracter="function(x) { return x.id }"
 							v-model="action.operation" label="Operation" :filter="$services.page.getTriggerOperations" />
 							
 						<n-page-mapper v-if="action.operation" :to="$services.page.getSimpleKeysFor($services.page.getSwaggerOperationInputDefinition(action.operation), true)"
+							:key="action.operation + '-mapper'"
 							:from="getAvailableParameters(trigger, action)" 
 							v-model="action.bindings"/>
 							
@@ -139,7 +142,7 @@
 							after="You can capture the output of this service to use in further actions"/>
 					</div>
 					
-					<div v-else-if="action.type == 'download'">
+					<div v-else-if="action.type == 'download'" class="is-column is-spacing-gap-medium">
 						<n-form-combo :key="'operation' + page.content.actions.indexOf(action)" 
 							:formatter="function(x) { return x.id }"
 							:extracter="function(x) { return x.id }"
@@ -148,6 +151,7 @@
 						<n-form-text label="File name" v-model="action.fileName"/>
 						
 						<n-page-mapper v-if="action.operation" :to="$services.page.getSimpleKeysFor($services.page.getSwaggerOperationInputDefinition(action.operation), true)"
+							:key="action.operation + '-mapper'"
 							:from="getAvailableParameters(trigger, action)" 
 							v-model="action.bindings"/>
 							
@@ -157,7 +161,7 @@
 							:items="['excel', 'csv', 'json', 'xml']"/>
 					</div>
 					
-					<div v-else-if="action.type == 'function'">
+					<div v-else-if="action.type == 'function'" class="is-column is-spacing-gap-medium">
 						<n-form-combo v-model="action.function" label="Function" :filter="$services.page.listFunctions" />
 						<n-form-text v-if="action.function && $services.page.hasFunctionOutput(action.function)" v-model="action.resultName" label="Local variable name of the function output"/>
 						

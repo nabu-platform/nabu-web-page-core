@@ -3158,7 +3158,8 @@ nabu.services.VueService(Vue.extend({
 			}
 			
 			// and the page itself
-			result.page = this.getPageParameters(page);
+			// we exclude the dynamic because we add it below
+			result.page = this.getPageParameters(page, true);
 			
 			// the available state
 			page.content.states.map(function(state) {
@@ -3538,7 +3539,7 @@ nabu.services.VueService(Vue.extend({
 		// we can't guarantee that the components will be there at runtime (due to conditions)
 		// but at you need to be able to bind to these things
 		// for instance the page-level form fields use this service to deduce which fields they can write to
-		getPageParameters: function(page) {
+		getPageParameters: function(page, excludeRuntime) {
 			var parameters = {
 				properties: {}
 			};
@@ -3603,7 +3604,7 @@ nabu.services.VueService(Vue.extend({
 			
 //			parameters = {properties:{page: { properties: parameters.properties}}};
 			
-			if (pageInstance) {
+			if (pageInstance && !excludeRuntime) {
 				this.enrichWithRuntimeAliasDefinitions(parameters.properties, pageInstance);
 			}
 			

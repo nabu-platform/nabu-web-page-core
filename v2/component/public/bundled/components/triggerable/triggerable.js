@@ -501,7 +501,7 @@ Vue.component("page-triggerable-configure", {
 				name: "notification"
 			})
 			types.push({
-				title: "Redirect the user to another page (this is a final action)",
+				title: "Redirect the user to another page",
 				name: "route"
 			});
 			types.push({
@@ -528,6 +528,11 @@ Vue.component("page-triggerable-configure", {
 		}
 	},
 	methods: {
+		finalizedTrigger: function(trigger) {
+			return trigger.actions && trigger.actions.filter(function(x) {
+				return x.type == "route";
+			}).length > 0;
+		},
 		getAvailableColors: function(value) {
 			var variants = [];
 			this.$services.page.getArisComponentHierarchy("alert").forEach(function(component) {
