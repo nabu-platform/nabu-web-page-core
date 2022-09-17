@@ -19,7 +19,7 @@
 				<n-page-mapper v-if="validation.operationId" v-model='validation.bindings' :from="availableParameters" :to="getOperationParameters(validation.operationId, true)"/>
 			
 				<div v-if="validation.operationId">
-					<h2>Validation Codes<span class='subscript'>You can remap validation codes with different messages here</span></h2>
+					<h2>Validation Codes</h2>
 					<div v-if='validation.codes'>
 						<div class='list-row' v-for='code in validation.codes' :timeout='600'>
 							<n-form-text v-model='code.code' label='Code' :timeout='600'/>

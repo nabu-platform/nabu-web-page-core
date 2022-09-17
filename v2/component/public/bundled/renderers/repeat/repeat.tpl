@@ -27,10 +27,10 @@
 				@ready="mounted"/>
 		</template>
 		<template v-else-if="!edit && !loading && !state.records.length">
-			<span class="is-text" v-if="target.repeat.emptyPlaceholder" v-html="$services.page.translate(target.repeat.emptyPlaceholder)"></span>
+			<component :is="getMessageComponent()" v-if="target.repeat.emptyPlaceholder"><span class="is-text" v-html="$services.page.translate(target.repeat.emptyPlaceholder)"></span></component>
 		</template>
 		<template v-else-if="!edit && loading">
-			<span class="is-text" v-if="target.repeat.loadingPlaceholder" v-html="$services.page.translate(target.repeat.loadingPlaceholder)"></span>
+			<component :is="getMessageComponent()" v-if="target.repeat.loadingPlaceholder"><span class="is-text" v-html="$services.page.translate(target.repeat.loadingPlaceholder)"></span></component>
 		</template>
 		<template v-else>
 			<slot></slot>

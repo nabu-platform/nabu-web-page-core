@@ -705,6 +705,8 @@ window.addEventListener("load", function() {
 						// not a thing (yet?)
 						//tableBody.repeat.repeatType = "operation";
 						tableBody.repeat.operation = content;
+						tableBody.repeat.loadingPlaceholder = "%" + "{Loading...}";
+						tableBody.repeat.emptyPlaceholder = "%" + "{No data available}";
 						// by default we allow selection
 						tableBody.repeat.selectable = true;
 						tableBody.runtimeAlias = "repeat" + name;

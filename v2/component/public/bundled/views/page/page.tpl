@@ -367,6 +367,7 @@
 									</n-collapsible>
 								</n-collapsible>
 								<n-collapsible :only-one-open="true" title="Triggers">
+									<p class="is-p is-size-small is-spacing-medium">You can add triggers to react to events.</p>
 									<page-triggerable-configure :page="page" :target="page.content" :triggers="getEvents()"/>
 								</n-collapsible>
 								<n-collapsible :only-one-open="true" title="Triggers" class="list" v-if="false">
@@ -519,8 +520,9 @@
 				<div v-else-if="activeTab == 'selected' && cell && selectedType == 'cell'" :key="'page_' + pageInstanceId + '_cell_' + cell.id + '_configuration'">
 					<n-form class="is-variant-floating-labels" key="cell-form">
 						<h2 class="is-h4 is-color-primary-outline is-spacing-medium">Cell Configuration</h2>
-						<p class="is-p is-size-small is-color-light is-spacing-medium">Here you can configure cell settings that are available to all cells in the grid regardless of the content type.</p>
-						<n-collapsible :only-one-open="true" :title="cell.renderer ? $services.page.getRenderer(cell.renderer).title : 'Rendering'" :class="{'is-color-primary-light': cell.renderer}" class="is-highlight-left">
+						<p class="is-p is-size-small is-color-light is-spacing-medium">Configure general settings for this cell regardless of the content rendered within.</p>
+						<n-collapsible :only-one-open="true" :title="cell.renderer ? $services.page.getRenderer(cell.renderer).title : 'Rendering'" :class="{'is-color-primary-light': cell.renderer}" class="is-highlight-left"
+								v-if="!cell.alias || getParentConfig(cell)">
 							<div class="is-column is-spacing-medium">
 								<n-form-combo label="Target slot in renderer" v-if="getSlots(cell)" v-model="cell.rendererSlot" :items="getSlots(cell)"/>
 								
@@ -543,11 +545,10 @@
 									<component :is="$services.page.getRendererConfiguration(cell.renderer)" :target="cell" :page="page"/>
 								</div>
 									
-								<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
 							</div>
 							<renderer-bindings :target="cell" :page="page" v-if="cell.renderer"/>
 						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Cell Settings" key="cell-settings" content-class="is-spacing-medium">
+						<n-collapsible :only-one-open="true" title="Content" key="cell-settings" content-class="is-spacing-medium" class="is-highlight-left">
 							<n-form-combo label="Route" :filter="$services.page.getRoutes" v-model="cell.alias"
 								:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
 								:required="true"
@@ -561,11 +562,19 @@
 								:from="getAvailableParameters(cell)" 
 								v-model="cell.bindings"/>
 						
-							<n-form-ace mode="javascript" label="Condition" v-model="cell.condition" after="If you fill in a condition, the cell will only render the content if the condition evaluates to true" :timeout="600"/>
+							
+							<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
+							
 							<n-form-combo v-model="cell.state.openTrigger" label="Open on" placeholder="Always open" :items="['click', 'hover']"/>
-							<div v-if="$services.page.devices.length">
-								<p class="is-p is-size-small is-color-light is-spacing-vertical-bottom-small">You can choose to render the cell only if a set of device rules is met.</p>
-								<div class="is-row is-align-end is-spacing-vertical-bottom-small">
+						</n-collapsible>
+						<n-collapsible :only-one-open="true" title="Conditions" key="cell-conditions" content-class="is-spacing-medium" class="is-highlight-left">
+							<p class="is-p is-size-small">By default the cell will always render, you can however manipulate this behavior.</p>
+							
+							<p class="is-p is-size-small">Render this cell only if this condition is met:</p>
+							<n-form-ace mode="javascript" label="Condition" v-model="cell.condition" :timeout="600"/>
+							<div v-if="$services.page.devices.length" class="is-column is-spacing-vertical-gap-medium">
+								<p class="is-p is-size-small is-color-light is-spacing-vertical-bottom-small">Render the cell only if these device rules are met.</p>
+								<div class="is-row is-align-end">
 									<button class="is-button is-variant-primary-outline is-size-xsmall" @click="addDevice(cell)"><icon name="plus"/>Device rule</button>
 								</div>
 								<div v-if="cell.devices" class="is-column is-spacing-vertical-gap-medium">
@@ -580,14 +589,12 @@
 							</div>
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Triggers" key="cell-triggers" class="is-highlight-left" v-if="getTriggersForCell(cell)">
+							<p class="is-p is-size-small is-spacing-medium">You can add triggers to react to user interaction with the content.</p>
 							<page-triggerable-configure :page="page" :target="cell" :triggers="getTriggersForCell(cell)" :allow-closing="cell.target && cell.target != 'page'"/>
 						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Eventing" key="cell-events" content-class="is-spacing-medium" class="is-highlight-left">
-							<n-form-switch label="Closeable" v-model="cell.closeable" v-if="!cell.on"/>
-							<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents" v-if="!cell.closeable"
-								after="Only show this cell if a certain event is triggered"/>
-							<n-form-combo label="Target" :items="['page', 'sidebar', 'prompt', 'absolute']" v-model="cell.target"
-								after="By default the cell will render in the page"/>
+						<n-collapsible :only-one-open="true" title="Location" key="cell-location" content-class="is-spacing-medium" class="is-highlight-left">
+							<p class="is-p is-size-small">By default the cell will render in the page, following its natural positioning.</p>
+							<n-form-combo label="Target" :items="['page', 'sidebar', 'prompt', 'absolute']" v-model="cell.target" />
 							<n-form-switch label="Prevent Auto Close" v-model="cell.preventAutoClose" v-if="cell.target == 'sidebar'"
 								after="The sidebar will automatically close when the user clicks elsewhere unless this is toggled"/>
 							<n-form-switch label="Optimize (may result in stale content)" v-model="cell.optimizeVueKey" v-if="cell.on"/>
@@ -598,6 +605,11 @@
 							<n-form-text label="Minimum Width" v-model="cell.minWidth" v-if="cell.target == 'absolute'"/>
 							<n-form-switch label="Position fixed?" v-model="cell.fixed" v-if="cell.target == 'absolute'"/>
 							<n-form-switch label="Autoclose" v-model="cell.autoclose" v-if="cell.target == 'absolute' || cell.target == 'prompt'"/>
+						</n-collapsible>
+						<n-collapsible :only-one-open="true" title="Eventing" key="cell-events" content-class="is-spacing-medium" class="is-highlight-left">
+							<n-form-switch label="Closeable" v-model="cell.closeable" v-if="!cell.on"/>
+							<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents" v-if="!cell.closeable"
+								after="Only show this cell if a certain event is triggered"/>
 							<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" @resetEvents="resetEvents" :inline="true" v-if="false"/>
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Styling" class="is-highlight-left">
@@ -619,12 +631,12 @@
 									v-if="$services.page.useAris && $services.page.normalizeAris(page, cell)" :child-components="$services.page.getCellComponents(page, cell)" :container="cell.aris"
 									:specific="cell.alias"/>
 						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Templating" content-class="is-spacing-medium">
+						<n-collapsible :only-one-open="true" title="Templating" content-class="is-spacing-medium" class="is-highlight-left">
 							<template-manager :target="cell" :page="page"/>
 						</n-collapsible>
 						<div v-if="canConfigureInline(cell)" class="is-column is-spacing-vertical-top-large">
 							<h2 class="is-h4 is-spacing-medium is-color-primary-outline">Content Configuration</h2>
-							<p class="is-p is-size-small is-color-light is-spacing-medium">Here you can find additional configuration settings for the content type that you have chosen.</p>
+							<p class="is-p is-size-small is-color-light is-spacing-medium">Configure additional settings for the content that is rendered in this cell.</p>
 							<component :is="getCellConfigurator(cell)" v-bind="getCellConfiguratorInput(cell)"/>
 						</div>
 					</n-form>
@@ -633,7 +645,8 @@
 				<div v-else-if="activeTab == 'selected' && row && selectedType == 'row'" :key="'page_' + pageInstanceId + '_row_' + row.id + '_configuration'">
 					<n-form class="is-variant-floating-labels" key="cell-form">
 						<h2 class="is-h4 is-color-primary-outline is-spacing-medium">Row Configuration</h2>
-						<n-collapsible :only-one-open="true" :title="row.renderer ? $services.page.getRenderer(row.renderer).title : 'Rendering'" :class="{'is-color-primary-light': row.renderer}">
+						<p class="is-p is-size-small is-color-light is-spacing-medium">Configure general settings for this row.</p>
+						<n-collapsible :only-one-open="true" :title="row.renderer ? $services.page.getRenderer(row.renderer).title : 'Rendering'" :class="{'is-color-primary-light': row.renderer}" class="is-highlight-left">
 							<div class="is-column is-spacing-medium">
 								<n-form-combo label="Target slot in renderer" v-if="getSlots(row)" v-model="row.rendererSlot" :items="getSlots(row)"/>
 								
@@ -648,12 +661,18 @@
 							</div>
 							<renderer-bindings :target="row" :page="page" v-if="row.renderer"/>	
 						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Row Settings" content-class="is-spacing-medium">
+						<n-collapsible :only-one-open="true" title="Content" content-class="is-spacing-medium" class="is-highlight-left">
 							<n-form-text label="Row Name" v-model="row.name" after="A descriptive name for this row" :timeout="600"/>
 							<n-form-text label="Row Id" v-model="row.customId" after="If you set an id on this row, it can be used as a render target. Useful for skeletons."/>
-							<n-form-ace mode="javascript" label="Condition" v-model="row.condition" class="vertical" after="If filled in, the row will only rendered if this results in true."/>
+						</n-collapsible>
+						<n-collapsible :only-one-open="true" title="Conditions" key="cell-conditions" content-class="is-spacing-medium" class="is-highlight-left">
+							<p class="is-p is-size-small">By default the cell will always render, you can however manipulate this behavior.</p>
+							
+							<p class="is-p is-size-small">Render this row only if this condition is met:</p>
+							<n-form-ace mode="javascript" label="Condition" v-model="row.condition" class="vertical"/>
 							
 							<div v-if="$services.page.devices.length" class="is-column is-spacing-vertical-medium">
+								<p class="is-p is-size-small is-color-light is-spacing-vertical-bottom-small">Render the row only if these device rules are met.</p>
 								<div class="is-row is-align-end">
 									<button class="is-button is-variant-primary-outline is-size-xsmall" @click="addDevice(row)"><icon name="plus"/>Device rule</button>
 								</div>
@@ -668,13 +687,14 @@
 								</div>
 							</div>
 						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Eventing" content-class="is-spacing-medium">
+						<n-collapsible :only-one-open="true" title="Eventing" content-class="is-spacing-medium" class="is-highlight-left">
 							<n-form-combo label="Show On" v-model="row.on" :filter="getAvailableEvents"/>
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Triggers" key="row-triggers" class="is-highlight-left" v-if="getTriggersForCell(row)">
+							<p class="is-p is-size-small is-spacing-medium">You can add triggers to react to user interaction with the content.</p>
 							<page-triggerable-configure :page="page" :target="row" :triggers="getTriggersForCell(row)" :allow-closing="row.target && row.target != 'page'"/>
 						</n-collapsible>
-						<n-collapsible title="Styling">
+						<n-collapsible title="Styling" :only-one-open="true" class="is-highlight-left">
 							<div class="is-column is-spacing-medium">
 								<n-form-text label="Class" v-model="row.class" :timeout="600"/>
 								<div class="is-row is-align-end">
@@ -691,7 +711,7 @@
 							
 							<aris-editor v-if="$services.page.useAris && $services.page.normalizeAris(page, row, 'row')" :child-components="$services.page.getRowComponents(page, row)" :container="row.aris"/>
 						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Templating" content-class="is-spacing-medium">
+						<n-collapsible :only-one-open="true" title="Templating" content-class="is-spacing-medium" class="is-highlight-left">
 							<template-manager :target="row" :page="page"/>
 						</n-collapsible>
 					</n-form>
@@ -1195,9 +1215,13 @@
 <template id="template-manager">
 	<div>
 		<div v-if="target.templateReferenceId">
-			<p class="is-p is-spacing-horizontal-gap-small"><span class="is-text">This is part of a template instance</span><span class="is-badge is-variant-primary-outline is-size-xsmall" v-if="target.templateVersion">v{{target.templateVersion}}</span></p>
-			<div v-if="target.templateVersion && latestAvailableVersion != null && target.templateVersion != latestAvailableVersion" class="is-row is-align-end">
-				<button class="is-button is-variant-primary-outline is-size-xsmall" @click="updateToLatest">Update to v{{latestAvailableVersion}}</button>
+			<p class="is-p is-spacing-horizontal-gap-small" v-if="target.templateVersion"><span class="is-text">This is an instance of template "{{target.templateTitle}}"</span><span class="is-badge is-variant-primary-outline is-size-xsmall">v{{target.templateVersion}}</span></p>
+			<p class="is-p is-spacing-horizontal-gap-small" v-else><span class="is-text">This is part of a template instance</span><span class="is-badge is-variant-primary-outline is-size-xsmall" v-if="target.templateVersion">v{{target.templateVersion}}</span></p>
+			<div v-if="target.templateVersion && latestAvailableVersion != null && target.templateVersion != latestAvailableVersion" class="is-column is-spacing-vertical-medium">
+				<p class="is-p">A new version is available.</p>
+				<div class="is-row is-align-end">
+					<button class="is-button is-variant-primary-outline is-size-xsmall" @click="updateToLatest">Update to v{{latestAvailableVersion}}</button>
+				</div>
 			</div>
 		</div>
 		<div v-else-if="partOfTemplate">

@@ -288,24 +288,45 @@ Vue.component("renderer-form", {
 				var componentGroup = this.target.form.componentGroup ? this.target.form.componentGroup : "default";
 				var promises = [];
 				var messages = [];
+				var codes = self.target.form.codes ? self.target.form.codes : [];
 				this.$el.querySelectorAll("[component-group='" + componentGroup + "']").forEach(function(x) {
 					var result = x.__vue__.validate();
+					
+					// we likely have the codes on the "wrapper" component
+					// vue can render multiple components on the same $el (e.g. if the root of a component is another component)
+					// this is the case for form components in the page, so we likely find it in the parent
+					var localCodes = x.__vue__.codes ? x.__vue__.codes : (x.__vue__.$parent && x.__vue__.$parent.codes ? x.__vue__.$parent.codes : []);
+					
+					var allCodes = [];
+					// the LAST hit wins, so we want the most specific one to win...
+					nabu.utils.arrays.merge(allCodes, codes);
+					nabu.utils.arrays.merge(allCodes, localCodes);
+					
+					// we want to clone them so we don't update the original by reference
+					// then we want to interpret them!
+					var allCodes = allCodes.map(function(x) {
+						var cloned = JSON.parse(JSON.stringify(x));
+						cloned.title = self.$services.page.translate(self.$services.page.interpret(cloned.title, self));
+						return cloned;
+					});
+					
 					// these are currently not compatible with the all() promises bundler... :(
 					if (result && result.then) {
 						var localPromise = self.$services.q.defer();
 						promises.push(localPromise);
 						result.then(function(x) {
+							nabu.utils.vue.form.rewriteCodes(x, allCodes);
 							nabu.utils.arrays.merge(messages, x);
 							localPromise.resolve(x);
 						}, localPromise);
 					}
 					else if (result instanceof Array) {
+						nabu.utils.vue.form.rewriteCodes(result, allCodes);	
 						nabu.utils.arrays.merge(messages, result);
 					}
 				});
 				var promise = this.$services.q.defer();
 				this.$services.q.all(promises).then(function() {
-					console.log("all promises done", promises, messages);
 					if (messages.length == 0) {
 						promise.resolve();
 					}

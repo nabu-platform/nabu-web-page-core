@@ -25,3 +25,10 @@
 		<n-form-text label="Colspan" v-model="cell.table.colspan"/>
 	</div>
 </template>
+
+
+<template id="renderer-table-message">
+	<tr>
+		<td colspan="100"><slot></slot></td>
+	</tr>
+</template>

@@ -20,17 +20,6 @@ Vue.component("page-form-input-text-configure", {
 		+ "	<n-form-text v-model='field.maximum' label='Maximum' v-if=\"field.textType == 'range' || field.textType == 'number'\" :timeout='600'/>"
 		+ "	<n-form-text v-model='field.step' label='Step' v-if=\"field.textType == 'range'\" :timeout='600'/>"
 		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"
-		+ "	<h2>Validation Codes<span class='subscript'>You can remap validation codes with different messages here</span></h2>"
-		+ "		<div v-if='field.codes'>"
-		+ "			<div class='list-row' v-for='code in field.codes' :timeout='600'>"
-		+ "				<n-form-text v-model='code.code' label='Code' :timeout='600'/>"
-		+ "				<n-form-text v-model='code.title' label='Title' :timeout='600'/>"
-		+ "				<span @click='field.codes.splice(field.codes.indexOf(code), 1)' class='fa fa-times'></span>"
-		+ "			</div>"
-		+ "		</div>"
-		+ "		<div class='list-actions'>"
-		+ "			<button @click=\"field.codes ? field.codes.push({code:null,title:null}) : $window.Vue.set(field, 'codes', [{code:null,title:null}])\">Add code</button>"           
-		+ "		</div>"
 		+ "</n-form-section>",
 	props: {
 		cell: {
@@ -63,7 +52,6 @@ Vue.component("page-form-input-text-configure", {
 
 Vue.component("page-form-input-text", {
 	template: "<n-form-text :type='textType' ref='form'"
-			+ "		:codes='allCodes'"
 			+ "		:class=\"{'has-suffix-icon': !!field.suffixIcon, 'has-suffix': !!field.suffix }\""
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='$services.page.interpret($services.page.translate(placeholder), $self)'"

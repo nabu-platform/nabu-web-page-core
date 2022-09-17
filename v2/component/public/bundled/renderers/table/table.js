@@ -54,6 +54,9 @@ nabu.page.provide("page-type", {
 	},
 	repeatComponent: function(target) {
 		return "table-body"
+	},
+	messageTag: function(target) {
+		return "renderer-table-message";
 	}
 });
 
@@ -139,6 +142,19 @@ Vue.component("renderer-table-cell-configure", {
 		}
 	}
 });
+
+Vue.component("renderer-table-message", {
+	template: "#renderer-table-message",
+	props: {
+		target: {
+			type: Object
+		},
+		page: {
+			type: Object
+		}
+	}
+});
+
 
 Vue.component("renderer-table-body-cell", {
 	template: "#renderer-table-body-cell",

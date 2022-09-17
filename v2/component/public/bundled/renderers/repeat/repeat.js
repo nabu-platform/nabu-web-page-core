@@ -419,6 +419,36 @@ Vue.component("renderer-repeat", {
 			}
 			return "div";
 		},
+		getMessageComponent: function() {
+			var self = this;
+			var pageType = this.getPageType();
+			if (pageType) {
+				var provider = nabu.page.providers("page-type").filter(function(x) {
+					return x.name == pageType;
+				})[0];
+				if (provider && provider.messageTag instanceof Function) {
+					return provider.messageTag(this.target);
+				}
+				else if (provider && provider.messageTag) {
+					return provider.messageTag;
+				}
+				// if we are a cell, check if we have a celltag
+				else if (provider && this.target.rows && provider.cellTag instanceof Function) {
+					return provider.cellTag(null, this.target);
+				}
+				else if (provider && this.target.rows && provider.cellTag) {
+					return provider.cellTag;
+				}
+				// if we are a row, check if we have a celltag
+				else if (provider && this.target.cells && provider.rowTag instanceof Function) {
+					return provider.rowTag(this.target);
+				}
+				else if (provider && this.target.cells && provider.rowTag) {
+					return provider.rowTag;
+				}
+			}
+			return "div";
+		},
 		onDragStart: function(event, record) {
 			var name = this.target.repeat.dragName ? this.target.repeat.dragName : "default";
 			this.$services.page.setDragData(event, "data-" + name, JSON.stringify(record));

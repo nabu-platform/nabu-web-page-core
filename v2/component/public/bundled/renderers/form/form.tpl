@@ -59,6 +59,21 @@
 		<div v-if="target.form.formType">
 			<n-form-switch v-model="target.form.noInlineErrors" label="Disable inline error message" after="By default, validation errors will be shown inline."/>
 		</div>
+		
+		<div class="is-column is-spacing-medium">
+			<h3 class="is-h3">Validation Messages</h3>
+			<p class="is-p is-size-small">You can remap specific validation codes for the whole form to provide the user with a different message than the default message available for that code.</p>
+			<div v-if='target.form.codes' class="is-column is-spacing-vertical-gap-medium">
+				<div class="is-column is-color-body is-spacing-medium has-button-close" v-for='code in target.form.codes' :timeout='600'>
+					<n-form-text v-model='code.code' label='Code' :timeout='600' after="The code you want to remap, for example 'required'"/>
+					<n-form-text v-model='code.title' label='Title' :timeout='600' after="The message you want to show the user"/>
+					<button class="is-button is-variant-close" @click='target.form.codes.splice(target.form.codes.indexOf(code), 1)'><icon name="times"/></button>
+				</div>
+			</div>
+			<div class="is-row is-align-end">
+				<button class="is-button is-size-xsmall is-variant-primary-outline" @click="target.form.codes ? target.form.codes.push({code:null,title:null}) : $window.Vue.set(target.form, 'codes', [{code:null,title:null}])"><icon name="plus"/><span class="is-text">Message</span></button>
+			</div>
+		</div>
 	</div>
 </template>
 
