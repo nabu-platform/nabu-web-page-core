@@ -1287,7 +1287,7 @@ window.addEventListener("load", function() {
 							if (buttonCell) {
 								buttonCell.alias = "page-button";
 								buttonCell.state = {
-									content: operation.method.toLowerCase() == "post" ? "%" + "{" + buttonCell.name + "}" : null,
+									content: operation.method.toLowerCase() == "post" ? "%" + "{Create}" : null,
 									icon: operation.method.toLowerCase() == "post" ? "plus" : "pencil-alt",
 									triggers: [{
 										trigger: "click",

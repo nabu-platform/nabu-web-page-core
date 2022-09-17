@@ -113,11 +113,6 @@ Vue.component("renderer-form", {
 			required: false
 		}
 	},
-	computed: {
-		mode: function() {
-			return !this.cell.state.noInlineErrors ? "component" : null;
-		}
-	},
 	created: function() {
 		var self = this;
 		if (this.parameters) {

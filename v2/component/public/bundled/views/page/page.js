@@ -768,6 +768,40 @@ nabu.page.views.Page = Vue.component("n-page", {
 				this.page.content.actions.unshift(action);
 			}
 		},
+		getHideMode: function(cell) {
+			// not yet defined (backwards compatible)
+			if (!cell.state.hasOwnProperty("hideMode")) {
+				var mode = null;
+				if (cell.on) {
+					mode = "event";
+				}
+				else if (cell.condition) {
+					mode = "script";
+				}
+				else if (cell.devices && cell.devices.length) {
+					mode = "device";
+				}
+				else if (cell.closeable) {
+					mode = "toggle";
+				}
+				Vue.set(cell.state, "hideMode", mode);
+			}
+			return cell.state.hideMode;
+		},
+		setHideMode: function(cell, mode) {
+			Vue.set(cell.state, "hideMode", mode);
+			// set some other states to be backwards compatible and keep the future ability to combine multiple conditions
+			Vue.set(cell, "closeable", mode == "toggle");
+			if (cell.state.mode != "event") {
+				cell.on = null;
+			}
+			if (cell.state.mode != "script") {
+				cell.condition = null;
+			}
+			if (cell.state.mode != "devices" && cell.devices) {
+				cell.devices.splice(0);
+			}
+		},
 		moveActionBottom: function(action) {
 			var index = this.page.content.actions.indexOf(action);	
 			if (index >= 0) {

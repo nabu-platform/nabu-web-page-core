@@ -569,7 +569,7 @@
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Location" key="cell-location" content-class="is-spacing-medium" class="is-highlight-left">
 							<p class="is-p is-size-small">By default the cell will render in the page, following its natural positioning.</p>
-							<n-form-combo label="Target" :items="['page', 'sidebar', 'prompt', 'absolute']" v-model="cell.target" />
+							<n-form-combo label="Render in" :items="['page', 'sidebar', 'prompt', 'absolute']" v-model="cell.target" />
 							<n-form-switch label="Prevent Auto Close" v-model="cell.preventAutoClose" v-if="cell.target == 'sidebar'"
 								after="The sidebar will automatically close when the user clicks elsewhere unless this is toggled"/>
 							<n-form-switch label="Optimize (may result in stale content)" v-model="cell.optimizeVueKey" v-if="cell.on"/>
@@ -582,15 +582,23 @@
 							<n-form-switch label="Autoclose" v-model="cell.autoclose" v-if="cell.target == 'absolute' || cell.target == 'prompt'"/>
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Conditions" key="cell-conditions" content-class="is-spacing-medium" class="is-highlight-left">
-							<p class="is-p is-size-small" v-if="cell.target == 'page' || cell.target == null">By default the cell will always render, you can however manipulate this behavior.</p>
+							<p class="is-p is-size-small" v-if="!$services.page.isCloseable(cell) && !cell.condition">By default the cell will be visible.</p>
 							<p class="is-p is-size-small" v-else>By default the cell will be hidden.</p>
 
-							<n-form-switch label="Hide by default" v-model="cell.closeable" v-if="cell.target == 'page' || cell.target == null"
-								after="Toggle this if you want to the cell to be hidden when the page is rendered"/>
+							<n-form-combo label="Hide this cell" 
+								:items="[{name:'event', title:'Until an event occurs'}, {name: 'script', title: 'Until a condition is met'}, {name:'toggle', title: 'Until explicitly toggled'}, {name: 'device', title: 'On certain devices'}]"
+								:extracter="function(x) { return x.name }"
+								:formatter="function(x) { return x.title }"
+								:value="getHideMode(cell)"
+								@input="function(value) { setHideMode(cell, value) }"/>
+								
+							<n-form-combo label="The event that has to occur" v-model="cell.on" :filter="getAvailableEvents" v-if="cell.state.hideMode == 'event'" />
+								
+							<n-form-switch label="Hide until toggled explicitly" v-model="cell.closeable" v-if="false && !cell.on && (cell.target == 'page' || cell.target == null)" />
 							
-							<p class="is-p is-size-small">Render this cell only if this condition is met:</p>
-							<n-form-ace mode="javascript" label="Condition" v-model="cell.condition" :timeout="600"/>
-							<div v-if="$services.page.devices.length" class="is-column is-spacing-vertical-gap-medium">
+							<n-form-ace mode="javascript" label="Condition" v-model="cell.condition" :timeout="600" v-if="cell.state.hideMode == 'script'"/>
+							
+							<div v-if="$services.page.devices.length && cell.state.hideMode == 'device'" class="is-column is-spacing-vertical-gap-medium">
 								<p class="is-p is-size-small is-color-light is-spacing-vertical-bottom-small">Render the cell only if these device rules are met.</p>
 								<div class="is-row is-align-end">
 									<button class="is-button is-variant-primary-outline is-size-xsmall" @click="addDevice(cell)"><icon name="plus"/>Device rule</button>
@@ -669,15 +677,24 @@
 							<n-form-text label="Row Id" v-model="row.customId" after="If you set an id on this row, it can be used as a render target. Useful for skeletons."/>
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Conditions" key="row-conditions" content-class="is-spacing-medium" class="is-highlight-left">
-							<p class="is-p is-size-small">By default the row will always render, you can however manipulate this behavior.</p>
+							<p class="is-p is-size-small" v-if="!$services.page.isCloseable(row) && !row.condition">By default the row will be visible.</p>
+							<p class="is-p is-size-small" v-else>By default the row will be hidden.</p>
+							
+							<n-form-combo label="Hide this row" 
+								:items="[{name:'event', title:'Until an event occurs'}, {name: 'script', title: 'Until a condition is met'}, {name:'toggle', title: 'Until explicitly toggled'}, {name: 'device', title: 'On certain devices'}]"
+								:extracter="function(x) { return x.name }"
+								:formatter="function(x) { return x.title }"
+								:value="getHideMode(row)"
+								@input="function(value) { setHideMode(row, value) }"/>
+							
+							<n-form-combo label="The event that has to occur" v-model="row.on" :filter="getAvailableEvents" v-if="row.state.hideMode == 'event'"/>
 							
 							<n-form-switch label="Hide by default" v-model="row.closeable"
-								after="Toggle this if you want to the row to be hidden when the page is rendered"/>
+								v-if="false"/>
 							
-							<p class="is-p is-size-small">Render this row only if this condition is met:</p>
-							<n-form-ace mode="javascript" label="Condition" v-model="row.condition" class="vertical"/>
+							<n-form-ace mode="javascript" label="Condition" v-model="row.condition" v-if="row.state.hideMode == 'script'" class="vertical"/>
 							
-							<div v-if="$services.page.devices.length" class="is-column is-spacing-vertical-medium">
+							<div v-if="$services.page.devices.length && row.state.hideMode == 'device'" class="is-column is-spacing-vertical-medium">
 								<p class="is-p is-size-small is-color-light is-spacing-vertical-bottom-small">Render the row only if these device rules are met.</p>
 								<div class="is-row is-align-end">
 									<button class="is-button is-variant-primary-outline is-size-xsmall" @click="addDevice(row)"><icon name="plus"/>Device rule</button>
@@ -692,9 +709,6 @@
 									</div>
 								</div>
 							</div>
-						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Eventing" content-class="is-spacing-medium" class="is-highlight-left" v-if="row.on">
-							<n-form-combo label="Show On" v-model="row.on" :filter="getAvailableEvents"/>
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Triggers" key="row-triggers" class="is-highlight-left" v-if="getTriggersForCell(row)">
 							<p class="is-p is-size-small is-spacing-medium">You can add triggers to react to user interaction with the content.</p>
