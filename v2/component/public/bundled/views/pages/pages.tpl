@@ -123,7 +123,8 @@
 						<h3 class="is-h3" :key="category" :ref="'category_' + category">
 							<span class="is-text">{{category}}</span>
 							<ul class="is-menu is-variant-toolbar is-position-right">
-								<li class="is-column"><button class="is-button is-variant-primary-outline is-size-small has-tooltip" @click="copyCategory(category)"><icon name="copy"/><span class="is-text">Copy category</span><span class="is-tooltip is-position-top is-width-medium">Copy all pages in this category</span></button></li>
+								<li class="is-column"><button class="is-button is-size-small is-variant-primary has-tooltip" @click="create(category)"><icon name="plus"/><span class="is-text">Add page</span><span class="is-tooltip is-position-top is-width-medium">Add a new page to your application</span></button></li>
+								<li v-if="false" class="is-column"><button class="is-button is-variant-primary-outline is-size-small has-tooltip" @click="copyCategory(category)"><icon name="copy"/><span class="is-text">Copy category</span><span class="is-tooltip is-position-top is-width-medium">Copy all pages in this category</span></button></li>
 							</ul>
 						</h3>
 						<div class="is-accordion">
@@ -262,13 +263,15 @@
 		<h3 class="is-h3">Add a new page</h3>
 		<n-form-section>
 			<n-form-text v-model="name" label="Page name" :required="true" :validator="validator" after="The name of your page should be unique within your application"/>
-			<n-form-switch :invert="true" label="Add to an existing category" v-model="newCategory" v-if="hasAnyCategories"/>
-			<n-form-combo v-if="!newCategory" v-model="category" label="Existing Category" :required="true" :filter="checkCategory" after="Choose an existing category"/>
-			<n-form-text v-else v-model="category" label="New Category" :required="true" after="Create a new category with this name"/>
+			<div v-if="!fixedCategory">
+				<n-form-switch :invert="true" label="Add to an existing category" v-model="newCategory" v-if="hasAnyCategories"/>
+				<n-form-combo v-if="!newCategory" v-model="category" label="Existing Category" :required="true" :filter="checkCategory" after="Choose an existing category"/>
+				<n-form-text v-else v-model="category" label="New Category" :required="true" after="Create a new category with this name"/>
+			</div>
 		</n-form-section>
 		<footer class="is-row is-align-space-between">
 			<button @click="$reject" class="is-button is-variant-link">Cancel</button>
-			<button @click="$resolve({category:category, name:name})" class="is-button is-variant-primary">Add</button>
+			<button @click="$resolve({category:fixedCategory ? fixedCategory : category, name:name})" class="is-button is-variant-primary">Add</button>
 		</footer>
 	</n-form>
 </template>

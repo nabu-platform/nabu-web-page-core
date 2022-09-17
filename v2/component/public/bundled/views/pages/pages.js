@@ -241,13 +241,14 @@ nabu.page.views.Pages = Vue.extend({
 				self.$services.page.remove(page);
 			});
 		},
-		create: function() {
+		create: function(category) {
 			var self = this;
 			this.$prompt(function() {
 				return new nabu.page.views.PageCreate({
 					propsData: {
 						validator: self.customNameValidator,
-						categories: self.categories
+						categories: self.categories,
+						fixedCategory: category
 					}
 				});
 			}).then(function(resolved) {
@@ -297,6 +298,10 @@ nabu.page.views.Pages = Vue.extend({
 nabu.page.views.PageCreate = Vue.extend({
 	template: "#nabu-create-page",
 	props: {
+		fixedCategory: {
+			type: String,
+			required: false
+		},
 		validator: {
 			type: Function,
 			required: false

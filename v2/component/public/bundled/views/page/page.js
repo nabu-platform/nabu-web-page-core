@@ -444,6 +444,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}});
 			});
 		}
+		
+		// set the initial state...
+		// stuff that should be hidden, is hidden by default
+		// for events, it was enough to detect the event, but with the new generic closeable, we need to specifically set this
+		// it should continue to work for events as well though
+		this.$services.page.listCloseableItems(this.page).forEach(function(x) {
+			Vue.set(self.closed, x.id, x.on ? x.on : "$any");
+		});
 	},
 	beforeMount: function() {
 		this.$services.page.setPageInstance(this.page, this);
@@ -1395,15 +1403,22 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			
 			component.$on("close", function() {
-				if (cell.on || cell.closeable) {
+				var closed = false;
+				if (self.$services.page.isCloseable(cell)) {
+					closed = true;
 					Vue.set(self.closed, cell.id, cell.on ? cell.on : "$any");
 				}
-				else if (component.$parent) {
+				if (row && self.$services.page.isCloseable(row)) {
+					closed = true;
+					Vue.set(self.closed, row.id, row.on ? row.on : "$any");
+				}
+				if (!closed && component.$parent) {
 					component.$parent.$emit("close");
 				}
 			});
 			
-			// we set the initial state
+			// in some cases only the component knows when to hide (e.g. tags)
+			// we use the hidden logic to v-show the wrapper cell as well to prevent it taking up empty space that might influence things like css gaps
 			if (component.isCellHidden) {
 				Vue.set(self.hidden, cell.id, component.isCellHidden());
 				// and we listen for updates
@@ -3654,18 +3669,28 @@ Vue.component("n-page-row", {
 				this.goto(event, row, cell, "cell");
 			}
 		},
-		close: function(cell) {
+		close: function(row, cell, childRow) {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
-			if (cell.on || cell.closeable) {
+			// if we didn't close anything, we want to send this up to the parent
+			var closed = false;
+			if (cell && this.$services.page.isCloseable(cell)) {
+				closed = true;
 				Vue.set(pageInstance.closed, cell.id, cell.on ? cell.on : "$any");
 			}
-			else {
+			if (row && this.$services.page.isCloseable(row)) {
+				closed = true;
+				Vue.set(pageInstance.closed, row.id, row.on ? row.on : "$any");
+			}
+			if (childRow && this.$services.page.isCloseable(childRow)) {
+				closed = true;
+				Vue.set(pageInstance.closed, childRow.id, childRow.on ? childRow.on : "$any");
+			}
+			if (!closed) {
 				this.$parent.$emit("close");
 			}
 		},
 		shouldRenderRow: function(row) {
-			
 			if (this.edit) {
 				return true;
 			}
@@ -3686,6 +3711,9 @@ Vue.component("n-page-row", {
 				if (!pageInstance.get(row.on)) {
 					return false;
 				}
+			}
+			if (this.$services.page.isCloseable(row)) {
+				return !pageInstance.closed[row.id];
 			}
 			return true;
 		},
@@ -3764,9 +3792,12 @@ Vue.component("n-page-row", {
 				nabu.utils.arrays.merge(classes, this.$services.page.getDynamicClasses(cell.styles, pageInstance.variables, this));
 			}
 			// if we have an explicit open trigger on click, we explicitly close it as well
+			// deprecated
+			/*
 			if (cell.state.openTrigger == "click") {
 				classes.push("is-closed");
 			}
+			*/
 			return classes;
 		},
 		rowClasses: function(row) {
@@ -3869,7 +3900,7 @@ Vue.component("n-page-row", {
 					return false;
 				}
 			}
-			else if (cell.closeable && pageInstance.closed[cell.id]) {
+			else if (this.$services.page.isCloseable(cell) && pageInstance.closed[cell.id]) {
 				return false;
 			}
 			var providers = [];
@@ -4045,6 +4076,8 @@ Vue.component("n-page-row", {
 			}
 		},
 		clickOnContentCell: function(row, cell) {
+			// opentrigger is deprecated, it was a tryout that was never used
+			/*
 			if (cell.state.openTrigger == "click") {
 				var cellInstance = document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
 				if (cellInstance) {
@@ -4058,8 +4091,12 @@ Vue.component("n-page-row", {
 					}
 				}
 			}
+			*/
 		},
 		autocloseCell: function(row, cell, inside) {
+			this.close(row, cell);
+			// deprecated
+			/*
 			if (cell.state.openTrigger == "click") {
 				var cellInstance = document.getElementById(this.page.name + '_' + row.id + '_' + cell.id);
 				if (cellInstance) {
@@ -4069,6 +4106,7 @@ Vue.component("n-page-row", {
 					}
 				}
 			}
+			*/
 		},
 		
 		addCell: function(target) {

@@ -171,6 +171,17 @@
 							key="button-function-mapper"
 							v-model="action.bindings"/>
 					</div>
+					
+					<div v-else-if="action.type == 'visibility'" class="is-column is-spacing-gap-medium">
+						<n-form-combo v-model="action.closeableTarget" label="Closeable item" :filter="$services.page.listCloseableItems.bind($self, page)"
+							:extracter="function(x) { return x.id }"
+							:formatter="function(x) { return $services.page.formatPageItem($services.page.getPageInstance(page), x) }"/>
+						<n-form-combo v-model="action.closeableAction"
+							placeholder="Unless you set an explicit value, it will toggle" :items="[{name: 'visible', title: 'Show it'}, {name: 'hidden', title: 'Hide it'}]"
+							label="Visibility change"
+							:extracter="function(x) { return x.name }"
+							:formatter="function(x) { return x.title }"/>
+					</div>
 						
 				</div>
 				

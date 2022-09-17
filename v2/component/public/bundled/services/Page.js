@@ -304,6 +304,35 @@ nabu.services.VueService(Vue.extend({
 			}
 			return result;
 		},
+		listCloseableItems: function(page, value) {
+			var result = [];
+			var search = function(container) {
+				if (container.closeable) {
+					result.push(container);
+				}
+				if (container.cells) {
+					container.cells.forEach(search);
+				}
+				if (container.rows) {
+					container.rows.forEach(search);
+				}
+			}	
+			search(page.content);
+			if (value) {
+				var pageInstance = this.getPageInstance(page);
+				var self = this;
+				result = result.filter(function(x) {
+					return self.formatPageItem(pageInstance, x).toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				});
+			}
+			return result;
+		},
+		isCloseable: function(target) {
+			// it is closeable when you have an event-driven opening (old school)
+			// or when you specifically set that it can be closed
+			// or when it is rendered somewhere else than the page
+			return target.on || target.closeable || (target.target != 'page' && target.target != null);	
+		},
 		// calculate all the available actions in a page
 		getAvailableActions: function(pageInstance, value) {
 			var self = this;
@@ -943,7 +972,7 @@ nabu.services.VueService(Vue.extend({
 				return this.getRenderer(target.renderer).title;
 			}
 			// if all else fails, we use the id
-			return target.id;
+			return "" + target.id;
 		},
 		getPageType: function(page, target) {
 			var self = this;

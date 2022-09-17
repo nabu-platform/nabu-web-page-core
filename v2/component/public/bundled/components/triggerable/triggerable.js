@@ -360,6 +360,21 @@ Vue.service("triggerable", {
 							self.$confirm({message:self.$services.page.translate(self.$services.page.interpret(action.confirmation, instance))}).then(promise, promise);
 							return promise;
 						}
+						else if (action.type == "visibility" && action.closeableTarget) {
+							var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
+							// if we want to ensure visibility, we must wipe the "closed" state
+							if (action.closeableAction == "visible") {
+								Vue.set(pageInstance.closed, action.closeableTarget, null);
+							}
+							else if (action.closeableAction == "hidden") {
+								Vue.set(pageInstance.closed, action.closeableTarget, "$any");
+							}
+							else {
+								// just toggle it
+								Vue.set(pageInstance.closed, action.closeableTarget, pageInstance.closed[action.closeableTarget] == null ? "$any" : null);
+							}
+							return self.$services.q.resolve();
+						}
 					};
 					
 					if (!self.edit) {
@@ -523,6 +538,10 @@ Vue.component("page-triggerable-configure", {
 			types.push({
 				title: "Ask for confirmation",
 				name: "confirmation"
+			});
+			types.push({
+				title: "Change visibility of cell or row",
+				name: "visibility"
 			});
 			return types;
 		}

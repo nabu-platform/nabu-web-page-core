@@ -565,10 +565,28 @@
 							
 							<n-form-switch label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
 							
-							<n-form-combo v-model="cell.state.openTrigger" label="Open on" placeholder="Always open" :items="['click', 'hover']"/>
+							<n-form-combo v-if="false" v-model="cell.state.openTrigger" label="Open on" placeholder="Always open" :items="['click', 'hover']"/>
+						</n-collapsible>
+						<n-collapsible :only-one-open="true" title="Location" key="cell-location" content-class="is-spacing-medium" class="is-highlight-left">
+							<p class="is-p is-size-small">By default the cell will render in the page, following its natural positioning.</p>
+							<n-form-combo label="Target" :items="['page', 'sidebar', 'prompt', 'absolute']" v-model="cell.target" />
+							<n-form-switch label="Prevent Auto Close" v-model="cell.preventAutoClose" v-if="cell.target == 'sidebar'"
+								after="The sidebar will automatically close when the user clicks elsewhere unless this is toggled"/>
+							<n-form-switch label="Optimize (may result in stale content)" v-model="cell.optimizeVueKey" v-if="cell.on"/>
+							<n-form-text label="Top" v-model="cell.top" v-if="cell.target == 'absolute'"/>
+							<n-form-text label="Bottom" v-model="cell.bottom" v-if="cell.target == 'absolute'"/>
+							<n-form-text label="Left" v-model="cell.left" v-if="cell.target == 'absolute'"/>
+							<n-form-text label="Right" v-model="cell.right" v-if="cell.target == 'absolute'"/>
+							<n-form-text label="Minimum Width" v-model="cell.minWidth" v-if="cell.target == 'absolute'"/>
+							<n-form-switch label="Position fixed?" v-model="cell.fixed" v-if="cell.target == 'absolute'"/>
+							<n-form-switch label="Autoclose" v-model="cell.autoclose" v-if="cell.target == 'absolute' || cell.target == 'prompt'"/>
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Conditions" key="cell-conditions" content-class="is-spacing-medium" class="is-highlight-left">
-							<p class="is-p is-size-small">By default the cell will always render, you can however manipulate this behavior.</p>
+							<p class="is-p is-size-small" v-if="cell.target == 'page' || cell.target == null">By default the cell will always render, you can however manipulate this behavior.</p>
+							<p class="is-p is-size-small" v-else>By default the cell will be hidden.</p>
+
+							<n-form-switch label="Hide by default" v-model="cell.closeable" v-if="cell.target == 'page' || cell.target == null"
+								after="Toggle this if you want to the cell to be hidden when the page is rendered"/>
 							
 							<p class="is-p is-size-small">Render this cell only if this condition is met:</p>
 							<n-form-ace mode="javascript" label="Condition" v-model="cell.condition" :timeout="600"/>
@@ -592,22 +610,7 @@
 							<p class="is-p is-size-small is-spacing-medium">You can add triggers to react to user interaction with the content.</p>
 							<page-triggerable-configure :page="page" :target="cell" :triggers="getTriggersForCell(cell)" :allow-closing="cell.target && cell.target != 'page'"/>
 						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Location" key="cell-location" content-class="is-spacing-medium" class="is-highlight-left">
-							<p class="is-p is-size-small">By default the cell will render in the page, following its natural positioning.</p>
-							<n-form-combo label="Target" :items="['page', 'sidebar', 'prompt', 'absolute']" v-model="cell.target" />
-							<n-form-switch label="Prevent Auto Close" v-model="cell.preventAutoClose" v-if="cell.target == 'sidebar'"
-								after="The sidebar will automatically close when the user clicks elsewhere unless this is toggled"/>
-							<n-form-switch label="Optimize (may result in stale content)" v-model="cell.optimizeVueKey" v-if="cell.on"/>
-							<n-form-text label="Top" v-model="cell.top" v-if="cell.target == 'absolute'"/>
-							<n-form-text label="Bottom" v-model="cell.bottom" v-if="cell.target == 'absolute'"/>
-							<n-form-text label="Left" v-model="cell.left" v-if="cell.target == 'absolute'"/>
-							<n-form-text label="Right" v-model="cell.right" v-if="cell.target == 'absolute'"/>
-							<n-form-text label="Minimum Width" v-model="cell.minWidth" v-if="cell.target == 'absolute'"/>
-							<n-form-switch label="Position fixed?" v-model="cell.fixed" v-if="cell.target == 'absolute'"/>
-							<n-form-switch label="Autoclose" v-model="cell.autoclose" v-if="cell.target == 'absolute' || cell.target == 'prompt'"/>
-						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Eventing" key="cell-events" content-class="is-spacing-medium" class="is-highlight-left">
-							<n-form-switch label="Closeable" v-model="cell.closeable" v-if="!cell.on"/>
+						<n-collapsible :only-one-open="true" title="Eventing" key="cell-events" content-class="is-spacing-medium" class="is-highlight-left" v-if="cell.on">
 							<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents" v-if="!cell.closeable"
 								after="Only show this cell if a certain event is triggered"/>
 							<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" @resetEvents="resetEvents" :inline="true" v-if="false"/>
@@ -665,8 +668,11 @@
 							<n-form-text label="Row Name" v-model="row.name" after="A descriptive name for this row" :timeout="600"/>
 							<n-form-text label="Row Id" v-model="row.customId" after="If you set an id on this row, it can be used as a render target. Useful for skeletons."/>
 						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Conditions" key="cell-conditions" content-class="is-spacing-medium" class="is-highlight-left">
-							<p class="is-p is-size-small">By default the cell will always render, you can however manipulate this behavior.</p>
+						<n-collapsible :only-one-open="true" title="Conditions" key="row-conditions" content-class="is-spacing-medium" class="is-highlight-left">
+							<p class="is-p is-size-small">By default the row will always render, you can however manipulate this behavior.</p>
+							
+							<n-form-switch label="Hide by default" v-model="row.closeable"
+								after="Toggle this if you want to the row to be hidden when the page is rendered"/>
 							
 							<p class="is-p is-size-small">Render this row only if this condition is met:</p>
 							<n-form-ace mode="javascript" label="Condition" v-model="row.condition" class="vertical"/>
@@ -687,7 +693,7 @@
 								</div>
 							</div>
 						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Eventing" content-class="is-spacing-medium" class="is-highlight-left">
+						<n-collapsible :only-one-open="true" title="Eventing" content-class="is-spacing-medium" class="is-highlight-left" v-if="row.on">
 							<n-form-combo label="Show On" v-model="row.on" :filter="getAvailableEvents"/>
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Triggers" key="row-triggers" class="is-highlight-left" v-if="getTriggersForCell(row)">
@@ -765,10 +771,12 @@
 			:target="row"
 			:edit="edit"
 			:page="page"
+			@close="close(row)"
 			:child-components="$services.page.calculateArisComponents(row.aris, row.renderer, $self)"
 			:parameters="getRendererParameters(row)"
 			:anchor="row.customId && !row.renderer ? row.customId : null"
 			class="page-row"
+			v-auto-close="$services.page.isCloseable(row) ? function() { autocloseCell(row) } : null"
 			>
 		<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit && false" @mouseenter="menuHover" @mouseleave="menuUnhover">
 			<button class="is-button is-variant-primary is-size-xsmall has-tooltip is-wrap-none" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-text">Configure row</span></button>
@@ -839,14 +847,14 @@
 				</component>
 			</template>
 			<template v-else-if="shouldRenderCell(row, cell)">
-				<n-sidebar v-if="cell.target == 'sidebar'" @close="close(cell)" :popout="false" :autocloseable="!cell.preventAutoClose" class="content-sidebar" :style="getSideBarStyles(cell)">
+				<n-sidebar v-if="cell.target == 'sidebar'" @close="close(row, cell)" :popout="false" :autocloseable="!cell.preventAutoClose" class="content-sidebar" :style="getSideBarStyles(cell)">
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
 							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-							@close="close(cell)"
+							@close="close(row, cell)"
 							@click="clickOnCell(row, cell)"
 							@click.ctrl="goto($event, row, cell)"
 							@click.meta="goto($event, row, cell)"
@@ -869,31 +877,31 @@
 						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.customId || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						<div class="is-column-content" v-if="cell.customId && (cell.renderer || cell.alias || cell.rows.length)" :id="cell.customId" :anchor="cell.customId"></div>
 						
-						<n-page-row v-for="row in cell.rows"
-							:row="row"
+						<n-page-row v-for="childRow in cell.rows"
+							:row="childRow"
 							:page="page" 
 							:edit="edit"
 							:depth="depth + 1"
 							:parameters="parameters"
 							:ref="page.name + '_' + cell.id + '_rows'"
-							:local-state="getLocalState(row, cell)"
+							:local-state="getLocalState(childRow, cell)"
 							:page-instance-id="pageInstanceId"
 							:stop-rerender="stopRerender"
 							v-bubble:viewComponents
 							v-bubble:select
-							@close="close(cell)"
-							:slot="row.rendererSlot"
+							@close="close(row, cell, childRow)"
+							:slot="childRow.rendererSlot"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</component>
 				</n-sidebar>
-				<n-prompt v-else-if="cell.target == 'prompt'" @close="close(cell)" :autoclose="cell.autoclose">
+				<n-prompt v-else-if="cell.target == 'prompt'" @close="close(row, cell)" :autoclose="cell.autoclose">
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
 							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-							@close="close(cell)"
+							@close="close(row, cell)"
 							@click="clickOnCell(row, cell)"
 							@click.ctrl="goto($event, row, cell)"
 							@click.meta="goto($event, row, cell)"
@@ -915,31 +923,31 @@
 						
 						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.customId || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						<div class="is-column-content" v-if="cell.customId && (cell.renderer || cell.alias || cell.rows.length)" :id="cell.customId" :anchor="cell.customId"></div>
-						<n-page-row v-for="row in cell.rows"
-							:row="row"
+						<n-page-row v-for="childRow in cell.rows"
+							:row="childRow"
 							:page="page" 
 							:edit="edit"
 							:depth="depth + 1"
 							:parameters="parameters"
 							:ref="page.name + '_' + cell.id + '_rows'"
-							:local-state="getLocalState(row, cell)"
+							:local-state="getLocalState(childRow, cell)"
 							:page-instance-id="pageInstanceId"
 							:stop-rerender="stopRerender"
 							v-bubble:viewComponents
 							v-bubble:select
-							@close="close(cell)"
-							:slot="row.rendererSlot"
+							@close="close(row, cell, childRow)"
+							:slot="childRow.rendererSlot"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</component>
 				</n-prompt>
-				<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right">          
+				<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(row, cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right">          
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
 							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-							@close="close(cell)"
+							@close="close(row, cell)"
 							@click="clickOnCell(row, cell)"
 							@click.ctrl="goto($event, row, cell)"
 							@click.meta="goto($event, row, cell)"
@@ -961,20 +969,20 @@
 						
 						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.customId || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						<div class="is-column-content" v-if="cell.customId && (cell.renderer || cell.alias || cell.rows.length)" :id="cell.customId" :anchor="cell.customId"></div>
-						<n-page-row v-for="row in cell.rows"
-							:row="row"
+						<n-page-row v-for="childRow in cell.rows"
+							:row="childRow"
 							:page="page" 
 							:edit="edit"
 							:depth="depth + 1"
 							:parameters="parameters"
 							:ref="page.name + '_' + cell.id + '_rows'"
-							:local-state="getLocalState(row, cell)"
+							:local-state="getLocalState(childRow, cell)"
 							:page-instance-id="pageInstanceId"
 							:stop-rerender="stopRerender"
 							v-bubble:viewComponents
 							v-bubble:select
-							@close="close(cell)"
-							:slot="row.rendererSlot"
+							@close="close(row, cell, childRow)"
+							:slot="childRow.rendererSlot"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</component>
 				</n-absolute>
@@ -985,7 +993,7 @@
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'is-empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
 							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
-							@close="close(cell)"
+							@close="close(row, cell)"
 							@click="clickOnCell(row, cell)"
 							@click.ctrl="goto($event, row, cell)"
 							@click.meta="goto($event, row, cell)"
@@ -995,7 +1003,7 @@
 							@dragover="dragOverCell($event, row, cell)"
 							@dragexit="dragExitCell($event, row, cell)"
 							@drop="dropCell($event, row, cell)"
-							v-auto-close="cell.state.openTrigger ? function(inside) { autocloseCell(row, cell, inside) } : null"
+							v-auto-close="$services.page.isCloseable(cell) ? function() { autocloseCell(null, cell) } : null"
 							:target="cell"
 							:edit="edit"
 							:page="page"
@@ -1008,20 +1016,20 @@
 						
 						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.customId || cell.rows.length)" @click="clickOnContentCell(row, cell)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						<div class="is-column-content" v-if="cell.customId && (cell.renderer || cell.alias || cell.rows.length)" :id="cell.customId" :anchor="cell.customId"></div>
-						<n-page-row v-for="row in cell.rows"
-							:row="row"
+						<n-page-row v-for="childRow in cell.rows"
+							:row="childRow"
 							:page="page" 
 							:edit="edit"
 							:depth="depth + 1"
 							:parameters="parameters"
 							:ref="page.name + '_' + cell.id + '_rows'"
-							:local-state="getLocalState(row, cell)"
+							:local-state="getLocalState(childRow, cell)"
 							:page-instance-id="pageInstanceId"
 							:stop-rerender="stopRerender"
 							v-bubble:viewComponents
 							v-bubble:select
-							@close="close(cell)"
-							:slot="row.rendererSlot"
+							@close="close(row, cell, childRow)"
+							:slot="childRow.rendererSlot"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</component>
 				</template>
