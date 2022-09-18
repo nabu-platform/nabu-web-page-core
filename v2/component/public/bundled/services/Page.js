@@ -2367,12 +2367,12 @@ nabu.services.VueService(Vue.extend({
 			}
 			return result;
 		},
-		isCondition: function(condition, state, instance) {
+		isCondition: function(condition, state, instance, customValueFunction) {
 			if (!condition) {
 				return true;
 			}
 			try {
-				var result = this.eval(condition, state, instance);
+				var result = this.eval(condition, state, instance, customValueFunction);
 				return !!result;
 			}
 			catch (exception) {
@@ -2488,7 +2488,7 @@ nabu.services.VueService(Vue.extend({
 			//}
 			return value;	
 		},
-		eval: function(condition, state, instance) {
+		eval: function(condition, state, instance, customValueFunction) {
 			if (!condition) {
 				return null;
 			}
@@ -2529,12 +2529,10 @@ nabu.services.VueService(Vue.extend({
 					var resultFunction = Function('"use strict";return (function(state, $services, $value, application) { return ' + condition + ' })')();
 					// by default it is bound to "undefined"
 					resultFunction = resultFunction.bind(this);
-					var result = resultFunction(state, this.$services, instance ? instance.$value : function() { throw "No value function" }, application);
+					var result = resultFunction(state, this.$services, customValueFunction ? customValueFunction : (instance ? instance.$value : function() { throw "No value function" }), application);
 				}
 				catch (exception) {
-					if (${environment("development")}) {
-						console.warn("Could not evaluate", condition, exception);
-					}
+					console.warn("Could not evaluate", condition, exception);
 					return null;
 				}
 				if (result instanceof Function) {

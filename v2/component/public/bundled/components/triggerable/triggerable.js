@@ -151,8 +151,18 @@ Vue.service("triggerable", {
 				// TODO: don't pre-filter actions, but instead filter them as we go further into the pipeline
 				// if we then pass in the "state" (rather than the value), we can evaluate to the local pipeline state
 				
+				var customValueFunction = function(path, literal) {
+					// look up in local state so you can evaluate that
+					var result = self.$services.page.getValue(state, path);
+					// fallback to global value function!
+					if (result == null) {
+						result = self.$value(path, literal);
+					}
+					return result;
+				}
+				
 				var actions = x.actions.filter(function(y) {
-					return !y.condition || self.$services.page.isCondition(y.condition, value, instance);
+					return !y.condition || self.$services.page.isCondition(y.condition, value, instance, customValueFunction);
 				});
 				
 				// local state we have built up, we can get variables from there
