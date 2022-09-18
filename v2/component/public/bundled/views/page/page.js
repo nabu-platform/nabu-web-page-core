@@ -63,6 +63,21 @@ Vue.mixin({
 			return this;
 		}	
 	},
+	beforeDestroy: function() {
+		var target = this.$$target;
+		if (!target) {
+			target = this.$$cell;
+		}
+		if (target && target.triggers) {
+			console.log("untriggering", target);
+			// untrigger everything when we get destroyed!
+			this.$services.triggerable.untrigger(target, null, this);
+		}
+		if (target && target.state && target.state.triggers) {
+			console.log("untriggering", target.state);
+			this.$services.triggerable.untrigger(target.state, null, this);
+		}
+	},
 	methods: {
 		// expects a prop with name "childComponents"
 		getChildComponentClasses: function(name) {
@@ -394,6 +409,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	beforeDestroy: function() {
+		console.log("destroying page", this.page.content.name);
 		this.stopEdit();
 		if (this.autoRefreshTimeout) {
 			clearTimeout(this.autoRefreshTimeout);
@@ -1417,6 +1433,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 				if (!target.retainState) {
 				}
 			}
+			// link back for certain functions like beforeDestroy untriggering
+			component.$$target = target;
 			var self = this;
 			// when we exit edit mode, we don't actually destroy the parent page, but we do reroute all the children
 			// for whatever reason (possibly because this is asynchronous), it does not play well with the rerendering of the actual children
