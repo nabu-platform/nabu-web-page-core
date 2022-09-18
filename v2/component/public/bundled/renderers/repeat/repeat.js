@@ -30,6 +30,31 @@ nabu.page.provide("page-renderer", {
 	type: ["row", "cell"],
 	component: "renderer-repeat",
 	configuration: "renderer-repeat-configure",
+	getTriggers: function(target, pageInstance, $services) {
+		// this ONLY works if you set a runtime alias which is not the cleanest way
+		// but it is (currently) the only way to really get the definition
+		// the problem in getState is when we depend on OTHER definitions to define ourselves (e.g. when doing the array)
+		// for this reason we added the pageParameters workaround, but it is fragile at best
+		// anyway, the repeat WITHOUT a runtime alias is quite useless as you can't bind to any data anyway
+		// we do know however that there is a select, and we want you to be able to configure it immediately
+		// so if we can't resolve the state yet (no runtime alias), we already expose the trigger without any data
+		if (pageInstance && target && target.runtimeAlias && target.repeat && target.repeat.selectable) {
+			// we need the definition for this
+			var parameters = $services.page.getAllAvailableParameters(pageInstance.page);
+			var trigger = {
+				select: {
+					items: {
+						type: "array",
+						items: {
+							type: "object",
+							properties: parameters[target.runtimeAlias].properties.record.properties
+						}
+					}
+				}
+			};
+			return trigger;
+		}
+	},
 	getState: function(container, page, pageParameters, $services) {
 		var result = {};
 		if (container.repeat) {
@@ -554,9 +579,20 @@ Vue.component("renderer-repeat", {
 					if (value.items) {
 						nabu.utils.arrays.merge(this.state.selected, value.items);
 					}
+					if (this.state.selected.length) {
+						return this.$services.triggerable.trigger(this.target, "select", this.state.selected, this);
+					}
+					else {
+						this.unselectAll();
+						return this.$services.q.resolve();
+					}
 				}
 			}
 			return this.$services.q.reject();
+		},
+		unselectAll: function() {
+			this.state.selected.splice(0);
+			this.$services.triggerable.untrigger(this.target, "select", this);
 		},
 		getRuntimeState: function() {
 			return this.state;	
@@ -648,6 +684,10 @@ Vue.component("renderer-repeat", {
 		loadData: function(page, append) {
 			this.loadCounter++;
 			var self = this;
+			// trigger an unselect
+			if (this.state.selected.length > 0) {
+				this.unselectAll();
+			}
 			// we want to call an operation
 			if (this.target.repeat && this.target.repeat.operation) {
 				var parameters = this.operationParameters;

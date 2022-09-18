@@ -596,6 +596,8 @@
 								
 							<n-form-switch label="Hide until toggled explicitly" v-model="cell.closeable" v-if="false && !cell.on && (cell.target == 'page' || cell.target == null)" />
 							
+							<n-form-switch label="Autoclose once visible" v-model="cell.autocloseable" v-if="cell.closeable" after="Once it is toggled to visible and the user clicks outside this cell, do you want to automatically hide it again?"/>
+							
 							<n-form-ace mode="javascript" label="Condition" v-model="cell.condition" :timeout="600" v-if="cell.state.hideMode == 'script'"/>
 							
 							<div v-if="$services.page.devices.length && cell.state.hideMode == 'device'" class="is-column is-spacing-vertical-gap-medium">
@@ -691,6 +693,8 @@
 							
 							<n-form-switch label="Hide by default" v-model="row.closeable"
 								v-if="false"/>
+								
+							<n-form-switch label="Autoclose once visible" v-model="row.autocloseable" v-if="row.closeable" after="Once it is toggled to visible and the user clicks outside this row, do you want to automatically hide it again?"/>
 							
 							<n-form-ace mode="javascript" label="Condition" v-model="row.condition" v-if="row.state.hideMode == 'script'" class="vertical"/>
 							
@@ -775,7 +779,9 @@
 			@dragover="dragOver($event, row)"
 			@dragexit="dragExit($event, row)"
 			@mouseout="mouseOut($event, row)"
+			@mouseout.native="mouseOut($event, row)"
 			@mouseover="mouseOver($event, row)"
+			@mouseover.native="mouseOver($event, row)"
 			@click.ctrl="goto($event, row)"
 			@click.meta="goto($event, row)"
 			@click.alt="$emit('select', row, null, 'row')"
@@ -790,7 +796,7 @@
 			:parameters="getRendererParameters(row)"
 			:anchor="row.customId && !row.renderer ? row.customId : null"
 			class="page-row"
-			v-auto-close="$services.page.isCloseable(row) ? function() { autocloseCell(row) } : null"
+			v-auto-close="$services.page.isCloseable(row) && row.autocloseable ? function() { autocloseCell(row) } : null"
 			>
 		<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit && false" @mouseenter="menuHover" @mouseleave="menuUnhover">
 			<button class="is-button is-variant-primary is-size-xsmall has-tooltip is-wrap-none" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-text">Configure row</span></button>
@@ -1017,7 +1023,7 @@
 							@dragover="dragOverCell($event, row, cell)"
 							@dragexit="dragExitCell($event, row, cell)"
 							@drop="dropCell($event, row, cell)"
-							v-auto-close="$services.page.isCloseable(cell) ? function() { autocloseCell(null, cell) } : null"
+							v-auto-close="$services.page.isCloseable(cell) && cell.autocloseable ? function() { autocloseCell(null, cell) } : null"
 							:target="cell"
 							:edit="edit"
 							:page="page"

@@ -82,6 +82,53 @@ Vue.service("triggerable", {
 				return x.trigger == trigger;
 			}).length > 0 : false;
 		},
+		// you can untrigger, for example hover effect might stop once you have a mouseout
+		// or the select event might stop once you reload the data and nothing is selected anymore
+		// or the button click might stop once the button is removed completely
+		// if no specific trigger is passed in (e.g. select), we untrigger everything, this can be handy for example on destroy
+		untrigger: function(target, trigger, instance) {
+			var self = this;
+			// TODO: the name "triggers" is actually configurable
+			var triggers = target.triggers ? target.triggers.filter(function(x) {
+				return !trigger || x.trigger == trigger;
+			}) : [];
+			triggers.forEach(function(x) {
+				if (x.actions) {
+					x.actions.forEach(function(action) {
+						// we can untoggle the visibility
+						if (action.type == "visibility" && action.closeableTarget) {
+							if (action.allowUntrigger) {
+								var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
+								// if we were aiming for visibility, the untrigger is closing it again
+								if (action.closeableAction == "visible") {
+									Vue.set(pageInstance.closed, action.closeableTarget, "$any");
+								}
+								// and the other way around
+								else if (action.closeableAction == "hidden") {
+									Vue.set(pageInstance.closed, action.closeableTarget, null);
+								}
+								// otherwise, we just toggle
+								// note that if (in the mean time) someone else played with the visibility, this might not have the desired effect
+								else {
+									// just toggle it
+									Vue.set(pageInstance.closed, action.closeableTarget, pageInstance.closed[action.closeableTarget] == null ? "$any" : null);
+								}
+							}
+						}
+						// we can withdraw an event by setting it to null
+						else if (action.type == "event" && nabu.page.event.getName(action, "event")) {
+							if (action.allowUntrigger) {
+								var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
+								return pageInstance.emit(
+									nabu.page.event.getName(action, "event"),
+									null
+								);
+							}
+						}
+					});
+				}	
+			});
+		},
 		// the target we want to trigger on (cell, row,..)
 		// the name of the trigger (e.g. click)
 		// any value we received for the trigger, for instance an action or event might have data attached to it

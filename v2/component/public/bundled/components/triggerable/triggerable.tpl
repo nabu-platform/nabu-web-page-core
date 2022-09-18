@@ -76,6 +76,9 @@
 						<n-form-combo v-model="action.eventContent" :items="$window.Object.keys($services.triggerable.getInternalState(page, trigger, action))" label="Event content" after="Choose the event content from the available state"
 							v-if="!action.event || !action.event.eventFields || !action.event.eventFields.length"
 							@input="resetEvents"/>
+							
+						<n-form-switch v-model="action.allowUntrigger" label="Remove event when trigger ends"
+							after="Triggers are limited in time, for example a hover effect might stop, a selection might be undone or the button that triggered a click might be removed alltogether. Enable this if you want the event to be unset at that point."/>
 					</div>
 					
 					<div v-else-if="action.type == 'notification'" class="is-column is-spacing-gap-medium">
@@ -181,6 +184,9 @@
 							label="Visibility change"
 							:extracter="function(x) { return x.name }"
 							:formatter="function(x) { return x.title }"/>
+							
+						<n-form-switch v-model="action.allowUntrigger" label="Reverse when trigger ends"
+							after="Triggers are limited in time, for example a hover effect might stop, a selection might be undone or the button that triggered a click might be removed alltogether. Enable this if you want the reverse action to take place at that point."/>
 					</div>
 						
 				</div>

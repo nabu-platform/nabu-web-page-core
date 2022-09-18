@@ -616,7 +616,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 			}
 		},
-		getClickTrigger: function() {
+		getDefaultTriggers: function() {
 			return {
 				click: {
 					properties: {
@@ -633,6 +633,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 							type: "boolean"
 						}
 					}
+				},
+				hover: {
+					properties: {
+						// nothing (yet?)
+					}
 				}
 			};
 		},
@@ -640,25 +645,44 @@ nabu.page.views.Page = Vue.component("n-page", {
 		getTriggersForCell: function(cell) {
 			var component = this.components[cell.id];
 			// always have a click trigger
-			var result = this.getClickTrigger();
+			var result = this.getDefaultTriggers();
+			var actions = [];
 			if (component) {
 				// only works for component based actions
-				var actions = this.$services.page.getActions(component, cell, this);
-				// this works for renderer based
-				if ((!actions || !actions.length) && cell.renderer) {
-					var renderer = this.$services.page.getRenderer(cell.renderer);
-					actions = this.$services.page.getActions(renderer, cell, this);
+				var componentActions = this.$services.page.getActions(component, cell, this);
+				if (componentActions) {
+					nabu.utils.arrays.merge(actions, componentActions);
 				}
-				if (actions.length > 0) {
-					var self = this;
-					actions.forEach(function(x) {
-						var actionInput = self.$services.page.getActionInput(self, cell.id, x.name);
-						var actionOutput = self.$services.page.getActionOutput(self, cell.id, x.name);
-						result[x.name + ":before"] = actionInput ? actionInput : {};
-						result[x.name + ":after"] = actionOutput ? actionOutput : {};
-						result[x.name + ":error"] = {};
-					});
+				if (component.getTriggers) {
+					var componentTriggers = component.getTriggers(cell, this, this.$services);
+					if (componentTriggers) {
+						nabu.utils.objects.merge(result, componentTriggers);
+					}
 				}
+			}
+			// this works for renderer based
+			if (cell.renderer) {
+				var renderer = this.$services.page.getRenderer(cell.renderer);
+				var rendererActions = this.$services.page.getActions(renderer, cell, this);
+				if (rendererActions) {
+					nabu.utils.arrays.merge(actions, rendererActions);
+				}
+				if (renderer.getTriggers) {
+					var rendererTriggers = renderer.getTriggers(cell, this, this.$services);
+					if (rendererTriggers) {
+						nabu.utils.objects.merge(result, rendererTriggers);
+					}
+				}
+			}
+			if (actions.length > 0) {
+				var self = this;
+				actions.forEach(function(x) {
+					var actionInput = self.$services.page.getActionInput(self, cell.id, x.name);
+					var actionOutput = self.$services.page.getActionOutput(self, cell.id, x.name);
+					result[x.name + ":before"] = actionInput ? actionInput : {};
+					result[x.name + ":after"] = actionOutput ? actionOutput : {};
+					result[x.name + ":error"] = {};
+				});
 			}
 			return result;
 		},
@@ -4246,6 +4270,14 @@ Vue.component("n-page-row", {
 					}
 				}
 			}
+			else {
+				if (cell) {
+					this.$services.triggerable.untrigger(cell, "hover", this);
+				}
+				// it's hard to hover a row filled with content so we just trigger it always if you have something
+				this.$services.triggerable.untrigger(row, "hover", this);
+				event.stopPropagation();
+			}
 		},
 		mouseOver: function(event, row, cell) {
 			if (this.edit) {
@@ -4262,6 +4294,15 @@ Vue.component("n-page-row", {
 						event.stopPropagation();
 					}
 				}
+			}
+			// in non-edit mode, we want to trigger the hover
+			else {
+				if (cell) {
+					this.$services.triggerable.trigger(cell, "hover", null, this);
+				}
+				// it's hard to hover a row filled with content so we just trigger it always if you have something
+				this.$services.triggerable.trigger(row, "hover", null, this);
+				event.stopPropagation();
 			}
 		},
 		menuHover: function($event) {
