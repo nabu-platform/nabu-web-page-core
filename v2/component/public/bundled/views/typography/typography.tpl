@@ -19,6 +19,7 @@
 		<div v-for="variable in $services.typography.getVariables(content)" class="is-column is-color-body is-spacing-medium">
 			<h4 class="is-h4">{{variable}}</h4>
 			<n-form-combo v-model="container.fragments[variable].key" :filter="getAllKeys" label="Variable to bind"/>
+			<n-form-text v-model="container.fragments[variable].placeholder" label="Placeholder"/>
 			<page-formatted-configure :page="page" :cell="cell" 
 				:fragment="container.fragments[variable]" 
 				:allow-html="true"

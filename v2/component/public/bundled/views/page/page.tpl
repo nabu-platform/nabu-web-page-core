@@ -49,6 +49,7 @@
 						{{page.content.label ? page.content.label : page.content.name}}
 						<ul class="is-menu is-variant-toolbar">
 							<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall" @click="save"><span class="is-text">Save</span></button></li>
+							<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="updateTemplates"><span class="is-text">Update Templates</span></button></li>
 						</ul>
 					</div>
 				</h3>
@@ -199,7 +200,7 @@
 									<div class="is-row is-align-end">
 										<button class="is-button is-color-primary-outline is-size-xsmall" @click="page.content.query.push(null)"><icon name="plus"/>New query parameter</button>
 									</div>
-									<div v-if="page.content.query && page.content.query.length">
+									<div v-if="page.content.query && page.content.query.length" class="is-column is-spacing-gap-small">
 										<div v-for="i in Object.keys(page.content.query)" class="has-button-close">
 											<n-form-text v-model="page.content.query[i]" :timeout="600" placeholder="Name of the parameter"/>
 											<button @click="removeQuery(i)" class="is-button is-variant-close is-size-small"><icon name="times"/></button>
@@ -291,7 +292,7 @@
 											<div v-else>
 												<n-form-combo :value="state.operation" :filter="getStateOperations" label="Operation" @input="function(newValue) { setStateOperation(state, newValue) }"/>
 												<n-page-mapper v-if="state.operation && Object.keys($services.page.getPageParameters(page)).length" :to="getOperationParameters(state.operation)"
-													:from="{page:$services.page.getPageParameters(page)}" 
+													:from="$services.page.getPageStartupParameters(page)" 
 													v-model="state.bindings"/>
 											</div>
 											<page-event-value :page="page" :container="state" title="Successful Update Event" name="updateEvent" @resetEvents="resetEvents" :inline="true"/>
@@ -822,6 +823,8 @@
 						@click.meta.native="goto($event, row, cell)"
 						@click.alt.prevent.native="pasteArisStyling($event, cell)"
 						@contextmenu.prevent.alt.native="copyArisStyling($event, cell)"
+						@contextmenu.prevent.ctrl="goto($event, row, cell, 'layout')"
+						@contextmenu.prevent.ctrl.native="goto($event, row, cell, 'layout')"
 						@mouseout="mouseOut($event, row, cell)"
 						@mouseout.native="mouseOut($event, row, cell)"
 						@mouseover="mouseOver($event, row, cell)"
@@ -875,7 +878,10 @@
 							:key="cellId(cell)"
 							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
 							@close="close(row, cell)"
-							@click="clickOnCell(row, cell)"
+							@click="clickOnCell(row, cell, $event)"
+							@mouseover.native="mouseOver($event, row, cell)"
+							@mouseout.native="mouseOut($event, row, cell)"
+							@click.native="clickOnCell(row, cell, $event)"
 							@click.ctrl="goto($event, row, cell)"
 							@click.meta="goto($event, row, cell)"
 							@mouseout="mouseOut($event, row, cell)"
@@ -922,7 +928,10 @@
 							:key="cellId(cell)"
 							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
 							@close="close(row, cell)"
-							@click="clickOnCell(row, cell)"
+							@click="clickOnCell(row, cell, $event)"
+							@mouseover.native="mouseOver($event, row, cell)"
+							@mouseout.native="mouseOut($event, row, cell)"
+							@click.native="clickOnCell(row, cell, $event)"
 							@click.ctrl="goto($event, row, cell)"
 							@click.meta="goto($event, row, cell)"
 							@mouseout="mouseOut($event, row, cell)"
@@ -968,7 +977,10 @@
 							:key="cellId(cell)"
 							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
 							@close="close(row, cell)"
-							@click="clickOnCell(row, cell)"
+							@click="clickOnCell(row, cell, $event)"
+							@mouseover.native="mouseOver($event, row, cell)"
+							@mouseout.native="mouseOut($event, row, cell)"
+							@click.native="clickOnCell(row, cell, $event)"
 							@click.ctrl="goto($event, row, cell)"
 							@click.meta="goto($event, row, cell)"
 							@mouseout="mouseOut($event, row, cell)"
@@ -1014,7 +1026,10 @@
 							:key="cellId(cell)"
 							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
 							@close="close(row, cell)"
-							@click="clickOnCell(row, cell)"
+							@click="clickOnCell(row, cell, $event)"
+							@mouseover.native="mouseOver($event, row, cell)"
+							@mouseout.native="mouseOut($event, row, cell)"
+							@click.native="clickOnCell(row, cell, $event)"
 							@click.ctrl="goto($event, row, cell)"
 							@click.meta="goto($event, row, cell)"
 							@mouseout="mouseOut($event, row, cell)"

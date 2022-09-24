@@ -1,5 +1,5 @@
 <template id="data-field-picker">
-	<div class="data-field-picker is-column is-color-background is-spacing-large">
+	<div class="data-field-picker is-column is-color-background is-spacing-large is-overflow-auto">
 		<h1>Field picker</h1>
 		<div v-for="field in result" class="is-row">
 			<n-form-checkbox v-model="field.checked" :label="field.name" class="is-column is-fill-normal"/>

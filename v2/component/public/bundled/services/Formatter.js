@@ -18,7 +18,7 @@ nabu.services.VueService(Vue.extend({
 				return properties.html ? properties.html : value;
 			}
 			else if (properties.format == "link") {
-				return "<a target='_blank' ref='noopener noreferrer nofollow' href='" + value + "'>" + value.replace(/http[s]*:\/\/([^/]+).*/, "$1") + "</a>";
+				return "<a target='_blank' class='is-button is-variant-link is-spacing-none' ref='noopener noreferrer nofollow' href='" + value + "'>" + value.replace(/http[s]*:\/\/([^/]+).*/, "$1") + "</a>";
 			}
 			else if (properties.format == "date") {
 				if (value && properties.isTimestamp) {

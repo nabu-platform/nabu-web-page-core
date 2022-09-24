@@ -54,6 +54,18 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				return !!this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, state, this);
 			}
 		},
+		// for some reason enumeration (and all derivatives of enumeration) did not get destroyed correctly
+		// if you remove the alias for example for form-text, the destroy is called correctly at all levels
+		// same for all other tested form components (date, checkbox,...)
+		// but with enumeration, the inner page-form-enumeration destroy was correctly called, but the outer destroy in this component was NOT called
+		// this left a remaining instance of the component registered in the page at position 0, which made editing impossible until you fully destroyed and recreated the page
+		// after various tests it is entirely unclear why the destroy does not correctly cascade in the case of enumerations so we subscribe to that destroy and cascade it here if relevant
+		ready: function() {
+			var self = this;
+			this.$refs.input.$on("hook:beforeDestroy", function() {
+				self.$destroy();
+			});
+		},
 		methods: {
 			getChildComponents: function() {
 				var result = [];

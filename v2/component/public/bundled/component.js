@@ -727,7 +727,7 @@ window.addEventListener("load", function() {
 							
 							// for search, we want a placeholder instead of label and (at least for text input) a search icon suffix
 							row.cells.forEach(function(cell) {
-								cell.state.placeholder = cell.state.label == "%" + "{Q}" ? "%" + "{Search...}" : cell.state.label;
+								cell.state.placeholder = cell.state.label == "%" + "{Q}" ? "%" + "{Search}" : cell.state.label;
 								cell.state.label = null;
 								if (cell.alias == "page-form-text") {
 									cell.state.suffixIcon = "search";
@@ -753,7 +753,7 @@ window.addEventListener("load", function() {
 									var cell = cellGenerator(row);
 									cell.alias = "page-tag";
 									cell.state.field = "repeat" + name + ".filter." + x.name;
-									cell.state.content = "%" + "{" + x.name.substring(0, 1).toUpperCase() + x.name.substring(1).replace(/([A-Z]+)/g, " $1") + "}";
+									cell.state.content = x.name == "q" ? "%" + "{Search}" : "%" + "{" + x.name.substring(0, 1).toUpperCase() + x.name.substring(1).replace(/([A-Z]+)/g, " $1") + "}";
 									
 									if (tagTemplates.length == 0) {
 										application.services.page.normalizeAris(pageInstance.page, cell, "cell");
@@ -874,7 +874,7 @@ window.addEventListener("load", function() {
 									}
 								}
 							}
-							cell.name = application.services.page.prettify(name);
+							//cell.name = application.services.page.prettify(name);
 							
 							var headerCell = cellGenerator(header);
 							// names are automatically generated from the content these days
@@ -882,7 +882,7 @@ window.addEventListener("load", function() {
 							
 							//headerCell.alias = "typography-fragment";
 							headerCell.alias = "page-button-sort";
-							headerCell.state.content = "%" + "{" + cell.name + "}";
+							headerCell.state.content = "%" + "{" + application.services.page.prettify(name) + "}";
 							headerCell.state.sortFields = [{
 								name: name
 							}];

@@ -2,6 +2,8 @@
 <restInterface>
     <method>GET</method>
     <path>/configuration</path>
+    <useServiceContextAsPermissionContext>false</useServiceContextAsPermissionContext>
+    <useWebApplicationAsPermissionContext>false</useWebApplicationAsPermissionContext>
     <output>nabu.web.page.core.types.rest.configuration</output>
     <token>false</token>
     <lenient>false</lenient>

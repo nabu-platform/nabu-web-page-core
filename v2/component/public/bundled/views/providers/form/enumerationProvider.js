@@ -185,6 +185,13 @@ Vue.component("page-form-input-enumeration-provider", {
 		this.provider = this.getProvider();
 	},
 	methods: {
+		getChildComponents: function() {
+			return [{
+				title: "Form combo",
+				name: "form-component",
+				component: "form-combo"
+			}];
+		},
 		getProvider: function() {
 			if (this.field.enumerationProvider) {
 				var self = this;

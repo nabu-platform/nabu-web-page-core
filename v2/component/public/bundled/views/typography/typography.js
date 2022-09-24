@@ -76,6 +76,10 @@ Vue.service("typography", {
 			this.getVariables(content).forEach(function(variable) {
 				// we must at the very least have selected a key
 				if (container.fragments && container.fragments[variable] && container.fragments[variable].key) {
+					var placeholder = container.fragments[variable].placeholder;
+					if (placeholder != null) {
+						placeholder = self.$services.page.interpret(self.$services.page.translate(placeholder), pageInstance);;
+					}
 					var formatted;
 					var oldContent;
 					var updateContent = function(newValue) {
@@ -83,7 +87,14 @@ Vue.service("typography", {
 							// if we passed something in, use it
 							if (newValue != null) {
 								element.querySelectorAll("[variable='" + variable + "']").forEach(function(x) {
-									x.innerHTML = newValue;
+									x.classList.remove("is-placeholder");
+									if (!newValue && placeholder != null) {
+										x.classList.add("is-placeholder");
+										x.innerHTML = placeholder;
+									}
+									else {
+										x.innerHTML = newValue == null ? "" : newValue;
+									}
 								});
 								oldContent = newValue;
 							}
@@ -95,7 +106,14 @@ Vue.service("typography", {
 								var newContent = formatted.$el.innerHTML;
 								if (newContent != oldContent) {
 									element.querySelectorAll("[variable='" + variable + "']").forEach(function(x) {
-										x.innerHTML = newContent;
+										x.classList.remove("is-placeholder");
+										if (!newValue && placeholder != null) {
+											x.classList.add("is-placeholder");
+											x.innerHTML = placeholder;
+										}
+										else {
+											x.innerHTML = newValue == null ? "" : newValue;
+										}
 									})
 									oldContent = newContent;
 								}
@@ -119,7 +137,11 @@ Vue.service("typography", {
 					}});
 					formatted.$mount();
 					oldContent = formatted.$el.innerHTML;
-					content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<span variable='" + variable + "'>" + oldContent + "</span>");
+					var contentToShow = oldContent;
+					if (!contentToShow && placeholder != null) {
+						contentToShow = placeholder;
+					}
+					content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<span class='is-variable " + (contentToShow != oldContent ? 'is-placeholder' : '') + "' variable='" + variable + "'>" + (contentToShow == null ? "" : contentToShow) + "</span>");
 				}
 			});
 			return this.$services.page.translate(content);

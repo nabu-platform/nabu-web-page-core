@@ -5,7 +5,7 @@
 		:field="cell.state"
 		:class="getChildComponentClasses('form-component')"
 		@blur="blur"
-		:component-group="cell.state.componentGroup ? cell.state.componentGroup : 'default'"
+		:component-group="cell.state.componentGroup ? cell.state.componentGroup : 'form'"
 		:value="value"
 		:parent-value="parentValue"
 		:label="$services.page.translate(cell.state.label)"
@@ -13,7 +13,7 @@
 		:disabled="disabled"
 		:schema="getSchema()"
 		:readOnly="false"
-		:placeholder="$services.page.translate(cell.state.placeholder)"
+		:placeholder="$services.page.interpret($services.page.translate(cell.state.placeholder), $self)"
 		:child-components="childComponents"
 		@input="update"/>
 </template>

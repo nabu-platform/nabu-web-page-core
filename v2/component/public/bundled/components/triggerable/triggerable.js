@@ -234,7 +234,7 @@ Vue.service("triggerable", {
 							}
 						}
 						else if (action.type == "route" && action.url) {
-							var url = self.$services.page.interpret(action.url, instance);
+							var url = self.$services.page.interpret(action.url, instance, null, customValueFunction);
 							if (action.anchor == "$blank") {
 								window.open(url);
 							}
@@ -337,53 +337,64 @@ Vue.service("triggerable", {
 							});
 						}
 						else if (action.type == "download" && action.operation) {
-							var operation = self.$services.swagger.operations[action.operation];
-							if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
-								var parameters = getBindings();
-								if (action.anchor != "$window") {
-									self.$services.page.download(self.$services.swagger.parameters(action.operation, parameters).url, function() {
-										// download failed, but there is no equivalent for when it is successful, hard to put it in a promise
-									});
+							var parameters = getBindings();
+							var startDownload = function(url) {
+								var operation = self.$services.swagger.operations[action.operation];
+								if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
+									if (action.anchor != "$window") {
+										self.$services.page.download(url, function() {
+											// download failed, but there is no equivalent for when it is successful, hard to put it in a promise
+										});
+									}
+									else {
+										window.location = self.$services.swagger.parameters(action.operation, parameters).url;
+									}
 								}
-								else {
-									window.location = self.$services.swagger.parameters(action.operation, parameters).url;
+								else if (operation["x-downloadable"] == "true") {
+									var contentType = null;
+									if (action.downloadAs == "excel") {
+										contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+									}
+									else if (action.downloadAs == "csv") {
+										contentType = "text/csv";
+									}
+									else if (action.downloadAs == "json") {
+										contentType = "application/json";
+									}
+									else if (action.downloadAs == "xml") {
+										contentType = "application/xml";
+									}
+									var separator = url.indexOf("?") < 0 ? "?" : "&";
+									if (contentType != null) {
+										url += separator + "header:Accept=" + contentType;
+										separator = "&";
+									}
+									url += separator + "header:Accept-Content-Disposition=attachment";
+									if (action.fileName) {
+										url += ";fileName=" + self.$services.page.interpret(action.fileName, instance);
+									}
+									if (action.anchor != "$window") {
+										self.$services.page.download(url, function() {
+											// nothing yet
+										});
+									}
+									else {
+										window.location = url;
+									}
 								}
 							}
-							else if (operation["x-downloadable"] == "true") {
-								var contentType = null;
-								if (action.downloadAs == "excel") {
-									contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-								}
-								else if (action.downloadAs == "csv") {
-									contentType = "text/csv";
-								}
-								else if (action.downloadAs == "json") {
-									contentType = "application/json";
-								}
-								else if (action.downloadAs == "xml") {
-									contentType = "application/xml";
-								}
-								var parameters = getBindings();
-								var url = self.$services.swagger.parameters(action.operation, parameters).url;
-								var separator = url.indexOf("?") < 0 ? "?" : "&";
-								if (contentType != null) {
-									url += separator + "header:Accept=" + contentType;
-									separator = "&";
-								}
-								url += separator + "header:Accept-Content-Disposition=attachment";
-								if (action.fileName) {
-									url += ";fileName=" + self.$services.page.interpret(action.fileName, instance);
-								}
-								if (action.anchor != "$window") {
-									self.$services.page.download(url, function() {
-										// nothing yet
-									});
-								}
-								else {
-									window.location = url;
-								}
+							// in the new setup, we use otp generation to create a link that is self-authorizing
+							if (self.$services.user.downloadUrl) {
+								return self.$services.user.downloadUrl(action.operation, parameters).then(function(url) {
+									if (url) {
+										startDownload(url);
+									}
+								});
 							}
-							return self.$services.q.resolve();
+							else {
+								startDownload(self.$services.swagger.parameters(action.operation, parameters).url);
+								return self.$services.q.resolve();
+							}
 						}
 						else if (action.type == "javascript" && action.javascript) {
 							var script = action.javascript;
@@ -395,7 +406,7 @@ Vue.service("triggerable", {
 							}
 							//var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
 							//var result = self.$services.page.eval(script, pageInstance.variables, instance);
-							var result = self.$services.page.eval(script, state, instance);
+							var result = self.$services.page.eval(script, state, instance, customValueFunction);
 							if (result && result.then) {
 								return result;
 							}

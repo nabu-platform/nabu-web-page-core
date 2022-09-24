@@ -72,7 +72,7 @@
 					</div>
 					
 					<div v-else-if="action.type == 'event'" class="is-column is-spacing-gap-medium">
-						<page-event-value :page="page" :container="action" title="Event to emit" name="event" @resetEvents="resetEvents" :inline="true" :allow-fields="!action.eventContent"/>
+						<page-event-value :page="page" :container="action" title="Event to emit" name="event" :inline="true" :allow-fields="!action.eventContent"/>
 						<n-form-combo v-model="action.eventContent" :items="$window.Object.keys($services.triggerable.getInternalState(page, trigger, action))" label="Event content" after="Choose the event content from the available state"
 							v-if="!action.event || !action.event.eventFields || !action.event.eventFields.length"
 							@input="resetEvents"/>

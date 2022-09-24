@@ -102,6 +102,20 @@ nabu.page.provide("page-renderer", {
 				var record = {};
 				var available = pageParameters;
 				var arrayName = container.repeat.array;
+				var definition = $services.page.getChildDefinition({properties:available}, arrayName);
+				if (!definition && arrayName.indexOf("page.") == 0) {
+					definition = $services.page.getChildDefinition({properties:available}, arrayName.substring("page.".length));
+				}
+				if (definition && definition.items && definition.items.properties) {
+					nabu.utils.objects.merge(record, definition.items.properties);
+				}
+				result.record = {properties:record};
+				result.records = {type: "array", items: {properties:record}};
+				// sometimes an array is actually at the page level (e.g. external) so we can't just strip out page
+				/*
+				var record = {};
+				var available = pageParameters;
+				var arrayName = container.repeat.array;
 				if (arrayName.indexOf("page.") == 0) {
 					arrayName = arrayName.substring("page.".length);
 				}
@@ -125,6 +139,7 @@ nabu.page.provide("page-renderer", {
 				}
 				result.record = {properties:record};
 				result.records = {type: "array", items: {properties:record}};
+				*/
 			}
 			if (result.record && container.repeat.selectable) {
 				result["selected"] = {
@@ -254,6 +269,7 @@ Vue.component("renderer-repeat", {
 			fragmentPage: null,
 			// position counter to make each record unique
 			position: 0,
+			lastParameters: null,
 			// the state in the original page, this can be used to write stuff like "limit" etc to
 			// note that the "record" will not actually be in this
 			state: {
@@ -285,7 +301,6 @@ Vue.component("renderer-repeat", {
 	created: function() {
 		// the parameters that we pass in contain the bound values
 		var self = this;
-		var blacklist = ["records", "paging"];
 		
 		// first map the default order by, we might overwrite it with the input mappings
 		if (this.target.repeat.defaultOrderBy) {
@@ -298,17 +313,7 @@ Vue.component("renderer-repeat", {
 		// however, by the act of modifying the state if you have bindings, we trigger the watcher for state.filter which will also do a reload
 		// so we want behavior that if we don't do any state mappings, we do an initial load
 		// if a filter change comes in because of initial mapping, we ignore it
-		var stateModified = false;
-		Object.keys(this.parameters).forEach(function(key) {
-			if (blacklist.indexOf(key) < 0 && self.parameters[key] != null) {
-				Vue.set(self.state, key, self.parameters[key]);
-				stateModified = true;
-			}
-		});
-		
-		if (!stateModified) {
-			this.created = true;
-		}
+		this.mergeParameters();
 		
 		this.loadPage();
 		
@@ -317,6 +322,9 @@ Vue.component("renderer-repeat", {
 		// note that this is NOT an activate, we can not stop the rendering until the call is done
 		// in the future we could add a "working" icon or a placeholder logic
 		this.loadData();
+	},
+	mounted: function() {
+		
 	},
 	computed: {
 		alias: function() {
@@ -340,8 +348,23 @@ Vue.component("renderer-repeat", {
 		}
 	},
 	watch: {
+		// the parameters that are passed in by the page are calculated against the global state maintained in "variables"
+		// by doing a loadData, we update the state in the repeat which is exposed globally as well in the variables
+		// even though the actual parameter values are not changed, the container that holds them, has been so this triggers a recalculate of parameters at the page level
+		// which in turn triggers this watcher, which triggers a load, which triggers this watcher etc....
+		// the only way to break this cycle is to check if anything _actually_ changed
+		parameters: {
+			deep: true,
+			handler: function(newValue, oldValue) {
+				var newParameters = JSON.stringify(newValue);
+				if (this.lastParameters != newParameters && this.created && this.target.repeat.enableParameterWatching) {
+					this.mergeParameters();
+					this.loadData();
+				}
+				this.lastParameters = newParameters;
+			}
+		},
 		// we don't want to watch paging, it is the output
-		// TODO: we want to add a new field that serves as input to manipulate the limit!
 		operationParameters: function() {
 			this.loadData();	
 		},
@@ -365,6 +388,19 @@ Vue.component("renderer-repeat", {
 		this.unloadPage();
 	},
 	methods: {
+		mergeParameters: function() {
+			var self = this;
+			this.created = false;
+			var stateModified = false;
+			var blacklist = ["records", "paging"];
+			Object.keys(this.parameters).forEach(function(key) {
+				if (blacklist.indexOf(key) < 0 && self.parameters[key] != null && self.state[key] != self.parameters[key]) {
+					Vue.set(self.state, key, self.parameters[key]);
+					stateModified = true;
+				}
+			});
+			return stateModified;
+		},
 		getOrderByFields: function() {
 			var result = [];
 			if (this.target.repeat && this.target.repeat.operation) {
@@ -690,7 +726,8 @@ Vue.component("renderer-repeat", {
 			}
 			// we want to call an operation
 			if (this.target.repeat && this.target.repeat.operation) {
-				var parameters = this.operationParameters;
+				var parameters = {}
+				nabu.utils.objects.merge(parameters, this.operationParameters);
 				// local state variables win from passed in ones!
 				if (this.state.filter) {
 					Object.keys(this.state.filter).forEach(function(key) {
@@ -779,6 +816,7 @@ Vue.component("renderer-repeat", {
 					nabu.utils.arrays.merge(this.state.records, result);
 				}
 				self.uniquify();
+				self.created = true;
 				return this.$services.q.resolve(result);
 			}
 		},

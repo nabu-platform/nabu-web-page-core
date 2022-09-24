@@ -43,7 +43,7 @@ Vue.component("page-field-fragment-form", {
 				+ "		:page='page'"
 				+ "		:cell='cell'"
 				+ "		:mode='fragment.mode'"
-				+ "		:component-group=\"fragment.componentGroup ? fragment.componentGroup : 'default'\""
+				+ "		:component-group=\"fragment.componentGroup ? fragment.componentGroup : 'form'\""
 				+ "		:is-disabled='!!fragment.disabled && $services.page.isCondition(fragment.disabled, {record:data}, $self)'/>",
 	props: {
 		cell: {

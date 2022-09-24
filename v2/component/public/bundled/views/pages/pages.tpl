@@ -115,7 +115,7 @@
 						<p class="is-p">In this section you can manage all the pages available in your application.</p>
 						<p class="is-p">Pages are divided into categories allowing you to group them together in whatever way you see fit.</p>
 						<ul class="is-menu is-variant-toolbar is-row is-align-end">
-							<li class="is-column"><button class="is-button is-size-small is-variant-primary has-tooltip" @click="create"><icon name="plus"/><span class="is-text">Add page</span><span class="is-tooltip is-position-top is-width-medium">Add a new page to your application</span></button></li>
+							<li class="is-column"><button class="is-button is-size-small is-variant-primary has-tooltip" @click="create()"><icon name="plus"/><span class="is-text">Add page</span><span class="is-tooltip is-position-top is-width-medium">Add a new page to your application</span></button></li>
 							<li class="is-column" v-if="hasTemplates"><button class="is-button is-size-small is-variant-primary-outline has-tooltip" @click="showTemplates = true"><icon name="plus"/><span class="is-text">Add template</span><span class="is-tooltip is-position-top is-width-medium">Add an existing template page to your application</span></button></li>
 						</ul>
 					</div>
@@ -263,7 +263,7 @@
 		<h3 class="is-h3">Add a new page</h3>
 		<n-form-section>
 			<n-form-text v-model="name" label="Page name" :required="true" :validator="validator" after="The name of your page should be unique within your application"/>
-			<div v-if="!fixedCategory">
+			<div v-if="!fixedCategory" class="is-column is-spacing-vertical-gap-medium">
 				<n-form-switch :invert="true" label="Add to an existing category" v-model="newCategory" v-if="hasAnyCategories"/>
 				<n-form-combo v-if="!newCategory" v-model="category" label="Existing Category" :required="true" :filter="checkCategory" after="Choose an existing category"/>
 				<n-form-text v-else v-model="category" label="New Category" :required="true" after="Create a new category with this name"/>

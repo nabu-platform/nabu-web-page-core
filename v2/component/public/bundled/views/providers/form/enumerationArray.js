@@ -164,6 +164,13 @@ Vue.component("page-form-input-enumeration-array", {
 		}
 	},
 	methods: {
+		getChildComponents: function() {
+			return [{
+				title: "Form combo",
+				name: "form-component",
+				component: "form-combo"
+			}];
+		},
 		enumerationFilter: function(value) {
 			var values = this.enumerationFilterAny(value);
 			return values;

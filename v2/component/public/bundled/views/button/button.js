@@ -38,14 +38,12 @@ Vue.view("page-button", {
 	data: function() {
 		return {
 			timer: null,
-			running: false
+			running: false,
+			activated: false
 		}
 	},
 	created: function() {
 		this.elementPromise = this.$services.q.defer();
-	},
-	ready: function() {
-		this.elementPromise.resolve(this.$el);	
 	},
 	computed: {
 		active: function() {
@@ -57,6 +55,12 @@ Vue.view("page-button", {
 		},
 		disabled: function() {
 			return this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, null, this);
+		}
+	},
+	ready: function() {
+		this.elementPromise.resolve(this.$el);	
+		if (this.cell.state.activateByDefault) {
+			this.handle();
 		}
 	},
 	methods: {
@@ -75,7 +79,6 @@ Vue.view("page-button", {
 			var result = {};
 			nabu.utils.objects.merge(result, this.$services.triggerable.getEvents(this.page, this.cell.state));
 
-			
 			if (nabu.page.event.getName(this.cell.state, "clickEvent") && nabu.page.event.getName(this.cell.state, "clickEvent") != "$close") {
 				var type = nabu.page.event.getType(this.cell.state, "clickEvent");
 				result[nabu.page.event.getName(this.cell.state, "clickEvent")] = type;
@@ -92,9 +95,21 @@ Vue.view("page-button", {
 			// if you are in edit mode, you have to explicitly click alt to enable the button
 			// it seems that vue also intercepts spaces and sends it as a click event, meaning when you type in the rich text, it can trigger
 			if (!this.edit || $event.altKey) {
+				// if we are part of a component group, we will first untrigger any existing active component group buttons
+				// we rather have an intermittent situation where no buttons are active than where two buttons are active
+				if (this.cell.state.componentGroup) {
+					document.querySelectorAll("[component-group='" + this.cell.state.componentGroup + "']").forEach(function(x) {
+						if (x.__vue__) {
+							if (x.__vue__.deactivate) {
+								x.__vue__.deactivate();
+							}
+						}	
+					});
+				}
+				
 				var promise = this.$services.triggerable.trigger(this.cell.state, "click", null, this);
 				
-				if (this.cell.state.stopPropagation) {
+				if (this.cell.state.stopPropagation && $event) {
 					$event.stopPropagation();
 					$event.preventDefault();
 				}
@@ -105,6 +120,9 @@ Vue.view("page-button", {
 					self.running = false;
 					if (self.cell.state.emitClose) {
 						self.$emit("close");
+					}
+					if (self.cell.state.componentGroup) {
+						self.activated = true;
 					}
 				}
 				promise.then(unlock, unlock);
@@ -200,6 +218,9 @@ Vue.view("page-button", {
 					if (self.cell.state.emitClose) {
 						self.$emit("close");
 					}
+					if (self.cell.state.componentGroup) {
+						self.activated = true;
+					}
 				};
 				this.running = true;
 				var promise = handler();
@@ -213,6 +234,12 @@ Vue.view("page-button", {
 			if (this.cell.state.stopPropagation) {
 				$event.stopPropagation();
 				$event.preventDefault();
+			}
+		},
+		deactivate: function() {
+			if (this.activated) {
+				this.$services.triggerable.untrigger(this.cell.state, "click", this);
+				this.activated = false;	
 			}
 		},
 		configurator: function() {
@@ -268,6 +295,19 @@ Vue.component("page-button-configure", {
 		}
 		if (!this.cell.state.activeRoutes) {
 			Vue.set(this.cell.state, "activeRoutes", []);
+		}
+	},
+	watch: {
+		'cell.state.activateByDefault': function(newValue) {
+			// disable this in others from the same group
+			if (newValue) {
+				var self = this;
+				document.querySelectorAll("[component-group='" + this.cell.state.componentGroup + "']").forEach(function(x) {
+					if (x.__vue__ && x.__vue__.cell.id != self.cell.id) {
+						Vue.set(x.__vue__.cell.state, "activateByDefault", false);
+					}
+				});
+			}
 		}
 	}
 });

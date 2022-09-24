@@ -6,6 +6,11 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			+ "		<n-form-combo v-model='field.enumerationOperation'"
 			+ "			label='Enumeration Operation'"
 			+ "			:filter='getEnumerationServices'/>"
+			+ "		<n-page-mapper v-if='field.enumerationOperation && hasMappableEnumerationParameters(field)'"
+			+ "			v-model='field.enumerationOperationBinding'"
+			+ "			:from='availableParameters'"
+			+ "			:to='getMappableEnumerationParameters(field)'/>"
+			+ "		<n-form-combo v-if='field.enumerationOperation' :filter='function() { return getEnumerationFields(field.enumerationOperation) }' v-model='field.enumerationCachingKey' label='Enumeration Caching Key'/>"    
 			+ "		<n-form-switch v-model='field.enumerationOperationLabelComplex' label='Complex Enumeration Label'/>"
 			+ "		<n-form-combo v-if='field.enumerationOperation && !field.enumerationOperationLabelComplex' v-model='field.enumerationOperationLabel' label='Enumeration Label'"
 			+ "			:filter='function() { return getEnumerationFields(field.enumerationOperation) }'/>"
@@ -30,12 +35,7 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			+ "	<n-form-text v-model='field.afterIcon' label='After Icon' v-if='field.after'/>"
 			+ "	<n-form-text v-model='field.suffix' label='Suffix' v-if='!field.suffixIcon'/>"
 			+ "	<n-form-text v-model='field.suffixIcon' label='Suffix Icon' v-if='!field.suffix'/>"
-			+ "		<n-page-mapper v-if='field.enumerationOperation && hasMappableEnumerationParameters(field)'"
-			+ "			v-model='field.enumerationOperationBinding'"
-			+ "			:from='availableParameters'"
-			+ "			:to='getMappableEnumerationParameters(field)'/>"
-			+ "		<n-form-combo v-if='field.enumerationOperation' :filter='function() { return getEnumerationFields(field.enumerationOperation) }' v-model='field.enumerationCachingKey' label='Enumeration Caching Key'/>"    
-			+ "		<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"
+			+ "		<n-page-mapper v-model='field.bindings' :from='availableParameters' v-if='false' :to='[\"validator\"]'/>"
 			+ "</n-form-section>",
 	props: {
 		cell: {
@@ -278,6 +278,13 @@ Vue.component("page-form-input-enumeration-operation", {
 		}
 	},
 	methods: {
+		getChildComponents: function() {
+			return [{
+				title: "Form combo",
+				name: "form-component",
+				component: "form-combo"
+			}];
+		},
 		// enumerationOperation: null,
 		// enumerationFormatter
 		// enumerationOperationLabel: null,

@@ -1,5 +1,5 @@
 Vue.component("n-page-mapper", {
-	template: "#n-page-mapper",
+	template: "#n-page-mapper2",
 	props: {
 		// every key is a new source to map from and contains the definitions of the fields we can map in there
 		from: {
@@ -31,11 +31,22 @@ Vue.component("n-page-mapper", {
 			}).filter(function(x) { return sources.indexOf(x) < 0 }));
 			sources.sort();
 			return sources;
+		},
+		unmappedFields: function() {
+			var self = this;
+			return this.fieldsToMap.filter(function(x) {
+				return self.mappedFields.indexOf(x) < 0;
+			});
 		}
 	},
 	data: function() {
 		return {
-			fieldsToMap: []
+			fieldsToMap: [],
+			// adding field?
+			adding: false,
+			fieldToAdd: null,
+			fieldMode: null,
+			mappedFields: []
 		}
 	},
 	created: function() {
@@ -45,8 +56,35 @@ Vue.component("n-page-mapper", {
 		else if (this.to) {
 			nabu.utils.arrays.merge(this.fieldsToMap, this.$services.page.getSimpleKeysFor(this.to, true, true));
 		}
+		var self = this;
+		this.fieldsToMap.forEach(function(x) {
+			if (self.value[x] != null) {
+				self.mappedFields.push(x);
+			}
+		});
 	},
 	methods: {
+		removeField: function(field) {
+			this.setValue(field, null, null);
+			var index = this.mappedFields.indexOf(field);
+			if (index >= 0) {
+				this.mappedFields.splice(index, 1);
+			}
+		},
+		resetField: function() {
+			this.adding = false; 
+			this.fieldToAdd = null; 
+			this.fieldMode = null;
+		},
+		addField: function() {
+			if (this.fieldToAdd) {
+				this.mappedFields.push(this.fieldToAdd);
+				if (this.fieldMode == "fixed") {
+					this.value[this.fieldToAdd] = "fixed.";
+				}
+			}
+			this.resetField();
+		},
 		// get the possible field names for this label
 		fieldsFrom: function(value, label, fields) {
 			if (label == "$function") {
@@ -83,6 +121,11 @@ Vue.component("n-page-mapper", {
 			}
 			fields.push("$all");
 			return fields;
+		},
+		getUnmappedField: function(value) {
+			return this.unmappedFields.filter(function(x) {
+				return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+			});
 		},
 		getFunctionInput: function(id) {
 			var transformer = this.$services.page.functions.filter(function(x) { return x.id == id })[0];
@@ -126,7 +169,7 @@ Vue.component("n-page-mapper", {
 				this.value[field].lambdable = def && !def.async;
 			}
 			else {
-				Vue.set(this.value, field, label && newValue ? label + '.' + newValue : null);
+				Vue.set(this.value, field, label && (newValue || label == "fixed") ? label + '.' + (newValue ? newValue : "") : null);
 			}
 		},
 		getBindingsFor: function(field) {
@@ -137,6 +180,10 @@ Vue.component("n-page-mapper", {
 		},
 		getObjectFor: function(field) {
 			return this.value[field];
+		},
+		isFixedValue: function(field) {
+			var value = this.value[field];
+			return value != null && value.indexOf("fixed.") == 0;
 		},
 		getValueFor: function(field) {
 			if (this.value[field] && this.value[field].value) {

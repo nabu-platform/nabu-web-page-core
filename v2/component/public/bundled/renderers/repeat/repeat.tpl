@@ -52,6 +52,8 @@
 		<n-form-text v-model="target.repeat.emptyPlaceholder" label="Empty Place Holder"/>
 		<n-form-text v-model="target.repeat.loadingPlaceholder" label="Loading Place Holder" v-if="target.repeat.operation"/>
 		
+		<n-form-switch v-model="target.repeat.enableParameterWatching" label="Watch bound values for change"/>
+		
 		<n-form-switch v-model="target.repeat.enableDrag" label="Enable dragging"/>
 		<n-form-text v-model="target.repeat.dragName" label="Drag source name" v-if="target.repeat.enableDrag" placeholder="default"/>
 		

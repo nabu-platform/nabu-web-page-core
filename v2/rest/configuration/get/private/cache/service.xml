@@ -147,6 +147,7 @@
 			comment="The client last modified has no millisecond precision, so we need to strip that from these timestamps"
 			disabled="false"
 			id="001cfae7-4d96-4beb-ac21-7c9e32b130df"
+			label="lastModified != null"
 			lineNumber="4">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
@@ -235,6 +236,13 @@
 			<from>resulta64063acfba84f6888ca945789c4c802/date</from>
 			<to>lastModified</to>
 		</steps>
+	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			comment="The client last modified has no millisecond precision, so we need to strip that from these timestamps"
+			disabled="false"
+			id="d7706cc600e346ae823ee9b96c7f984e"
+			label="featuresLastModified != null"
+			lineNumber="5">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="92d06e74-8930-4072-b057-0fb7585277f2"
@@ -326,12 +334,12 @@
 	<steps xsi:type="be.nabu.libs.services.vm.step.Switch"
 			disabled="false"
 			id="2ab6ea1f-42d4-4245-a7e5-ee3552a18712"
-			lineNumber="5">
+			lineNumber="6">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				disabled="false"
 				id="ae4fa129-db5f-48d6-89e6-4ad9c14ea040"
 				label="featuresLastModified != null &amp;&amp; input/clientCache/lastModified != null &amp;&amp; featuresLastModified &gt; input/clientCache/lastModified"
-				lineNumber="6">
+				lineNumber="7">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="9bb8c7cf-b013-46c4-a2bf-a692301c7cbc"
@@ -347,7 +355,7 @@
 				disabled="false"
 				id="12f1d1b1-7ab3-4992-805d-5717ff176451"
 				label="etag != input/clientCache/etag"
-				lineNumber="7">
+				lineNumber="8">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="6d1d9325-b85e-4b39-b7ec-ac8e6b3d5e6d"
@@ -363,7 +371,7 @@
 				disabled="false"
 				id="b1f7a443-46d5-44da-880b-1723e7227687"
 				label="input/clientCache/lastModified = null"
-				lineNumber="8">
+				lineNumber="9">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="d3ed79c4-40c2-4573-b6ce-4a4eda24aaf9"
@@ -379,7 +387,7 @@
 				disabled="false"
 				id="adc8e90f-6a2b-4180-a413-e71558487122"
 				label="input/clientCache/lastModified &lt; lastModified"
-				lineNumber="9">
+				lineNumber="10">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="0e8d618e-2f37-42e5-98b6-53507ea1c6a9"
@@ -393,7 +401,7 @@
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				disabled="false"
 				id="3eefed3e-59e0-4f38-a4c1-b7002f96c776"
-				lineNumber="10">
+				lineNumber="11">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 					disabled="false"
 					id="15495df6-d68f-44a8-89b6-f43fbd0e4460"

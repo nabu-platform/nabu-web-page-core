@@ -737,6 +737,15 @@ Vue.component("page-formatted", {
 			return this.fragment.format == "checkbox";	
 		},
 		formatted: function() {
+			// slow retrofit for array support
+			// unsure if we always simply take the first or concat them all or...
+			var value = this.value;
+			if (value instanceof Array && value.length == 1) {
+				value = value[0];
+			}
+			else if (value instanceof Array && value.length == 0) {
+				return null;
+			}
 			if (this.fragment.format == "checkbox") {
 				return "<n-form-checkbox :value='value' />";
 			}
@@ -761,7 +770,7 @@ Vue.component("page-formatted", {
 				return this.fragment.html ? this.fragment.html : this.value;
 			}
 			else if (this.fragment.format == "link") {
-				return "<a target='_blank' ref='noopener noreferrer nofollow' href='" + this.value + "'>" + this.value.replace(/http[s]*:\/\/([^/]+).*/, "$1") + "</a>";
+				return "<a target='_blank' class='is-button is-variant-link is-spacing-none' ref='noopener noreferrer nofollow' href='" + value + "'>" + value.replace(/http[s]*:\/\/([^/]+).*/, "$1") + "</a>";
 			}
 			// if it is native, format it that way
 			else if (this.nativeTypes.indexOf(this.fragment.format) >= 0) {

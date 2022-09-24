@@ -83,6 +83,7 @@
 		<n-form-switch label="Is timestamp in seconds?" v-model="fragment.isSecondsTimestamp" v-if="fragment.format == 'date' && !fragment.isTimestamp"/>
 		<n-form-combo label="Type" v-model="fragment.tag" :items="['span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div']"/>
 		<component v-if="isProvided(fragment.format) && getConfiguration(fragment.format)"
+			class="is-column is-spacing-gap-medium"
 			:is="getConfiguration(fragment.format)"
 			:page="page" 
 			:cell="cell"

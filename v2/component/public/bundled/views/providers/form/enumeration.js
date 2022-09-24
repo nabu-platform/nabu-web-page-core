@@ -15,7 +15,7 @@ Vue.component("page-form-input-enumeration-configure", {
 			+ "	<n-form-text v-model='field.afterIcon' label='After Icon' v-if='field.after'/>"
 			+ "	<n-form-text v-model='field.suffix' label='Suffix' v-if='!field.suffixIcon'/>"
 			+ "	<n-form-text v-model='field.suffixIcon' label='Suffix Icon' v-if='!field.suffix'/>"
-		+ "		<button @click='addEnumeration'>Add enumeration</button>"
+		+ "		<div class='is-row is-align-end'><button class='is-button is-size-xsmall is-variant-primary-outline' @click='addEnumeration'><icon name='plus'/><span class='text'>Enumeration</span></button></div>"
 		+ "		<div v-if='!field.complex'><n-form-section class='enumeration list-row' v-for='i in Object.keys(field.enumerations)' :key=\"field.name + 'enumeration_' + i\">"
 		+ "			<n-form-text v-model='field.enumerations[i]'/>"
 		+ "			<button @click='field.enumerations.splice(i, 1)'><span class='fa fa-trash'></span></button>"
@@ -168,6 +168,13 @@ Vue.component("page-form-input-enumeration", {
 		}
 	},
 	methods: {
+		getChildComponents: function() {
+			return [{
+				title: "Form combo",
+				name: "form-component",
+				component: "form-combo"
+			}];
+		},
 		validate: function(soft) {
 			return this.$refs.form.validate(soft);
 		},

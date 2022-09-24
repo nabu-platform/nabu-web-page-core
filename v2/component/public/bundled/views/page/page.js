@@ -69,12 +69,10 @@ Vue.mixin({
 			target = this.$$cell;
 		}
 		if (target && target.triggers) {
-			console.log("untriggering", target);
 			// untrigger everything when we get destroyed!
 			this.$services.triggerable.untrigger(target, null, this);
 		}
 		if (target && target.state && target.state.triggers) {
-			console.log("untriggering", target.state);
 			this.$services.triggerable.untrigger(target.state, null, this);
 		}
 	},
@@ -409,7 +407,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	beforeDestroy: function() {
-		console.log("destroying page", this.page.content.name);
 		this.stopEdit();
 		if (this.autoRefreshTimeout) {
 			clearTimeout(this.autoRefreshTimeout);
@@ -596,6 +593,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		updateTemplates: function() {
+			this.$services.page.updateToLatestTemplate(this.page.content, true);
+		},
 		isContentHidden: function(target) {
 			if (this.hidden[target.id] == null) {
 				Vue.set(this.hidden, target.id, false);
@@ -951,10 +951,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 				this.selectItem(path[path.length - 2], target, "cell");
 			}
 		},
-		selectItem: function(row, cell, type) {
+		selectItem: function(row, cell, type, tab) {
 			Vue.set(this, 'row', row);
 			Vue.set(this, 'cell', cell);
 			Vue.set(this, 'selectedType', type);
+			
+			if (tab) {
+				this.activeTab = tab ? tab : "selected";
+			}
 
 			// if we set something, calculate a new path
 			if (type) {
@@ -1422,7 +1426,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 		getComponentForCell: function(cellId) {
 			var result = this.components[cellId];
 			if (result instanceof Array) {
-				return result[0];
+				// slightly evil fix, in some rare cases (currently and hopefully only during editing), the destroy routines are not correctly triggered
+				// this means we end up picking the "stale" cell that is no longer part of the page
+				// instead of taking the first (which was initially the setup), we take the last instance
+				return result[result.length - 1];
 			}
 			return result;
 		},
@@ -2964,6 +2971,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 		getAvailableParameters: function(cell) {
 			return this.$services.page.getAvailableParameters(this.page, cell, true);
 		},
+		/*
+		double copy paste?
 		getAvailableEvents: function(event) {
 			var available = this.getEvents();
 			var result = Object.keys(available);
@@ -2975,6 +2984,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			result.sort();
 			return result;
 		},
+		*/
 		canConfigureInline: function(cell) {
 			var pageInstance = this;
 			var component = pageInstance.getComponentForCell(cell.id);
@@ -3019,9 +3029,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 				cells.splice(cells.indexOf(cell), 1);
 			});
 		},
+		/*
+		// presumably wrong copy paste...
 		removeRow: function(cell, row) { 
 			cell.rows.splice(cell.rows(indexOf(row), 1));
 		},
+		*/
 		removeInstance: function(target, name) {
 			// currently just reset the instances thing, we currently only allow one
 			Vue.set(target, "instances", {});	
@@ -3250,9 +3263,9 @@ Vue.component("n-page-row", {
 			event.stopPropagation();
 			event.preventDefault();
 		},
-		goto: function(event, row, cell) {
+		goto: function(event, row, cell, tab) {
 			if (this.edit) {
-				this.$emit("select", row, cell, cell ? "cell" : "row");
+				this.$emit("select", row, cell, cell ? "cell" : "row", tab ? tab : "selected");
 				var doDefault = true;
 				// if we have a cell target with a configuration, show that, otherwise, we do the generic configuration
 				if (cell != null) {

@@ -22,6 +22,16 @@ defaultTemplate ?= true
 if (noresolve)
 	context.set("noresolve", noresolve)
 
+initialLoader = function("initialLoader")
+if (initialLoader != null)
+	echo("		<script>\n")
+	initialLoader("js")
+	echo("		</script>\n")
+if (initialLoader != null)
+	echo("		<style>\n")
+	initialLoader("css")
+	echo("		</style>\n")
+	
 if (environment("mobile") == true)
 	echo('		<meta http-equiv="Content-Security-Policy" content="default-src \'self\' data: gap: cdvfile: https://ssl.gstatic.com ' + environment('url') + ' https://www.youtube.com \'unsafe-eval\' \'unsafe-inline\'; connect-src \'self\' ws: wss: http: https:; style-src \'self\' \'unsafe-inline\'; media-src *">')
 	echo('		<meta name="format-detection" content="telephone=no">')
@@ -78,6 +88,14 @@ nabu.utils.tpl(target: target, staticTarget: staticTarget, bundlePath: bundlePat
 }}
 	</head>
 	<body${when(style, " class='n-default'", "")}>
-		${when(!body, "<div id='body'></div>", "")}
+${{
+if (!body)
+	echo("<div id='body'>")
+	if (initialLoader != null)
+		initialLoader("html")
+	echo("</div>")
+else if (initialLoader != null)
+	initialLoader("html")
+}}
 	</body>
 </html>

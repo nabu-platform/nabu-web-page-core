@@ -41,8 +41,8 @@
 				<div class="is-row is-height-min-4 is-align-cross-center is-spacing-horizontal-medium is-spacing-vertical-small is-highlight-light is-cursor-pointer" v-for="operation in getOperationCategory(category)" :draggable="true"
 						@dragstart="dragOperation($event, operation)">
 					<div class="is-column is-width-column-11">
-						<h5 class="is-h5 is-size-medium">{{ operation.id }}</h5>
-						<p class="is-p is-size-xsmall" v-if="operation.summary">{{ operation.summary }}</p>
+						<p class="is-p is-size-xsmall">{{ operation.id }}</p>
+						<p class="is-p is-size-xxsmall" v-if="operation.summary">{{ operation.summary }}</p>
 					</div>
 				</div>
 			</n-collapsible>

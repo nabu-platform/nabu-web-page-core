@@ -76,9 +76,15 @@ nabu.page.provide("page-renderer", {
 			name: "validate"
 		});
 		if (container && container.form && (container.form.operation || container.form.function || (container.form.fields && container.form.fields.length > 0))) {
+			var output = null;
+			if (container.form.operation && container.form.formType == "operation") {
+				var operationId = container.form.operation;
+				output = application.services.page.getSwaggerOperationOutputDefinition(operationId);
+			}
 			actions.push({
 				title: "Submit",
-				name: "submit"
+				name: "submit",
+				output: output
 			});
 		}
 		return actions;
@@ -280,7 +286,7 @@ Vue.component("renderer-form", {
 			}
 			else if (name == "validate") {
 				// you can set a custom component group to only validate those particular elements?
-				var componentGroup = this.target.form.componentGroup ? this.target.form.componentGroup : "default";
+				var componentGroup = this.target.form.componentGroup ? this.target.form.componentGroup : "form";
 				var promises = [];
 				var messages = [];
 				var codes = self.target.form.codes ? self.target.form.codes : [];

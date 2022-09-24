@@ -211,6 +211,60 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		updateToLatestTemplate: function(target, recursive) {
+			var self = this;
+			if (target.templateReferenceId) {
+				var self = this;
+				var latest = this.templates.filter(function(x) {
+					return x.id == target.templateReferenceId;
+				})[0];
+				var instance = JSON.parse(latest.content).content;
+				var getOriginal = function(instance, id) {
+					if (instance.id == id) {
+						return instance;
+					}
+					else if (instance.cells) {
+						return instance.cells.reduce(function(all, x) {
+							return all == null ? getOriginal(x, id) : all;
+						}, null);
+					}
+					else if (instance.rows) {
+						return instance.rows.reduce(function(all, x) {
+							return all == null ? getOriginal(x, id) : all;
+						}, null);
+					}
+				}
+				var recursiveUpdate = function(x) {
+					var original = getOriginal(instance, x.templateFragmentId);
+					if (original && original.aris) {
+						Vue.set(x, "aris", original.aris);
+						self.$services.page.setRerender(x.aris);
+					}
+					if (x.cells) {
+						x.cells.forEach(recursiveUpdate);
+					}
+					if (x.rows){
+						x.rows.forEach(recursiveUpdate);
+					}
+				}
+				recursiveUpdate(target);
+				target.templateVersion = latest.templateVersion;
+			}
+			// we also recurse into templates, that means if a template is part of a larger template and not updated in the overall template, it might still be updated here
+			// but on the flipside, if you just nest natural templates (the more likely usecase), you want all of them to be updated
+			if (recursive) {
+				if (target.cells) {
+					target.cells.forEach(function(x) {
+						self.updateToLatestTemplate(x, true);
+					});
+				}
+				if (target.rows) {
+					target.rows.forEach(function(x) {
+						self.updateToLatestTemplate(x, true);
+					});
+				}
+			}
+		},
 		watchField: function(pageInstance, field, handler) {
 			if (field.indexOf("page.") == 0) {
 				field = field.substring("page.".length);
@@ -1396,16 +1450,17 @@ nabu.services.VueService(Vue.extend({
 				}
 				var promises = [];
 				if (self.canEdit()) {
+					var editorPromises = [];
 					if (self.useAris) {
-						promises.push(nabu.utils.ajax({url: "${server.root()}page/v2/api/aris-definitions"}).then(function(response) {
+						editorPromises.push(nabu.utils.ajax({url: "${server.root()}page/v2/api/aris-definitions"}).then(function(response) {
 							self.aris = {};
 							JSON.parse(response.responseText).forEach(function(component) {
 								self.aris[component.name] = component;
 							});
 						}));
 					}
-					promises.push(injectJavascript());
-					promises.push(self.$services.swagger.execute("nabu.web.page.core.rest.templates.list").then(function(list) {
+					editorPromises.push(injectJavascript());
+					editorPromises.push(self.$services.swagger.execute("nabu.web.page.core.rest.templates.list").then(function(list) {
 						if (list && list.templates) {
 							list.templates.forEach(function(template) {
 								try {
@@ -1424,6 +1479,10 @@ nabu.services.VueService(Vue.extend({
 							//nabu.utils.arrays.merge(self.templates, list.templates);
 						}
 					}));
+					// we probably don't want to wait for these, they should only be relevant once you are actually editing etc which is not _right_ away
+					if (false) {
+						nabu.utils.arrays.merge(promises, editorPromises);
+					}
 					self.scanPagesForTemplates();
 				}
 				if (self.canTest()) {
@@ -2090,12 +2149,12 @@ nabu.services.VueService(Vue.extend({
 			}
 			return value;
 		},
-		interpret: function(value, component, state) {
+		interpret: function(value, component, state, customValueFunction) {
 			if (typeof(value) == "string" && value.length > 0 && value.substring(0, 1) == "=") {
 				value = value.substring(1);
 				var result = null;
 				if (state) {
-					result = this.eval(value, state, component);
+					result = this.eval(value, state, component, customValueFunction);
 				}
 				else if (component) {
 					var stateOwner = component;
@@ -2103,16 +2162,16 @@ nabu.services.VueService(Vue.extend({
 						stateOwner = stateOwner.$parent;
 					}
 					if (stateOwner && stateOwner.localState) {
-						result = this.eval(value, stateOwner.localState, component);
+						result = this.eval(value, stateOwner.localState, component, customValueFunction);
 					}
 					if (result == null && stateOwner && stateOwner.state) {
-						result = this.eval(value, stateOwner.state, component);
+						result = this.eval(value, stateOwner.state, component, customValueFunction);
 					}
 					if (result == null && component.page) {
 						var pageInstance = this.getPageInstance(component.page, component);
 						// the whole "state" thing is deprecated, there is only page state
 						//result = this.getBindingValue(pageInstance, value);
-						result = this.eval(value, pageInstance.variables, component);
+						result = this.eval(value, pageInstance.variables, component, customValueFunction);
 					}
 				}
 				value = result;
@@ -2128,7 +2187,7 @@ nabu.services.VueService(Vue.extend({
 							var rule = value.substring(index + 2, end);
 							var result = null;
 							if (state) {
-								result = this.eval(rule, state, component);
+								result = this.eval(rule, state, component, customValueFunction);
 							}
 							else if (component) {
 								var stateOwner = component;
@@ -2136,10 +2195,10 @@ nabu.services.VueService(Vue.extend({
 									stateOwner = stateOwner.$parent;
 								}
 								if (stateOwner && stateOwner.localState) {
-									result = this.eval(rule, stateOwner.localState, component);
+									result = this.eval(rule, stateOwner.localState, component, customValueFunction);
 								}
 								if (result == null && stateOwner && stateOwner.state) {
-									result = this.eval(rule, stateOwner.state, component);
+									result = this.eval(rule, stateOwner.state, component, customValueFunction);
 								}
 								if (result == null && component.page) {
 									var pageInstance = this.getPageInstance(component.page, component);
@@ -3300,7 +3359,8 @@ nabu.services.VueService(Vue.extend({
 				if (includeComplex && key != "page") {
 					keys.push(key);
 				}
-				nabu.utils.arrays.merge(keys, self.getSimpleKeysFor(parameters[key], includeComplex).filter(function(x) { return x != null}).map(function(x) {
+				// if we want complex, we also want arrays (this was added later and backwards compatible etc etc)
+				nabu.utils.arrays.merge(keys, self.getSimpleKeysFor(parameters[key], includeComplex, includeComplex).filter(function(x) { return x != null}).map(function(x) {
 					return key + "." + x;
 				}));
 			});
@@ -3559,6 +3619,31 @@ nabu.services.VueService(Vue.extend({
 				}
 			}
 			return false;
+		},
+		// for example for initial state, we were using "getPageParameters" which only lists parameters available in the page itself (which is what we want)
+		// it should not, for instance, include events (which can not have triggered yet in initial state) nor runtime aliases from renderers (again, not yet available)
+		// but we DO need the parent state at that point
+		// the getAllAvailableParameters is too broad, it takes all the not-yet-available data into account
+		getPageStartupParameters: function(page) {
+			var self = this;
+			var result = {page: this.getPageParameters(page, true)};
+			// if you inherit from another page, we add that as well
+			if (page.content.pageParent) {
+				var parentPage = this.pages.filter(function(x) {
+					return x.content.name == page.content.pageParent;
+				})[0];
+				if (parentPage != null) {
+					result.parent = this.getPageParameters(parentPage);
+				}
+			}
+			// if not defined explicitly, we might still have a parent in this context?
+			else {
+				var parentInstance = self.$services.page.getParentPageInstance(page);
+				if (parentInstance && parentInstance.page) {
+					result.parent = this.getPageParameters(parentInstance.page);
+				}
+			}
+			return result;
 		},
 		// TODO: we don't want to be able to edit stuff like events
 		// but components can add their own state to the page
