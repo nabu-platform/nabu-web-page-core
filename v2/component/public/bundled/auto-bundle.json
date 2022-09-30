@@ -513,6 +513,11 @@
 				}
 			}
 		},
+		"import": {
+			"vue-frag.js": {
+				"url": "import/vue-frag.js"
+			}
+		},
 		"renderers": {
 			"form": {
 				"form.js": {

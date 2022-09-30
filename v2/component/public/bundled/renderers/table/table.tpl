@@ -1,7 +1,7 @@
 <template id="renderer-table">
 	<table class="is-table" :class="getChildComponentClasses('table')">
 		<thead><slot name="header"></slot></thead>
-		<slot></slot>
+		<tbody><slot></slot></tbody>
 		<tfoot><slot name="footer"></slot></tfoot>
 	</table>
 </template>

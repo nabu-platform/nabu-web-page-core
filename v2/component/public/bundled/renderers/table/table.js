@@ -5,7 +5,7 @@
 
 nabu.page.provide("page-type", {
 	name: "table-page",
-	rowTag: function(row, depth, editing, reversePath) {
+	rowTag: function(row, depth, editing, reversePath, page) {
 		// it must be inside the table, this goes for header, footer & body, for example for body depth:
 		// <column> <repeat> <table>
 		var isRow = reversePath.length >= 2 && reversePath[1].renderer == "table";
@@ -14,13 +14,22 @@ nabu.page.provide("page-type", {
 		// the repeat spins off a fragment page with the correct page type (e.g. table), but not the necessary depth
 		isRow |= reversePath.length == 1;
 		if (isRow) {
+			// if the repeat type is CELL, we assume that you have a repeat inside the header!
+			// this means you have a singular header row (no repeat) and within that a cell that has a repeat
+			if (page.content.repeatType == "cell") {
+				return "th";
+			}
 			return "tr";
 		}
 		else {
 			return null;
 		}
 	},
-	cellTag: function(row, cell, depth, editing, reversePath) {
+	cellTag: function(row, cell, depth, editing, reversePath, page) {
+		// we are repeating in the header (or footer) a cell, the row is already tagged as a cell, we don't need this here
+		if (page.content.repeatType == "cell") {
+			return null;
+		}
 		// it must be inside the table, this goes for header, footer & body, for example for body depth:
 		// <column> <repeat> <table>
 		var isColumn = reversePath.length >= 3 && reversePath[2].renderer == "table";
@@ -42,14 +51,21 @@ nabu.page.provide("page-type", {
 	repeatTag: function(target) {
 		return "tbody";
 	},
-	cellComponent: function(cell, reversePath) {
+	cellComponent: function(cell, reversePath, page) {
+		// see above
+		if (page.content.repeatType == "cell") {
+			return null;
+		}
 		var isColumn = reversePath.length >= 3 && reversePath[2].renderer == "table";
 		isColumn |= reversePath.length == 2;
 		return isColumn ? "table-column" : null;
 	},
-	rowComponent: function(cell, reversePath) {
+	rowComponent: function(cell, reversePath, page) {
 		var isRow = reversePath.length >= 2 && reversePath[1].renderer == "table";
 		isRow |= reversePath.length == 1;
+		if (isRow && page.content.repeatType == "cell") {
+			return "table-column";
+		}
 		return isRow ? "table-row" : null;
 	},
 	repeatComponent: function(target) {
@@ -57,6 +73,18 @@ nabu.page.provide("page-type", {
 	},
 	messageTag: function(target) {
 		return "renderer-table-message";
+	}
+});
+
+// 1-deep, we assume you have a dynamic repeat WITHIN the repeat of your body
+// note that nested repeats in headers and footers are not supported atm
+nabu.page.provide("page-type", {
+	name: "table-page-child",
+	rowTag: function(row, depth, editing, reversePath) {
+		return reversePath.length == 1 ? "td" : null;	
+	},
+	rowComponent: function(cell, reversePath) {
+		return reversePath.length == 1 ? "table-column" : null;	
 	}
 });
 
@@ -191,3 +219,4 @@ Vue.component("renderer-table-header-cell", {
 		}
 	}
 });
+

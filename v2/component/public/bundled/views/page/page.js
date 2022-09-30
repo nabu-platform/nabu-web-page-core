@@ -3550,7 +3550,7 @@ Vue.component("n-page-row", {
 				var rowTag = null;
 				// if it is a function, we can do more stuff
 				if (provider && provider.rowTag instanceof Function) {
-					rowTag = provider.rowTag(row, this.depth, this.edit, result.path);
+					rowTag = provider.rowTag(row, this.depth, this.edit, result.path, this.page);
 				}
 				// special override for editing purposes
 				else if (this.edit && provider && provider.rowTagEdit) {
@@ -3589,7 +3589,7 @@ Vue.component("n-page-row", {
 				var cellTag = null;
 				// if it is a function, we can do more stuff
 				if (provider && provider.cellTag instanceof Function) {
-					cellTag = provider.cellTag(row, cell, this.depth, this.edit, result.path);
+					cellTag = provider.cellTag(row, cell, this.depth, this.edit, result.path, this.page);
 				}
 				// special override for editing purposes
 				else if (this.edit && provider && provider.cellTagEdit) {
@@ -3846,7 +3846,7 @@ Vue.component("n-page-row", {
 						resultingComponent = provider[cell.renderer + "Component"];
 					}
 					else if (provider && provider.cellComponent instanceof Function) {
-						resultingComponent = provider.cellComponent(cell, result.path);
+						resultingComponent = provider.cellComponent(cell, result.path, this.page);
 					}
 					else if (provider && provider.cellComponent) {
 						resultingComponent = provider.cellComponent;
@@ -3913,7 +3913,7 @@ Vue.component("n-page-row", {
 						resultingComponent = provider[row.renderer + "Component"];
 					}
 					else if (provider && provider.rowComponent instanceof Function) {
-						resultingComponent = provider.rowComponent(row, result.path);
+						resultingComponent = provider.rowComponent(row, result.path, this.page);
 					}
 					else if (provider && provider.rowComponent) {
 						resultingComponent = provider.rowComponent;

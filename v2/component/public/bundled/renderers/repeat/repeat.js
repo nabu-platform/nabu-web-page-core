@@ -448,6 +448,11 @@ Vue.component("renderer-repeat", {
 					}
 				})
 			}
+			// we take the parent page type and add "-child" to it
+			// if you keep nesting, we keep adding -child
+			if (pageType == null) {
+				pageType = this.page.content.pageType + "-child";
+			}
 			return pageType;
 		},
 		getComponent: function() {
@@ -847,6 +852,9 @@ Vue.component("renderer-repeat", {
 					// currently this also throws away edit mode so we can only globally enable this once we have moved the editing outside of the page!
 					// no longer needed, vue was complaining about two roots so made an optimized derivative component
 					"optimizeRows": false
+					// TODO: should be recursive, currently we can only go up one parent
+					// aimed at matrices atm
+//					"fragmentParentContent": pageInstance.fragmentParent ? pageInstance.fragmentParent.page.content : pageInstance.page.content
 				};
 				// add our local value
 				content.parameters.push({
@@ -863,9 +871,11 @@ Vue.component("renderer-repeat", {
 				// we have a row, just push it to the rows
 				if (this.target.rows) {
 					nabu.utils.arrays.merge(content.rows, this.target.rows);
+					content.repeatType = "cell";
 				}
 				// we have a cell
 				else if (this.target.cells) {
+					content.repeatType = "row";
 					var row = {
 						// use an id that definitely does not collide with the content
 						id: -1,

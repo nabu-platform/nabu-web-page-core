@@ -1,5 +1,5 @@
 <template id="renderer-repeat">
-	<component :is="getComponent()" :class="{'is-selectable': target.repeat.selectable}">
+	<div :is="getComponent()" :class="{'is-selectable': target.repeat.selectable}" v-fragment>
 		<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
 			<n-page :page="fragmentPage"
 				@click.native="handleClick($event, record)"
@@ -35,7 +35,7 @@
 		<template v-else>
 			<slot></slot>
 		</template>
-	</component>
+	</div>
 </template>
 
 <template id="renderer-repeat-configure">

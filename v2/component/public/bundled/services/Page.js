@@ -1046,10 +1046,9 @@ nabu.services.VueService(Vue.extend({
 		getPageType: function(page, target) {
 			var self = this;
 			var pageType = null;
-				
 			// we check if there is a renderer in the path to this target
 			// if so, that renderer can modify how we render the content
-			var path = this.$services.page.getTargetPath(page.content, target.id);
+			var path = this.$services.page.getTargetPath(page.content.fragmentParentContent ? page.content.fragmentParentContent : page.content, target.id);
 			path.reverse();
 			path.forEach(function(x) {
 				if (x.renderer && !pageType) {

@@ -1072,6 +1072,8 @@
 		</template>
 	</component>
 </template>
+
+
 <template id="page-rows">
 	<component :is="rowsTag()" class="is-grid">
 		<n-page-row v-for="row in rows" :row="row" :page="page" :edit="edit" :parameters="parameters" :root="root" :stop-rerender="stopRerender" :depth="depth"/>
