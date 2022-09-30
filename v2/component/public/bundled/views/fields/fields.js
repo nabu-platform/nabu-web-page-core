@@ -749,7 +749,7 @@ Vue.component("page-formatted", {
 			if (this.fragment.format == "checkbox") {
 				return "<n-form-checkbox :value='value' />";
 			}
-			else if (this.value == null || typeof(this.value) == "undefined") {
+			else if (value == null || typeof(value) == "undefined") {
 				return null;
 			}
 			// formatting is optional

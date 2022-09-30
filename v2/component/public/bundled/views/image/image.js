@@ -42,7 +42,6 @@ Vue.view("page-image", {
 		// that means, when you dynamically change the blob based on state, the router can not determine that it is a _different_ blob and nothing will rerender
 		// specifically for that, you can add an id here (like an attachment id) which identifies the blob
 		contentId: {
-			type: Object,
 			required: false
 		}
 	},

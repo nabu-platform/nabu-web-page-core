@@ -4,8 +4,10 @@
     <path>/template</path>
     <queryParameters>q</queryParameters>
     <role>editor</role>
-    <permissionContext>="webApplication:" + input/webApplicationId</permissionContext>
     <permissionAction>resource.read</permissionAction>
+    <permissionContext>="context:" + input/webApplicationId</permissionContext>
+    <useServiceContextAsPermissionContext>false</useServiceContextAsPermissionContext>
+    <useWebApplicationAsPermissionContext>false</useWebApplicationAsPermissionContext>
     <output>nabu.web.page.core.rest.templates.templateList</output>
     <lenient>true</lenient>
     <webApplicationId>true</webApplicationId>
@@ -23,4 +25,7 @@
     <allowRaw>false</allowRaw>
     <domain>false</domain>
     <ignoreOffline>true</ignoreOffline>
+    <allowRootArrays>false</allowRootArrays>
+    <captureErrors>false</captureErrors>
+    <captureSuccessful>false</captureSuccessful>
 </restInterface>

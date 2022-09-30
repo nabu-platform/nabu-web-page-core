@@ -38,15 +38,26 @@
 				placeholder="Field to add"
 				:filter="getUnmappedField"/>
 				
-			<n-form-radio
-				v-model="fieldMode"
-				:extracter="function(x) { return x.name }"
-				:formatter="function(x) { return x.title }"
-				:items="[{name: 'fixed', title: 'Set a fixed value'},{name: 'map', title: 'Map an existing value'}]"/>
-				
-			<div class="is-row is-align-space-between">
-				<button class="is-button is-size-small is-variant-link" @click="resetField">Cancel</button>
-				<button class="is-button is-size-small is-variant-primary" @click="addField">Add mapping</button>
+			<div v-if="false">
+				<n-form-radio
+					v-model="fieldMode"
+					:extracter="function(x) { return x.name }"
+					:formatter="function(x) { return x.title }"
+					:items="[{name: 'fixed', title: 'Set a fixed value'},{name: 'map', title: 'Map an existing value'}]"/>
+					
+				<div class="is-row is-align-space-between">
+					<button class="is-button is-size-small is-variant-link" @click="resetField">Cancel</button>
+					<button class="is-button is-size-small is-variant-primary" @click="addField">Add mapping</button>
+				</div>
+			</div>
+			<div v-else>
+				<div class="is-row is-align-space-between">
+					<button class="is-button is-size-small is-variant-link" @click="resetField">Cancel</button>
+					<div>
+						<button class="is-button is-size-small is-variant-secondary" @click="function() { fieldMode = 'fixed'; addField() }">Add Fixed</button>
+						<button class="is-button is-size-small is-variant-primary" @click="function() { fieldMode = 'map'; addField() }">Add Mapping</button>
+					</div>
+				</div>
 			</div>
 		</div>
 		

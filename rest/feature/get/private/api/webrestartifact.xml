@@ -4,8 +4,10 @@
     <path>/feature</path>
     <role>editor</role>
     <role>tester</role>
-    <permissionContext>="webApplication:" + input/webApplicationId</permissionContext>
     <permissionAction>feature.get</permissionAction>
+    <permissionContext>="context:" + input/webApplicationId</permissionContext>
+    <useServiceContextAsPermissionContext>false</useServiceContextAsPermissionContext>
+    <useWebApplicationAsPermissionContext>false</useWebApplicationAsPermissionContext>
     <output>nabu.utils.types.FeatureList</output>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
@@ -23,4 +25,7 @@
     <allowRaw>false</allowRaw>
     <domain>false</domain>
     <ignoreOffline>true</ignoreOffline>
+    <allowRootArrays>false</allowRootArrays>
+    <captureErrors>false</captureErrors>
+    <captureSuccessful>false</captureSuccessful>
 </restInterface>

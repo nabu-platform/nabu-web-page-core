@@ -92,7 +92,20 @@ Vue.service("triggerable", {
 			var triggers = target.triggers ? target.triggers.filter(function(x) {
 				return !trigger || x.trigger == trigger;
 			}) : [];
-			triggers.forEach(function(x) {
+			triggers.forEach(function(x, triggerIndex) {
+				if (instance["$$triggerTimer" + triggerIndex]) {
+					if (x.timeout) {
+						clearTimeout(instance["$$triggerTimer" + triggerIndex]);
+					}
+					else if (x.interval) {
+						clearInterval(instance["$$triggerTimer" + triggerIndex]);
+					}
+					instance["$$triggerTimer" + triggerIndex] = null;
+				}
+				if (instance["$$triggerPromise" + triggerIndex]) {
+					instance["$$triggerPromise" + triggerIndex].reject();
+					instance["$$triggerPromise" + triggerIndex] = null;
+				}
 				if (x.actions) {
 					x.actions.forEach(function(action) {
 						// we can untoggle the visibility
@@ -142,7 +155,7 @@ Vue.service("triggerable", {
 					&& (!x.condition || self.$services.page.isCondition(x.condition, value, instance));
 			}) : [];
 			
-			var promises = triggers.map(function(x) {
+			var promises = triggers.map(function(x, triggerIndex) {
 				var state = {};
 				
 				// the initial state
@@ -156,7 +169,7 @@ Vue.service("triggerable", {
 					var result = self.$services.page.getValue(state, path);
 					// fallback to global value function!
 					if (result == null) {
-						result = self.$value(path, literal);
+						result = instance.$value(path, literal);
 					}
 					return result;
 				}
@@ -172,6 +185,7 @@ Vue.service("triggerable", {
 				
 				// actions can be immediately run or chained
 				var runAction = function(index, lastPromise) {
+					console.log("running", index);
 					var action = actions[index];
 					var getBindings = function() {
 						var parameters = {};
@@ -449,8 +463,14 @@ Vue.service("triggerable", {
 						var runNext = function(promise) {
 							// we finished!
 							if (index == actions.length - 1) {
+								// we want to keep repeating
+								if (x.interval) {
+									instance["$$triggerTimer" + triggerIndex] = setTimeout(function() {
+										runAction(0);
+									}, x.interval);
+								}
 								// if we passed in a promise, wait for it to finish
-								if (promise) {
+								else if (promise) {
 									promise.then(triggerPromise, triggerPromise);
 								}
 								else {
@@ -494,11 +514,27 @@ Vue.service("triggerable", {
 				
 				// start at the beginning
 				if (actions.length > 0) {
+
+					// for both the timeout and interval, we want to capture the promise so we can reject it later					
+					// there is already a global "untrigger" when something unloads, so it should be cleanly stopped
+					if (x.timeout || x.interval) {
+						instance["$$triggerPromise" + triggerIndex] = triggerPromise;
+					}
+					
 					// if we want confirmation and you reject, we don't start
+					// deprecated, confirmation is now part of the actions
 					if (x.confirmation) {
 						self.$confirm({message:self.$services.page.translate(self.$services.page.interpret(x.confirmation, instance))}).then(function() {
 							runAction(0);
 						}, triggerPromise);
+					}
+					// if we have a timeout, use it to delay the start
+					// if we only have an interval, the first run is immediately
+					// if we have a timeout and interval, we only start after that timeout
+					else if (x.timeout) {
+						instance["$$triggerTimer" + triggerIndex] = setTimeout(function() {
+							runAction(0);
+						}, x.timeout);
 					}
 					else {
 						runAction(0);

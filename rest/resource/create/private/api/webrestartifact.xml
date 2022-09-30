@@ -4,13 +4,16 @@
     <path>/resource</path>
     <queryParameters>path, webApplicationId</queryParameters>
     <role>editor</role>
-    <permissionContext>="webApplication:" + input/webApplicationId</permissionContext>
     <permissionAction>resource.write</permissionAction>
+    <permissionContext>="context:" + input/webApplicationId</permissionContext>
+    <useServiceContextAsPermissionContext>false</useServiceContextAsPermissionContext>
+    <useWebApplicationAsPermissionContext>false</useWebApplicationAsPermissionContext>
     <inputAsStream>true</inputAsStream>
     <outputAsStream>false</outputAsStream>
     <output>nabu.web.page.core.rest.resource.resource</output>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
+    <geoPosition>false</geoPosition>
     <language>false</language>
     <allowFormBinding>false</allowFormBinding>
     <caseInsensitive>false</caseInsensitive>
@@ -21,4 +24,10 @@
     <allowHeaderAsQueryParameter>false</allowHeaderAsQueryParameter>
     <useServerCache>false</useServerCache>
     <source>false</source>
+    <allowRaw>false</allowRaw>
+    <domain>false</domain>
+    <ignoreOffline>false</ignoreOffline>
+    <allowRootArrays>false</allowRootArrays>
+    <captureErrors>false</captureErrors>
+    <captureSuccessful>false</captureSuccessful>
 </restInterface>

@@ -1,10 +1,12 @@
 <sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		disabled="false"
-		id="cf4b643b-d63f-43e5-b08f-f5314eb293de">
+		id="cf4b643b-d63f-43e5-b08f-f5314eb293de"
+		lineNumber="1">
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			disabled="false"
 			comment="Get uri"
-			id="7647d120-4b02-4df4-a5a9-2d272e9f015f">
+			disabled="false"
+			id="7647d120-4b02-4df4-a5a9-2d272e9f015f"
+			lineNumber="2">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="6a314901-50f0-4950-a5cc-b4041c8d9a37"
@@ -14,7 +16,8 @@
 				x="24"
 				y="84"
 				invocationOrder="0"
-				asynchronous="false">
+				asynchronous="false"
+				recache="false">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="d50cce9e-0525-4228-98e1-3c7ab4e78730"
@@ -43,7 +46,8 @@
 				x="143"
 				y="171"
 				invocationOrder="1"
-				asynchronous="false">
+				asynchronous="false"
+				recache="false">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="c7bf275e-ce65-4a48-92dc-709e50a900eb"
@@ -66,12 +70,14 @@
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Throw"
 			disabled="false"
-			label="path !~ &quot;/public/artifacts/pages/.*&quot;"
 			id="8f636e1f-aa95-4a04-b184-172aa677b016"
+			label="path !~ &quot;/public/artifacts/pages/.*&quot;"
+			lineNumber="3"
 			message="=&quot;Invalid target: &quot; + path" xsi:nil="true"/>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"
-			id="bf803105-58d9-46dd-853a-308df6febf7f">
+			id="bf803105-58d9-46dd-853a-308df6febf7f"
+			lineNumber="4">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="76865c2d-5214-4eff-bb21-498ce8097d42"
@@ -81,7 +87,8 @@
 				x="70"
 				y="88"
 				invocationOrder="0"
-				asynchronous="false">
+				asynchronous="false"
+				recache="false">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="8ceedcbe-eaf0-4172-8a21-558fdff19dc2"

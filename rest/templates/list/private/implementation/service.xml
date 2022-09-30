@@ -1,9 +1,11 @@
 <sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		disabled="false"
-		id="b24b2de3-a890-43ac-8089-ecdea435cea0">
+		id="b24b2de3-a890-43ac-8089-ecdea435cea0"
+		lineNumber="1">
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"
-			id="73f315ae-fec7-483d-9c1d-5bef1d06f99c">
+			id="73f315ae-fec7-483d-9c1d-5bef1d06f99c"
+			lineNumber="2">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="fe9e17d4-05e1-4925-bf38-c3335fa445ef"

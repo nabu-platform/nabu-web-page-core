@@ -617,13 +617,28 @@ nabu.services.VueService(Vue.extend({
 			return state;
 		},
 		// do the reverse from input binding: apply the renderer state to the pageInstance
-		applyRendererParameters: function(pageInstance, target, state) {
+		applyRendererParameters: function(pageInstance, target, state, dumbMerge) {
 			if (target && target.rendererBindings) {
 				var self = this;
 				// note that we also explicitly set null values to allow you to unset
 				Object.keys(target.rendererBindings).forEach(function(key) {
 					if (target.rendererBindings[key] != null) {
-						pageInstance.set(target.rendererBindings[key], self.$services.page.getValue(state, key));
+						var merged = false;
+						// basic merging works when you are doing field-level bindings
+						// but suppose you have an update form and map an entire record to it
+						// the record you map is from an update that was triggered by a button in a table
+						// if you just merge back the full record into the event, it will still not modify the record in the original table
+						// but if we merge it one-deep, we will do a by-reference merge into the necessary objects
+						if (!dumbMerge) {
+							var existing = pageInstance.get(target.rendererBindings[key]);
+							if (existing && self.isObject(existing)) {
+								self.mergeObject(existing, self.$services.page.getValue(state, key));
+								merged = true;
+							}
+						}
+						if (!merged) {
+							pageInstance.set(target.rendererBindings[key], self.$services.page.getValue(state, key));
+						}
 					}
 				});
 			}

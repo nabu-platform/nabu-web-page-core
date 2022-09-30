@@ -3,11 +3,14 @@
     <method>PUT</method>
     <path>/page</path>
     <role>editor</role>
-    <permissionContext>="webApplication:" + input/webApplicationId</permissionContext>
     <permissionAction>page.edit</permissionAction>
+    <permissionContext>="context:" + input/webApplicationId</permissionContext>
+    <useServiceContextAsPermissionContext>false</useServiceContextAsPermissionContext>
+    <useWebApplicationAsPermissionContext>false</useWebApplicationAsPermissionContext>
     <input>nabu.web.page.core.types.rest.page</input>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
+    <geoPosition>false</geoPosition>
     <language>false</language>
     <allowFormBinding>false</allowFormBinding>
     <caseInsensitive>false</caseInsensitive>
@@ -20,4 +23,8 @@
     <source>false</source>
     <allowRaw>false</allowRaw>
     <domain>false</domain>
+    <ignoreOffline>false</ignoreOffline>
+    <allowRootArrays>false</allowRootArrays>
+    <captureErrors>false</captureErrors>
+    <captureSuccessful>false</captureSuccessful>
 </restInterface>

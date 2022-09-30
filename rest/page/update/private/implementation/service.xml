@@ -1,10 +1,12 @@
 <sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		disabled="false"
-		id="70455fa4-d71d-4aae-89c9-37743baa644e">
+		id="70455fa4-d71d-4aae-89c9-37743baa644e"
+		lineNumber="1">
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			comment="Set empty content by default"
 			disabled="false"
-			id="7647d120-4b02-4df4-a5a9-2d272e9f015f">
+			id="7647d120-4b02-4df4-a5a9-2d272e9f015f"
+			lineNumber="2">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 				disabled="false"
 				id="8ffebd62-32a3-4ac9-b9a3-e729a3e75f70"
@@ -79,10 +81,12 @@
 			disabled="false"
 			id="8f636e1f-aa95-4a04-b184-172aa677b016"
 			label="path !~ &quot;/public/artifacts/pages/.*&quot;"
+			lineNumber="3"
 			message="=&quot;Invalid target: &quot; + path" xsi:nil="true"/>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"
-			id="b231104f-895e-4fb4-8139-de193e90349f">
+			id="b231104f-895e-4fb4-8139-de193e90349f"
+			lineNumber="4">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="092dc840-3f92-4eb0-9e05-bb495153675a"
@@ -117,7 +121,8 @@
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			comment="Clear any cache regarding last modified"
 			disabled="false"
-			id="874f0100-66df-494e-8264-f944de82539b">
+			id="874f0100-66df-494e-8264-f944de82539b"
+			lineNumber="5">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="1d431a39-d8b6-4e7a-857a-1ce1d971df4a"
