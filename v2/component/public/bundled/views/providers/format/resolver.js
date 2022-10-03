@@ -34,7 +34,8 @@ Vue.component("page-format-resolver", {
 		+ "			:filter='function() { return getEnumerationFields(fragment.resolveOperation) }'/>"
 		+ "		<n-form-combo v-if='fragment.resolveOperation' v-model='fragment.resolveOperationIds' label='Input Ids Field'"
 		+ "			:filter='function() { return getEnumerationParameters(fragment.resolveOperation) }'/>"
-		+ "		<page-fields-edit :allow-multiple='false' v-if='fragment.resolveOperation && fragment.resolveOperationLabelComplex' fields-name='resolveFields' :cell='{state:fragment}' :page='page' :keys='getEnumerationFields(fragment.resolveOperation)' :allow-editable='false'/>"
+		+ "		<n-form-text v-model='fragment.complexLabel' label='The complex text label' v-if='fragment.resolveOperation && fragment.resolveOperationLabelComplex'/>"
+		+ "		<typography-variable-replacer v-if='fragment.resolveOperation && fragment.resolveOperationLabelComplex && fragment.complexLabel' :content='fragment.complexLabel' :page='page' :container='fragment' :keys='getEnumerationFields(fragment.resolveOperation)' />"
 		+ "		<n-page-mapper v-if='fragment.resolveOperation && hasMappableEnumerationParameters(fragment)'"
 		+ "			v-model='fragment.resolveOperationBinding'"
 		+ "			:from='availableParameters'"
@@ -43,7 +44,8 @@ Vue.component("page-format-resolver", {
 	computed: {
 		availableParameters: function() {
 			var result = this.$services.page.getAvailableParameters(this.page, this.cell);
-			if (this.keys) {
+			// deprecated in v2?
+			if (this.keys && false) {
 				var record = {properties:{}}
 				this.keys.forEach(function(key) {
 					record.properties[key] = {type: "string"}

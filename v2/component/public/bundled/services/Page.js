@@ -211,6 +211,35 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		getBindings: function(bindings, instance, state) {
+			var self = this;
+			var parameters = {};
+			var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
+			Object.keys(bindings).map(function(key) {
+				if (bindings[key] != null) {
+					var value = null;
+					
+					// need to check if you want to access local state
+					var index = bindings[key].indexOf(".");
+					var resolved = false;
+					if (index > 0) {
+						var variableName = bindings[key].substring(0, index);
+						// if we have it in state, that wins
+						if (state && state.hasOwnProperty(variableName)) {
+							value = self.$services.page.getValue(state, bindings[key]);
+							resolved = true;
+						}
+					}
+					if (!resolved) {
+						value = self.$services.page.getBindingValue(pageInstance, bindings[key], instance);
+					}
+					if (value != null) {
+						self.$services.page.setValue(parameters, key, value);
+					}
+				}
+			});
+			return parameters;
+		},
 		updateToLatestTemplate: function(target, recursive) {
 			var self = this;
 			if (target.templateReferenceId) {
@@ -1079,7 +1108,7 @@ nabu.services.VueService(Vue.extend({
 			
 			var pageType = this.getPageType(page, cell);
 			if (pageType && pageType.provider && pageType.provider.cellComponent instanceof Function) {
-				var component = pageType.provider.cellComponent(cell, pageType.path);
+				var component = pageType.provider.cellComponent(cell, pageType.path, page);
 				if (component) {
 					components.push({
 						title: "Cell",
@@ -1131,7 +1160,7 @@ nabu.services.VueService(Vue.extend({
 			
 			var pageType = this.getPageType(page, row);
 			if (pageType && pageType.provider && pageType.provider.rowComponent instanceof Function) {
-				var component = pageType.provider.rowComponent(row, pageType.path);
+				var component = pageType.provider.rowComponent(row, pageType.path, page);
 				if (component) {
 					components.push({
 						title: "Row",
@@ -2338,6 +2367,15 @@ nabu.services.VueService(Vue.extend({
 				return operation && operation.method != "get"
 					&& (!value || operation.id.toLowerCase().indexOf(value.toLowerCase()) >= 0);
 			});
+		},
+		// operations where you can download a binary blob
+		// download operations can also download records in csv format etc
+		getBinaryOperations: function(value) {
+			return this.getOperations(function(operation) {
+				var binaryDownload = operation && operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream"
+					&& (!value || operation.id.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+				return binaryDownload;
+			});			
 		},
 		// operations where you can download data
 		getDownloadOperations: function(value) {

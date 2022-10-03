@@ -1,5 +1,5 @@
 <template id="renderer-repeat">
-	<div :is="getComponent()" :class="{'is-selectable': target.repeat.selectable}" v-fragment>
+	<div v-fragment>
 		<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
 			<n-page :page="fragmentPage"
 				@click.native="handleClick($event, record)"
@@ -7,7 +7,20 @@
 				v-for="(record, index) in state.records" :record-index="index" class="is-repeat-content" 
 				:draggable="target.repeat.enableDrag"
 				@dragstart.native="onDragStart($event, record)"
-				:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }]"
+				:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }, {'is-selectable': target.repeat.selectable}]"
+				:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record)"
+				:parameters="getParameters(record)"
+				@beforeMount="beforeMount"
+				@ready="mounted"/>
+		</template>
+		<template v-else-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length == 1 && fragmentPage.content.repeatType == 'cell'">
+			<n-page-optimized-column :page="fragmentPage"
+				@click.native="handleClick($event, record)"
+				:fragment-parent="getPageInstance()"
+				v-for="(record, index) in state.records" :record-index="index" class="is-repeat-content" 
+				:draggable="target.repeat.enableDrag"
+				@dragstart.native="onDragStart($event, record)"
+				:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }, {'is-selectable': target.repeat.selectable}]"
 				:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record)"
 				:parameters="getParameters(record)"
 				@beforeMount="beforeMount"
@@ -20,7 +33,7 @@
 				v-for="(record, index) in state.records" :record-index="index" class="is-repeat-content" 
 				:draggable="target.repeat.enableDrag"
 				@dragstart.native="onDragStart($event, record)"
-				:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }]"
+				:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }, {'is-selectable': target.repeat.selectable}]"
 				:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record)"
 				:parameters="getParameters(record)"
 				@beforeMount="beforeMount"

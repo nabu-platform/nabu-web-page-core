@@ -4,8 +4,8 @@ if (!nabu.page.views) { nabu.page.views = {} }
 
 Vue.view("page-image", {
 	category: "Media",
-	name: "Image",
-	description: "Position an image with this component",
+	name: "Static Image",
+	description: "Position a static image",
 	icon: "page/core/images/image.svg",
 	props: {
 		page: {
@@ -138,7 +138,6 @@ Vue.view("page-image", {
 			return href;
 		},
 		getChildComponents: function() {
-			console.log("query child comopnet");
 			return [{
 				title: "Image",
 				name: "image",

@@ -1,3 +1,21 @@
+<template id="nabu-optimized-page-column">
+	<n-page-row 
+		v-fragment
+		:row="page.content.rows[0]"
+		:page="page" 
+		:edit="edit"
+		:depth="0"
+		:parameters="parameters"
+		:ref="page.name + '_rows'"
+		:root="true"
+		:page-instance-id="pageInstanceId"
+		:stop-rerender="stopRerender"
+		:key="'page_' + pageInstanceId + '_row_' + page.content.rows[0].id"
+		@select="selectItem"
+		@viewComponents="viewComponents = edit"
+		@removeRow="function(x) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(x), 1) }) }"/>
+</template>
+
 <template id="nabu-optimized-page">
 	<n-page-row 
 		:row="page.content.rows[0]"

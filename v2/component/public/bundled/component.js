@@ -1448,40 +1448,8 @@ window.addEventListener("load", function() {
 					});
 				}
 				var result = $services.pageResolver.resolve(fragment.resolveOperation, fragment.resolveOperationIds, fragment.resolveOperationId, id, properties);
-				// the content is not there yet at time of serialization, need to update when it is...
-				// put the resulting string in watched storage, use updated in the component to redo the string!
 				if (result && fragment.resolveOperationLabelComplex) {
-					
-					var storageId = "resolve." + JSON.stringify(fragment) + "." + fragment.resolveOperation + "." + id;
-					storageId = storageId.replace(/\./g, "_");
-					// always check to prevent unending loops
-					if (pageInstance.retrieve(storageId) != null) {
-						return pageInstance.retrieve(storageId);
-					}
-					pageInstance.store(storageId, "");
-					
-					// not sure why, but need to take it out of the synchronous execution...
-					setTimeout(function() {
-						var updateFunction = function() {
-							if (pageInstance.retrieve(storageId) != component.$el.innerHTML) {
-								pageInstance.store(storageId, component.$el.innerHTML);
-							}
-							if (updater) {
-								updater(component.$el.innerHTML);
-							}
-						};
-						var component = new nabu.page.views.PageFields({ propsData: {
-							page: nabu.utils.objects.deepClone(page),
-							cell: nabu.utils.objects.deepClone({state:fragment}),
-							edit: false,
-							data: result,
-							label: false,
-							fieldsName: "resolveFields"
-						}, updated: updateFunction, ready: updateFunction });
-						component.$mount();
-					}, 1);
-					
-					return pageInstance.retrieve(storageId);
+					return !fragment.complexLabel ? fragment.complexLabel : $services.typography.replaceVariables(pageInstance, fragment, fragment.complexLabel, $services.q.reject(), result);
 				}
 				else {
 					return result && fragment.resolveOperationLabel ? result[fragment.resolveOperationLabel] : result;

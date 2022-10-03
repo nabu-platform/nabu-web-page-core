@@ -3182,6 +3182,12 @@ nabu.page.views.PageOptimized = Vue.component("n-page-optimized", {
 	template: "#nabu-optimized-page"
 });
 
+nabu.page.views.PageOptimized = Vue.component("n-page-optimized-column", {
+	mixins: [Vue.component("n-page")],
+	template: "#nabu-optimized-page-column"
+});
+
+
 Vue.component("n-page-row", {
 	template: "#page-row",
 	props: {
