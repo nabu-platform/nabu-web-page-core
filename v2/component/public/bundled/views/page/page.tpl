@@ -1116,7 +1116,10 @@
 
 <template id="aris-editor">
 	<div class="aris-editor">
-		<n-collapsible v-for="childComponent in childComponents" :only-one-open="true" class="is-highlight-left is-color-primary-light" :title="childComponent.title" :after="childComponent.component">
+		<div class="is-column is-spacing-medium">
+			<n-form-text v-model="search" :timeout="600" placeholder="Search styling options"/>
+		</div>
+		<n-collapsible v-for="childComponent in childComponents" :only-one-open="true" class="is-highlight-left is-color-primary-light" :title="childComponent.title" :after="childComponent.component + getFormattedAmountOfAppliedOptions(childComponent)" ref="collapsibles">
 			<ul class="is-menu is-variant-toolbar is-align-end is-spacing-horizontal-right-small" slot="buttons">
 				<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall has-tooltip" @click="saveAsDefaultAris(childComponent)"><icon name="save"/><span class="is-tooltip is-position-left">Save as default</span></button></li>
 				<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall has-tooltip" @click="clearOptions(childComponent)"><icon name="undo"/><span class="is-tooltip is-position-left">Clear settings</span></button></li>
@@ -1149,21 +1152,22 @@
 				</div>
 			</n-collapsible>
 			<n-collapsible v-for="dimension in getAvailableDimensions(childComponent)" :only-one-open="true" :title="dimension.name" class="is-highlight-left is-color-secondary-light" 
+					v-if="hasAnySearchHits(dimension)"
 					content-class="is-spacing-medium is-spacing-vertical-gap-none"
 					:after="listActiveOptions(childComponent, dimension)"
 					@show="conditioning = null">
-				<div class="is-row" v-for="option in dimension.options">
-					<n-form-checkbox v-if="conditioning != dimension.name + '_' + option" :value="isActiveOption(childComponent, dimension, option)" @input="function() { toggleOption(childComponent, dimension, option) }"
-						:label="prettifyOption(option)"/>
-					<n-form-text v-model="container.components[childComponent.name].conditions[dimension.name + '_' + option]" v-else class="is-size-small is-border-underline" placeholder="Condition"/>
-					<div class="is-row is-position-right is-align-cross-end" v-if="isActiveOption(childComponent, dimension, option)">
-						<ul v-if="conditioning == dimension.name + '_' + option" class="is-menu is-variant-toolbar">
+				<div class="is-row" v-for="option in dimension.options" v-if="hasAnySearchHits(dimension, option)">
+					<n-form-checkbox v-if="conditioning != dimension.name + '_' + option.name" :value="isActiveOption(childComponent, dimension, option.name)" @input="function() { toggleOption(childComponent, dimension, option.name) }"
+						:label="prettifyOption(option.name)" :info="formatBody(option.body)"/>
+					<n-form-text v-model="container.components[childComponent.name].conditions[dimension.name + '_' + option.name]" v-else class="is-size-small is-border-underline" placeholder="Condition"/>
+					<div class="is-row is-position-right is-align-cross-end" v-if="isActiveOption(childComponent, dimension, option.name)">
+						<ul v-if="conditioning == dimension.name + '_' + option.name" class="is-menu is-variant-toolbar">
 							<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="conditioning = null">Save</button></li>
-							<li class="is-column"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="container.components[childComponent.name].conditions[dimension.name + '_' + option] = null; conditioning = null">Clear</button></li>
+							<li class="is-column"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="container.components[childComponent.name].conditions[dimension.name + '_' + option.name] = null; conditioning = null">Clear</button></li>
 						</ul>
 						<ul v-else class="is-menu is-variant-toolbar">
-							<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="conditioning = dimension.name + '_' + option">Set Condition</button></li>
-							<li class="is-column" v-if="hasCondition(childComponent, dimension.name + '_' + option)"><button class="is-button is-size-xsmall is-variant-danger-outline has-tooltip" @click="container.components[childComponent.name].conditions[dimension.name + '_' + option] = null">Clear Condition</button></li>
+							<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="conditioning = dimension.name + '_' + option.name">Set Condition</button></li>
+							<li class="is-column" v-if="hasCondition(childComponent, dimension.name + '_' + option.name)"><button class="is-button is-size-xsmall is-variant-danger-outline has-tooltip" @click="container.components[childComponent.name].conditions[dimension.name + '_' + option.name] = null">Clear Condition</button></li>
 						</ul>
 					</div>
 				</div>

@@ -5014,10 +5014,64 @@ Vue.component("aris-editor", {
 	},
 	data: function() {
 		return {
-			conditioning: null
+			conditioning: null,
+			search: null
 		}
 	},
 	methods: {
+		hasAnySearchHits: function(dimension, option) {
+			if (!this.search) {
+				return true;
+			}
+			var options = [];
+			// a dimension search across all options
+			if (!option) {
+				nabu.utils.arrays.merge(options, dimension.options);
+			}
+			else {
+				options.push(option);
+			}
+			var matches = false;
+			var regex = new RegExp(this.search.toLowerCase().replace(/[\s]+/g, ".*"));
+			options.forEach(function(x) {
+				if (!matches && (!!x.name.toLowerCase().match(regex) || !!x.body.toLowerCase().match(regex))) {
+					matches = true;
+				}
+			});
+			return matches;
+		},
+		getAmountOfAppliedOptions: function(component) {
+			var self = this;
+			var modifiers = this.getAvailableModifiers(component);
+			var activeModifiers = Object.keys(modifiers).filter(function(key) {
+				self.isActiveModifier(component, key);
+			}).length;
+			var dimensions = this.getAvailableDimensions(component);
+			var activeOptions = 0;
+			dimensions.forEach(function(x) {
+				activeOptions += x.options.filter(function(y) {
+					return self.isActiveOption(component, x, y.name);
+				}).length;
+			});
+			return activeOptions + activeModifiers;
+		},
+		// we format it here to prevent having to call it twice for condition
+		getFormattedAmountOfAppliedOptions: function(component) {
+			var amount = this.getAmountOfAppliedOptions(component);	
+			return amount ? " (" + amount + " active)" : "";
+		},
+		getAmountOfSearchHits: function(component) {
+			if (!this.search) {
+				return 0;
+			}
+			var self = this;
+			return this.getAvailableDimensions(component).filter(function(x) {
+				return self.hasAnySearchHits(x);
+			}).length;
+		},
+		formatBody: function(body) {
+			return ("\t" + body).replace(/[\n]+/g, "<br/>").replace(/[\t]/g, "&nbsp;&nbsp;&nbsp;");
+		},
 		getAvailableDimensions: function(childComponent) {
 			var hierarchy = this.$services.page.getArisComponentHierarchy(childComponent.component);
 			var dimensions = [];
