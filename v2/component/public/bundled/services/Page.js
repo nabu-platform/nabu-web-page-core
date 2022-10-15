@@ -1493,6 +1493,7 @@ nabu.services.VueService(Vue.extend({
 				}
 				var promises = [];
 				if (self.canEdit()) {
+					self.injectEditIcon();
 					var editorPromises = [];
 					if (self.useAris) {
 						editorPromises.push(nabu.utils.ajax({url: "${server.root()}page/v2/api/aris-definitions"}).then(function(response) {
@@ -1589,6 +1590,79 @@ nabu.services.VueService(Vue.extend({
 					}
 					done();
 				});
+			});
+		},
+		injectEditIcon: function() {
+			var div = document.createElement("div");
+			div.setAttribute("class", "is-column");
+			div.setAttribute("style", "position: fixed; bottom: 1rem; left: 1rem;");
+			var button = document.createElement("button");
+			div.appendChild(button);
+			//button.setAttribute("class", "is-button is-border-radius-xxlarge is-variant-warning");
+			button.setAttribute("style", "padding: 0.7rem; border-radius: 50px; background-color: #fff; border: solid 1px #666; cursor: pointer")
+			button.innerHTML = "<img src='" + application.configuration.root + "resources/images/helper/edit.svg' class='is-image is-width-fixed-1' />";
+			document.body.appendChild(div);
+			
+			var pages = document.createElement("div");
+			pages.setAttribute("style", "position: absolute; bottom: 100%; left: 0;");
+			//pages.style.display = "none";
+			div.appendChild(pages);
+			var showPages = function() {
+				nabu.utils.elements.clear(pages);
+				var availablePages = [];
+				Object.keys(nabu.page.instances).forEach(function(key) {
+					var page = nabu.page.instances[key].page;
+					if (availablePages.indexOf(page) < 0) {
+						availablePages.push(page);
+					}
+				});
+				availablePages.sort(function(a, b) {
+					return a.content.name.localeCompare(b.content.name);
+				});
+				availablePages.forEach(function(x) {
+					var button = document.createElement("button");
+					button.setAttribute("style", "background-color: #fff; border: none; padding: 0.7rem; border: solid 1px #666; margin-bottom: 0.3rem; border-radius: 10px; cursor: pointer;");
+					button.innerHTML = x.content.name;
+					pages.appendChild(button);
+					// we just edit the first instance of the page we find
+					button.onclick = function(event) {
+						var found = false;
+						Object.keys(nabu.page.instances).forEach(function(key) {
+							console.log("finding", x);
+							if (!found && x == nabu.page.instances[key].page) {
+								found = true;
+								nabu.page.instances[key].goIntoEdit();
+							}
+						});
+					}
+				})
+			}
+			button.onclick = function(event) {
+				if (pages.firstChild) {
+					nabu.utils.elements.clear(pages);	
+				}
+				else {
+					showPages();
+					event.stopPropagation();
+				}
+			};
+			// make sure it closes when you click somewhere
+			document.addEventListener("click", function() {
+				if (pages.firstChild) {
+					nabu.utils.elements.clear(pages);
+				}
+			});
+			var self = this;
+			// add the same shortkey as before to open it
+			document.addEventListener("keydown", function(event) {
+				if (event.ctrlKey && event.altKey && event.keyCode == 88) {
+					if (self.canEdit()) {
+						showPages();
+					}
+					else {
+						self.$services.router.route("login", null, null, true);
+					}
+				}
 			});
 		},
 		// we can do inline templates in pages

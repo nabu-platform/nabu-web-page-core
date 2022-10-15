@@ -38,7 +38,7 @@
 			@drop="dropMenu($event)" @dragover="dragOver($event)"
 			:class="[classes, getGridClasses()]"
 			>
-		<div class="is-page-edit-menu" v-if="!page.content.readOnly && $services.page.canEdit() && $services.page.wantEdit && !embedded && !$services.page.editing" 
+		<div class="is-page-edit-menu" v-if="false && !page.content.readOnly && $services.page.canEdit() && $services.page.wantEdit && !embedded && !$services.page.editing" 
 				:draggable="true" 
 				@dragstart="dragMenu($event)"
 				:class="{'is-bookmarkable': !!page.content.path}"

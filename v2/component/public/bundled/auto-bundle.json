@@ -33,6 +33,11 @@
 				"pinterest.svg": {
 					"url": "images/social/pinterest.svg"
 				}
+			},
+			"helper": {
+				"edit.svg": {
+					"url": "images/helper/edit.svg"
+				}
 			}
 		},
 		"page": {
