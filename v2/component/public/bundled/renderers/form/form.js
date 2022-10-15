@@ -123,7 +123,13 @@ Vue.component("renderer-form", {
 		var self = this;
 		if (this.parameters) {
 			Object.keys(this.parameters).forEach(function(key) {
-				Vue.set(self.state, key, !self.target.form.bindingByReference ? JSON.parse(JSON.stringify(self.parameters[key])) : self.parameters[key]);
+				if (!self.target.form.bindingByReference) {
+					Vue.set(self.state, key, self.$services.page.smartClone(self.parameters[key]));
+				}
+				else {
+					Vue.set(self.state, key, self.parameters[key]);
+				}
+				//Vue.set(self.state, key, !self.target.form.bindingByReference ? JSON.parse(JSON.stringify(self.parameters[key])) : self.parameters[key]);
 				//Vue.set(self.state, key, self.parameters[key]);
 			});
 		}

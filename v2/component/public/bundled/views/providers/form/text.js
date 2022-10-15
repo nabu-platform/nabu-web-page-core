@@ -6,7 +6,6 @@ Vue.component("page-form-input-text-configure", {
 		+ "	<n-form-text v-model='field.maxLength' label='Max Length' :timeout='600'/>"
 		+ "	<n-form-switch v-model='field.showLength' label='Show Length' v-if='field.maxLength'/>"
 		+ "	<n-form-switch v-model='field.showCustomSpinner' label='Use custom spinners' v-if=\"field.textType == 'number'\"/>"
-		+ "	<n-form-combo v-model='field.required' label='Required' :items=\"[true,false]\" />"
 		+ "	<n-form-text v-model='field.info' label='Info Content' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.before' label='Before Content' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.beforeIcon' label='Before Icon' v-if='field.before && false' :timeout='600'/>"
@@ -64,7 +63,7 @@ Vue.component("page-form-input-text", {
 			+ "		:value='value'"
 			+ "		:pattern='field.regex'"
 			+ "		v-bubble:blur"
-			+ "		:required='field.required'"
+			+ "		:required='required'"
 			+ "		:validator='getValidator()'"
 			+ "		:info='field.info ? $services.page.interpret($services.page.translate(field.info), $self) : null'"
 			+ "		:before='field.before ? $services.page.interpret($services.page.translate(field.before), $self) : null'"
@@ -118,6 +117,10 @@ Vue.component("page-form-input-text", {
 		},
 		placeholder: {
 			type: String,
+			required: false
+		},
+		required: {
+			type: Boolean,
 			required: false
 		},
 		codes: {

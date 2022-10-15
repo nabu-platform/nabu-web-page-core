@@ -14,7 +14,6 @@ Vue.component("page-form-input-date-configure", {
 		+ "	<n-form-text v-model='field.suffix' label='Suffix' v-if='!field.suffixIcon' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.suffixIcon' label='Suffix Icon' v-if='!field.suffix' :timeout='600'/>"
 		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='field.dateFormat ? [\"allow\", \"default\"] : [\"allow\", \"default\",\"formatter\",\"parser\"]'/>"
-		+ "	<n-form-combo v-model='field.required' label='Required' :items=\"[true,false]\" />"
 		+ "</n-form-section>",
 	props: {
 		cell: {
@@ -67,7 +66,7 @@ Vue.component("page-form-input-date", {
 			+ "		:include-seconds='field.includeHours && field.includeMinutes && field.includeSeconds'"
 			+ "		:timestamp='field.isTimestamp'"
 			+ "		:seconds-timestamp='field.isSecondsTimestamp'"
-			+ "		:required='field.required'"
+			+ "		:required='required'"
 			+ "		:formatter='getFormatter()'"
 			+ "		:parser='getParser()'"
 			+ "		:disabled='disabled'/>",
@@ -103,6 +102,10 @@ Vue.component("page-form-input-date", {
 			required: false
 		},
 		readOnly: {
+			type: Boolean,
+			required: false
+		},
+		required: {
 			type: Boolean,
 			required: false
 		},

@@ -716,6 +716,12 @@ window.addEventListener("load", function() {
 					
 					var operation = $services.swagger.operations[content];
 					var blacklist = ["limit", "offset", "orderBy", "id"];
+					if (operation["x-temporary-secret"]) {
+						blacklist.push(operation["x-temporary-secret"]);
+					}
+					if (operation["x-temporary-id"]) {
+						blacklist.push(operation["x-temporary-id"]);
+					}
 					if (tableFilters && operation) {
 						var row = tableFilters.cells ? tableFilters : rowGenerator(tableFilters);
 						if (operation.parameters) {

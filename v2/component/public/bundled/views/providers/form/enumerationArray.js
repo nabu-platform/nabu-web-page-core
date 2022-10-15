@@ -4,7 +4,6 @@ Vue.component("page-form-input-enumeration-array-configure", {
 			+ " 	<n-form-switch v-model='field.showRadioView' label='Show radio visualisation'/>"
 			+ " 	<n-form-switch v-model='field.addEmptyState' label='Add empty state'/>"
 			+ " 	<n-form-text v-if='!!field.addEmptyState' v-model='field.emptyState' label='Empty state text'/>"
-			+ "		<n-form-combo v-model='field.required' label='Required' :items=\"[true,false]\" />"
 			+ "		<n-form-text v-if='field.showRadioView' v-model='field.mustChoose' label='Must choose' placeholder='=true' allow-typing='true' />"
 			+ "		<n-form-combo v-model='field.enumerationArray'"
 			+ "			label='Enumeration Array'"
@@ -95,7 +94,7 @@ Vue.component("page-form-input-enumeration-array", {
 			+ "		:description-icon='field.descriptionIcon'"
 			+ "		:schema='schema'"
 			+ "		v-bubble:label"
-			+ "		:required='field.required'"
+			+ "		:required='required'"
 			+ "		:must-choose='field.mustChoose ? $services.page.interpret(field.mustChoose, $self) : null'"
 			+ "		:formatter='enumerationFormatter'"
 			+ "		:extracter='enumerationExtracter'"
@@ -105,6 +104,7 @@ Vue.component("page-form-input-enumeration-array", {
 			+ "		:formatter='enumerationFormatter'"
 			+ " 	:extracter='enumerationExtracter'"
 			+ "		:edit='!readOnly'"
+			+ "		:required='required'"
 			+ "		:placeholder='placeholder'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		v-bubble:label"
@@ -150,6 +150,10 @@ Vue.component("page-form-input-enumeration-array", {
 			required: false
 		},
 		readOnly: {
+			type: Boolean,
+			required: false
+		},
+		required: {
 			type: Boolean,
 			required: false
 		},

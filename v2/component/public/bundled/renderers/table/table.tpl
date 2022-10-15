@@ -7,7 +7,7 @@
 </template>
 
 <template id="renderer-table-body-cell">
-	<td :colspan="colspan"><slot></slot></td>
+	<td :colspan="colspan" :label="label"><slot></slot></td>
 </template>
 
 <template id="renderer-table-header-cell">
@@ -23,6 +23,7 @@
 <template id="renderer-table-cell-configure">
 	<div class="is-column is-spacing-vertical-gap-medium">
 		<n-form-text label="Colspan" v-model="cell.table.colspan"/>
+		<n-form-text label="Embedded label" v-model="cell.table.embeddedLabel" />
 	</div>
 </template>
 

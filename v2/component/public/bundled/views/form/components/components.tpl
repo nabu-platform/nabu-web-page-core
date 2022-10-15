@@ -13,6 +13,7 @@
 		:disabled="disabled"
 		:schema="getSchema()"
 		:readOnly="false"
+		:required="isRequired()"
 		:placeholder="$services.page.interpret($services.page.translate(cell.state.placeholder), $self)"
 		:child-components="childComponents"
 		@input="update"/>
@@ -29,6 +30,10 @@
 			<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
 			<n-form-text v-model="cell.state.disabled" label="Disable if" />
 			<n-form-switch v-model="cell.state.validateOnBlur" label="Validate on blur"/>
+			<n-form-combo v-model="cell.state.required" label="Required" :items="[{value: true, title: 'Always'}, {value: false, title: 'Depends on the schema'}, {value: 'condition', title: 'Based on a condition'}]"
+				:extracter="function(x) { return x.value }"
+				:formatter="function(x) { return x.title }"/>
+			<n-form-ace v-if="cell.state.required == 'condition'" v-model="cell.state.requiredCondition" label="Required" after="You can force this field to be mandatory"/>
 		</div>
 		<component :is="configurationComponent" :page="page" :cell="cell" :field="cell.state" :possible-fields="availableFields()"
 			class="is-column is-spacing-medium"/>

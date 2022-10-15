@@ -2736,7 +2736,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					result = this.variables[stateParameter.name];
 				}
 				else {
-					result = this.parameters[name];
+					result = this.parameters ? this.parameters[name] : null;
 					// if it exists nowhere else, we will create an entry for it in variables
 					// at least then there is SOMETHING to bind to reactively, if we _do_ get the state at a later point in variables, it should be reactive
 					if (result == null) {

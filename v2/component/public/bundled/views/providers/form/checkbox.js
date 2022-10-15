@@ -37,6 +37,7 @@ Vue.component("page-form-input-checkbox", {
 			+ "		:schema='schema'"
 			+ "		:info-icon='field.infoIcon'"
 			+ "		:info='$services.page.translate(field.info)'"
+			+ "		:required='required'"
 			+ "		:must-check='field.mustCheck'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
@@ -74,6 +75,10 @@ Vue.component("page-form-input-checkbox", {
 		},
 		schema: {
 			type: Object,
+			required: false
+		},
+		required: {
+			type: Boolean,
 			required: false
 		},
 		readOnly: {

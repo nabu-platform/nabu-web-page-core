@@ -107,6 +107,7 @@ Vue.view("page-button", {
 					});
 				}
 				
+				this.running = true;
 				var promise = this.$services.triggerable.trigger(this.cell.state, "click", null, this);
 				
 				if (this.cell.state.stopPropagation && $event) {
@@ -114,7 +115,6 @@ Vue.view("page-button", {
 					$event.preventDefault();
 				}
 				
-				this.running = true;
 				var self = this;
 				var unlock = function() {
 					self.running = false;

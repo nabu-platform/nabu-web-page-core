@@ -67,6 +67,14 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			});
 		},
 		methods: {
+			isRequired: function() {
+				if (this.cell.state.required == "condition") {
+					return this.$services.page.isCondition(this.cell.state.requiredCondition, {}, this);
+				}
+				else {
+					return this.cell.state.required;
+				}
+			},
 			getChildComponents: function() {
 				var result = [];
 				if (this.$refs.input && this.$refs.input.getChildComponents) {

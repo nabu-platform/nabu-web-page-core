@@ -59,7 +59,7 @@
 			<button class="is-button is-variant-ghost is-size-xsmall" v-else @click="$services.page.disableReload = true"><icon name="ban"/></button>
 		</div>
 		
-		<n-sidebar v-if="edit && page.content.rows" position="left" class="is-size-large is-header-size-large" :inline="true" :autocloseable="false" ref="sidemenu"
+		<n-sidebar v-if="edit && page.content.rows" position="left" class="is-size-large is-header-size-xlarge" :inline="true" :autocloseable="false" ref="sidemenu"
 				@close="stopEdit">
 			<div class="is-column is-spacing-medium is-align-left is-spacing-vertical-gap-small" slot="header">
 				<h3 class="is-h3 is-color-neutral">

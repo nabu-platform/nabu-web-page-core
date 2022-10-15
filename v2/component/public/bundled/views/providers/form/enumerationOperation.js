@@ -191,7 +191,7 @@ Vue.component("page-form-input-enumeration-operation", {
 			+ "		:description-icon='field.descriptionIcon'"
 			+ "		:schema='schema'"
 			+ "		v-bubble:label"
-			+ "		:required='field.required'"
+			+ "		:required='required'"
 			+ "		:must-choose='field.mustChoose ? $services.page.interpret(field.mustChoose, $self) : null'"
 			+ "		:formatter='enumerationFormatter'"
 			+ "		:extracter='enumerationExtracter'"
@@ -205,6 +205,7 @@ Vue.component("page-form-input-enumeration-operation", {
 			+ "		v-bubble:blur"
 			+ "		:label='label'"
 			+ "		:value='value'"
+			+ "		:required='required'"
 			+ "		:allow-typing='!field.readOnly'"
 			+ "		:empty-value='field.emptyValue ? $services.page.translate($services.page.interpret(field.emptyValue)) : null'"
 			+ "		:calculating-value='field.calculatingValue ? $services.page.translate($services.page.interpret(field.calculatingValue)) : null'"
@@ -256,6 +257,10 @@ Vue.component("page-form-input-enumeration-operation", {
 		},
 		placeholder: {
 			type: String,
+			required: false
+		},
+		required: {
+			type: Boolean,
 			required: false
 		},
 		parentValue: {

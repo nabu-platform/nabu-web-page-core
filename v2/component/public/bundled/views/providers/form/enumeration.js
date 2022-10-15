@@ -6,7 +6,6 @@ Vue.component("page-form-input-enumeration-configure", {
 		+ " 	<n-form-switch v-model='field.iconAlt' v-if='field.showRadioView && field.icon' label='Icon (when not selected)'/>"
 		+ " 	<n-form-switch v-if='!field.showRadioView' v-model='field.forceValue' label='Force Any Value' />"
 		+ "		<n-form-switch v-if='!field.complex' v-model='field.allowCustom' label='Allow Custom Values'/>"
-		+ "		<n-form-combo v-model='field.required' label='Required' :items=\"[true,false]\" />"
 		+ "		<n-form-combo v-if='field.showRadioView' v-model='field.mustChoose' label='Must choose' :items=\"[true,false]\" />"
 			+ "	<n-form-text v-model='field.info' label='Info Content'/>"
 			+ "	<n-form-text v-model='field.before' label='Before Content'/>"
@@ -101,7 +100,7 @@ Vue.component("page-form-input-enumeration", {
 			+ "		:suffix='field.suffixIcon ? $services.page.getIconHtml(field.suffixIcon) : field.suffix'"
 			+ "		:schema='schema'"
 			+ "		v-bubble:label"
-			+ "		:required='field.required'"
+			+ "		:required='required'"
 			+ "		:must-choose='field.mustChoose ? $services.page.interpret(field.mustChoose, $self) : null'"
 			+ "		:extracter='extracter'"
 			+ "		:disabled='disabled'/>"
@@ -123,7 +122,7 @@ Vue.component("page-form-input-enumeration", {
 			+ "		:after='field.after ? $services.page.translate(field.after) : null'"
 			+ "		:suffix='field.suffixIcon ? $services.page.getIconHtml(field.suffixIcon) : field.suffix'"
 			+ "		:schema='schema'"
-			+ "		:required='field.required'"
+			+ "		:required='required'"
 			+ "		:extracter='extracter'"			
 			+ "		:disabled='disabled'/>"
 			+ " </div>",
@@ -159,6 +158,10 @@ Vue.component("page-form-input-enumeration", {
 			required: false
 		},
 		readOnly: {
+			type: Boolean,
+			required: false
+		},
+		required: {
 			type: Boolean,
 			required: false
 		},

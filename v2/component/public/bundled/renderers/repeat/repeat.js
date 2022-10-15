@@ -712,6 +712,13 @@ Vue.component("renderer-repeat", {
 		},
 		uniquify: function() {
 			var self = this;
+			// make sure we have the highest before we start
+			// if for example we pass in an array from outside, it might already have a position
+			this.state.records.forEach(function(record) {
+				if (record.hasOwnProperty("$position") && record.$position >= self.position) {
+					self.position = record.$position + 1;
+				}
+			});
 			this.state.records.forEach(function(record) {
 				if (!record.hasOwnProperty("$position") && typeof(record) != "string" && !(record instanceof String)) {
 					record["$position"] = self.position++;
@@ -770,7 +777,7 @@ Vue.component("renderer-repeat", {
 								if (root[field] instanceof Array && !arrayFound) {
 									root[field].forEach(function(x, i) {
 										if (x) {
-											x.$position = i;
+											x.$position = self.position++;
 										}
 									});
 									nabu.utils.arrays.merge(self.state.records, root[field]);

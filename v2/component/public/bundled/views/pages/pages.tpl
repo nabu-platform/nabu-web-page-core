@@ -1,13 +1,13 @@
 <template id="nabu-pages">
 	<div class="nabu-pages">
-		<ul class="is-row is-menu is-variant-toolbar is-dark is-main-top is-primary-highlight is-content-width-large is-height-min-3">
+		<ul class="is-row is-menu is-variant-toolbar is-dark is-main-top is-primary-highlight is-content-width-large is-height-fixed-3">
 			<li class="is-column"><button @click="selectedTab = 'pages'" class="is-button is-variant-ghost-light is-size-small is-wrap-none"><img class="is-icon" src="${server.root()}resources/images/branding/nabu-logo.svg"/><span class="is-text">Page Builder</span></button></li>
 			<li class="is-column is-position-right" @click="selectedTab = 'pages'"><button :class="{'is-active': selectedTab == 'pages' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-alt"/><span class="is-text">Pages</span></button></li>
 			<li class="is-column" @click="selectedTab = 'settings'"><button :class="{'is-active': selectedTab == 'settings' }" class="is-button is-variant-ghost-light is-size-small"><icon name="cogs"/><span class="is-text">Settings</span></button></li>
 			<li class="is-column" @click="selectedTab = 'script'"><button :class="{'is-active': selectedTab == 'script' }" class="is-button is-variant-ghost-light is-size-small"><icon name="file-code"/><span class="is-text">Script</span></button></li>
 			<li v-for="entry in getAdditionalSettings()" class="is-column" @click="selectedTab = entry.route"><button :class="[{'is-active': selectedTab == entry.route }, 'setting-' + entry.name]" class="is-button is-variant-ghost-light is-size-small"><icon v-if="entry.icon" :name="entry.icon"/><span class="is-text">{{entry.title}}</span></button></li>
 		</ul>
-		<div class="is-row is-content-width-large is-direction-vertical is-height-max-3 is-overflow-auto" v-if="$services.page.canEdit">
+		<div class="is-row is-content-width-large is-direction-vertical is-height-remainder-3 is-overflow-auto" v-if="$services.page.canEdit">
 			<n-prompt v-if="showing" class="is-modal">
 				<n-form class="is-color-background is-spacing-large is-shadow-xsmall is-variant-vertical">
 					<h3 class="is-h3">Page properties</h3>
@@ -182,7 +182,7 @@
 					</div>
 					<n-sidebar v-if="showTemplates" @close="showTemplates = false" class="page-components-overview">
 						<n-collapsible v-for="category in templateCategories" :title="$services.page.prettify(category)" content-class="is-pattern-underline">
-							<div class="is-row is-height-min-4 is-align-cross-center is-spacing-horizontal-medium is-spacing-vertical-small is-highlight-light is-cursor-pointer" v-for="template in getTemplateCategory(category)" :class="{'is-selected': selectedTemplates.indexOf(template) >= 0 }" :draggable="true" 
+							<div class="is-row is-height-fixed-4 is-align-cross-center is-spacing-horizontal-medium is-spacing-vertical-small is-highlight-light is-cursor-pointer" v-for="template in getTemplateCategory(category)" :class="{'is-selected': selectedTemplates.indexOf(template) >= 0 }" :draggable="true" 
 									@dragstart="dragTemplate($event, template)">
 								<img :draggable="false" :src="'${server.root()}resources/' + template.icon" v-if="template.icon && template.icon.match(/^.*\.[^.]+$/)" class="is-column is-width-column-1"/>
 								<icon v-else-if="template.icon" :name="template.icon" class="is-column is-width-column-1"/>
@@ -270,8 +270,8 @@
 			</div>
 		</n-form-section>
 		<footer class="is-row is-align-space-between">
-			<button @click="$reject" class="is-button is-variant-link">Cancel</button>
-			<button @click="$resolve({category:fixedCategory ? fixedCategory : category, name:name})" class="is-button is-variant-primary">Add</button>
+			<button @click="$reject" class="is-button is-variant-link" type="button">Cancel</button>
+			<button @click="$resolve({category:fixedCategory ? fixedCategory : category, name:name})" type="submit" class="is-button is-variant-primary">Add</button>
 		</footer>
 	</n-form>
 </template>
@@ -283,8 +283,8 @@
 			<n-form-text v-model="name" label="Paste with name" :required="true"/>
 		</n-form-section>
 		<footer class="is-row is-align-space-between">
-			<button @click="$reject" class="is-button is-variant-link">Cancel</button>
-			<button @click="$resolve({category:category, name:name})" class="is-button is-variant-primary">Add</button>
+			<button @click="$reject" class="is-button is-variant-link" type="button">Cancel</button>
+			<button @click="$resolve({category:category, name:name})" class="is-button is-variant-primary" type="submit">Add</button>
 		</footer>
 	</n-form>
 </template>

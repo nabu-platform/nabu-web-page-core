@@ -4,8 +4,8 @@ if (!nabu.page.views) { nabu.page.views = {} }
 
 Vue.view("page-image", {
 	category: "Media",
-	name: "Static Image",
-	description: "Position a static image",
+	name: "Image",
+	description: "Position an image",
 	icon: "page/core/images/image.svg",
 	props: {
 		page: {
@@ -45,19 +45,12 @@ Vue.view("page-image", {
 			required: false
 		}
 	},
-	created: function() {
-		console.log("created new image");
-	},
 	activate: function(done) {
 		if (this.edit) {
 			done();
 		}
 		var self = this;
 		var promises = [];
-		// won't trigger with the new configuration thing as activate() doesn't work for components
-		if (this.edit) {
-			promises.push(this.load());
-		}
 		if (this.cell.state.inline && (this.cell.state.href || this.href)) {
 			var self = this;
 			var href = this.cell.state.href ? this.cell.state.href : this.href;
@@ -87,16 +80,136 @@ Vue.view("page-image", {
 	},
 	data: function() {
 		return {
-			images: [],
-			files: [],
 			inlineContent: null,
-			encodedData: null
+			encodedData: null,
+			href: null
 		}
 	},
 	computed: {
-		href: function() {
-			return this.getHref();	
+		title: function() {
+			return this.cell.state.title ? this.$services.page.interpret(this.$services.page.translate(this.cell.state.title), this) : null;
+		}
+	},
+	created: function() {
+		if (this.cell.state.imageType == "operation") {
+			this.calculateRESTUrl();
+		}
+		else if (this.cell.state.imageType == "static") {
+			this.calculateFixedUrl();
+		}
+		else if (this.cell.state.imageType == "bytes") {
+			this.calculateByteUrl();
+		}
+	},
+	methods: {
+		calculateByteUrl: function() {
+			if (this.cell.state.byteValue) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				if (pageInstance) {
+					var self = this;
+					var blob = pageInstance.get(this.cell.state.byteValue);
+					if (blob) {
+						var contentType = null;
+						if (this.cell.state.contentTypeValue) {
+							contentType = pageInstance.get(this.cell.state.contentTypeValue);		
+						}
+						if (!contentType) {
+							contentType = "image/jpeg";
+						}
+						blob = blob instanceof Blob ? blob : nabu.utils.binary.blob(blob, contentType);
+						var reader = new FileReader();
+						reader.readAsDataURL(blob);
+						var promise = new nabu.utils.promise();
+						reader.onload = function() {
+							var result = reader.result;
+							var index = result.indexOf(",");
+							self.href = result;// result.substring(index + 1);
+							promise.resolve();
+						};
+						return promise;
+					}
+				}
+			}
 		},
+		calculateFixedUrl: function() {
+			var href = null;
+			if (this.cell.state.href) {
+				href = this.$services.page.interpret(this.cell.state.href, this);
+			}
+			// if the href is not an absolute one (either globally absolute or application absolute), we inject the server root
+			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && href.substring(0, 1) != "/") {
+				href = application.configuration.root + href;
+			}
+			// make it absolute if needed
+			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && this.cell.state.absolute) {
+				href = application.configuration.url + href;
+			}
+			// on mobile we don't want absolute paths starting with "/", otherwise it won't fetch from the file system
+			else if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && ${environment("mobile") == true} && href.indexOf("/") == 0) {
+				href = href.substring(1);
+			}
+			if (!href && this.edit) {
+				href = application.configuration.root + "resources/modules/image/placeholder.svg";
+			}
+			return href;
+		},
+		calculateRESTUrl: function() {
+			if (this.cell.state.imageOperation) {
+				var operation = this.$services.swagger.operations[this.cell.state.imageOperation];
+				var properties = this.$services.page.getBindings(this.cell.state.bindings, this);
+				var self = this;
+				// we need temporary credentials
+				if (operation["x-temporary-id"] && operation["x-temporary-secret"] && this.$services.user && this.$services.user.ltp) {
+					this.$services.user.ltp(operation.id).then(function(authorization) {
+						properties[operation["x-temporary-id"]] = authorization.authenticationId;
+						properties[operation["x-temporary-secret"]] = authorization.secret;
+						self.href = self.$services.swagger.parameters(operation.id, properties).url;
+					}, function(e) {
+						self.href = null;
+						console.log("Could not get ltp for", operation.id, e);
+					});
+				}
+				else {
+					self.href = self.$services.swagger.properties(operation.id, properties).url;
+				}
+			}
+		},
+		getChildComponents: function() {
+			return [{
+				title: "Image",
+				name: "image",
+				component: "image"
+			}];
+		},
+		configurator: function() {
+			return "page-image-configure";
+		}
+	}
+})
+
+Vue.component("page-image-configure", {
+	template: "#page-image-configure",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
+		edit: {
+			type: Boolean,
+			required: true
+		}
+	},
+	created: function() {
+		this.load();
+		if (!this.cell.state.imageBindings) {
+			Vue.set(this.cell.state, "imageBindings", {});
+		}
+	},
+	computed: {
 		hasPrevious: function() {
 			var self = this;
 			var entry = this.images.filter(function(x) {
@@ -115,35 +228,13 @@ Vue.view("page-image", {
 			return entry && this.images.indexOf(entry) < this.images.length - 1;
 		}
 	},
+	data: function() {
+		return {
+			images: [],
+			files: []
+		}
+	},
 	methods: {
-		getHref: function() {
-			var href = null;
-			if (this.cell.state.href) {
-				href = this.$services.page.interpret(this.cell.state.href, this);
-			}
-			// if the href is not an absolute one (either globally absolute or application absolute), we inject the server root
-			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && href.substring(0, 1) != "/") {
-				href = "${server.root()}" + href;
-			}
-			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && this.cell.state.absolute) {
-				href = "${environment('url')}" + href;
-			}
-			// on mobile we don't want absolute paths starting with "/", otherwise it won't fetch from the file system
-			else if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && ${environment("mobile") == true} && href.indexOf("/") == 0) {
-				href = href.substring(1);
-			}
-			if (!href && this.content) {
-				href = this.encodedData;
-			}
-			return href;
-		},
-		getChildComponents: function() {
-			return [{
-				title: "Image",
-				name: "image",
-				component: "image"
-			}];
-		},
 		next: function() {
 			var self = this;
 			if (!this.cell.state.href) {
@@ -169,9 +260,6 @@ Vue.view("page-image", {
 				this.cell.state.href = this.images[index - 1].relativePath;
 			}
 		},
-		configurator: function() {
-			return "page-image-configure";
-		},
 		load: function() {
 			var self = this;
 			return this.$services.swagger.execute("nabu.web.page.core.rest.resource.list", {path:this.cell.state.imagePath}).then(function(list) {
@@ -190,29 +278,22 @@ Vue.view("page-image", {
 				}
 				self.files.splice(0, self.files.length);
 			});
+		},
+		getAllKeys: function(value) {
+			var keys = [];
+			nabu.utils.arrays.merge(keys, this.$services.page.getAllAvailableKeys(this.page, true));
+			if (value) {
+				keys = keys.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				});
+			}
+			keys.sort();
+			return keys;
 		}
 	},
 	watch: {
 		'cell.state.imagePath': function() {
 			this.load();
-		}
-	}
-})
-
-Vue.component("page-image-configure", {
-	template: "#page-image-configure",
-	props: {
-		page: {
-			type: Object,
-			required: true
-		},
-		cell: {
-			type: Object,
-			required: true
-		},
-		edit: {
-			type: Boolean,
-			required: true
 		}
 	}
 })

@@ -1602,6 +1602,12 @@ nabu.services.VueService(Vue.extend({
 							target.rows.forEach(function(x) {
 								if (x.isTemplate) {
 									if (x.templateStable) {
+										var existing = self.templates.filter(function(y) {
+											return y.id == x.templateId;
+										})[0];
+										if (existing) {
+											self.templates.splice(self.templates.indexOf(existing), 1);
+										}
 										self.templates.push({
 											id: x.templateId,
 											version: x.release,
@@ -1628,6 +1634,12 @@ nabu.services.VueService(Vue.extend({
 							target.cells.forEach(function(x) {
 								if (x.isTemplate) {
 									if (x.templateStable) {
+										var existing = self.templates.filter(function(y) {
+											return y.id == x.templateId;
+										})[0];
+										if (existing) {
+											self.templates.splice(self.templates.indexOf(existing), 1);
+										}
 										self.templates.push({
 											id: x.templateId,
 											version: x.release,
@@ -3628,6 +3640,34 @@ nabu.services.VueService(Vue.extend({
 				result = object;
 			}
 			return result;
+		},
+		smartClone: function(object) {
+			var self = this;
+			// when we clone things like blob and files, they break, so we do it slightly smarter
+			var cloned = JSON.parse(JSON.stringify(object));
+			var scanForSpecials = function(original, cloned) {
+				Object.keys(original).forEach(function(x) {
+					if (original[x] instanceof Blob || original[x] instanceof File) {
+						// should be immutable
+						cloned[x] = original[x];
+					}
+					else if (original[x] instanceof Date) {
+						cloned[x] = new Date(original[x].getTime());
+					}
+					if (original[x] instanceof Array) {
+						original[x].forEach(function(y, index) {
+							if (self.isObject(y)) {
+								scanForSpecials(y, cloned[x][index]);
+							}
+						});
+					}
+					else if (self.isObject(original[x])) {
+						scanForSpecials(original[x], cloned[x]);
+					}
+				});
+			};
+			scanForSpecials(object, cloned);
+			return cloned;
 		},
 		explode: function(into, from, path) {
 			var self = this;

@@ -194,10 +194,87 @@ Vue.component("renderer-table-body-cell", {
 			type: Object
 		}
 	},
+	data: function() {
+		return {
+			elementPromise: null
+		}
+	},
+	created: function() {
+		this.elementPromise = this.$services.q.defer();
+	},
+	ready: function() {
+		this.elementPromise.resolve(this.$el);
+	},
 	computed: {
 		// TODO: if colspan is 0, calculate the amount of columns!
 		colspan: function() {
 			return this.target && this.target.table ? this.target.table.colspan : null;
+		},
+		label: function() {
+			if (this.target && this.target.table && this.target.table.embeddedLabel) {
+				return this.$services.page.interpret(this.$services.page.translate(this.target.table.embeddedLabel), this)
+			}
+			else {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				var originalPageInstance = pageInstance;
+				// we are in the body, which is (presumably) a repeat
+				// if so, we are in a fragment page that does not have full overview of the content
+				// let's check the fragment parent for the real content
+				// note that this does not work with nested repeats...(yet)
+				if (pageInstance.fragmentParent) {
+					pageInstance = pageInstance.fragmentParent;
+				}
+				var path = this.$services.page.getTargetPath(pageInstance.page.content, this.target.id);
+				// the parent should be the body repeat
+				// the grandparent should be the table
+				if (path.length >= 2) {
+					var table = path[path.length - 3];
+					var headerRow = table.rows.filter(function(x) {
+						return x.rendererSlot == "header";
+					})[0];
+					// only proceed if we have a header row to look at					
+					if (headerRow) {
+						// calculate the correct colspan for ourselves
+						var parent = path[path.length - 2];
+						var ourIndex = parent.cells.indexOf(path[path.length - 1]);
+						var colspan = 0;
+						for (var i = 0; i <= ourIndex; i++) {
+							if (parent.cells[i].table && parent.cells[i].table.colspan) {
+								colspan += parseInt(parent.cells[i].table.colspan);
+							}
+							else {
+								colspan++;
+							}
+						}
+						var headerColspan = 0;
+						var cellToUse = null;
+						// check the cell that corresponds to this colspan
+						for (var i = 0; i < headerRow.cells.length; i++) {
+							if (headerRow.cells[i].table && headerRow.cells[i].table.colspan) {
+								headerColspan += parseInt(headerRow.cells[i].table.colspan);
+							}
+							else {
+								headerColspan++;
+							}
+							// as long as our colspan is OK, we set this cell
+							if (headerColspan <= colspan) {
+								cellToUse = headerRow.cells[i];
+							}
+							else {
+								break;
+							}
+						}
+						// we need a cell
+						if (cellToUse) {
+							// we want a typography-enabled content
+							if (cellToUse.state.content) {
+								return this.$services.typography.replaceVariables(originalPageInstance, cellToUse.state, cellToUse.state.content, this.elementPromise);
+							}
+						}
+					}
+				}
+			}
+			return null;
 		}
 	}
 });

@@ -166,6 +166,14 @@
 							"url": "views/image/image.scss"
 						}
 					}, 
+					"dynamicImage": {
+						"dynamicImage.tpl": {
+							"url": "views/dynamicImage/dynamicImage.tpl"
+						}, 
+						"image.js": {
+							"url": "views/dynamicImage/dynamicImage.js"
+						}
+					}, 
 					"pages": {
 						"pages.js": {
 							"url": "views/pages/pages.js"
@@ -495,12 +503,35 @@
 							}
 						}
 					}, 
+					"defaults": {
+						"login": {
+							"login.tpl": {
+								"url": "defaults/login/login.tpl"
+							},
+							"login.js": {
+								"url": "defaults/login/login.js"
+							}
+						},
+						"error": {
+							"error.tpl": {
+								"url": "defaults/error/error.tpl"
+							},
+							"error.js": {
+								"url": "defaults/error/error.js"
+							}
+						},
+						"unknown": {
+							"unknown.tpl": {
+								"url": "defaults/unknown/unknown.tpl"
+							},
+							"unknown.js": {
+								"url": "defaults/unknown/unknown.js"
+							}
+						}
+					},
 					"style.scss": {
 						"url": "views/style.scss"
 					}
-				}, 
-				"auto-bundle.json": {
-					"url": "auto-bundle.json"
 				}, 
 				"component.js": {
 					"url": "component.js",

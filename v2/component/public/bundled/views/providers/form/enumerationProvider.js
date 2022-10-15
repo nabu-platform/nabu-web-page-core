@@ -2,7 +2,6 @@ Vue.component("page-form-input-enumeration-provider-configure", {
 	template: "<n-form-section><n-form-combo v-model='field.enumerationProvider' :filter='enumerationFilter' label='Enumeration Provider'/>"
 		+ " 	<n-form-switch v-model='field.showRadioView' v-if='!field.showCheckboxView' label='Show radio visualisation'/>"
 		+ " 	<n-form-switch v-model='field.showCheckboxView' v-if='!field.showRadioView && supportsMultiple' label='Show checkbox visualisation (allows multiselect)'/>"
-		+ " 	<n-form-switch v-model='field.required' label='Required'/>"
 		+ "		<n-form-text v-if='!field.showRadioView' v-model='field.emptyValue' label='Empty Value Text'/>"
 		+ "		<n-form-text v-if='!field.showRadioView' v-model='field.resetValue' label='Reset Value Text' info='The text to show to reset the current value'/>"
 		+ " 	<n-form-switch v-if='!field.showRadioView' v-model='field.readOnly' label='Read only' />"
@@ -95,7 +94,7 @@ Vue.component("page-form-input-enumeration-provider", {
 			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
 			+ "		:descriptionType='field.descriptionType'"
 			+ "		:descriptionIcon='field.descriptionIcon'"
-			+ "		:required='field.required'"
+			+ "		:required='required'"
 			+ "		:extracter='enumerationExtracter'"
 			+ "		:disabled='disabled'/>"
 			+ "	<n-form-radio v-else-if='field.showRadioView' :items='enumerationFilter()' ref='form'"
@@ -111,13 +110,13 @@ Vue.component("page-form-input-enumeration-provider", {
 			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
 			+ "		:descriptionType='field.descriptionType'"
 			+ "		:descriptionIcon='field.descriptionIcon'"
-			+ "		:required='field.required'"
+			+ "		:required='required'"
 			+ "		:extracter='enumerationExtracter'"
 			+ "		:disabled='disabled'/>"
 			+ " <n-form-combo v-else ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
-			+ "		:required='field.required ? field.required : null'"
+			+ "		:required='required'"
 			+ "		v-bubble:label"
 			+ "		v-bubble:blur"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
@@ -168,6 +167,10 @@ Vue.component("page-form-input-enumeration-provider", {
 			required: false
 		},
 		readOnly: {
+			type: Boolean,
+			required: false
+		},
+		required: {
 			type: Boolean,
 			required: false
 		},

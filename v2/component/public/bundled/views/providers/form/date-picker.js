@@ -60,6 +60,7 @@ Vue.component("page-form-input-date-picker", {
 			+ "		:label='field.label ? $services.page.translate(field.label) : null'"
 			+ "		:value='value'"
 			+ "		:default='getDefault()'"
+			+ "		:required='required'"
 			+ "		:timeout='timeout'"
 			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
 			+ "		:description-type='field.descriptionType'"
@@ -105,6 +106,10 @@ Vue.component("page-form-input-date-picker", {
 			required: false
 		},
 		readOnly: {
+			type: Boolean,
+			required: false
+		},
+		required: {
 			type: Boolean,
 			required: false
 		},
