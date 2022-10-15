@@ -1602,6 +1602,7 @@ nabu.services.VueService(Vue.extend({
 			button.setAttribute("style", "padding: 0.7rem; border-radius: 50px; background-color: #fff; border: solid 1px #666; cursor: pointer")
 			button.innerHTML = "<img src='" + application.configuration.root + "resources/images/helper/edit.svg' class='is-image is-width-fixed-1' />";
 			document.body.appendChild(div);
+			var self = this;
 			
 			var pages = document.createElement("div");
 			pages.setAttribute("style", "position: absolute; bottom: 100%; left: 0;");
@@ -1609,6 +1610,13 @@ nabu.services.VueService(Vue.extend({
 			div.appendChild(pages);
 			var showPages = function() {
 				nabu.utils.elements.clear(pages);
+				var button = document.createElement("button");
+				button.setAttribute("style", "background-color: #333; color: #fff; white-space:nowrap; border: none; padding: 0.7rem; border: solid 1px #333; margin-bottom: 0.3rem; border-radius: 10px; cursor: pointer;");
+				button.innerHTML = "View all pages";
+				pages.appendChild(button);
+				button.onclick = function() {
+					self.$services.router.route("pages");
+				};
 				var availablePages = [];
 				Object.keys(nabu.page.instances).forEach(function(key) {
 					var page = nabu.page.instances[key].page;
@@ -1621,7 +1629,7 @@ nabu.services.VueService(Vue.extend({
 				});
 				availablePages.forEach(function(x) {
 					var button = document.createElement("button");
-					button.setAttribute("style", "background-color: #fff; border: none; padding: 0.7rem; border: solid 1px #666; margin-bottom: 0.3rem; border-radius: 10px; cursor: pointer;");
+					button.setAttribute("style", "background-color: #fff; border: none; white-space: nowrap; padding: 0.7rem; border: solid 1px #666; margin-bottom: 0.3rem; border-radius: 10px; cursor: pointer;");
 					button.innerHTML = x.content.name;
 					pages.appendChild(button);
 					// we just edit the first instance of the page we find
@@ -1652,7 +1660,6 @@ nabu.services.VueService(Vue.extend({
 					nabu.utils.elements.clear(pages);
 				}
 			});
-			var self = this;
 			// add the same shortkey as before to open it
 			document.addEventListener("keydown", function(event) {
 				if (event.ctrlKey && event.altKey && event.keyCode == 88) {
