@@ -5058,6 +5058,10 @@ Vue.component("aris-editor", {
 		// we format it here to prevent having to call it twice for condition
 		getFormattedAmountOfAppliedOptions: function(component) {
 			var amount = this.getAmountOfAppliedOptions(component);	
+			if (this.search) {
+				var amountOfHits = this.getAmountOfSearchHits(component);
+				return amount ? " (" + amount + " active, " + amountOfHits + " matches)" : " (" + amountOfHits + " matches)";
+			}
 			return amount ? " (" + amount + " active)" : "";
 		},
 		getAmountOfSearchHits: function(component) {
