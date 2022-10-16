@@ -37,6 +37,9 @@
 			"helper": {
 				"edit.svg": {
 					"url": "images/helper/edit.svg"
+				},
+				"search.svg": {
+					"url": "images/helper/search.svg"
 				}
 			}
 		},

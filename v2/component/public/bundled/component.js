@@ -51,15 +51,6 @@ window.addEventListener("load", function() {
 		});
 		
 		$services.router.register({
-			alias: "offline",
-			enter: function(parameters) {
-				var component = Vue.component("pages-offline");
-				return new component({propsData:parameters});
-			},
-			priority: -5
-		});
-		
-		$services.router.register({
 			alias: "page-code",
 			enter: function(parameters) {
 				return new nabu.page.views.Code({propsData: parameters});
@@ -848,6 +839,11 @@ window.addEventListener("load", function() {
 							
 							cell.state.fragments[name].key = body.runtimeAlias + ".record." + key;
 							
+							// set an optional empty thing for mobile rendering
+							application.services.page.normalizeAris(pageInstance.page, cell, "cell");
+							cell.aris.components["table-column"].modifiers.push("empty");
+							cell.aris.components["table-column"].conditions["empty"] = "$value(\"" + body.runtimeAlias + ".record." + key + "\") == null";
+							
 							// try to find a more specific alias
 							if (child) {
 								if (child.type == "integer") {
@@ -1186,10 +1182,36 @@ window.addEventListener("load", function() {
 							var buttonCell = null;
 							
 							if (operation.method.toLowerCase() == "post") {
+								var tableTemplateRoot = application.services.page.getTemplateRoot(page, table, true);
+								var findGlobalActions = function(target) {
+									var result = null;
+									if (target.name && target.name.toLowerCase() == "global actions") {
+										result = target;
+									}
+									else if (target.cells) {
+										target.cells.forEach(function(x) {
+											if (!result) {
+												result = findGlobalActions(x);
+											}
+										});
+									}
+									else if (target.rows) {
+										target.rows.forEach(function(x) {
+											if (!result) {
+												result = findGlobalActions(x);
+											}
+										});
+									}
+									return result;
+								}
 								// find a footer child that has the name "Global Actions"
+								/*
 								var buttons = table.rows.filter(function(x) {
-									return x.name.toLowerCase() == "global actions" && x.rendererSlot == "footer";
+									return x.name.toLowerCase() == "global actions";
 								})[0];
+								*/
+								buttons = findGlobalActions(tableTemplateRoot);
+								console.log("finding global actions", tableTemplateRoot, buttons);
 								if (!buttons) {
 									buttons = rowGenerator(table);
 								}
@@ -1197,6 +1219,9 @@ window.addEventListener("load", function() {
 								buttonCell = cellGenerator(buttons);
 
 								buttonCell.name = "Create" + (name ? " " + name : "");
+								
+								application.services.page.normalizeAris(pageInstance.page, buttonCell, "cell", [{name:"page-button"}]);
+								buttonCell.aris.components["page-button"].variant = "primary";
 								
 								// make sure we send out a created event once done
 /*								dataComponent.state.actions.push({

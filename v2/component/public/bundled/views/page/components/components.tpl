@@ -2,7 +2,7 @@
 	<div class="page-components-overview" @drop.prevent="function($event) { $event.stopPropagation() }">
 		<ul class="is-menu is-variant-toolbar is-spacing-horizontal-sides-medium">
 			<li class="is-column"><button class="is-button is-border-underline is-size-small" @click="selected = 'components'" :class="{'is-active': selected == 'components'}">Components</button></li>
-			<li class="is-column"><button class="is-button is-border-underline is-size-small" @click="selected = 'templates'" :class="{'is-active': selected == 'templates'}">Templates</button></li>
+			<li v-if="false" class="is-column"><button class="is-button is-border-underline is-size-small" @click="selected = 'templates'" :class="{'is-active': selected == 'templates'}">Templates</button></li>
 			<li class="is-column"><button class="is-button is-border-underline is-size-small" @click="selected = 'operations'" :class="{'is-active': selected == 'operations'}">Operations</button></li>
 		</ul>
 		<p class="is-p is-size-small is-color-light is-spacing-medium">Drag and drop a component of your choice into a row.</p>
@@ -37,8 +37,11 @@
 			</n-collapsible>
 		</div>
 		<div v-else-if="selected == 'operations'">
-			<n-collapsible class="component-category" v-for="category in getOperationCategories()" :title="prettyPrint(category)" content-class="is-pattern-underline">
-				<div class="is-row is-height-fixed-4 is-align-cross-center is-spacing-horizontal-medium is-spacing-vertical-small is-highlight-light is-cursor-pointer" v-for="operation in getOperationCategory(category)" :draggable="true"
+			<div class="is-column is-spacing-medium">
+				<n-form-text v-model="operationSearch" placeholder="Search operations..." :timeout="600"/>
+			</div>
+			<n-collapsible class="component-category" v-for="category in getOperationCategories()" :title="prettyPrint(category)" content-class="is-pattern-underline" v-if="hasAnyOperationMatch(category)">
+				<div class="is-row is-height-fixed-4 is-align-cross-center is-spacing-horizontal-medium is-spacing-vertical-small is-highlight-light is-cursor-pointer" v-for="operation in getOperationCategory(category)" v-if="hasAnyOperationMatch(category, operation)" :draggable="true"
 						@dragstart="dragOperation($event, operation)">
 					<div class="is-column is-width-column-11">
 						<p class="is-p is-size-xsmall">{{ operation.id }}</p>

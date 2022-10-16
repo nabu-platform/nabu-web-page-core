@@ -211,6 +211,20 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		isPartOfTemplate: function(target) {
+			return target.templateReferenceId && !target.templateVersion;
+		},
+		getTemplateRoot: function(page, target, highest) {
+			var path = this.getTargetPath(page.content, target.id);	
+			// for nested templates you can wonder whether you want to highest (nearest the root) or lowest (nearest the target)
+			// if we want the "highest" root, we want the one m
+			if (!highest) {
+				path.reverse();
+			}
+			return path.filter(function(x) {
+				return x.templateReferenceId && x.templateVersion;
+			})[0];
+		},
 		getBindings: function(bindings, instance, state) {
 			var self = this;
 			var parameters = {};
@@ -1600,7 +1614,7 @@ nabu.services.VueService(Vue.extend({
 			div.appendChild(button);
 			//button.setAttribute("class", "is-button is-border-radius-xxlarge is-variant-warning");
 			button.setAttribute("style", "padding: 0.7rem; border-radius: 50px; background-color: #fff; border: solid 1px #666; cursor: pointer")
-			button.innerHTML = "<img src='" + application.configuration.root + "resources/images/helper/edit.svg' class='is-image is-width-fixed-1' />";
+			button.innerHTML = "<img src='" + application.configuration.root + "resources/images/helper/edit.svg' style='width: 1rem' />";
 			document.body.appendChild(div);
 			var self = this;
 			
@@ -1611,7 +1625,7 @@ nabu.services.VueService(Vue.extend({
 			var showPages = function() {
 				nabu.utils.elements.clear(pages);
 				var button = document.createElement("button");
-				button.setAttribute("style", "background-color: #333; color: #fff; white-space:nowrap; border: none; padding: 0.7rem; border: solid 1px #333; margin-bottom: 0.3rem; border-radius: 10px; cursor: pointer;");
+				button.setAttribute("style", "background-color: #333; color: #fff; white-space:nowrap; border: none; padding: 0.7rem; border: solid 1px #333; margin-bottom: 0.3rem; border-radius: 10px; cursor: pointer; display: flex;");
 				button.innerHTML = "View all pages";
 				pages.appendChild(button);
 				button.onclick = function() {
@@ -1620,7 +1634,7 @@ nabu.services.VueService(Vue.extend({
 				var availablePages = [];
 				Object.keys(nabu.page.instances).forEach(function(key) {
 					var page = nabu.page.instances[key].page;
-					if (availablePages.indexOf(page) < 0) {
+					if (!page.content.readOnly && availablePages.indexOf(page) < 0) {
 						availablePages.push(page);
 					}
 				});
@@ -1629,14 +1643,30 @@ nabu.services.VueService(Vue.extend({
 				});
 				availablePages.forEach(function(x) {
 					var button = document.createElement("button");
-					button.setAttribute("style", "background-color: #fff; border: none; white-space: nowrap; padding: 0.7rem; border: solid 1px #666; margin-bottom: 0.3rem; border-radius: 10px; cursor: pointer;");
-					button.innerHTML = x.content.name;
+					button.setAttribute("style", "background-color: #fff; border: none; white-space: nowrap; padding: 0.7rem; border: solid 1px #666; margin-bottom: 0.3rem; border-radius: 10px; cursor: pointer; display: flex; column-gap: 0.7rem; align-items: center");
+					var span = document.createElement("span");
+					span.innerHTML = x.content.label ? x.content.label : x.content.name;
+					button.appendChild(span);
+					var img = document.createElement("img");
+					img.setAttribute("src", application.configuration.root + "resources/images/helper/search.svg");
+					img.setAttribute("style", "width: 0.7rem");
+					img.setAttribute("title", "Inspect state");
+					button.appendChild(img);
+					img.onclick = function(event) {
+						var reported = [];
+						Object.keys(nabu.page.instances).forEach(function(key) {
+							if (x == nabu.page.instances[key].page && reported.indexOf(nabu.page.instances[key]) < 0) {
+								reported.push(nabu.page.instances[key]);
+								console.log("Page: " + x.content.name, nabu.page.instances[key].variables, nabu.page.instances[key]);
+							}
+						});
+						event.stopPropagation();
+					}
 					pages.appendChild(button);
 					// we just edit the first instance of the page we find
 					button.onclick = function(event) {
 						var found = false;
 						Object.keys(nabu.page.instances).forEach(function(key) {
-							console.log("finding", x);
 							if (!found && x == nabu.page.instances[key].page) {
 								found = true;
 								nabu.page.instances[key].goIntoEdit();
@@ -1664,7 +1694,12 @@ nabu.services.VueService(Vue.extend({
 			document.addEventListener("keydown", function(event) {
 				if (event.ctrlKey && event.altKey && event.keyCode == 88) {
 					if (self.canEdit()) {
-						showPages();
+						if (pages.firstChild) {
+							nabu.utils.elements.clear(pages);	
+						}
+						else {
+							showPages();
+						}
 					}
 					else {
 						self.$services.router.route("login", null, null, true);

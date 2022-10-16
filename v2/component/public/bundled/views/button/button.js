@@ -64,6 +64,21 @@ Vue.view("page-button", {
 		}
 	},
 	methods: {
+		guessButtonType: function() {
+			var isSubmit = false;
+			if (this.cell.state.triggers) {
+				this.cell.state.triggers.forEach(function(trigger) {
+					if (trigger.actions) {
+						trigger.actions.forEach(function(action) {
+							if (action.type == "action" && action.action == 'submit') {
+								isSubmit = true;
+							}
+						});
+					}
+				})
+			}
+			return isSubmit ? "submit" : "button";
+		},
 		getContentWithVariables: function(content) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			return !content ? content : this.$services.typography.replaceVariables(pageInstance, this.cell.state, content, this.elementPromise);

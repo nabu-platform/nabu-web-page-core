@@ -57,10 +57,32 @@ Vue.component("page-components-overview", {
 	},
 	data: function() {
 		return {
-			selected: 'components'
+			selected: 'components',
+			operationSearch: null,
+			templateSearch: null,
+			componentSearch: null
 		}
 	},
 	methods: {
+		hasAnyOperationMatch: function(category, operation) {
+			if (!this.operationSearch) {
+				return true;
+			}
+			var operations = [];
+			if (operation) {
+				operations.push(operation.id);
+			}
+			else {
+				nabu.utils.arrays.merge(operations, this.getOperationCategory(category).map(function(x) {
+					return x.id;
+				}));
+			}
+			var regex = new RegExp(this.operationSearch.toLowerCase().replace(/[\s]+/g, ".*"));
+			var matches = operations.filter(function(x) {
+				return !!x.toLowerCase().match(regex);
+			});
+			return matches.length > 0;
+		},
 		getOperationIds: function() {
 			return Object.keys(this.$services.swagger.operations)
 				.filter(function(x) {

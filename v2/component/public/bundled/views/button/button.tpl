@@ -1,6 +1,7 @@
 <template id="page-button">
 	<button class="is-button" @click="handle($event)" :disabled="running || disabled" :class="[getChildComponentClasses('page-button'), {'is-active': active || activated}]" 
-			:component-group="cell.state.componentGroup">
+			:component-group="cell.state.componentGroup"
+			:type="cell.state.buttonType ? cell.state.buttonType : guessButtonType()">
 		<img :src="cell.state.icon.indexOf('http') == 0 ? cell.state.icon : '${server.root()}resources/' + cell.state.icon" v-if="cell.state.icon && cell.state.icon.match(/^.*\.[^.]+$/)" class="is-icon"/>
 		<icon :name="cell.state.icon" v-if="cell.state.icon"/>
 		<span class="is-text" v-if="cell.state.content && !edit" v-html="$services.page.translate(getContentWithVariables($services.page.interpret(cell.state.content, $self)))"></span>
@@ -27,6 +28,8 @@
 			<n-form-switch v-model="cell.state.activateByDefault" v-if="cell.state.componentGroup" label="Have this button active by default"/>
 			<n-form-ace mode="javascript" v-model="cell.state.disabled" label="Disabled if"/>
 			<n-form-ace mode="javascript" v-model="cell.state.active" label="Active if" v-if="!cell.state.componentGroup"/>
+			
+			<n-form-combo v-model="cell.state.buttonType" :items="['submit', 'reset', 'button']" label="Button type"/>
 		</div>
 		
 		<page-triggerable-configure :page="page" :target="cell.state" :triggers="{'click': {}}" :allow-closing="true"/>
