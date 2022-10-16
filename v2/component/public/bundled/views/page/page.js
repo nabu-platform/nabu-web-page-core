@@ -3296,7 +3296,7 @@ Vue.component("n-page-row", {
 		},
 		suggesPageRowClasses: function(value) {
 			return this.$services.page.classes("page-row", value).filter(function(x) {
-				return ["is-empty", "is-hover-top", "is-hover-bottom", "is-hover-left", "is-hover-right", "is-hovering"].indexOf(x) < 0;
+				return ["empty", "is-hover-top", "is-hover-bottom", "is-hover-left", "is-hover-right", "is-hovering"].indexOf(x) < 0;
 			});
 		},
 		getCellById: function(row, cell) {
@@ -5044,7 +5044,7 @@ Vue.component("aris-editor", {
 			var self = this;
 			var modifiers = this.getAvailableModifiers(component);
 			var activeModifiers = Object.keys(modifiers).filter(function(key) {
-				self.isActiveModifier(component, key);
+				return self.isActiveModifier(component, key);
 			}).length;
 			var dimensions = this.getAvailableDimensions(component);
 			var activeOptions = 0;
