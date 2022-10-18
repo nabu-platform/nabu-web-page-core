@@ -1,6 +1,6 @@
 <template id="page-button-sort">
 	<button class="is-button" @click="handle($event)" :disabled="running || disabled" :class="[getChildComponentClasses('page-button-sort')]">
-		<img :src="icon.indexOf('http') == 0 ? icon : '${server.root()}resources/' + icon" v-if="icon && icon.match(/^.*\.[^.]+$/)" class="is-icon"/>
+		<img :src="icon.indexOf('http') == 0 ? icon : $window.application.configuration.root + 'resources/' + icon" v-if="icon && icon.match(/^.*\.[^.]+$/)" class="is-icon"/>
 		<icon :name="icon" v-if="icon"/>
 		<span class="is-text" v-if="cell.state.content && !edit" v-html="$services.page.translate(getContentWithVariables($services.page.interpret(cell.state.content, $self)))"></span>
 		<span class="is-text is-inline-editor" v-else-if="edit" 

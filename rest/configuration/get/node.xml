@@ -38,4 +38,5 @@
     <references>nabu.utils.List.size</references>
     <references>nabu.web.page.core.services.getCommonConfiguration</references>
     <references>nabu.utils.Resource.read</references>
+    <tags>Pagebuilder</tags>
 </node>

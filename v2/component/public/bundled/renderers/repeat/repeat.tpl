@@ -2,7 +2,7 @@
 	<div v-fragment>
 		<template v-if="!edit && !loading && state.records.length">
 			<template v-if="fragmentPage.content.repeatType == 'cell'">
-				<component :is="getComponent()" v-for="(record, index) in state.records" :class="getChildComponentClasses('page-column')">
+				<component :is="getComponent()" v-for="(record, index) in state.records" :class="getChildComponentClasses('page-column')" :page="page" :target="target">
 					<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
 						<n-page :page="fragmentPage"
 							@click.native="handleClick($event, record)"

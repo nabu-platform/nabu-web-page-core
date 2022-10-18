@@ -6,4 +6,5 @@
     <references>nabu.utils.types.FeatureList</references>
     <references>nabu.utils.Runtime.getFeatures</references>
     <references>java.lang.String</references>
+    <tags>Pagebuilder</tags>
 </node>

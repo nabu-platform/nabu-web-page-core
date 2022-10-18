@@ -9,4 +9,5 @@
     <references>nabu.web.page.core.interfaces.setContent</references>
     <references>java.lang.String</references>
     <references>nabu.utils.Cache.clear</references>
+    <tags>Pagebuilder</tags>
 </node>

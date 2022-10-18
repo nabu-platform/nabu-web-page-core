@@ -11,4 +11,5 @@
     <references>java.net.URI</references>
     <references>nabu.utils.Resource.read</references>
     <references>be.nabu.libs.resources.api.ResourceProperties</references>
+    <tags>Pagebuilder</tags>
 </node>

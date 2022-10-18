@@ -13,4 +13,5 @@
     <references>java.net.URI</references>
     <references>nabu.web.application.types.WebApplicationInformation</references>
     <references>java.io.InputStream</references>
+    <tags>Pagebuilder</tags>
 </node>

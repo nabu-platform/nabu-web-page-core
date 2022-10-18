@@ -38,7 +38,7 @@
 		</div>
 		<div v-else-if="selected == 'operations'">
 			<div class="is-column is-spacing-medium">
-				<n-form-text v-model="operationSearch" placeholder="Search operations..." :timeout="600"/>
+				<n-form-text v-model="operationSearch" placeholder="Search operations..." :timeout="300"/>
 			</div>
 			<n-collapsible class="component-category" v-for="category in getOperationCategories()" :title="prettyPrint(category)" content-class="is-pattern-underline" v-if="hasAnyOperationMatch(category)">
 				<div class="is-row is-height-fixed-4 is-align-cross-center is-spacing-horizontal-medium is-spacing-vertical-small is-highlight-light is-cursor-pointer" v-for="operation in getOperationCategory(category)" v-if="hasAnyOperationMatch(category, operation)" :draggable="true"

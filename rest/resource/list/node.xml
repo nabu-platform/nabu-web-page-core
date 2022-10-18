@@ -12,4 +12,5 @@
     <references>java.lang.String</references>
     <references>nabu.web.application.types.WebApplicationInformation</references>
     <references>be.nabu.libs.resources.api.ResourceProperties</references>
+    <tags>Pagebuilder</tags>
 </node>

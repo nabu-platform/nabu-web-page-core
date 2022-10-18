@@ -1086,12 +1086,20 @@ nabu.services.VueService(Vue.extend({
 			// if all else fails, we use the id
 			return "" + target.id;
 		},
+		getRootPage: function(pageInstance) {
+			while (pageInstance.fragmentParent) {
+				pageInstance = pageInstance.fragmentParent;
+			}
+			return pageInstance;
+		},
 		getPageType: function(page, target) {
 			var self = this;
 			var pageType = null;
+			var pageInstance = this.getRootPage(this.getPageInstance(page));
+			var path = this.$services.page.getTargetPath(pageInstance.page.content, target.id);
 			// we check if there is a renderer in the path to this target
 			// if so, that renderer can modify how we render the content
-			var path = this.$services.page.getTargetPath(page.content.fragmentParentContent ? page.content.fragmentParentContent : page.content, target.id);
+//			var path = this.$services.page.getTargetPath(page.content, target.id);
 			path.reverse();
 			path.forEach(function(x) {
 				if (x.renderer && !pageType) {

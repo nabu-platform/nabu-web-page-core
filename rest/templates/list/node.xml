@@ -6,4 +6,5 @@
     <references>nabu.web.page.core.rest.templates.listAll</references>
     <references>java.lang.String</references>
     <references>nabu.web.page.core.rest.templates.templateList</references>
+    <tags>Pagebuilder</tags>
 </node>

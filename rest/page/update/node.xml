@@ -10,4 +10,5 @@
     <references>java.net.URI</references>
     <references>nabu.utils.Cache.clear</references>
     <references>nabu.web.page.core.types.rest.page</references>
+    <tags>Pagebuilder</tags>
 </node>

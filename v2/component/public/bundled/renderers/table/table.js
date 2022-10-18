@@ -6,6 +6,7 @@
 nabu.page.provide("page-type", {
 	name: "table-page",
 	rowTag: function(row, depth, editing, reversePath, page) {
+		console.log("checking row for", reversePath.length);
 		// it must be inside the table, this goes for header, footer & body, for example for body depth:
 		// <column> <repeat> <table>
 		var isRow = reversePath.length >= 2 && reversePath[1].renderer == "table";
@@ -81,10 +82,10 @@ nabu.page.provide("page-type", {
 nabu.page.provide("page-type", {
 	name: "table-page-child",
 	rowTag: function(row, depth, editing, reversePath) {
-		return reversePath.length == 1 ? "td" : null;	
+		//return reversePath.length == 1 ? "td" : null;	
 	},
 	rowComponent: function(cell, reversePath) {
-		return reversePath.length == 1 ? "table-column" : null;	
+		//return reversePath.length == 1 ? "table-column" : null;	
 	}
 });
 
@@ -215,15 +216,17 @@ Vue.component("renderer-table-body-cell", {
 				return this.$services.page.interpret(this.$services.page.translate(this.target.table.embeddedLabel), this)
 			}
 			else {
+				console.log("looking label for", this.page);
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				var originalPageInstance = pageInstance;
 				// we are in the body, which is (presumably) a repeat
 				// if so, we are in a fragment page that does not have full overview of the content
 				// let's check the fragment parent for the real content
 				// note that this does not work with nested repeats...(yet)
-				if (pageInstance.fragmentParent) {
+				pageInstance = this.$services.page.getRootPage(pageInstance);
+/*				if (pageInstance.fragmentParent) {
 					pageInstance = pageInstance.fragmentParent;
-				}
+				}*/
 				var path = this.$services.page.getTargetPath(pageInstance.page.content, this.target.id);
 				// the parent should be the body repeat
 				// the grandparent should be the table

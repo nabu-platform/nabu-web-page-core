@@ -30,4 +30,5 @@
     <references>nabu.web.page.core.services.getCommonConfiguration</references>
     <references>nabu.utils.Resource.read</references>
     <references>nabu.web.page.core.v2.services.getCommonConfiguration</references>
+    <tags>Pagebuilder</tags>
 </node>

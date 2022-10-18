@@ -10,4 +10,5 @@
     <references>nabu.web.page.core.types.environmentConfiguration</references>
     <references>java.lang.String</references>
     <references>nabu.utils.Cache.clear</references>
+    <tags>Pagebuilder</tags>
 </node>

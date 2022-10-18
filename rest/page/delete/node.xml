@@ -8,4 +8,5 @@
     <references>nabu.utils.Resource.delete</references>
     <references>java.lang.String</references>
     <references>java.net.URI</references>
+    <tags>Pagebuilder</tags>
 </node>

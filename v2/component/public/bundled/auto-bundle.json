@@ -341,11 +341,18 @@
 					},
 					"tag": {
 						"tag.js": {
-							"url": "views/tag/tag.js",
-							"template": true
+							"url": "views/tag/tag.js"
 						}, 
 						"tag.tpl": {
 							"url": "views/tag/tag.tpl"
+						}
+					},
+					"smartCheck": {
+						"smartCheck.js": {
+							"url": "views/smartCheck/smartCheck.js"
+						}, 
+						"smartCheck.tpl": {
+							"url": "views/smartCheck/smartCheck.tpl"
 						}
 					},
 					"button": {
@@ -353,8 +360,7 @@
 							"url": "views/button/button.js"
 						}, 
 						"button.tpl": {
-							"url": "views/button/button.tpl",
-							"template": true
+							"url": "views/button/button.tpl"
 						}
 					},
 					"button-sort": {
@@ -362,8 +368,7 @@
 							"url": "views/button-sort/button-sort.js"
 						}, 
 						"button-sort.tpl": {
-							"url": "views/button-sort/button-sort.tpl",
-							"template": true
+							"url": "views/button-sort/button-sort.tpl"
 						}
 					},
 					"badge": {
@@ -371,8 +376,7 @@
 							"url": "views/badge/badge.js"
 						}, 
 						"badge.tpl": {
-							"url": "views/badge/badge.tpl",
-							"template": true
+							"url": "views/badge/badge.tpl"
 						}
 					},
 					"notifier": {

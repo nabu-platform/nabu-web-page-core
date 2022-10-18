@@ -431,14 +431,15 @@ Vue.component("renderer-repeat", {
 		getPageType: function() {
 			var self = this;
 			var pageType = null;
+//			var path = this.$services.page.getTargetPath(this.page.content, this.target.id);
+			var path = this.$services.page.getTargetPath(this.getRootPage().page.content, this.target.id);
+			path.reverse();
 			if (this.parameters.pageType) {
 				this.pageType = this.parameters.pageType;
 			}
 			else {
 				// we check if there is a renderer in the path to this repeat
 				// if so, that renderer can modify how we render the pages (e.g. a table)
-				var path = this.$services.page.getTargetPath(this.page.content, this.target.id);
-				path.reverse();
 				path.forEach(function(x) {
 					if (x.renderer && !pageType) {
 						var renderer = self.$services.page.getRenderer(x.renderer);
@@ -453,31 +454,34 @@ Vue.component("renderer-repeat", {
 			if (pageType == null) {
 				pageType = this.page.content.pageType + "-child";
 			}
-			return pageType;
+			return {
+				pageType: pageType,
+				path: path
+			};
+		},
+		getRootPage: function() {
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			while (pageInstance.fragmentParent) {
+				pageInstance = pageInstance.fragmentParent;
+			}
+			return pageInstance;
 		},
 		getComponent: function() {
 			var self = this;
 			var pageType = this.getPageType();
-			if (pageType) {
+			if (pageType.pageType) {
 				var provider = nabu.page.providers("page-type").filter(function(x) {
-					return x.name == pageType;
+					return x.name == pageType.pageType;
 				})[0];
-				if (provider && provider.repeatTag instanceof Function) {
-					return provider.repeatTag(this.target);
-				}
-				else if (provider && provider.repeatTag) {
-					return provider.repeatTag;
-				}
-				// if we are a cell, check if we have a celltag
-				else if (provider && this.target.rows && provider.cellTag instanceof Function) {
-					return provider.cellTag(null, this.target);
+				if (provider && this.target.rows && provider.cellTag instanceof Function) {
+					return provider.cellTag(null, this.target, null, this.edit, pageType.path, this.page);
 				}
 				else if (provider && this.target.rows && provider.cellTag) {
 					return provider.cellTag;
 				}
 				// if we are a row, check if we have a celltag
 				else if (provider && this.target.cells && provider.rowTag instanceof Function) {
-					return provider.rowTag(this.target);
+					return provider.rowTag(this.target, null, this.edit, pageType.path, this.page);
 				}
 				else if (provider && this.target.cells && provider.rowTag) {
 					return provider.rowTag;
@@ -488,9 +492,9 @@ Vue.component("renderer-repeat", {
 		getMessageComponent: function() {
 			var self = this;
 			var pageType = this.getPageType();
-			if (pageType) {
+			if (pageType.pageType) {
 				var provider = nabu.page.providers("page-type").filter(function(x) {
-					return x.name == pageType;
+					return x.name == pageType.pageType;
 				})[0];
 				if (provider && provider.messageTag instanceof Function) {
 					return provider.messageTag(this.target);
@@ -854,7 +858,7 @@ Vue.component("renderer-repeat", {
 					"name": this.alias,
 					"parameters": [],
 					"readOnly": true,
-					"pageType": this.getPageType(),
+					"pageType": this.getPageType().pageType,
 					// you can optimze the rows by throwing away the page wrapper
 					// currently this also throws away edit mode so we can only globally enable this once we have moved the editing outside of the page!
 					// no longer needed, vue was complaining about two roots so made an optimized derivative component
@@ -885,7 +889,7 @@ Vue.component("renderer-repeat", {
 					content.repeatType = "row";
 					var row = {
 						// use an id that definitely does not collide with the content
-						id: -1,
+						id: this.target.id,
 						state: {},
 						cells: [],
 						class: null,
