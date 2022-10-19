@@ -1,0 +1,8 @@
+<structure interface="nabu.cms.core.hooks.security.initialize" name="pipeline">
+    <structure name="input"/>
+    <structure name="output"/>
+    <field maxOccurs="unbounded" minOccurs="0" name="managerPermissions" type="java.lang.String"/>
+    <field maxOccurs="unbounded" minOccurs="0" name="testerPermissions" type="java.lang.String"/>
+    <field maxOccurs="unbounded" minOccurs="0" name="editorPermissions" type="java.lang.String"/>
+    <field maxOccurs="unbounded" minOccurs="0" name="adminPermissions" type="java.lang.String"/>
+</structure>

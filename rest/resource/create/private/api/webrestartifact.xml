@@ -5,9 +5,8 @@
     <queryParameters>path, webApplicationId</queryParameters>
     <role>editor</role>
     <permissionAction>resource.write</permissionAction>
-    <permissionContext>="context:" + input/webApplicationId</permissionContext>
     <useServiceContextAsPermissionContext>false</useServiceContextAsPermissionContext>
-    <useWebApplicationAsPermissionContext>false</useWebApplicationAsPermissionContext>
+    <useWebApplicationAsPermissionContext>true</useWebApplicationAsPermissionContext>
     <inputAsStream>true</inputAsStream>
     <outputAsStream>false</outputAsStream>
     <output>nabu.web.page.core.rest.resource.resource</output>

@@ -1518,7 +1518,7 @@ nabu.services.VueService(Vue.extend({
 					self.injectEditIcon();
 					var editorPromises = [];
 					if (self.useAris) {
-						editorPromises.push(nabu.utils.ajax({url: "${server.root()}page/v2/api/aris-definitions"}).then(function(response) {
+						editorPromises.push(nabu.utils.ajax({url: application.configuration.root + "page/v2/api/aris-definitions"}).then(function(response) {
 							self.aris = {};
 							JSON.parse(response.responseText).forEach(function(component) {
 								self.aris[component.name] = component;
@@ -1526,7 +1526,7 @@ nabu.services.VueService(Vue.extend({
 						}));
 					}
 					editorPromises.push(injectJavascript());
-					editorPromises.push(self.$services.swagger.execute("nabu.web.page.core.rest.templates.list").then(function(list) {
+					editorPromises.push(self.$services.swagger.execute("nabu.web.page.core.v2.rest.templates.list").then(function(list) {
 						if (list && list.templates) {
 							list.templates.forEach(function(template) {
 								try {
@@ -1555,7 +1555,7 @@ nabu.services.VueService(Vue.extend({
 					// this call can take long (lots of I/O to be done)
 					// so we don't include it in the blocking promises array
 					// loading this does not change the application, it simply gives the tester more options in case he specifically wants to test features (which is very rare)
-					self.$services.swagger.execute("nabu.web.page.core.rest.feature.get").then(function(features) {
+					self.$services.swagger.execute("nabu.web.page.core.v2.rest.feature.get").then(function(features) {
 						if (features) {
 							if (features.enabled) {
 								nabu.utils.arrays.merge(self.availableFeatures,
@@ -2867,7 +2867,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		saveConfiguration: function() {
 			var self = this;
-			return this.$services.swagger.execute("nabu.web.page.core.rest.configuration.update", {
+			return this.$services.swagger.execute("nabu.web.page.core.v2.rest.configuration.update", {
 				body: {
 					title: this.title,
 					home: this.home,
@@ -3037,7 +3037,7 @@ nabu.services.VueService(Vue.extend({
 			});
 		},
 		removeByName: function(name) {
-			return this.$services.swagger.execute("nabu.web.page.core.rest.page.delete", {name: name});
+			return this.$services.swagger.execute("nabu.web.page.core.v2.rest.page.delete", {name: name});
 		},
 		uniquifyPageName: function(pageName) {
 			var existing = this.pages.map(function(x) {
@@ -3081,7 +3081,7 @@ nabu.services.VueService(Vue.extend({
 			
 			//page.marshalled = JSON.stringify(page.content, null, "\t");
 			page.marshalled = JSON.stringify(page.content);
-			return this.$services.swagger.execute("nabu.web.page.core.rest.page.update", { body: page }).then(function() {
+			return this.$services.swagger.execute("nabu.web.page.core.v2.rest.page.update", { body: page }).then(function() {
 				// add it to the pages if it isn't there yet (e.g. create)
 				var index = self.pages.indexOf(page);
 				// re-add to trigger a reregister (if necessary)

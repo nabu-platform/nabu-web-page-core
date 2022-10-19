@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<node artifactManager="be.nabu.eai.module.rest.provider.RESTServiceManager" created="2018-06-16T09:13:28.276+02:00" lastModified="2022-10-19T22:05:38.021+02:00" leaf="true" version="42">
+    <environmentId>apollo</environmentId>
+    <hidden>false</hidden>
+    <properties/>
+    <references>nabu.web.page.core.v2.rest.resource.resource</references>
+    <references>nabu.utils.Resource.write</references>
+    <references>nabu.web.application.Services.information</references>
+    <references>nabu.utils.Uri.normalize</references>
+    <references>nabu.utils.String.replace</references>
+    <references>nabu.utils.Uri.toComponents</references>
+    <references>java.lang.String</references>
+    <references>java.net.URI</references>
+    <references>nabu.web.application.types.WebApplicationInformation</references>
+    <references>java.io.InputStream</references>
+    <tags>Pagebuilder</tags>
+</node>

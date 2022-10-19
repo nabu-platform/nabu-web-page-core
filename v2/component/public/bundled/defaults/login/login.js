@@ -41,7 +41,7 @@ Vue.view("default-login", {
 					},
 					function(error) {
 						self.messages.push({
-							title: "%{login:Login failed}",
+							title: self.$services.page.translate("%{login::Login failed}"),
 							severity: "error"
 						})
 						self.working = false;

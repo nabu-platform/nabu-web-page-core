@@ -262,7 +262,7 @@ Vue.component("page-image-configure", {
 		},
 		load: function() {
 			var self = this;
-			return this.$services.swagger.execute("nabu.web.page.core.rest.resource.list", {path:this.cell.state.imagePath}).then(function(list) {
+			return this.$services.swagger.execute("nabu.web.page.core.v2.rest.resource.list", {path:this.cell.state.imagePath}).then(function(list) {
 				self.images.splice(0);
 				if (list && list.resources) {
 					nabu.utils.arrays.merge(self.images, list.resources);
@@ -271,7 +271,7 @@ Vue.component("page-image-configure", {
 		},
 		upload: function() {
 			var self = this;
-			this.$services.swagger.execute("nabu.web.page.core.rest.resource.create", { path:this.cell.state.imagePath, body: this.files[0] }).then(function(result) {
+			this.$services.swagger.execute("nabu.web.page.core.v2.rest.resource.create", { path:this.cell.state.imagePath, body: this.files[0] }).then(function(result) {
 				self.load();
 				if (result && result.relativePath) {
 					self.cell.state.href = result.relativePath;

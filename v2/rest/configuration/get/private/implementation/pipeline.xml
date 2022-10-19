@@ -13,4 +13,6 @@
     <field minOccurs="0" name="featuresLastModified" type="java.util.Date"/>
     <structure comment="Nabu Page Builder environment specific configuration options" definition="nabu.web.page.core.types.environmentConfiguration" name="environmentSpecific"/>
     <field minOccurs="0" name="lastModified" type="java.util.Date"/>
+    <field name="development" type="java.lang.Boolean"/>
+    <structure definition="nabu.web.application.types.WebApplicationInformation" minOccurs="0" name="information"/>
 </structure>

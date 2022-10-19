@@ -1,0 +1,41 @@
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		disabled="false"
+		id="b24b2de3-a890-43ac-8089-ecdea435cea0"
+		lineNumber="1">
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			disabled="false"
+			id="73f315ae-fec7-483d-9c1d-5bef1d06f99c"
+			lineNumber="2">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="fe9e17d4-05e1-4925-bf38-c3335fa445ef"
+				serviceId="nabu.web.page.core.rest.templates.listAll"
+				resultName="result14282fe98c87430c976b85044000b2fa"
+				temporaryMapping="true"
+				x="171"
+				y="48"
+				invocationOrder="0"
+				asynchronous="false"
+				recache="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="e484d658-3fb0-4d04-a61f-5c537ffe8f3e"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/webApplicationId</from>
+				<to>webApplicationId</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="91c529ac-5a79-4b97-a3fb-580e660049f4"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>result14282fe98c87430c976b85044000b2fa/templates[/input/query/q = null || name ~ "(?i)(?s).*" + /input/query/q + ".*" || (description != null &amp;&amp; description ~ "(?i)(?s).*" + /input/query/q + ".*")
+]</from>
+			<to>output/content/templates</to>
+		</steps>
+	</steps>
+</sequence>

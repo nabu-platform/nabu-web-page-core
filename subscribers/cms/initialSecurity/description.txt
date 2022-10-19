@@ -1,0 +1,2 @@
+An editor has the same permissions as a tester because the editor must be able to test to validate.
+An admin has the same permissions as everyone else

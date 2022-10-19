@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<node artifactManager="be.nabu.eai.module.rest.provider.RESTServiceManager" created="2020-04-17T07:43:56.960+02:00" lastModified="2022-10-19T22:05:07.325+02:00" leaf="true" version="16">
+    <environmentId>apollo</environmentId>
+    <hidden>false</hidden>
+    <properties/>
+    <references>nabu.utils.types.FeatureList</references>
+    <references>nabu.utils.Runtime.getFeatures</references>
+    <references>java.lang.String</references>
+    <tags>Pagebuilder</tags>
+</node>

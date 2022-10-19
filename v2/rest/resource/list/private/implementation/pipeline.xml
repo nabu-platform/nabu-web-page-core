@@ -1,0 +1,7 @@
+<structure interface="nabu.web.page.core.v2.rest.resource.list:api" name="pipeline">
+    <structure name="input"/>
+    <structure name="output"/>
+    <structure definition="be.nabu.libs.resources.api.ResourceProperties" maxOccurs="unbounded" minOccurs="0" name="resources"/>
+    <structure definition="nabu.web.page.core.v2.rest.resource.resource" name="result"/>
+    <structure definition="nabu.web.application.types.WebApplicationInformation" minOccurs="0" name="information"/>
+</structure>

@@ -160,6 +160,75 @@
 			<from>result50624919e9314735b0872575dd0b4e4b/lastModified</from>
 			<to>lastModified</to>
 		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="c17be9ca-fbe8-403d-add2-c27bc8ce06e9"
+				serviceId="nabu.utils.Server.property"
+				resultName="result0bc8f9d771484d7f9f3d6819a80bdb74"
+				temporaryMapping="true"
+				x="163"
+				y="223"
+				invocationOrder="0"
+				asynchronous="false"
+				recache="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="f08ff5c5-fdc2-4850-9f61-f99b7f14ec8b"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>development</from>
+				<to>key</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="4b68863d-04e7-408f-ab89-7a6fe36e7c69"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>false</from>
+				<to>defaultValue</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="7e3f7936-4455-4da9-8e5b-335a427a06d4"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>result0bc8f9d771484d7f9f3d6819a80bdb74/value</from>
+			<to>development</to>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="90caa155-4144-4d8b-a103-07234f93ade4"
+				serviceId="nabu.web.application.Services.information"
+				resultName="result4336441603654e93b10aad86d265e372"
+				temporaryMapping="true"
+				x="177"
+				y="304"
+				invocationOrder="0"
+				asynchronous="false"
+				recache="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="ef511fda-70f9-4d3b-9388-60b7cd6e2cb4"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/webApplicationId</from>
+				<to>webApplicationId</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="cfab4fbb-75fb-4372-a697-d6f43a82ddb7"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>result4336441603654e93b10aad86d265e372/information</from>
+			<to>information</to>
+		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			comment="If we get an &quot;older&quot; result back from the common, it is presumably cached. We want to retry with recache on"
@@ -505,301 +574,404 @@
 		</steps>
 		<query>pages[name ~ ".*\.json"]</query>
 	</steps>
-	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			comment="Check if has role &quot;editor&quot;"
+	<steps xsi:type="be.nabu.libs.services.vm.step.Switch"
 			disabled="false"
-			id="1ed4b2d1-a142-4c35-a259-b34177ad491d"
+			id="5caaab91-7628-4ea9-a522-9d0f24e2fe3f"
 			lineNumber="12">
-		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+		<steps xsi:type="be.nabu.libs.services.vm.step.Sequence"
+				comment="If we have a permission handler, we can get edit and test permissions in prd mode"
 				disabled="false"
-				id="6280b790-1c4e-4d5b-b1b4-206d8c30670d"
-				serviceId="nabu.web.application.Services.hasRole"
-				resultName="result5932a4ece19d4495a6b9072f83b6a6c2"
-				temporaryMapping="true"
-				x="150"
-				y="150"
-				invocationOrder="1"
-				asynchronous="false"
-				recache="false">
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				id="b3f78d4e-a4ae-4feb-a7e3-baf251e5210c"
+				label="information/hasPermissionHandler"
+				lineNumber="13">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+					comment="Check permission &quot;application.edit&quot;"
 					disabled="false"
-					id="ec31e900-9e31-40f9-83c4-48c1f3f68823"
-					mask="false"
-					optional="false"
-					fixedValue="false">
-				<from>input/webApplicationId</from>
-				<to>webApplicationId</to>
+					id="282cea4e-b635-4294-86c6-a5e275fdac16"
+					lineNumber="14">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="b763c208-3acf-4cc0-979e-16ae2e04c9d1"
+						serviceId="nabu.web.application.Services.hasPermission"
+						resultName="result97e0f8c59db644f5bfd7d3a3c0b189f3"
+						temporaryMapping="true"
+						x="333"
+						y="149"
+						invocationOrder="1"
+						asynchronous="false"
+						recache="false">
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="c31276a0-b934-4310-bc42-1abf89d97407"
+							mask="false"
+							optional="false"
+							fixedValue="true">
+						<from>application.edit</from>
+						<to>action</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="1af063ef-84a0-436a-ba93-ebde7cbbbe23"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>input/webApplicationId</from>
+						<to>webApplicationId</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="a0c6431a-2339-4d84-90e5-2b9dcf42a223"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>resultc6aea8ed5f0b4d438f630120600b15e5/token</from>
+						<to>token</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="46e8f13c-0e72-4d34-b485-7c1db71dabac"
+							mask="false"
+							optional="false"
+							fixedValue="true">
+						<from>="context:" + input/webApplicationId</from>
+						<to>context</to>
+					</steps>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="c6a4308b-3709-4d37-8676-432e3e9c59a3"
+						serviceId="nabu.utils.Runtime.getCurrentToken"
+						resultName="resultc6aea8ed5f0b4d438f630120600b15e5"
+						temporaryMapping="true"
+						x="64"
+						y="17"
+						invocationOrder="0"
+						asynchronous="false"
+						recache="false">
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="426c10c7-cc4d-4364-bc93-7d8945e1a13b"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>result97e0f8c59db644f5bfd7d3a3c0b189f3/response</from>
+					<to>output/content/editable</to>
+				</steps>
 			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+					comment="Check permission &quot;application.test&quot;"
 					disabled="false"
-					id="ddd06c73-4282-42fb-809b-3c51a522bd9d"
-					mask="false"
-					optional="false"
-					fixedValue="false">
-				<from>result8da93b31aa294ba29c211a61cb938906/token</from>
-				<to>token</to>
-			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-					disabled="false"
-					id="7d271e4c-bcb6-413a-a8c1-dc5b878a0ecb"
-					mask="false"
-					optional="false"
-					fixedValue="true">
-				<from>editor</from>
-				<to>role</to>
+					id="5977cf0843524170b6b8dab3f4e82ec7"
+					lineNumber="15">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="1160825235f946c09ce279fe7a7f461a"
+						serviceId="nabu.web.application.Services.hasPermission"
+						resultName="result97e0f8c59db644f5bfd7d3a3c0b189f3"
+						temporaryMapping="true"
+						x="333"
+						y="149"
+						invocationOrder="1"
+						asynchronous="false"
+						recache="false">
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="62db6b3bff834ca7a450a4e44062d154"
+							mask="false"
+							optional="false"
+							fixedValue="true">
+						<from>application.test</from>
+						<to>action</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="e1876be06d234787bce98e835e71d2d2"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>input/webApplicationId</from>
+						<to>webApplicationId</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="b2e1cac3b88c4cc58301aaaaa2088dd2"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>resultc6aea8ed5f0b4d438f630120600b15e5/token</from>
+						<to>token</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="da034ea0f6a44e01a18adeab8bb38cdc"
+							mask="false"
+							optional="false"
+							fixedValue="true">
+						<from>="context:" + input/webApplicationId</from>
+						<to>context</to>
+					</steps>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="7eee1911e0744cb58de3547638fee7dd"
+						serviceId="nabu.utils.Runtime.getCurrentToken"
+						resultName="resultc6aea8ed5f0b4d438f630120600b15e5"
+						temporaryMapping="true"
+						x="64"
+						y="17"
+						invocationOrder="0"
+						asynchronous="false"
+						recache="false">
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="b878eda8-1136-4b13-9faf-057000a7ab0d"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>result97e0f8c59db644f5bfd7d3a3c0b189f3/response</from>
+					<to>output/content/testable</to>
+				</steps>
 			</steps>
 		</steps>
-		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+		<steps xsi:type="be.nabu.libs.services.vm.step.Sequence"
+				comment="In development, role handling is enough"
 				disabled="false"
-				id="fdcaaafa-d7f7-488a-a92b-e498991d2b3f"
-				serviceId="nabu.utils.Runtime.getCurrentToken"
-				resultName="result8da93b31aa294ba29c211a61cb938906"
-				temporaryMapping="true"
-				x="84"
-				y="43"
-				invocationOrder="0"
-				asynchronous="false"
-				recache="false">
-		</steps>
-		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-				disabled="false"
-				id="219fce5d-4d29-47fb-a3c6-e3032854d86e"
-				mask="false"
-				optional="false"
-				fixedValue="false">
-			<from>result5932a4ece19d4495a6b9072f83b6a6c2/response</from>
-			<to>output/content/editable</to>
-		</steps>
-	</steps>
-	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			comment="If hasRole is true, you either have the role or a role handler is not configured. Check permission as well."
-			disabled="false"
-			id="282cea4e-b635-4294-86c6-a5e275fdac16"
-			label="output/content/editable"
-			lineNumber="13">
-		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
-				disabled="false"
-				id="b763c208-3acf-4cc0-979e-16ae2e04c9d1"
-				serviceId="nabu.web.application.Services.hasPermission"
-				resultName="result97e0f8c59db644f5bfd7d3a3c0b189f3"
-				temporaryMapping="true"
-				x="333"
-				y="149"
-				invocationOrder="1"
-				asynchronous="false"
-				recache="false">
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				id="6943e562-f9ed-469a-a790-e62087bfc878"
+				label="development &amp;&amp; information/hasRoleHandler"
+				lineNumber="16">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+					comment="Check if has role &quot;Administrator&quot;"
 					disabled="false"
-					id="c31276a0-b934-4310-bc42-1abf89d97407"
-					mask="false"
-					optional="false"
-					fixedValue="true">
-				<from>page.edit</from>
-				<to>action</to>
+					id="42d17d35fe404ea294351c209596b078"
+					lineNumber="17">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="a1a14f17c3524dd9aa25550eb1cd361a"
+						serviceId="nabu.web.application.Services.hasRole"
+						resultName="result5932a4ece19d4495a6b9072f83b6a6c2"
+						temporaryMapping="true"
+						x="150"
+						y="150"
+						invocationOrder="1"
+						asynchronous="false"
+						recache="false">
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="c0529f4756b6466492d6e85eec477185"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>input/webApplicationId</from>
+						<to>webApplicationId</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="433b78e9d4434bd09986d3c0d536b088"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>result8da93b31aa294ba29c211a61cb938906/token</from>
+						<to>token</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="d2a078a6b7104266b73a3b4e5bd80add"
+							mask="false"
+							optional="false"
+							fixedValue="true">
+						<from>Administrator</from>
+						<to>role</to>
+					</steps>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="eb1ea58446914637880489f4399ae8a7"
+						serviceId="nabu.utils.Runtime.getCurrentToken"
+						resultName="result8da93b31aa294ba29c211a61cb938906"
+						temporaryMapping="true"
+						x="84"
+						y="43"
+						invocationOrder="0"
+						asynchronous="false"
+						recache="false">
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="ce6d93e1-098b-43a9-8459-e668dbb2665f"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>result5932a4ece19d4495a6b9072f83b6a6c2/response</from>
+					<to>output/content/testable</to>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="c256e949-592e-42c5-9303-5d3b8c5ccc13"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>result5932a4ece19d4495a6b9072f83b6a6c2/response</from>
+					<to>output/content/editable</to>
+				</steps>
 			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+					comment="Check if has role &quot;Application Editor&quot;"
 					disabled="false"
-					id="1af063ef-84a0-436a-ba93-ebde7cbbbe23"
-					mask="false"
-					optional="false"
-					fixedValue="false">
-				<from>input/webApplicationId</from>
-				<to>webApplicationId</to>
+					id="1ed4b2d1-a142-4c35-a259-b34177ad491d"
+					label="!output/content/editable"
+					lineNumber="18">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="6280b790-1c4e-4d5b-b1b4-206d8c30670d"
+						serviceId="nabu.web.application.Services.hasRole"
+						resultName="result5932a4ece19d4495a6b9072f83b6a6c2"
+						temporaryMapping="true"
+						x="150"
+						y="150"
+						invocationOrder="1"
+						asynchronous="false"
+						recache="false">
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="ec31e900-9e31-40f9-83c4-48c1f3f68823"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>input/webApplicationId</from>
+						<to>webApplicationId</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="ddd06c73-4282-42fb-809b-3c51a522bd9d"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>result8da93b31aa294ba29c211a61cb938906/token</from>
+						<to>token</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="7d271e4c-bcb6-413a-a8c1-dc5b878a0ecb"
+							mask="false"
+							optional="false"
+							fixedValue="true">
+						<from>Application Editor</from>
+						<to>role</to>
+					</steps>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="fdcaaafa-d7f7-488a-a92b-e498991d2b3f"
+						serviceId="nabu.utils.Runtime.getCurrentToken"
+						resultName="result8da93b31aa294ba29c211a61cb938906"
+						temporaryMapping="true"
+						x="84"
+						y="43"
+						invocationOrder="0"
+						asynchronous="false"
+						recache="false">
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="219fce5d-4d29-47fb-a3c6-e3032854d86e"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>result5932a4ece19d4495a6b9072f83b6a6c2/response</from>
+					<to>output/content/editable</to>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="885808bf-576c-4989-a025-b7a779dafdab"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>result5932a4ece19d4495a6b9072f83b6a6c2/response</from>
+					<to>output/content/testable</to>
+				</steps>
 			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+					comment="Check if has role &quot;Application Tester&quot;"
 					disabled="false"
-					id="a0c6431a-2339-4d84-90e5-2b9dcf42a223"
-					mask="false"
-					optional="false"
-					fixedValue="false">
-				<from>resultc6aea8ed5f0b4d438f630120600b15e5/token</from>
-				<to>token</to>
+					id="6352ab9071d743959870354b9754e416"
+					label="!output/content/testable"
+					lineNumber="19">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="814b1dccf1214a95a36faaf61b086aa3"
+						serviceId="nabu.web.application.Services.hasRole"
+						resultName="result5932a4ece19d4495a6b9072f83b6a6c2"
+						temporaryMapping="true"
+						x="150"
+						y="150"
+						invocationOrder="1"
+						asynchronous="false"
+						recache="false">
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="3cfa4c4a69b542b6a39aae96189f5936"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>input/webApplicationId</from>
+						<to>webApplicationId</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="3cb66c58e88844e2a7480ea7c8ce747e"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>result8da93b31aa294ba29c211a61cb938906/token</from>
+						<to>token</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="1da32031778944349cf839aab1546f92"
+							mask="false"
+							optional="false"
+							fixedValue="true">
+						<from>Application Tester</from>
+						<to>role</to>
+					</steps>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="8c99d7681a8a414f9b845cdabd48ea9d"
+						serviceId="nabu.utils.Runtime.getCurrentToken"
+						resultName="result8da93b31aa294ba29c211a61cb938906"
+						temporaryMapping="true"
+						x="84"
+						y="43"
+						invocationOrder="0"
+						asynchronous="false"
+						recache="false">
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="c2059eb54f224d4ea8e45f14a09c167d"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>result5932a4ece19d4495a6b9072f83b6a6c2/response</from>
+					<to>output/content/testable</to>
+				</steps>
 			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-					disabled="false"
-					id="46e8f13c-0e72-4d34-b485-7c1db71dabac"
-					mask="false"
-					optional="false"
-					fixedValue="true">
-				<from>="webApplication:" + input/webApplicationId</from>
-				<to>context</to>
-			</steps>
-		</steps>
-		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
-				disabled="false"
-				id="c6a4308b-3709-4d37-8676-432e3e9c59a3"
-				serviceId="nabu.utils.Runtime.getCurrentToken"
-				resultName="resultc6aea8ed5f0b4d438f630120600b15e5"
-				temporaryMapping="true"
-				x="64"
-				y="17"
-				invocationOrder="0"
-				asynchronous="false"
-				recache="false">
-		</steps>
-		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-				disabled="false"
-				id="426c10c7-cc4d-4364-bc93-7d8945e1a13b"
-				mask="false"
-				optional="false"
-				fixedValue="false">
-			<from>result97e0f8c59db644f5bfd7d3a3c0b189f3/response</from>
-			<to>output/content/editable</to>
-		</steps>
-	</steps>
-	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			comment="Check if has role &quot;tester&quot;"
-			disabled="false"
-			id="42d17d35fe404ea294351c209596b078"
-			lineNumber="14">
-		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
-				disabled="false"
-				id="a1a14f17c3524dd9aa25550eb1cd361a"
-				serviceId="nabu.web.application.Services.hasRole"
-				resultName="result5932a4ece19d4495a6b9072f83b6a6c2"
-				temporaryMapping="true"
-				x="150"
-				y="150"
-				invocationOrder="1"
-				asynchronous="false"
-				recache="false">
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-					disabled="false"
-					id="c0529f4756b6466492d6e85eec477185"
-					mask="false"
-					optional="false"
-					fixedValue="false">
-				<from>input/webApplicationId</from>
-				<to>webApplicationId</to>
-			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-					disabled="false"
-					id="433b78e9d4434bd09986d3c0d536b088"
-					mask="false"
-					optional="false"
-					fixedValue="false">
-				<from>result8da93b31aa294ba29c211a61cb938906/token</from>
-				<to>token</to>
-			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-					disabled="false"
-					id="d2a078a6b7104266b73a3b4e5bd80add"
-					mask="false"
-					optional="false"
-					fixedValue="true">
-				<from>tester</from>
-				<to>role</to>
-			</steps>
-		</steps>
-		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
-				disabled="false"
-				id="eb1ea58446914637880489f4399ae8a7"
-				serviceId="nabu.utils.Runtime.getCurrentToken"
-				resultName="result8da93b31aa294ba29c211a61cb938906"
-				temporaryMapping="true"
-				x="84"
-				y="43"
-				invocationOrder="0"
-				asynchronous="false"
-				recache="false">
-		</steps>
-		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-				disabled="false"
-				id="ce6d93e1-098b-43a9-8459-e668dbb2665f"
-				mask="false"
-				optional="false"
-				fixedValue="false">
-			<from>result5932a4ece19d4495a6b9072f83b6a6c2/response</from>
-			<to>output/content/testable</to>
-		</steps>
-	</steps>
-	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
-			comment="If hasRole is true, you either have the role or a role handler is not configured. Check permission as well."
-			disabled="false"
-			id="5977cf0843524170b6b8dab3f4e82ec7"
-			label="output/content/testable"
-			lineNumber="15">
-		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
-				disabled="false"
-				id="1160825235f946c09ce279fe7a7f461a"
-				serviceId="nabu.web.application.Services.hasPermission"
-				resultName="result97e0f8c59db644f5bfd7d3a3c0b189f3"
-				temporaryMapping="true"
-				x="333"
-				y="149"
-				invocationOrder="1"
-				asynchronous="false"
-				recache="false">
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-					disabled="false"
-					id="62db6b3bff834ca7a450a4e44062d154"
-					mask="false"
-					optional="false"
-					fixedValue="true">
-				<from>page.test</from>
-				<to>action</to>
-			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-					disabled="false"
-					id="e1876be06d234787bce98e835e71d2d2"
-					mask="false"
-					optional="false"
-					fixedValue="false">
-				<from>input/webApplicationId</from>
-				<to>webApplicationId</to>
-			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-					disabled="false"
-					id="b2e1cac3b88c4cc58301aaaaa2088dd2"
-					mask="false"
-					optional="false"
-					fixedValue="false">
-				<from>resultc6aea8ed5f0b4d438f630120600b15e5/token</from>
-				<to>token</to>
-			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-					disabled="false"
-					id="da034ea0f6a44e01a18adeab8bb38cdc"
-					mask="false"
-					optional="false"
-					fixedValue="true">
-				<from>="webApplication:" + input/webApplicationId</from>
-				<to>context</to>
-			</steps>
-		</steps>
-		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
-				disabled="false"
-				id="7eee1911e0744cb58de3547638fee7dd"
-				serviceId="nabu.utils.Runtime.getCurrentToken"
-				resultName="resultc6aea8ed5f0b4d438f630120600b15e5"
-				temporaryMapping="true"
-				x="64"
-				y="17"
-				invocationOrder="0"
-				asynchronous="false"
-				recache="false">
-		</steps>
-		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-				disabled="false"
-				id="b878eda8-1136-4b13-9faf-057000a7ab0d"
-				mask="false"
-				optional="false"
-				fixedValue="false">
-			<from>result97e0f8c59db644f5bfd7d3a3c0b189f3/response</from>
-			<to>output/content/testable</to>
 		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Switch"
 			disabled="false"
 			id="1f608c72-cfe9-492b-8216-12459b372726"
-			lineNumber="16"
+			lineNumber="20"
 			query="output/content/editable">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				comment="If you can edit, we need to be able to differentiate between environment specific and not"
 				disabled="false"
 				id="45404ca2-1660-444d-a148-c638ff8aa854"
 				label="true"
-				lineNumber="17">
+				lineNumber="21">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="07e44f73-d5a2-4406-9bc8-e82e8cfd314f"
@@ -814,7 +986,7 @@
 				comment="If you can't edit, we add the properties to the generic properties. No need to leak this tiny bit of implementation detail"
 				disabled="false"
 				id="3aaae422-3f76-4adf-ae58-f6654887c7b5"
-				lineNumber="18">
+				lineNumber="22">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 					disabled="false"
 					id="8969083a-715a-4dc0-94c2-73800c0d2a85"
@@ -859,7 +1031,7 @@
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"
 			id="e81d8d49-b300-4648-ae98-bf2521aa81a4"
-			lineNumber="19">
+			lineNumber="23">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 				disabled="false"
 				id="e5ed97a3-a538-49b1-b60f-d05ceeac22d6"
@@ -913,7 +1085,7 @@
 			disabled="false"
 			id="d8c53831-becf-4673-9f05-2d1a6a899106"
 			label="output/cache/lastModified == null || (featuresLastModified != null &amp;&amp; featuresLastModified &gt; output/cache/lastModified)"
-			lineNumber="20">
+			lineNumber="24">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 				disabled="false"
 				id="407227d5-cc63-49ad-821e-b18f394f30a3"

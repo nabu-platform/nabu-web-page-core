@@ -317,6 +317,12 @@ Vue.component("renderer-form", {
 						return cloned;
 					});
 					
+					var translateMessages = function(messages) {
+						messages.forEach(function(message) {
+							message.title = self.$services.page.translate(message.title);
+						});
+					};
+					
 					// these are currently not compatible with the all() promises bundler... :(
 					if (result && result.then) {
 						var localPromise = self.$services.q.defer();
@@ -324,12 +330,14 @@ Vue.component("renderer-form", {
 						result.then(function(x) {
 							nabu.utils.vue.form.rewriteCodes(x, allCodes);
 							nabu.utils.arrays.merge(messages, x);
+							translateMessages(x);
 							localPromise.resolve(x);
 						}, localPromise);
 					}
 					else if (result instanceof Array) {
 						nabu.utils.vue.form.rewriteCodes(result, allCodes);	
 						nabu.utils.arrays.merge(messages, result);
+						translateMessages(messages);
 					}
 				});
 				var promise = this.$services.q.defer();

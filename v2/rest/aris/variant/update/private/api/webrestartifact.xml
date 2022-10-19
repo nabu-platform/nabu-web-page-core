@@ -2,11 +2,11 @@
 <restInterface>
     <method>POST</method>
     <path>/aris/variant/{variant}</path>
-    <role>editor</role>
-    <permissionAction>aris.update</permissionAction>
-    <permissionContext>="context:" + input/webApplicationId</permissionContext>
+    <role>Application Editor</role>
+    <role>Administrator</role>
+    <permissionAction>application.edit</permissionAction>
     <useServiceContextAsPermissionContext>false</useServiceContextAsPermissionContext>
-    <useWebApplicationAsPermissionContext>false</useWebApplicationAsPermissionContext>
+    <useWebApplicationAsPermissionContext>true</useWebApplicationAsPermissionContext>
     <input>nabu.web.page.core.types.rest.styleInput</input>
     <lenient>true</lenient>
     <webApplicationId>true</webApplicationId>

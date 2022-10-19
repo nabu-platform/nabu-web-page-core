@@ -1,0 +1,4 @@
+<structure name="resource">
+    <field name="path" type="java.lang.String"/>
+    <field name="relativePath" type="java.lang.String"/>
+</structure>

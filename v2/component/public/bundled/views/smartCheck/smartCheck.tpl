@@ -1,5 +1,6 @@
 <template id="page-smart-check">
-	<component :is="component" :value="checked" @input="toggle" :label="cell.state.label ? $services.page.interpret($services.page.translate(cell.state.label), $self) : null"/>
+	<component :is="component" :value="checked" @input="toggle" :label="cell.state.label ? $services.page.interpret($services.page.translate(cell.state.label), $self) : null"
+		:disabled="running"/>
 </template>
 
 <template id="page-smart-check-configure">

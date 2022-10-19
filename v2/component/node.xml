@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<node artifactManager="be.nabu.eai.module.web.component.WebComponentManager" created="2018-04-26T09:54:22.326+02:00" lastModified="2022-09-10T13:10:23.265+02:00" leaf="true" version="45">
+<node artifactManager="be.nabu.eai.module.web.component.WebComponentManager" created="2018-04-26T09:54:22.326+02:00" lastModified="2022-10-19T14:04:36.580+02:00" leaf="true" version="50">
     <environmentId>apollo</environmentId>
     <hidden>false</hidden>
     <properties/>
-    <references>nabu.web.page.core.rest.page.update</references>
-    <references>nabu.web.page.core.rest.page.delete</references>
+    <references>nabu.web.page.core.v2.rest.page.update</references>
+    <references>nabu.web.page.core.v2.rest.page.delete</references>
     <references>nabu.web.page.core.v2.rest.configuration.get</references>
-    <references>nabu.web.page.core.rest.configuration.update</references>
-    <references>nabu.web.page.core.rest.resource.create</references>
-    <references>nabu.web.page.core.rest.resource.list</references>
-    <references>nabu.web.page.core.rest.feature.get</references>
-    <references>nabu.web.page.core.rest.templates.list</references>
+    <references>nabu.web.page.core.v2.rest.configuration.update</references>
+    <references>nabu.web.page.core.v2.rest.resource.create</references>
+    <references>nabu.web.page.core.v2.rest.resource.list</references>
+    <references>nabu.web.page.core.v2.rest.feature.get</references>
+    <references>nabu.web.page.core.v2.rest.templates.list</references>
     <references>nabu.web.page.core.v2.rest.aris.variant.update</references>
 </node>

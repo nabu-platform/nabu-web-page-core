@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<node artifactManager="be.nabu.eai.module.services.vm.VMServiceManager" created="2022-10-19T12:53:33.339+02:00" lastModified="2022-10-19T22:01:26.498+02:00" leaf="true" version="20">
+    <environmentId>apollo</environmentId>
+    <hidden>false</hidden>
+    <properties/>
+    <references>nabu.cms.core.types.emodel.core.Role</references>
+    <references>java.lang.String</references>
+    <references>java.util.UUID</references>
+    <references>nabu.cms.core.hooks.security.initialize</references>
+    <references>nabu.utils.String.split</references>
+    <references>nabu.cms.core.v2.security.initial.mergeActions</references>
+    <references>nabu.utils.List.addAll</references>
+</node>
