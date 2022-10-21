@@ -6,7 +6,6 @@
 nabu.page.provide("page-type", {
 	name: "table-page",
 	rowTag: function(row, depth, editing, reversePath, page) {
-		console.log("checking row for", reversePath.length);
 		// it must be inside the table, this goes for header, footer & body, for example for body depth:
 		// <column> <repeat> <table>
 		var isRow = reversePath.length >= 2 && reversePath[1].renderer == "table";
@@ -216,7 +215,6 @@ Vue.component("renderer-table-body-cell", {
 				return this.$services.page.interpret(this.$services.page.translate(this.target.table.embeddedLabel), this)
 			}
 			else {
-				console.log("looking label for", this.page);
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				var originalPageInstance = pageInstance;
 				// we are in the body, which is (presumably) a repeat

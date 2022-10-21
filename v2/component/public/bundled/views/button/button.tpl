@@ -25,7 +25,8 @@
 			<n-form-text v-model="cell.state.componentGroup" label="Button group" after="You can add this button to a button group which will determine group behavior"
 				placeholder="E.g. myTabs"
 				:timeout="600"/>
-			<n-form-switch v-model="cell.state.activateByDefault" v-if="cell.state.componentGroup" label="Have this button active by default"/>
+			<n-form-switch v-model="cell.state.activateByDefault" v-if="cell.state.componentGroup && !cell.state.activeInitial" label="Have this button active by default"/>
+			<n-form-ace mode="javascript" v-model="cell.state.activeInitial" label="Start as active if" v-if="cell.state.componentGroup && !cell.state.activateByDefault"/>
 			<n-form-ace mode="javascript" v-model="cell.state.disabled" label="Disabled if"/>
 			<n-form-ace mode="javascript" v-model="cell.state.active" label="Active if" v-if="!cell.state.componentGroup"/>
 			

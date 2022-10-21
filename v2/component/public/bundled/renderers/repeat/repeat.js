@@ -41,18 +41,24 @@ nabu.page.provide("page-renderer", {
 		if (pageInstance && target && target.runtimeAlias && target.repeat && target.repeat.selectable) {
 			// we need the definition for this
 			var parameters = $services.page.getAllAvailableParameters(pageInstance.page);
-			var trigger = {
-				select: {
-					items: {
-						type: "array",
+			// sometimes the record does not exist because the definition can not be found (e.g. you have removed the operation)
+			if (parameters[target.runtimeAlias] && parameters[target.runtimeAlias].properties.record) {
+				var trigger = {
+					select: {
 						items: {
-							type: "object",
-							properties: parameters[target.runtimeAlias].properties.record.properties
+							type: "array",
+							items: {
+								type: "object",
+								properties: parameters[target.runtimeAlias].properties.record.properties
+							}
 						}
 					}
-				}
-			};
-			return trigger;
+				};
+				return trigger;
+			}
+			else {
+				console.error("Could not get trigger because we could not find the definition for: " + target.runtimeAlias);
+			}
 		}
 	},
 	getState: function(container, page, pageParameters, $services) {
@@ -188,24 +194,30 @@ nabu.page.provide("page-renderer", {
 		if (pageInstance && target && target.runtimeAlias && target.repeat && target.repeat.selectable) {
 			// we need the definition for this
 			var parameters = $services.page.getAllAvailableParameters(pageInstance.page);
-			var action = {
-				title: "Select",
-				name: "select",
-				input: {
-					items: {
-						type: "array",
+			// sometimes the record does not exist because the definition can not be found (e.g. you have removed the operation)
+			if (parameters[target.runtimeAlias] && parameters[target.runtimeAlias].properties.record) {
+				var action = {
+					title: "Select",
+					name: "select",
+					input: {
 						items: {
-							type: "object",
-							properties: parameters[target.runtimeAlias].properties.record.properties
+							type: "array",
+							items: {
+								type: "object",
+								properties: parameters[target.runtimeAlias].properties.record.properties
+							}
+						},
+						append: {
+							type: "boolean"
 						}
 					},
-					append: {
-						type: "boolean"
-					}
-				},
-				output: {}
-			};
-			actions.push(action);
+					output: {}
+				};
+				actions.push(action);
+			}
+			else {
+				console.error("Could not add select action because the definition could not be found for: " + target.runtimeAlias);
+			}
 		}
 		return actions;
 	},
@@ -465,6 +477,28 @@ Vue.component("renderer-repeat", {
 				pageInstance = pageInstance.fragmentParent;
 			}
 			return pageInstance;
+		},
+		getCellClasses: function() {
+			var self = this;
+			var component = null;
+			var pageType = this.getPageType();
+			if (pageType.pageType) {
+				var provider = nabu.page.providers("page-type").filter(function(x) {
+					return x.name == pageType.pageType;
+				})[0];
+				if (provider && this.target.rows && provider.cellComponent instanceof Function) {
+					component = provider.cellComponent(this.target, pageType.path, this.page);
+				}
+				else if (provider && this.target.rows && provider.cellComponent) {
+					component = provider.cellComponent;
+				}
+			}
+			if (!component) {
+				component = "page-column";
+			}
+			var result = ["is-" + component];
+			nabu.utils.arrays.merge(result, this.getChildComponentClasses(component));
+			return result;
 		},
 		getComponent: function() {
 			var self = this;

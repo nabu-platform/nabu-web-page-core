@@ -2670,10 +2670,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 				return null;
 			}
 			if (name == "page") {
-				return this.variables;
+				return this.fragmentParent ? this.fragmentParent.get(name) : this.variables;
 			}
 			else if (name == "page.$this") {
-				return this;
+				return this.fragmentParent ? this.fragmentParent.get(name) : this;
 			}
 			else if (name == "parent") {
 				var parentInstance = this.page.content.pageParent ? this.$services.page.getPageInstanceByName(this.page.content.pageParent) : null;

@@ -569,6 +569,7 @@
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Content" key="cell-settings" content-class="is-spacing-medium" class="is-highlight-left">
 							<n-form-combo label="Route" :filter="$services.page.getRoutes" v-model="cell.alias"
+								v-if="!cell.renderer"
 								:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
 								:required="true"
 								after="The component that should be routed into this cell"

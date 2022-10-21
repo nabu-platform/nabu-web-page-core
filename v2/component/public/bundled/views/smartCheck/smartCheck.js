@@ -27,6 +27,9 @@ Vue.view("page-smart-check", {
 		},
 		checked: function() {
 			return this.$services.page.isCondition(this.cell.state.checkCondition, {}, this);
+		},
+		disabled: function() {
+			return this.cell.state.disabledCondition ? this.$services.page.isCondition(this.cell.state.disabledCondition, {}, this) : false;
 		}
 	},
 	data: function() {

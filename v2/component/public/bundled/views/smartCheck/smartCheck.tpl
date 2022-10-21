@@ -1,6 +1,6 @@
 <template id="page-smart-check">
 	<component :is="component" :value="checked" @input="toggle" :label="cell.state.label ? $services.page.interpret($services.page.translate(cell.state.label), $self) : null"
-		:disabled="running"/>
+		:disabled="running || disabled"/>
 </template>
 
 <template id="page-smart-check-configure">
@@ -12,6 +12,7 @@
 				:formatter="function(x) { return x.title }"
 				:extracter="function(x) { return x.name }"/>
 			<n-form-ace v-model="cell.state.checkCondition" label="Checked when"/>
+			<n-form-ace v-model="cell.state.disabledCondition" label="Disabled when"/>
 		</div>
 		<page-triggerable-configure :page="page" :target="cell.state" :triggers="{'check': {}, 'clear': {}}" :allow-closing="true"/>
 	</div>

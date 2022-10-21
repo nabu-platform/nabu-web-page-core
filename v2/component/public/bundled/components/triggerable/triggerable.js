@@ -180,19 +180,20 @@ Vue.service("triggerable", {
 				
 				// local state we have built up, we can get variables from there
 				
+				// when the trigger execution stops specifically because of a confirmation failure (rather than an actual error), we don't want to run the error routines but DO want to fail the trigger
+				var confirmationError = false;
+				
 				// we start a new promise for the full trigger
 				var triggerPromise = self.$services.q.defer();
 				
 				// actions can be immediately run or chained
 				var runAction = function(index, lastPromise) {
-					console.log("running", index);
 					var action = actions[index];
 					var getBindings = function() {
 						var parameters = {};
 						var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
 						Object.keys(action.bindings).map(function(key) {
 							if (action.bindings[key] != null) {
-								console.log("resolving", action.bindings[key], state);
 								var value = null;
 								
 								// need to check if you want to access local state
@@ -344,11 +345,17 @@ Vue.service("triggerable", {
 						else if (action.type == "operation" && action.operation) {
 							var operation = self.$services.swagger.operations[action.operation];
 							var parameters = getBindings();
-							return self.$services.swagger.execute(action.operation, parameters).then(function(answer) {
-								if (action.resultName) {
-									state[action.resultName] = answer;
-								}
-							});
+							try {
+								return self.$services.swagger.execute(action.operation, parameters).then(function(answer) {
+									if (action.resultName) {
+										state[action.resultName] = answer;
+									}
+								});
+							}
+							catch (exception) {
+								console.error("Could not run operation: " + action.operation, exception);
+								return self.$services.q.reject(exception);
+							}
 						}
 						else if (action.type == "download" && action.operation) {
 							var parameters = getBindings();
@@ -434,12 +441,21 @@ Vue.service("triggerable", {
 								throw "Could not find function: " + action.function; 
 							}
 							var promise = self.$services.q.defer();
-							var result = self.$services.page.runFunction(func, getBindings(), self, promise);
+							try {
+								var result = self.$services.page.runFunction(func, getBindings(), self, promise);
+							}
+							catch (exception) {
+								console.error("Could not run function: " + action.function, exception);
+								promise.reject(exception);
+							}
 							return promise;
 						}
 						else if (action.type == "confirmation" && action.confirmation) {
 							var promise = self.$services.q.defer();
-							self.$confirm({message:self.$services.page.translate(self.$services.page.interpret(action.confirmation, instance))}).then(promise, promise);
+							self.$confirm({message:self.$services.page.translate(self.$services.page.interpret(action.confirmation, instance))}).then(promise, function(error) {
+								confirmationError = true;
+								promise.reject(error);
+							});
 							return promise;
 						}
 						else if (action.type == "visibility" && action.closeableTarget) {
@@ -550,9 +566,17 @@ Vue.service("triggerable", {
 						instance.$emit("close");
 					}
 				}, function(error) {
+					// deprecated and never used, can be removed
 					if (x.errorEvent) {
 						var pageInstance = self.$services.page.getPageInstance(self.page);
 						pageInstance.emit(x.errorEvent, error ? error : {});
+					}
+					if (!confirmationError) {
+						var errorName = x.trigger + ":error";
+						if (x.errorTrigger) {
+							errorName = x.errorTrigger;
+						}
+						self.trigger(target, errorName, {}, instance);
 					}
 				});
 			});
@@ -757,6 +781,20 @@ Vue.component("page-triggerable-configure", {
 			var result = Object.keys(this.triggers);
 			if (value) {
 				result = result.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0});
+			}
+			if (this.target.triggers) {
+				this.target.triggers.forEach(function(trigger) {
+					var name = null;
+					if (trigger.errorTrigger) {
+						name = trigger.errorTrigger;
+					}
+					else if (trigger.trigger) {
+						name = trigger.trigger + ":error";
+					}
+					if (name != null && result.indexOf(name) < 0) {
+						result.push(name);
+					}
+				});
 			}
 			result.sort();
 			return result;

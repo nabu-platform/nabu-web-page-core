@@ -2242,6 +2242,10 @@ nabu.services.VueService(Vue.extend({
 					context = context.$parent;
 				}
 			}
+			// if the page is a fragment of another page, check that parent one
+			if (value == null && pageInstance.fragmentParent) {
+				value = this.getBindingValue(pageInstance.fragmentParent, bindingValue, context);
+			}
 			return value;
 		},
 		translateErrorCode: function(value, defaultValue) {

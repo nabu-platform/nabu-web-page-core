@@ -62,6 +62,11 @@ Vue.view("page-button", {
 		if (this.cell.state.activateByDefault) {
 			this.handle();
 		}
+		if (this.cell.state.activeInitial) {
+			if (this.$services.page.isCondition(this.cell.state.activeInitial, null, this)) {
+				this.handle();
+			}
+		}
 	},
 	methods: {
 		guessButtonType: function() {

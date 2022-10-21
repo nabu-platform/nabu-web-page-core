@@ -12,7 +12,7 @@
 				<n-form-text v-model="trigger.condition" label="Condition" after="You can configure an additional condition that must evaluate to true before the trigger is activated"/>
 				<n-form-text v-if="false" v-model="trigger.confirmation" label="Confirmation message" after="You can prompt the user for additional confirmation before executing the trigger"/>
 				<n-form-switch v-model="trigger.closeEvent" label="Send close event once done" after="We can emit a close once our trigger is done, closing any window it is in" v-if="allowClosing"/>
-				<n-form-text v-model="trigger.errorEvent" label="Error event name" after="You can choose to emit an event if this trigger fails" :timeout="600" v-if="false"/>
+				<n-form-text v-model="trigger.errorTrigger" label="Error trigger name" after="You can choose to add another trigger if this one fails to perform actions at that point" :timeout="600" v-if="false" />
 				
 				<n-form-text v-model="trigger.timeout" label="Timeout" after="You can set this trigger to only run after a certain time has elapsed" suffix="ms" :timeout="600"/>
 				<n-form-text v-model="trigger.interval" label="Interval" after="You can run this trigger repeatedly" suffix="ms" :timeout="600"/>
