@@ -5,4 +5,5 @@
     <field maxOccurs="unbounded" minOccurs="0" name="testerPermissions" type="java.lang.String"/>
     <field maxOccurs="unbounded" minOccurs="0" name="editorPermissions" type="java.lang.String"/>
     <field maxOccurs="unbounded" minOccurs="0" name="adminPermissions" type="java.lang.String"/>
+    <field name="hasPageBuilder" type="java.lang.Boolean"/>
 </structure>

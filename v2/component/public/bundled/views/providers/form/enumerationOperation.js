@@ -177,7 +177,7 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 });
 
 Vue.component("page-form-input-enumeration-operation", {
-	template: "<div>"
+	template: ""
 			+ "<n-form-radio v-if='field.showRadioView'"
 			+ "		:items='resolvedItems'"
 			+ "		ref='form'"
@@ -219,7 +219,7 @@ Vue.component("page-form-input-enumeration-operation", {
 			+ "		:description-type='field.descriptionType'"
 			+ "		:description-icon='field.descriptionIcon'"
 			+ "		:schema='schema'"
-			+ "		:disabled='disabled'/></div>",
+			+ "		:disabled='disabled'/>",
 	props: {
 		cell: {
 			type: Object,

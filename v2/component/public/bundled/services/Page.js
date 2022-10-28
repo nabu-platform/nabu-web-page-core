@@ -162,7 +162,7 @@ nabu.services.VueService(Vue.extend({
 			// if you have permission to still view the application while offline (e.g. tester), you shouldn't end up here anyway
 			// so we don't check the canTest()!
 			setTimeout(function() {
-				self.$services.router.route("offline");
+				self.$services.router.route("offline", null, null, true);
 			}, 1);
 		}
 		// any cookies you have provided that are not set to auto accept will be added to the cookie providers
@@ -2243,7 +2243,7 @@ nabu.services.VueService(Vue.extend({
 				}
 			}
 			// if the page is a fragment of another page, check that parent one
-			if (value == null && pageInstance.fragmentParent) {
+			if (value == null && pageInstance && pageInstance.fragmentParent) {
 				value = this.getBindingValue(pageInstance.fragmentParent, bindingValue, context);
 			}
 			return value;
@@ -3316,7 +3316,10 @@ nabu.services.VueService(Vue.extend({
 					name: "Calculated route"
 				}];
 			}
-			var routes = this.$services.router.list().filter(function(x) { return x.isPage && !x.defaultAnchor });
+			var routes = this.$services.router.list().filter(function(x) { return x.isPage });
+			// originally we couldn't route to skeletons, it is "normally" not done
+			// however, a subskeleton needed a default routing because it did routing dynamically based on initial state
+			//var routes = this.$services.router.list().filter(function(x) { return x.isPage && !x.defaultAnchor });
 			routes.sort(function(a, b) {
 				return a.name.localeCompare(b.name);
 			});
@@ -3770,6 +3773,9 @@ nabu.services.VueService(Vue.extend({
 			return result;
 		},
 		smartClone: function(object) {
+			if (object == null) {
+				return null;
+			}
 			var self = this;
 			// when we clone things like blob and files, they break, so we do it slightly smarter
 			var cloned = JSON.parse(JSON.stringify(object));
@@ -3822,7 +3828,8 @@ nabu.services.VueService(Vue.extend({
 			});
 		},
 		isObject: function(object) {
-			return Object(object) === object 
+			return object != null 
+				&& Object(object) === object 
 				&& !(object instanceof Date)
 				&& !(object instanceof File)
 				&& !(object instanceof Blob);
@@ -4008,6 +4015,17 @@ nabu.services.VueService(Vue.extend({
 				}
 			}
 		},
+		getApplicationProperties: function() {
+			var properties = {};
+			this.properties.map(function(property) {
+				properties[property.key] = property.value;
+			});
+			this.environmentProperties.map(function(property) {
+				properties[property.key] = property.value;
+			});
+			return properties;
+		},
+		// @2022-10-26: deprecated because its weird (still need to check if its actually used anywhere)
 		getApplicationParameters: function() {
 			var parameters = {
 				properties: {}

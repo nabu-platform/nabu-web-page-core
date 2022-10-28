@@ -15,6 +15,13 @@ Vue.component("data-field-picker", {
 			result: []
 		}	
 	},
+	computed: {
+		allChecked: function() {
+			return this.result.filter(function(x) {
+				return !x.checked
+			}).length == 0;
+		}
+	},
 	created: function() {
 		nabu.utils.arrays.merge(this.result, this.fields.map(function(x) {
 			return {
@@ -25,6 +32,16 @@ Vue.component("data-field-picker", {
 		console.log("fields are", this.result);
 	},
 	methods: {
+		checkAll: function() {
+			this.result.forEach(function(x) {
+				x.checked = true;
+			});
+		},
+		uncheckAll: function() {
+			this.result.forEach(function(x) {
+				x.checked = false;
+			});
+		},
 		upAll: function(field) {
 			var index = this.result.indexOf(field);
 			if (index > 0) {
@@ -58,8 +75,8 @@ Vue.component("data-field-picker", {
 		result: {
 			deep: true,
 			handler: function() {
-				this.value.splice(0);
-				nabu.utils.arrays.merge(this.value, this.result.filter(function(x) {
+				this.value.fields.splice(0);
+				nabu.utils.arrays.merge(this.value.fields, this.result.filter(function(x) {
 					return x.checked
 				}).map(function (x){
 					return x.name

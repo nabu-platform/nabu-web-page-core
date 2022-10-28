@@ -30,12 +30,22 @@
 				v-model="cell.state.bindings"/>
 		</div>
 		<div v-else-if="cell.state.imageType == 'bytes'" class="is-column is-spacing-gap-medium">
-			<n-form-combo v-model="cell.state.byteValue" :filter="getAllKeys" label="Byte field"/>
-			<n-form-combo v-model="cell.state.contentTypeValue" :filter="getAllKeys" label="Content type field" placeholder="image/jpeg"/>
+			<p class="is-p">Add mappings for the byte content</p>
+			<n-page-mapper 
+				:to="['byteValue', 'contentTypeValue']"
+				:from="$services.page.getAllAvailableParameters(page)" 
+				:key="cell.state.operation + '-image-byte-data'"
+				v-model="cell.state"/>
+			<n-form-combo v-model="cell.state.byteValue" :filter="getAllKeys" label="Byte field" v-if="false"/>
+			<n-form-combo v-model="cell.state.contentTypeValue" :filter="getAllKeys" label="Content type field" placeholder="image/jpeg" v-if="false"/>
 		</div>
 		
 		<div v-if="cell.state.imageType">
 			<n-form-text v-model="cell.state.title" label="Title"/>
+			
+			<div class="is-row is-align-end is-spacing-vertical-medium">
+				<button class="is-button is-variant-danger-outline is-size-xsmall" @click="cell.state.imageType = null">Reset Image Type</button>
+			</div>
 		</div>
 	</div>
 </template>

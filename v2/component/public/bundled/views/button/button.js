@@ -49,12 +49,12 @@ Vue.view("page-button", {
 		active: function() {
 			var active = false;
 			if (this.cell.state.active) {
-				active = this.$services.page.isCondition(this.cell.state.active, null, this);
+				return this.$services.page.isCondition(this.cell.state.active, null, this);
 			}
-			return active || this.$services.triggerable.getActiveRoutes(this.cell.state).indexOf(this.$services.vue.route) >= 0;
+			return this.$services.triggerable.getActiveRoutes(this.cell.state).indexOf(this.$services.vue.route) >= 0;
 		},
 		disabled: function() {
-			return this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, null, this);
+			return this.cell.state.disabled ? this.$services.page.isCondition(this.cell.state.disabled, null, this) : false;
 		}
 	},
 	ready: function() {
@@ -114,7 +114,7 @@ Vue.view("page-button", {
 		handle: function($event) {
 			// if you are in edit mode, you have to explicitly click alt to enable the button
 			// it seems that vue also intercepts spaces and sends it as a click event, meaning when you type in the rich text, it can trigger
-			if (!this.edit || $event.altKey) {
+			if (!this.edit || ($event && $event.altKey)) {
 				// if we are part of a component group, we will first untrigger any existing active component group buttons
 				// we rather have an intermittent situation where no buttons are active than where two buttons are active
 				if (this.cell.state.componentGroup) {

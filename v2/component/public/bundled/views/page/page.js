@@ -387,7 +387,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					// masked route so we can reload
 					self.$services.router.route(route, {
 						code: "page-load-failed",
-						message: "%{error:The page you requested could not be loaded, please <a href='javascript:void(0)' @click='$window.location.reload()'>try again</a>}"
+						message: "%{error:The page you requested could not be loaded, please&nbsp;<a class='is-color-link' href='javascript:void(0)' @click='$window.location.reload()'>try again</a>}"
 					}, inSelf && self.$el ? nabu.utils.router.self(self.$el) : null, true);
 				}
 			};
@@ -407,7 +407,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	beforeDestroy: function() {
-		this.stopEdit();
+		if (!this.page.content.readOnly) {
+			this.stopEdit();
+		}
 		if (this.autoRefreshTimeout) {
 			clearTimeout(this.autoRefreshTimeout);
 			this.autoRefreshTimeout = null;
@@ -810,7 +812,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		},
 		getHideMode: function(cell) {
 			// not yet defined (backwards compatible)
-			if (!cell.state.hasOwnProperty("hideMode")) {
+			if (!cell.state || !cell.state.hasOwnProperty("hideMode")) {
 				var mode = null;
 				if (cell.on) {
 					mode = "event";
@@ -823,6 +825,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 				else if (cell.closeable) {
 					mode = "toggle";
+				}
+				if (!cell.state) {
+					Vue.set(cell, "state", {});
 				}
 				Vue.set(cell.state, "hideMode", mode);
 			}

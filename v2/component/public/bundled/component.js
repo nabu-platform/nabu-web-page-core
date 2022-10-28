@@ -692,6 +692,9 @@ window.addEventListener("load", function() {
 						tableTitle.state.content = "%" + "{" + name + "}";
 					}
 					
+					var repeatName = "repeat" + name;
+					var pickResult = null;
+					
 					if (tableBody) {
 						// not a thing (yet?)
 						//tableBody.repeat.repeatType = "operation";
@@ -700,74 +703,84 @@ window.addEventListener("load", function() {
 						tableBody.repeat.emptyPlaceholder = "%" + "{No data available}";
 						// by default we allow selection
 						tableBody.repeat.selectable = true;
-						tableBody.runtimeAlias = "repeat" + name;
+						tableBody.runtimeAlias = repeatName;
 						tableBody.name = "Table Body " + name;
-						generator.generateFields(type, content, pageInstance, root, tableBody, tableHeader, rowGenerator, cellGenerator);
+						pickResult = generator.generateFields(type, content, pageInstance, root, tableBody, tableHeader, rowGenerator, cellGenerator);
+					}
+					else {
+						pickResult = application.services.q.resolve({});
 					}
 					
-					var operation = $services.swagger.operations[content];
-					var blacklist = ["limit", "offset", "orderBy", "id"];
-					if (operation["x-temporary-secret"]) {
-						blacklist.push(operation["x-temporary-secret"]);
-					}
-					if (operation["x-temporary-id"]) {
-						blacklist.push(operation["x-temporary-id"]);
-					}
-					if (tableFilters && operation) {
-						var row = tableFilters.cells ? tableFilters : rowGenerator(tableFilters);
-						if (operation.parameters) {
-							var formGenerator = nabu.page.providers("page-generator").filter(function(x) {
-								return x.name.toLowerCase() == "form";
-							})[0];
-							formGenerator.generateFields("operation", content, pageInstance, "repeat" + name + ".filter", row, rowGenerator, cellGenerator,
-								blacklist, 600);
-							
-							// for search, we want a placeholder instead of label and (at least for text input) a search icon suffix
-							row.cells.forEach(function(cell) {
-								cell.state.placeholder = cell.state.label == "%" + "{Q}" ? "%" + "{Search}" : cell.state.label;
-								cell.state.label = null;
-								if (cell.alias == "page-form-text") {
-									cell.state.suffixIcon = "search";
-								}
-							});
+					pickResult.then(function(x) {
+						if (x.repeatName) {
+							repeatName = x.repeatName;
+							tableBody.runtimeAlias = x.repeatName;	
 						}
-					}
+						var operation = $services.swagger.operations[content];
+						var blacklist = ["limit", "offset", "orderBy", "id"];
+						if (operation["x-temporary-secret"]) {
+							blacklist.push(operation["x-temporary-secret"]);
+						}
+						if (operation["x-temporary-id"]) {
+							blacklist.push(operation["x-temporary-id"]);
+						}
+						if (tableFilters && operation) {
+							var row = tableFilters.cells ? tableFilters : rowGenerator(tableFilters);
+							if (operation.parameters) {
+								var formGenerator = nabu.page.providers("page-generator").filter(function(x) {
+									return x.name.toLowerCase() == "form";
+								})[0];
+								formGenerator.generateFields("operation", content, pageInstance, repeatName + ".filter", row, rowGenerator, cellGenerator,
+									blacklist, 600);
+								
+								// for search, we want a placeholder instead of label and (at least for text input) a search icon suffix
+								row.cells.forEach(function(cell) {
+									cell.state.placeholder = cell.state.label == "%" + "{Q}" ? "%" + "{Search}" : cell.state.label;
+									cell.state.label = null;
+									if (cell.alias == "page-form-text") {
+										cell.state.suffixIcon = "search";
+									}
+								});
+							}
+						}
+						
+						if (tableTags) {
+							var row = tableTags.cells ? tableTags : rowGenerator(tableTags);
+							var tagTemplates = row.cells.filter(function(x) {
+								return x.alias == "page-tag";
+							});
+							// remove them
+							tagTemplates.forEach(function(x) {
+								row.cells.splice(row.cells.indexOf(x), 1);
+							});
+							// if there are already cells in the row of the type "page-tag", we remove them
+							// they are assumed to be a template of what you want to do with the styling
+							if (operation.parameters) {
+								operation.parameters.forEach(function(x) {
+									if (blacklist.indexOf(x.name) < 0) {
+										var cell = cellGenerator(row);
+										cell.alias = "page-tag";
+										cell.state.field = repeatName + ".filter." + x.name;
+										cell.state.content = x.name == "q" ? "%" + "{Search}" : "%" + "{" + x.name.substring(0, 1).toUpperCase() + x.name.substring(1).replace(/([A-Z]+)/g, " $1") + "}";
+										
+										if (tagTemplates.length == 0) {
+											application.services.page.normalizeAris(pageInstance.page, cell, "cell");
+											// not rendered yet so we can't read it "live"
+											application.services.page.normalizeAris(pageInstance.page, cell, "cell", [{name:"page-tag"}]);
+											var options = cell.aris.components["page-tag"].options;
+											cell.aris.components["page-tag"].variant = "primary-dark-outline";
+											options.push("direction_reverse");
+											options.push("decoration_emphasis");
+										}
+										else {
+											cell.aris = tagTemplates[0].aris;
+										}
+									}
+								});
+							}
+						}
+					})
 					
-					if (tableTags) {
-						var row = tableTags.cells ? tableTags : rowGenerator(tableTags);
-						var tagTemplates = row.cells.filter(function(x) {
-							return x.alias == "page-tag";
-						});
-						// remove them
-						tagTemplates.forEach(function(x) {
-							row.cells.splice(row.cells.indexOf(x), 1);
-						});
-						// if there are already cells in the row of the type "page-tag", we remove them
-						// they are assumed to be a template of what you want to do with the styling
-						if (operation.parameters) {
-							operation.parameters.forEach(function(x) {
-								if (blacklist.indexOf(x.name) < 0) {
-									var cell = cellGenerator(row);
-									cell.alias = "page-tag";
-									cell.state.field = "repeat" + name + ".filter." + x.name;
-									cell.state.content = x.name == "q" ? "%" + "{Search}" : "%" + "{" + x.name.substring(0, 1).toUpperCase() + x.name.substring(1).replace(/([A-Z]+)/g, " $1") + "}";
-									
-									if (tagTemplates.length == 0) {
-										application.services.page.normalizeAris(pageInstance.page, cell, "cell");
-										// not rendered yet so we can't read it "live"
-										application.services.page.normalizeAris(pageInstance.page, cell, "cell", [{name:"page-tag"}]);
-										var options = cell.aris.components["page-tag"].options;
-										cell.aris.components["page-tag"].variant = "primary-dark-outline";
-										options.push("direction_reverse");
-										options.push("decoration_emphasis");
-									}
-									else {
-										cell.aris = tagTemplates[0].aris;
-									}
-								}
-							});
-						}
-					}
 				}
 				
 				if (availableTemplates.length == 0) {
@@ -812,18 +825,22 @@ window.addEventListener("load", function() {
 				});
 				var keys = application.services.page.getSimpleKeysFor(definition);
 				
-				var chosen = [];
+				var pickResult = {
+					fields: [],
+					repeatName: null
+				};
+				var promise = application.services.q.defer();
 				new nabu.utils.vue.prompt(function() {
 					var component = Vue.component("data-field-picker");
 					return new component({
 						propsData: {
-							value: chosen,
+							value: pickResult,
 							fields: keys
 						}
 					});
-					
 				}).then(function() {
-					chosen.forEach(function(key) {
+					var repeatName = pickResult.repeatName ? pickResult.repeatName : body.runtimeAlias;
+					pickResult.fields.forEach(function(key) {
 						// we don't generate a field for the id by default
 						if (key != "id") {
 							var name = key.replace(/^.*\.([^.]+)$/, "$1");
@@ -837,12 +854,12 @@ window.addEventListener("load", function() {
 								format: null
 							});
 							
-							cell.state.fragments[name].key = body.runtimeAlias + ".record." + key;
+							cell.state.fragments[name].key = repeatName + ".record." + key;
 							
 							// set an optional empty thing for mobile rendering
 							application.services.page.normalizeAris(pageInstance.page, cell, "cell");
 							cell.aris.components["table-column"].modifiers.push("empty");
-							cell.aris.components["table-column"].conditions["empty"] = "$value(\"" + body.runtimeAlias + ".record." + key + "\") == null";
+							cell.aris.components["table-column"].conditions["empty"] = "$value(\"" + repeatName + ".record." + key + "\") == null";
 							
 							// try to find a more specific alias
 							if (child) {
@@ -903,7 +920,12 @@ window.addEventListener("load", function() {
 							}
 						}
 					});
-				})
+					promise.resolve(pickResult);
+				}, function() {
+					// even if you add no fields, we continue generation
+					promise.resolve(pickResult);
+				});
+				return promise;
 			}
 		});
 		nabu.page.provide("page-generator", {

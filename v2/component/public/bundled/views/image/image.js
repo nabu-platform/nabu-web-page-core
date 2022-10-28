@@ -27,7 +27,8 @@ Vue.view("page-image", {
 		edit: {
 			type: Boolean,
 			required: true
-		}, 
+		}
+		/*, 
 		contentType: {
 			type: String,
 			required: false
@@ -43,7 +44,7 @@ Vue.view("page-image", {
 		// specifically for that, you can add an id here (like an attachment id) which identifies the blob
 		contentId: {
 			required: false
-		}
+		}*/
 	},
 	activate: function(done) {
 		if (this.edit) {
@@ -107,11 +108,13 @@ Vue.view("page-image", {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				if (pageInstance) {
 					var self = this;
-					var blob = pageInstance.get(this.cell.state.byteValue);
+//					var blob = pageInstance.get(this.cell.state.byteValue);
+					var blob = this.$services.page.getBindingValue(pageInstance, this.cell.state.byteValue);
 					if (blob) {
 						var contentType = null;
 						if (this.cell.state.contentTypeValue) {
-							contentType = pageInstance.get(this.cell.state.contentTypeValue);		
+							//contentType = pageInstance.get(this.cell.state.contentTypeValue);		
+							contentType = this.$services.page.getBindingValue(pageInstance, this.cell.state.contentTypeValue);
 						}
 						if (!contentType) {
 							contentType = "image/jpeg";
@@ -151,7 +154,7 @@ Vue.view("page-image", {
 			if (!href && this.edit) {
 				href = application.configuration.root + "resources/modules/image/placeholder.svg";
 			}
-			return href;
+			this.href = href;
 		},
 		calculateRESTUrl: function() {
 			if (this.cell.state.imageOperation) {

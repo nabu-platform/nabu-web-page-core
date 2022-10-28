@@ -131,7 +131,11 @@
 					</div>
 					
 					<div v-else-if="action.type == 'confirmation'" class="is-column is-spacing-gap-medium">
-						<n-form-text v-model="action.confirmation" label="Confirmation message"/>
+						<n-form-text v-model="action.confirmation" label="Confirmation message" :timeout="600"/>
+					</div>
+					
+					<div v-else-if="action.type == 'scroll'" class="is-column is-spacing-gap-medium">
+						<n-form-text v-model="action.scrollTo" label="Scroll to" placeholder="e.g. .is-messages" :timeout="600"/>
 					</div>
 					
 					<div v-else-if="action.type == 'operation'" class="is-column is-spacing-gap-medium">

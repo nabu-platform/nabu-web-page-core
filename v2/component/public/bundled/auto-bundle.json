@@ -174,14 +174,6 @@
 							"url": "views/image/image.scss"
 						}
 					}, 
-					"dynamicImage": {
-						"dynamicImage.tpl": {
-							"url": "views/dynamicImage/dynamicImage.tpl"
-						}, 
-						"image.js": {
-							"url": "views/dynamicImage/dynamicImage.js"
-						}
-					}, 
 					"pages": {
 						"pages.js": {
 							"url": "views/pages/pages.js"

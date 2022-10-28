@@ -473,6 +473,17 @@ Vue.service("triggerable", {
 							}
 							return self.$services.q.resolve();
 						}
+						else if (action.type == "scroll" && action.scrollTo) {
+							var element = document.querySelector(action.scrollTo);
+							if (element) {
+								// TODO: make the block target configurable, center is "generally" acceptable
+								element.scrollIntoView({behavior: "smooth", block: "center"});
+								return self.$services.q.resolve(element);
+							}
+							else {
+								return self.$services.q.reject();
+							}
+						}
 					};
 					
 					if (!self.edit) {
