@@ -1551,6 +1551,9 @@ nabu.services.VueService(Vue.extend({
 					}
 					self.scanPagesForTemplates();
 				}
+				else {
+					self.removeEditIcon();
+				}
 				if (self.canTest()) {
 					// this call can take long (lots of I/O to be done)
 					// so we don't include it in the blocking promises array
@@ -1614,8 +1617,15 @@ nabu.services.VueService(Vue.extend({
 				});
 			});
 		},
+		removeEditIcon: function() {
+			var icon = document.getElementById("page-edit-icon");
+			if (icon) {
+				icon.parentNode.removeChild(icon);
+			}
+		},
 		injectEditIcon: function() {
 			var div = document.createElement("div");
+			div.setAttribute("id", "page-edit-icon");
 			div.setAttribute("class", "is-column");
 			div.setAttribute("style", "position: fixed; bottom: 1rem; left: 1rem;");
 			var button = document.createElement("button");

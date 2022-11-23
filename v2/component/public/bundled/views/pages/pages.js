@@ -271,7 +271,6 @@ nabu.page.views.Pages = Vue.extend({
 				}
 			}
 			var parameters = this.$services.page.getPageParameters(page);
-			console.log("parameters are", parameters, page);
 			if (Object.keys(parameters.properties).length || (parentParameters && Object.keys(parentParameters.properties).length)) {
 				var result = {};
 				if (parentParameters) {

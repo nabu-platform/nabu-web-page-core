@@ -392,12 +392,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 			};
 			this.$services.q.all(promises).then(finalize, function(error) {
-				done();
 				// if we are in edit mode, we can be expected to fix this
 				if (self.edit || self.$services.page.wantEdit) {
 					finalize();
 				}
 				else {
+					done();
 					routeError(error, 0);
 				}
 			});
@@ -465,7 +465,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 		// for events, it was enough to detect the event, but with the new generic closeable, we need to specifically set this
 		// it should continue to work for events as well though
 		this.$services.page.listCloseableItems(this.page).forEach(function(x) {
-			Vue.set(self.closed, x.id, x.on ? x.on : "$any");
+			if (!x.startVisible) {
+				Vue.set(self.closed, x.id, x.on ? x.on : "$any");
+			}
 		});
 	},
 	beforeMount: function() {
@@ -3805,6 +3807,18 @@ Vue.component("n-page-row", {
 					return false;
 				}
 			}
+			if (!!row.permission) {
+				if (!this.$services.user.hasPermission(row.permission, row.permissionContext)) {
+					return false;
+				}
+			}
+			else if (!!row.permissionContext) {
+				if (this.$services.user.permissions.filter(function(x) {
+							return x.indexOf(":") > 0 && x.split(":")[0] == row.permissionContext;
+						}).length == 0) {
+					return false;
+				}
+			}
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			if (row.on) {
@@ -3877,6 +3891,24 @@ Vue.component("n-page-row", {
 					classes.push("is-page-prompt");
 				}
 				//{'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }
+			}
+			if (cell.target == "pane") {
+				classes.push("is-pane-layer");
+				// check the max layer currently active and go one higher
+				var maxLayer = 0;
+				document.querySelectorAll(".is-pane-layer").forEach(function(x) {
+					if (x.getAttribute("cell-id") != cell.id) {
+						x.classList.forEach(function(y) {
+							if (y.indexOf("is-pane-layer") == 0) {
+								var tmp = y.substring("is-pane-layer".length);
+								if (tmp && parseInt(tmp) > maxLayer) {
+									maxLayer = parseInt(tmp);
+								}
+							}
+						})
+					}
+				});
+				classes.push("is-pane-layer-" + (maxLayer + 1));
 			}
 			if (this.$services.page.useAris && cell.aris && cell.aris.components) {
 				var children = this.$services.page.calculateArisComponents(cell.aris, cell.alias, this);
@@ -3984,6 +4016,18 @@ Vue.component("n-page-row", {
 			
 			if (cell.condition) {
 				if (!this.$services.page.isCondition(cell.condition, this.getState(row, cell), this)) {
+					return false;
+				}
+			}
+			if (!!cell.permission) {
+				if (!this.$services.user.hasPermission(cell.permission, cell.permissionContext)) {
+					return false;
+				}
+			}
+			else if (!!cell.permissionContext) {
+				if (this.$services.user.permissions.filter(function(x) {
+							return x.indexOf(":") > 0 && x.split(":")[0] == cell.permissionContext;
+						}).length == 0) {
 					return false;
 				}
 			}
@@ -5103,9 +5147,13 @@ Vue.component("aris-editor", {
 						// only add options that we don't know about yet
 						if (current.options.length > 0) {
 							x.options.forEach(function(y) {
-								var option = current.options.filter(function(z) { return z == y })[0];
+								var option = current.options.filter(function(z) { return z.name == y.name })[0];
 								if (option == null) {
-									current.options.push(y);
+									current.options.push(JSON.parse(JSON.stringify(y)));
+								}
+								// append the body so we see the full effect
+								else if (option.body.indexOf(y.body) < 0) {
+									option.body += "\n" + y.body;
 								}
 							});
 						}

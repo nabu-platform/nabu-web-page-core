@@ -85,7 +85,7 @@ Vue.component("page-form-input-enumeration-provider", {
 			+ " <n-form-checkbox-list v-if='field.showCheckboxView' :items='enumerationFilter()' ref='form'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
-			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		v-bubble:input"
 			+ "		:formatter='enumerationFormatter'"
 			+ "		:label='label'"
 			+ "		:value='value'"
@@ -100,7 +100,7 @@ Vue.component("page-form-input-enumeration-provider", {
 			+ "	<n-form-radio v-else-if='field.showRadioView' :items='enumerationFilter()' ref='form'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
-			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		v-bubble:input"
 			+ "		:formatter='enumerationFormatter'"
 			+ "		:label='label'"
 			+ "		:name='name'"
@@ -119,7 +119,7 @@ Vue.component("page-form-input-enumeration-provider", {
 			+ "		:required='required'"
 			+ "		v-bubble:label"
 			+ "		v-bubble:blur"
-			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		v-bubble:input"
 			+ "		:label='label'"
 			+ "		:value='value'"
 			+ "		:description='field.description'"
@@ -213,11 +213,15 @@ Vue.component("page-form-input-enumeration-provider", {
 						return formatted.toLowerCase().indexOf(value.toLowerCase()) >= 0;
 					});
 				}
+				// the sorting can conflict with explicit sorting you want to manage from the outside
+				// additionally, it can cause an infinite render loop
+				/*
 				values.sort(function(a, b) {
 					var valueA = self.enumerationFormatter(a);
 					var valueB = self.enumerationFormatter(b);
 					return valueA ? valueA.localeCompare(valueB) : (valueB ? -1 : 0);
 				});
+				*/
 				return values;
 			}
 			else {

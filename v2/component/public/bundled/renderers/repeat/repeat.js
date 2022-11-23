@@ -52,6 +52,10 @@ nabu.page.provide("page-renderer", {
 								properties: parameters[target.runtimeAlias].properties.record.properties
 							}
 						}
+					},
+					// we want to trigger on deselect so we can for example show a placeholder
+					deselect: {
+						
 					}
 				};
 				return trigger;
@@ -503,25 +507,26 @@ Vue.component("renderer-repeat", {
 		getComponent: function() {
 			var self = this;
 			var pageType = this.getPageType();
+			var componentType = null;
 			if (pageType.pageType) {
 				var provider = nabu.page.providers("page-type").filter(function(x) {
 					return x.name == pageType.pageType;
 				})[0];
 				if (provider && this.target.rows && provider.cellTag instanceof Function) {
-					return provider.cellTag(null, this.target, null, this.edit, pageType.path, this.page);
+					componentType = provider.cellTag(null, this.target, null, this.edit, pageType.path, this.page);
 				}
 				else if (provider && this.target.rows && provider.cellTag) {
-					return provider.cellTag;
+					componentType = provider.cellTag;
 				}
 				// if we are a row, check if we have a celltag
 				else if (provider && this.target.cells && provider.rowTag instanceof Function) {
-					return provider.rowTag(this.target, null, this.edit, pageType.path, this.page);
+					componentType = provider.rowTag(this.target, null, this.edit, pageType.path, this.page);
 				}
 				else if (provider && this.target.cells && provider.rowTag) {
-					return provider.rowTag;
+					componentType = provider.rowTag;
 				}
 			}
-			return "div";
+			return componentType ? componentType : "div";
 		},
 		getMessageComponent: function() {
 			var self = this;
@@ -672,6 +677,8 @@ Vue.component("renderer-repeat", {
 		unselectAll: function() {
 			this.state.selected.splice(0);
 			this.$services.triggerable.untrigger(this.target, "select", this);
+			// trigger deselect
+			this.$services.triggerable.trigger(this.target, "deselect", this);
 		},
 		getRuntimeState: function() {
 			return this.state;	
@@ -725,7 +732,7 @@ Vue.component("renderer-repeat", {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			// TODO: subscribe to all events and emit them to this page
 			component.$on("hook:beforeDestroy", function() {
-				console.log("Destroying repeated fragmented page");
+				console.debug("Destroying repeated fragmented page");
 			});
 			// we don't need to explicitly unsubscribe? once the page gets destroyed, its gone anyway
 			component.subscribe("$any", function(name, value) {

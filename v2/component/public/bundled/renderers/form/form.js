@@ -84,7 +84,13 @@ nabu.page.provide("page-renderer", {
 			actions.push({
 				title: "Submit",
 				name: "submit",
-				output: output
+				input: {
+					skipValidate: {
+						type: "boolean"
+					}
+				},
+				output: output,
+				errors: ["submit", "validate"]
 			});
 		}
 		return actions;
@@ -176,57 +182,63 @@ Vue.component("renderer-form", {
 			this.messages.splice(0);
 			// do an operation call
 			if (this.target.form.operation && this.target.form.formType == "operation") {
-				return this.$services.swagger.execute(this.target.form.operation, this.state).then(function() {
-					// synchronize the changes back to the binding if relevant
-					if (self.target.form.synchronize) {
-						self.$services.page.applyRendererParameters(self.$services.page.getPageInstance(self.page, self), self.target, self.state);
-					}
-				}, function(error) {
-					self.error = "Form submission failed";
-					// if we get an XMLHTTPResponse thingy, parse it
-					if (error && error.responseText) {
-						error = JSON.parse(error.responseText);
-					}
-					// we get a (hopefully) standardized event back
-					if (error) {
-						if (!error.code) {
-							error.code = "HTTP-" + (error.status != null ? error.status : 500);
+				try {
+					return this.$services.swagger.execute(this.target.form.operation, this.state).then(function() {
+						// synchronize the changes back to the binding if relevant
+						if (self.target.form.synchronize) {
+							self.$services.page.applyRendererParameters(self.$services.page.getPageInstance(self.page, self), self.target, self.state);
 						}
-						try {
-							if (self.target.form.errorEvent) {
-								var pageInstance = self.$services.page.getPageInstance(self.page, self);
-								pageInstance.emit(self.target.form.errorEvent, error);
+					}, function(error) {
+						self.error = "Form submission failed";
+						// if we get an XMLHTTPResponse thingy, parse it
+						if (error && error.responseText) {
+							error = JSON.parse(error.responseText);
+						}
+						// we get a (hopefully) standardized event back
+						if (error) {
+							if (!error.code) {
+								error.code = "HTTP-" + (error.status != null ? error.status : 500);
 							}
-							// the default says nothing
-							if (error.title == "Internal Server Error") {
-								error.title = "%{Could not submit your form}";
+							try {
+								if (self.target.form.errorEvent) {
+									var pageInstance = self.$services.page.getPageInstance(self.page, self);
+									pageInstance.emit(self.target.form.errorEvent, error);
+								}
+								// the default says nothing
+								if (error.title == "Internal Server Error") {
+									error.title = "%{Could not submit your form}";
+								}
+								var translated = self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message);
+								self.error = translated;
+								self.messages.push({
+									type: "request",
+									severity: "error",
+									title: translated
+								})
 							}
-							var translated = self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message);
-							self.error = translated;
+							catch (exception) {
+								self.messages.push({
+									type: "request",
+									severity: "error",
+									title: self.$services.page.translateErrorCode(error.status ? "HTTP-" + error.status : "HTTP-500")
+								})
+							}
+						}
+						else {
 							self.messages.push({
 								type: "request",
 								severity: "error",
-								title: translated
-							})
+								title: self.$services.page.translateErrorCode("HTTP-500")
+							});
 						}
-						catch (exception) {
-							self.messages.push({
-								type: "request",
-								severity: "error",
-								title: self.$services.page.translateErrorCode(error.status ? "HTTP-" + error.status : "HTTP-500")
-							})
-						}
-					}
-					else {
-						self.messages.push({
-							type: "request",
-							severity: "error",
-							title: self.$services.page.translateErrorCode("HTTP-500")
-						});
-					}
-					self.doingIt = false;
-					stop(self.error);
-				});
+						self.doingIt = false;
+						stop(self.error);
+					});
+				}
+				catch (exception) {
+					console.error("Can not submit form", exception);
+					return self.$services.q.reject(exception);
+				}
 			}
 			else if (this.target.form.array && this.target.form.formType == "array") {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
@@ -279,15 +291,27 @@ Vue.component("renderer-form", {
 			var self = this;
 			if (name == "submit") {
 				var promise = this.$services.q.defer();
-				this.runAction("validate").then(function() {
+				var validationPromise = null;
+				if (input && input.skipValidate) {
+					validationPromise = this.$services.q.resolve();
+				}
+				else {
+					validationPromise = this.runAction("validate");
+				}
+				validationPromise.then(function() {
 					var result = self.submit();
 					if (result && result.then) {
-						result.then(promise, promise);
+						result.then(promise, function(error) {
+							promise.reject({errorType: "submit", error: error});
+						});
 					}
 					else {
 						promise.resolve();
 					}
-				}, promise);
+				}, function(error) {
+					self.$services.triggerable.trigger(self.target, "validate:error", {}, self);
+					promise.reject({errorType: "validate", error: error});
+				});
 				return promise;
 			}
 			else if (name == "validate") {
@@ -346,7 +370,7 @@ Vue.component("renderer-form", {
 						promise.resolve();
 					}
 					else {
-						promise.reject(messages);
+						promise.reject({errorType: "validate", messages: messages});
 					}
 				}, promise);
 				return promise;

@@ -44,8 +44,28 @@ Vue.view("page-button", {
 	},
 	created: function() {
 		this.elementPromise = this.$services.q.defer();
+		// click was renamed to activate
+		// for the forseeable future we do this rewriting
+		// might disable it at some point
+		if (this.cell.state.triggers) {
+			this.cell.state.triggers.forEach(function(x) {
+				if (x.trigger == "click") {
+					x.trigger = "activate";
+				}
+			})
+		}
 	},
 	computed: {
+		tooltip: function() {
+			if (this.cell.state.tooltip) {
+				return this.$services.page.interpret(this.$services.page.translate(this.cell.state.tooltip), this);
+			}	
+		},
+		badge: function() {
+			if (this.cell.state.badge) {
+				return this.$services.page.interpret(this.$services.page.translate(this.cell.state.badge), this);
+			}	
+		},
 		active: function() {
 			var active = false;
 			if (this.cell.state.active) {
@@ -89,20 +109,24 @@ Vue.view("page-button", {
 			return !content ? content : this.$services.typography.replaceVariables(pageInstance, this.cell.state, content, this.elementPromise);
 		},
 		getChildComponents: function() {
-			return [{
+			var childComponents = [{
 				title: "Button",
 				name: "page-button",
 				component: "button"
-			}]	
+			}];
+			if (this.cell.state.badge) {
+				childComponents.push({
+					title: "Badge",
+					name: "page-button-badge",
+					component: "badge"
+				});
+			}
+			return childComponents;
 		},
 		getEvents: function() {
 			var result = {};
 			nabu.utils.objects.merge(result, this.$services.triggerable.getEvents(this.page, this.cell.state));
 
-			if (nabu.page.event.getName(this.cell.state, "clickEvent") && nabu.page.event.getName(this.cell.state, "clickEvent") != "$close") {
-				var type = nabu.page.event.getType(this.cell.state, "clickEvent");
-				result[nabu.page.event.getName(this.cell.state, "clickEvent")] = type;
-			}
 			if (this.cell.state.action && this.cell.state.actionTarget && this.cell.state.actionEvent) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				var output = this.$services.page.getActionOutput(pageInstance, this.cell.state.actionTarget, this.cell.state.action);
@@ -128,7 +152,7 @@ Vue.view("page-button", {
 				}
 				
 				this.running = true;
-				var promise = this.$services.triggerable.trigger(this.cell.state, "click", null, this);
+				var promise = this.$services.triggerable.trigger(this.cell.state, "activate", null, this);
 				
 				if (this.cell.state.stopPropagation && $event) {
 					$event.stopPropagation();
@@ -149,116 +173,10 @@ Vue.view("page-button", {
 				
 				return promise;
 			}
-			
-			// we don't always call this handler (immediately), so we separate the logic
-			var self = this;
-			
-			var getBindings = function() {
-				var parameters = {};
-				var pageInstance = self.$services.page.getPageInstance(self.page, self);
-				Object.keys(self.cell.state.bindings).map(function(key) {
-					if (self.cell.state.bindings[key] != null) {
-						var value = self.$services.page.getBindingValue(pageInstance, self.cell.state.bindings[key], self);
-						if (value != null) {
-							parameters[key] = value;
-						}
-					}
-				});
-				return parameters;
-			}
-			var handler = function() {
-				// event-based
-				if (nabu.page.event.getName(self.cell.state, "clickEvent")) {
-					var pageInstance = self.$services.page.getPageInstance(self.page, self);
-					return pageInstance.emit(
-						nabu.page.event.getName(self.cell.state, "clickEvent"),
-						nabu.page.event.getInstance(self.cell.state, "clickEvent", self.page, self)
-					);
-				}
-				// route based
-				else if (self.cell.state.route) {
-					var route = self.cell.state.route;
-					// variable route possible
-					if (route.charAt(0) == "=") {
-						route = self.$services.page.interpret(route, self);
-					}
-					var parameters = getBindings();
-					if (self.cell.state.anchor == "$blank") {
-						window.open(self.$services.router.template(route, parameters));
-					}
-					else if (self.cell.state.anchor == "$window") {
-						window.location = self.$services.router.template(route, parameters);
-					}
-					else {
-						return self.$services.router.route(route, parameters, self.cell.state.anchor, self.cell.state.mask);
-					}
-				}
-				else if (self.cell.state.url) {
-					var url = this.$services.page.interpret(self.cell.state.url, this);
-					if (self.cell.state.anchor == "$blank") {
-						window.open(url);
-					}
-					else {
-						window.location = url;
-					}
-				}
-				// we might want to run an action
-				else if (self.cell.state.action) {
-					if (self.cell.state.actionTarget) {
-						var pageInstance = self.$services.page.getPageInstance(self.page, self);
-						var target = self.$services.page.getActionTarget(pageInstance, self.cell.state.actionTarget);
-						// at this point it is a renderer or a component
-						if (target && target.runAction) {
-							var result = target.runAction(self.cell.state.action, getBindings());
-							var promise = self.$services.q.defer();
-							// if we want to emit an action event, let's, even if the result is null
-							if (self.cell.state.actionEvent) {
-								if (result && result.then) {
-									// we don't do anything (yet) on error?
-									result.then(function(x) {
-										pageInstance.emit(self.cell.state.actionEvent, x);
-										promise.resolve();
-									}, promise);
-								}
-								else {
-									pageInstance.emit(self.cell.state.actionEvent, result).then(promise, promise);
-								}
-							}
-							else {
-								promise.resolve();
-							}
-							return promise;
-						}
-					}
-				}
-			};
-			if (!this.edit) {
-				var unlock = function() {
-					self.running = null;
-					if (self.cell.state.emitClose) {
-						self.$emit("close");
-					}
-					if (self.cell.state.componentGroup) {
-						self.activated = true;
-					}
-				};
-				this.running = true;
-				var promise = handler();
-				if (promise && promise.then) {
-					promise.then(unlock, unlock);
-				}
-				else {
-					unlock();
-				}
-			}
-			if (this.cell.state.stopPropagation) {
-				$event.stopPropagation();
-				$event.preventDefault();
-			}
 		},
 		deactivate: function() {
 			if (this.activated) {
-				this.$services.triggerable.untrigger(this.cell.state, "click", this);
+				this.$services.triggerable.untrigger(this.cell.state, "activate", this);
 				this.activated = false;	
 			}
 		},
@@ -315,6 +233,20 @@ Vue.component("page-button-configure", {
 		}
 		if (!this.cell.state.activeRoutes) {
 			Vue.set(this.cell.state, "activeRoutes", []);
+		}
+	},
+	computed: {
+		triggers: function() {
+			// we can activate
+			var triggers = {"activate": {}};
+			if (this.cell.state.triggers) {
+				if (this.cell.state.triggers.map(function(x) {
+						return x.trigger;
+					}).indexOf("activate") >= 0) {
+					triggers.deactivate = {};	
+				}
+			}
+			return triggers;
 		}
 	},
 	watch: {

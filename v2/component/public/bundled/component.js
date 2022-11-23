@@ -58,6 +58,22 @@ window.addEventListener("load", function() {
 		});
 		
 		$services.router.register({
+			alias: "impersonate",
+			priority: -10,
+			url: "/impersonate",
+			query: ["userId"],
+			enter: function(parameters) {
+				if (parameters.userId) {
+					$services.user.impersonate(parameters.userId).then(function() {
+						$services.router.route("home");
+					}, function() {
+						$services.router.route("error", {message:"%{Failed to impersonate}"});
+					})
+				}
+			}
+		});
+		
+		$services.router.register({
 			alias: "page-fields",
 			enter: function(parameters) {
 				return new nabu.page.views.PageFields({propsData: parameters});

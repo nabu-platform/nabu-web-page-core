@@ -589,7 +589,7 @@
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Location" key="cell-location" content-class="is-spacing-medium" class="is-highlight-left">
 							<p class="is-p is-size-small">By default the cell will render in the page, following its natural positioning.</p>
-							<n-form-combo label="Render in" :items="['page', 'sidebar', 'prompt', 'absolute']" v-model="cell.target" />
+							<n-form-combo label="Render in" :items="['page', 'sidebar', 'prompt', 'absolute', 'pane']" v-model="cell.target" />
 							<n-form-switch label="Prevent Auto Close" v-model="cell.preventAutoClose" v-if="cell.target == 'sidebar'"
 								after="The sidebar will automatically close when the user clicks elsewhere unless this is toggled"/>
 							<n-form-switch label="Optimize (may result in stale content)" v-model="cell.optimizeVueKey" v-if="cell.on"/>
@@ -614,6 +614,8 @@
 								
 							<n-form-combo label="The event that has to occur" v-model="cell.on" :filter="getAvailableEvents" v-if="cell.state.hideMode == 'event'" />
 								
+							<n-form-switch label="Start visible" v-model="cell.startVisible" v-if="cell.state.hideMode == 'toggle'" />
+							
 							<n-form-switch label="Hide until toggled explicitly" v-model="cell.closeable" v-if="false && !cell.on && (cell.target == 'page' || cell.target == null)" />
 							
 							<n-form-switch label="Autoclose once visible" v-model="cell.autocloseable" v-if="cell.closeable" after="Once it is toggled to visible and the user clicks outside this cell, do you want to automatically hide it again?"/>
@@ -635,12 +637,14 @@
 									</div>
 								</div>
 							</div>
+							<n-form-text label="Show only if user has permission" v-model="cell.permission" placeholder="E.g. company.list"/>
+							<n-form-text :label="row.permission ? 'Optional permission context' : 'Show only if user has any permission in context'" v-model="cell.permissionContext" placeholder="E.g. crm" />
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Triggers" key="cell-triggers" class="is-highlight-left" v-if="getTriggersForCell(cell)">
 							<p class="is-p is-size-small is-spacing-medium">You can add triggers to react to user interaction with the content.</p>
 							<page-triggerable-configure :page="page" :target="cell" :triggers="getTriggersForCell(cell)" :allow-closing="cell.target && cell.target != 'page'"/>
 						</n-collapsible>
-						<n-collapsible :only-one-open="true" title="Eventing" key="cell-events" content-class="is-spacing-medium" class="is-highlight-left" v-if="cell.on">
+						<n-collapsible :only-one-open="true" title="Eventing" key="cell-events" content-class="is-spacing-medium" class="is-highlight-left" v-if="false">
 							<n-form-combo label="Show On" v-model="cell.on" :filter="getAvailableEvents" v-if="!cell.closeable"
 								after="Only show this cell if a certain event is triggered"/>
 							<page-event-value :page="page" :container="cell" title="Click Event" name="clickEvent" @resetEvents="resetEvents" :inline="true" v-if="false"/>
@@ -733,6 +737,8 @@
 									</div>
 								</div>
 							</div>
+							<n-form-text label="Show only if user has permission" v-model="row.permission" placeholder="E.g. company.list"/>
+							<n-form-text :label="row.permission ? 'Optional permission context' : 'Show only if user has any permission in context'" v-model="row.permissionContext" placeholder="E.g. crm" />
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Triggers" key="row-triggers" class="is-highlight-left" v-if="getTriggersForCell(row)">
 							<p class="is-p is-size-small is-spacing-medium">You can add triggers to react to user interaction with the content.</p>
@@ -831,7 +837,7 @@
 						:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 						:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 						:key="cellId(cell) + '_edit' + '_' + cell.alias"
-						:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+						:cell-id="cell.id"
 						@click="clickOnCell(row, cell, $event)"
 						@click.ctrl="goto($event, row, cell)"
 						@click.meta="goto($event, row, cell)"
@@ -895,7 +901,7 @@
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
-							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+							:cell-id="cell.id"
 							@close="close(row, cell)"
 							@click="clickOnCell(row, cell, $event)"
 							@mouseover.native="mouseOver($event, row, cell)"
@@ -945,7 +951,7 @@
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
-							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+							:cell-id="cell.id"
 							@close="close(row, cell)"
 							@click="clickOnCell(row, cell, $event)"
 							@mouseover.native="mouseOver($event, row, cell)"
@@ -994,7 +1000,7 @@
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
-							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+							:cell-id="cell.id"
 							@close="close(row, cell)"
 							@click="clickOnCell(row, cell, $event)"
 							@mouseover.native="mouseOver($event, row, cell)"
@@ -1043,7 +1049,7 @@
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
-							:cell-key="'page_' + pageInstanceId + '_cell_' + cell.id"
+							:cell-id="cell.id"
 							@close="close(row, cell)"
 							@click="clickOnCell(row, cell, $event)"
 							@mouseover.native="mouseOver($event, row, cell)"

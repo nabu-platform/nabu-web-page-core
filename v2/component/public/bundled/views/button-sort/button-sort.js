@@ -126,7 +126,6 @@ Vue.view("page-button-sort", {
 							descMatch = false;
 						}
 					});
-					console.log("reuslt is", ascMatch, descMatch, this.cell.state.sortFields, current);
 					if (ascMatch && descMatch) {
 						console.log("Confusing order matching");
 					}

@@ -49,6 +49,36 @@ Vue.service("triggerable", {
 			}
 			return result;
 		},
+		// get all the error "types" that can be caused by a certain trigger
+		getTriggerErrorTypes: function(page, target) {
+			var result = [];
+			if (target && target.triggers) {
+				var pageInstance = this.$services.page.getPageInstance(page);
+				var available = this.$services.page.getAvailableActions(pageInstance);
+				target.triggers.forEach(function(trigger) {
+					if (trigger.actions) {
+						trigger.actions.forEach(function(action) {
+							// if we actually call an action on another component, check the action definition to see if it can return custom error types
+							if (action.type == "action") {
+								var chosenAction = available.filter(function(x) {
+									return x.name == action.action;
+								})[0];
+								if (chosenAction && chosenAction.errors && chosenAction.errors.length) {
+									nabu.utils.arrays.merge(result, chosenAction.errors);
+								}
+								else if (result.indexOf(action.action) < 0) {
+									result.push(action.action);
+								}
+							}
+							else if (result.indexOf(action.type) < 0) {
+								result.push(action.type);
+							}
+						})
+					}
+				});
+			}
+			return result;
+		},
 		// get all the events that can occur from these triggers
 		getEvents: function(page, target) {
 			var result = {};
@@ -152,7 +182,8 @@ Vue.service("triggerable", {
 			// TODO: the name "triggers" is actually configurable
 			var triggers = target.triggers ? target.triggers.filter(function(x) {
 				return x.trigger == trigger
-					&& (!x.condition || self.$services.page.isCondition(x.condition, value, instance));
+					&& (!x.condition || self.$services.page.isCondition(x.condition, value, instance))
+					&& (!x.triggerError || (value && value.errorType == x.triggerError));
 			}) : [];
 			
 			var promises = triggers.map(function(x, triggerIndex) {
@@ -306,7 +337,7 @@ Vue.service("triggerable", {
 													state[action.resultName] = answer;
 												}
 												if (runAfter && runAfter.length) {
-													self.$services.triggerable.trigger(targetConfiguration, action.action + ":after", null, target).then(function() {
+													self.$services.triggerable.trigger(targetConfiguration, action.action + ":after", answer, target).then(function() {
 														promise.resolve(answer)
 													}, promise);
 												}
@@ -315,7 +346,7 @@ Vue.service("triggerable", {
 												}
 											}, function(error) {
 												if (runError && runError.length) {
-													self.$services.triggerable.trigger(targetConfiguration, action.action + ":error", null, target).then(function() {
+													self.$services.triggerable.trigger(targetConfiguration, action.action + ":error", error, target).then(function() {
 														promise.reject(error)
 													}, promise);	
 												}
@@ -346,15 +377,21 @@ Vue.service("triggerable", {
 							var operation = self.$services.swagger.operations[action.operation];
 							var parameters = getBindings();
 							try {
-								return self.$services.swagger.execute(action.operation, parameters).then(function(answer) {
+								var promise = self.$services.q.defer();
+								self.$services.swagger.execute(action.operation, parameters).then(function(answer) {
 									if (action.resultName) {
 										state[action.resultName] = answer;
 									}
+									promise.resolve(answer);
+								}, function(error) {
+									// TODO: get the response code
+									promise.reject({errorType: "operation", error: error});
 								});
+								return promise;
 							}
 							catch (exception) {
 								console.error("Could not run operation: " + action.operation, exception);
-								return self.$services.q.reject(exception);
+								return self.$services.q.reject({action: "operation", exception: exception});
 							}
 						}
 						else if (action.type == "download" && action.operation) {
@@ -587,7 +624,7 @@ Vue.service("triggerable", {
 						if (x.errorTrigger) {
 							errorName = x.errorTrigger;
 						}
-						self.trigger(target, errorName, {}, instance);
+						self.trigger(target, errorName, error, instance);
 					}
 				});
 			});
@@ -686,6 +723,15 @@ Vue.component("page-triggerable-configure", {
 		}
 	},
 	methods: {
+		getTriggerErrorTypes: function(value) {
+			var result = this.$services.triggerable.getTriggerErrorTypes(this.page, this.target);
+			if (result.length && value) {
+				result = result.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				});
+			}
+			return result;
+		},
 		finalizedTrigger: function(trigger) {
 			return trigger.actions && trigger.actions.filter(function(x) {
 				return x.type == "route";

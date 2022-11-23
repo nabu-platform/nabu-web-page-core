@@ -9,6 +9,9 @@
 					<li class="is-column"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="target[name].splice(triggerIndex, 1)"><icon name="times"/></button></li>
 				</ul>
 				<n-form-combo v-model="trigger.trigger" v-if="getTriggerNames().length >= 2" :filter="getTriggerNames" label="Trigger On"/>
+				
+				<n-form-combo label="Only if error type is" v-model="trigger.triggerError" v-if="trigger.trigger && trigger.trigger.indexOf(':error') > 0" :filter="getTriggerErrorTypes"/>
+				
 				<n-form-text v-model="trigger.condition" label="Condition" after="You can configure an additional condition that must evaluate to true before the trigger is activated"/>
 				<n-form-text v-if="false" v-model="trigger.confirmation" label="Confirmation message" after="You can prompt the user for additional confirmation before executing the trigger"/>
 				<n-form-switch v-model="trigger.closeEvent" label="Send close event once done" after="We can emit a close once our trigger is done, closing any window it is in" v-if="allowClosing"/>
@@ -76,10 +79,11 @@
 					</div>
 					
 					<div v-else-if="action.type == 'event'" class="is-column is-spacing-gap-medium">
-						<page-event-value :page="page" :container="action" title="Event to emit" name="event" :inline="true" :allow-fields="!action.eventContent"/>
+						<page-event-value :page="page" :container="action" title="Event to emit" name="event" :inline="true" :allow-fields="!action.eventContent"
+							@resetEvents="$updateEvents"/>
 						<n-form-combo v-model="action.eventContent" :items="$window.Object.keys($services.triggerable.getInternalState(page, trigger, action))" label="Event content" after="Choose the event content from the available state"
 							v-if="!action.event || !action.event.eventFields || !action.event.eventFields.length"
-							@input="resetEvents"/>
+							@input="$updateEvents"/>
 							
 						<n-form-switch v-model="action.allowUntrigger" label="Remove event when trigger ends"
 							after="Triggers are limited in time, for example a hover effect might stop, a selection might be undone or the button that triggered a click might be removed alltogether. Enable this if you want the event to be unset at that point."/>
@@ -89,7 +93,7 @@
 						<n-form-text v-model="action.notificationDuration" label="Duration" :timeout="600" info="How long the notification should stay up (in ms)"/>
 						<n-form-text v-model="action.notificationTitle" label="Title" :timeout="600" info="An optional title for this notification, it can include variables from the originating event using the {{}} syntax"/>
 						<n-form-text v-model="action.notificationMessage" label="Message" :timeout="600" info="An optional title for this notification, it can include variables from the originating event using the {{}} syntax"/>
-						<n-form-combo v-model="action.notificationColor" label="Color" :filter="getAvailableColors" />
+						<n-form-combo v-model="action.notificationColor" label="Color" :filter="getAvailableColors" :extracter="function(x) { return x.name }" :formatter="function(x) { return x.name }" />
 						<n-form-combo v-model="action.notificationSeverity" label="Severity" :timeout="600" :items="['success', 'warning', 'error', 'info', 'danger']" :placeholder="info" v-if="false"/>
 						<n-form-text v-model="action.notificationIcon" label="Icon" :timeout="600" info="The correct value for this depends on your icon provider"/>
 						<n-form-switch v-model="action.notificationCloseable" label="Closeable" info="Can the user explicitly close the notification?"/>
