@@ -115,6 +115,9 @@ Vue.component("page-format-resolver", {
 					}
 				}
 			});
+//			result.properties["$serviceContext"] = {
+//				type: "string"
+//			};
 			return result;
 		},
 		hasMappableEnumerationParameters: function(field) {

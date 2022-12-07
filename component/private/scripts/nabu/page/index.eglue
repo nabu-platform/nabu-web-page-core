@@ -31,6 +31,7 @@ configuration = application.configuration("nabu.web.page.core.types.configuratio
 
 if (configuration/title != null)
 	title = configuration/title
+	echo("<title>" + configuration/title + "</title>")
 if (configuration/branding/favicon != null)
 	echo('		<link rel="icon" type="image/png" href="' + configuration/branding/favicon + '"/>\n')
 if (configuration/branding/title != null)
@@ -65,7 +66,6 @@ if (environment("url") != null)
 		<script src="${javascript}?version=${environment('version')}&build=${buildTime}${when(language() == null, '', '&language=' + language())}"></script>
 		<link rel="stylesheet" type="text/css" href="${css}?version=${environment('version')}&build=${buildTime}${when(language() == null, '', '&language=' + language())}">
 		${additional}
-		<title>${title}</title>
 ${{
 if (nabu.web.application.Services.hasFragment(environment("webApplicationId"), "nabu.web.core.rest.manifest")/has)
 	echo("<link rel='manifest' href='" + server.root() + "manifest.json'>")

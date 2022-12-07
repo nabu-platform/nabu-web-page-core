@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<node artifactManager="be.nabu.eai.module.services.vm.VMServiceManager" created="2022-10-19T12:53:33.339+02:00" lastModified="2022-10-27T17:00:53.132+02:00" leaf="true" version="22">
+<node artifactManager="be.nabu.eai.module.services.vm.VMServiceManager" created="2022-10-19T12:53:33.339+02:00" lastModified="2022-11-23T21:15:15.089+01:00" leaf="true" version="27">
     <environmentId>apollo</environmentId>
     <hidden>false</hidden>
+    <locked>false</locked>
     <properties/>
     <references>nabu.cms.core.types.emodel.core.Role</references>
     <references>java.lang.Boolean</references>

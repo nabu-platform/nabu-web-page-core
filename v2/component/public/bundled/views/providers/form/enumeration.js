@@ -15,14 +15,14 @@ Vue.component("page-form-input-enumeration-configure", {
 			+ "	<n-form-text v-model='field.suffix' label='Suffix' v-if='!field.suffixIcon'/>"
 			+ "	<n-form-text v-model='field.suffixIcon' label='Suffix Icon' v-if='!field.suffix'/>"
 		+ "		<div class='is-row is-align-end'><button class='is-button is-size-xsmall is-variant-primary-outline' @click='addEnumeration'><icon name='plus'/><span class='text'>Enumeration</span></button></div>"
-		+ "		<div v-if='!field.complex'><n-form-section class='enumeration list-row' v-for='i in Object.keys(field.enumerations)' :key=\"field.name + 'enumeration_' + i\">"
+		+ "		<div v-if='!field.complex' class='is-column is-spacing-gap-small'><n-form-section class='has-button-close' v-for='i in Object.keys(field.enumerations)' :key=\"field.name + 'enumeration_' + i\">"
 		+ "			<n-form-text v-model='field.enumerations[i]'/>"
-		+ "			<button @click='field.enumerations.splice(i, 1)'><span class='fa fa-trash'></span></button>"
+		+ "			<button class='is-button is-variant-close is-size-small' @click='field.enumerations.splice(i, 1)'><icon name='times'/></button>"
 		+ "		</n-form-section></div>"
-		+ "		<div v-else><n-form-section class='enumeration list-row' v-for='i in Object.keys(field.enumerations)' :key=\"field.name + 'enumeration_' + i\">"
+		+ "		<div v-else class='is-column is-spacing-gap-small'><n-form-section class='is-column is-spacing-medium is-spacing-vertical-top-large is-color-body has-button-close' v-for='i in Object.keys(field.enumerations)' :key=\"field.name + 'enumeration_' + i\">"
 		+ "			<n-form-text v-model='field.enumerations[i].key' placeholder='Value' :timeout='600'/>"
 		+ "			<n-form-text v-model='field.enumerations[i].value' placeholder='Label' :timeout='600'/>"
-		+ "			<button @click='field.enumerations.splice(i, 1)'><span class='fa fa-trash'></span></button>"
+		+ "			<button class='is-button is-variant-close is-size-small' @click='field.enumerations.splice(i, 1)'><icon name='times'/></button>"
 		+ "		</n-form-section>"
 		+ "	</div></n-form-section>",
 	props: {

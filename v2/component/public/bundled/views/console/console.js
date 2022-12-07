@@ -2,14 +2,14 @@ Vue.view("nabu-console", {
 	props: {
 		initialTab: {
 			type: String,
-			default: "events"
+			default: "features"
 		}	
 	},
 	data: function() {
 		return {
 			selected: null,
 			search: null,
-			tab: "events"
+			tab: "features"
 		}
 	},
 	computed: {

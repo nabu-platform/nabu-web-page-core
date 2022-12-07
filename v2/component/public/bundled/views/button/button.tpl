@@ -25,15 +25,36 @@
 			<n-form-text v-model="cell.state.badge" label="Badge" :timeout="600"/>
 			<n-form-switch v-model="cell.state.stopPropagation" label="Stop click propagation"/>
 			<n-form-switch v-model="cell.state.emitClose" label="Emit close on click" v-if="false"/>
+			
+			<n-form-combo label="Activation Type" v-model="cell.state.activationType" :items="['group', 'condition', 'route']"/>
+			
 			<n-form-text v-model="cell.state.componentGroup" label="Button group" after="You can add this button to a button group which will determine group behavior"
 				placeholder="E.g. myTabs"
+				v-if="cell.state.activationType == 'group'"
 				:timeout="600"/>
-			<n-form-switch v-model="cell.state.activateByDefault" v-if="cell.state.componentGroup && !cell.state.activeInitial" label="Have this button active by default"/>
-			<n-form-ace mode="javascript" v-model="cell.state.activeInitial" label="Start as active if" v-if="cell.state.componentGroup && !cell.state.activateByDefault"/>
-			<n-form-ace mode="javascript" v-model="cell.state.disabled" label="Disabled if"/>
-			<n-form-ace mode="javascript" v-model="cell.state.active" label="Active if" v-if="!cell.state.componentGroup"/>
+				
+			<n-form-switch v-model="cell.state.activateByDefault" v-if="cell.state.activationType == 'group' && !cell.state.activeInitial" label="Have this button active by default"/>
+			<n-form-ace mode="javascript" v-model="cell.state.activeInitial" label="Start as active if" v-if="cell.state.activationType == 'group' && !cell.state.activateByDefault"/>
+			<n-form-ace mode="javascript" v-model="cell.state.active" label="Active if" v-if="cell.state.activationType == 'condition'"/>
+			<div v-if="cell.state.activationType == 'route'" class="is-column is-spacing-gap-small">
+				<div v-for="(activeRoute, index) in cell.state.activeRoutes" class="is-column is-spacing-medium is-spacing-gap-small has-button-close is-spacing-vertical-top-large is-color-body">
+					<n-form-combo v-model="activeRoute.route" 
+						:filter="$services.page.getPageRoutes" 
+						:formatter="function(x) { return $services.page.prettifyRouteAlias(x.alias) }" 
+						:extracter="function(x) { return x.alias }" 
+						label="Route"
+						key="button-route"/>
+					<n-form-text v-model="activeRoute.condition" label="Condition on route parameters"/>
+					<button class="is-button is-variant-close is-size-small" @click="cell.state.activeRoutes.splice(index, 1)"><icon name="times"/></button>
+				</div>
+				<div class="is-row is-align-end">
+					<button class="is-button is-variant-primary-outline is-size-xsmall" @click="cell.state.activeRoutes.push({condition:null,route:null})"><icon name="plus"/><span class="is-text">Route</span></button>
+				</div>
+			</div>
 			
+			<n-form-ace mode="javascript" v-model="cell.state.disabled" label="Disabled if"/>
 			<n-form-combo v-model="cell.state.buttonType" :items="['submit', 'reset', 'button']" label="Button type"/>
+			
 		</div>
 		
 		<page-triggerable-configure :page="page" :target="cell.state" :triggers="triggers" :allow-closing="true"/>

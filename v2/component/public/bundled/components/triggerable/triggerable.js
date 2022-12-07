@@ -50,30 +50,32 @@ Vue.service("triggerable", {
 			return result;
 		},
 		// get all the error "types" that can be caused by a certain trigger
-		getTriggerErrorTypes: function(page, target) {
+		getTriggerErrorTypes: function(page, target, forTrigger) {
 			var result = [];
 			if (target && target.triggers) {
 				var pageInstance = this.$services.page.getPageInstance(page);
 				var available = this.$services.page.getAvailableActions(pageInstance);
 				target.triggers.forEach(function(trigger) {
-					if (trigger.actions) {
-						trigger.actions.forEach(function(action) {
-							// if we actually call an action on another component, check the action definition to see if it can return custom error types
-							if (action.type == "action") {
-								var chosenAction = available.filter(function(x) {
-									return x.name == action.action;
-								})[0];
-								if (chosenAction && chosenAction.errors && chosenAction.errors.length) {
-									nabu.utils.arrays.merge(result, chosenAction.errors);
+					if (!forTrigger || trigger.trigger == forTrigger) {
+						if (trigger.actions) {
+							trigger.actions.forEach(function(action) {
+								// if we actually call an action on another component, check the action definition to see if it can return custom error types
+								if (action.type == "action") {
+									var chosenAction = available.filter(function(x) {
+										return x.name == action.action;
+									})[0];
+									if (chosenAction && chosenAction.errors && chosenAction.errors.length) {
+										nabu.utils.arrays.merge(result, chosenAction.errors);
+									}
+									else if (result.indexOf(action.action) < 0) {
+										result.push(action.action);
+									}
 								}
-								else if (result.indexOf(action.action) < 0) {
-									result.push(action.action);
+								else if (result.indexOf(action.type) < 0) {
+									result.push(action.type);
 								}
-							}
-							else if (result.indexOf(action.type) < 0) {
-								result.push(action.type);
-							}
-						})
+							})
+						}
 					}
 				});
 			}
@@ -239,7 +241,7 @@ Vue.service("triggerable", {
 									}
 								}
 								if (!resolved) {
-									value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], instance);
+									value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], instance, customValueFunction);
 								}
 								if (value != null) {
 									// does not take into account "." separated field names which are received
@@ -378,6 +380,10 @@ Vue.service("triggerable", {
 							var parameters = getBindings();
 							try {
 								var promise = self.$services.q.defer();
+								if (!parameters["$serviceContext"]) {
+									var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
+									parameters["$serviceContext"] = pageInstance.getServiceContext();
+								}
 								self.$services.swagger.execute(action.operation, parameters).then(function(answer) {
 									if (action.resultName) {
 										state[action.resultName] = answer;
@@ -398,6 +404,13 @@ Vue.service("triggerable", {
 							var parameters = getBindings();
 							var startDownload = function(url) {
 								var operation = self.$services.swagger.operations[action.operation];
+								
+								var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
+								var serviceContext = pageInstance.getServiceContext();
+								if (serviceContext) {
+									url += (url.indexOf("?") >= 0 ? "&" : "?") + "$serviceContext=" + serviceContext;
+								}
+								
 								if (operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream") {
 									if (action.anchor != "$window") {
 										self.$services.page.download(url, function() {
@@ -723,8 +736,13 @@ Vue.component("page-triggerable-configure", {
 		}
 	},
 	methods: {
-		getTriggerErrorTypes: function(value) {
-			var result = this.$services.triggerable.getTriggerErrorTypes(this.page, this.target);
+		getTriggerErrorTypes: function(trigger, value) {
+			var triggerName = trigger ? trigger.trigger : null;
+			// if we are subscribing to an error, check there
+			if (triggerName) {
+				triggerName = triggerName.replace(/:error$/, "");
+			}
+			var result = this.$services.triggerable.getTriggerErrorTypes(this.page, this.target, triggerName);
 			if (result.length && value) {
 				result = result.filter(function(x) {
 					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;

@@ -174,6 +174,11 @@
 								<n-collapsible :only-one-open="true" title="Security" content-class="is-spacing-medium">
 									<p class="is-p is-size-small is-color-light">You can configure additional security on a page to limit access. If nothing is configured, everyone is allowed. You can use pseudo roles like $user and $guest.</p>
 									
+									<n-form-switch v-model="page.content.useFixedServiceContext" label="Use fixed service context"/>
+									<n-form-combo v-model="page.content.serviceContext" v-if="!page.content.useFixedServiceContext" label="Service Context Variable"
+										:filter="$services.page.filterPageStartupParameters.bind($self, page)"/>
+									<n-form-text v-model="page.content.fixedServiceContext" label="Fixed service context" v-else/>
+									
 									<div class="is-row is-align-end">
 										<button class="is-button is-variant-primary-outline is-size-xsmall" @click="page.content.roles ? page.content.roles.push('') : $window.Vue.set(page.content, 'roles', [''])"><icon name="plus"/>Role</button>
 									</div>
@@ -183,7 +188,6 @@
 											<button class="is-button is-variant-close is-size-small" @click="page.content.roles.splice(i, 1)"><icon name="times"/></button>
 										</div>
 									</div>
-									
 								</n-collapsible>
 								<n-collapsible :only-one-open="true" title="Branding" content-class="is-spacing-medium">
 									<div class="is-row is-align-end" v-if="!page.content.branding">
@@ -1283,6 +1287,10 @@
 		<n-page-mapper :to="fields"
 			:from="$services.page.getAvailableParameters(page, null, true)"
 			v-model="target.rendererBindings"/>
+		<div class="is-row is-align-end" v-if="target.renderer == 'form'">
+			<n-form-combo class="is-size-small" :filter="$services.page.getAllAvailableKeys.bind($self, page, true)" v-model="automapFrom"/>
+			<button @click="automap" class="is-button is-variant-primary-outline is-size-xsmall"><icon name="link"/><span class="is-text">Automap</span></button>
+		</div>
 	</n-collapsible>
 </template>
 

@@ -1,11 +1,11 @@
 <template id="nabu-console">
-	<div class="nabu-console">
-		<div class="tabs">
-			<button class="tab" @click="tab = 'events'" :class="{'active': tab == 'events'}">Events</button
-			><button class="tab" @click="tab = 'features'" :class="{'active': tab == 'features'}">Features</button
-			><button class="tab" @click="tab = 'inspect'" :class="{'active': tab == 'inspect'}">Inspect</button>
+	<n-sidebar class="nabu-console">
+		<div class="is-row">
+			<button class="is-button is-variant-tab" @click="tab = 'features'" :class="{'is-active': tab == 'features'}">Features</button
+			><button class="is-button is-variant-tab" @click="tab = 'events'" :class="{'is-active': tab == 'events'}" v-if="false">Events</button
+			><button class="is-button is-variant-tab" @click="tab = 'inspect'" :class="{'is-active': tab == 'inspect'}">Inspect</button>
 		</div>
-		<div v-if="tab == 'events'" class="tab-content">
+		<div v-if="tab == 'events'">
 			<div class="menu">
 				<n-form-text type="text" placeholder="Search" v-model="search" :timeout="400"/>
 				<button v-if="false" @click="$services.page.reports.splice(0)">Clear</button>
@@ -27,23 +27,23 @@
 				</div>
 			</div>
 		</div>
-		<div v-else-if="tab == 'features'" class="tab-content">
-			<div class="menu">
-				<button @click="resetFeatures">Reset</button>
+		<div v-else-if="tab == 'features'">
+			<div class="is-row is-align-end is-spacing-medium">
+				<button class="is-button is-variant-primary-outline is-size-xsmall" @click="resetFeatures">Reset</button>
 			</div>
-			<div class="content">
-				<h3>Enabled Features</h3>
-				<div class="feature-list">
-					<n-form-switch :value="true" @input="disableFeature(feature)" v-for="feature in enabledFeatures" :label="feature.description ? feature.description : feature.name"/>
+			<div class="is-column is-spacing-medium is-spacing-gap-large">
+				<h3 class="is-h3">Enabled Features</h3>
+				<div class="is-column is-spacing-gap-small">
+					<n-form-switch class="is-size-small" :value="true" @input="disableFeature(feature)" v-for="feature in enabledFeatures" :label="feature.description ? feature.description : feature.name"/>
 				</div>
-				<h3>Disabled Features</h3>
-				<div class="feature-list">
-					<n-form-switch @input="enableFeature(feature)" v-for="feature in disabledFeatures" :label="feature.description ? feature.description : feature.name"/>
+				<h3 class="is-h3">Disabled Features</h3>
+				<div class="is-column is-spacing-gap-small">
+					<n-form-switch class="is-size-small" @input="enableFeature(feature)" v-for="feature in disabledFeatures" :label="feature.description ? feature.description : feature.name"/>
 				</div>
 			</div>
 		</div>
-		<div v-else-if="tab == 'inspect'" class="tab-content inspect">
+		<div v-else-if="tab == 'inspect'">
 			<div class="content" v-content="cleanedUpContent"></div>
 		</div>
-	</div>
+	</n-sidebar>
 </template>

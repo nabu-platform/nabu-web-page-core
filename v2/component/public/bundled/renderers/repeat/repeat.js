@@ -106,6 +106,9 @@ nabu.page.provide("page-renderer", {
 						});
 					}
 					result.filter = {properties:filters};
+//					result["$serviceContext"] = {
+//						type: "string"
+//					}
 				}
 			}
 			else if (container.repeat.array) {
@@ -806,7 +809,12 @@ Vue.component("renderer-repeat", {
 					}
 					parameters.offset = parameters.limit * page;
 				}
-				
+				if (this.state["$serviceContext"]) {
+					parameters["$serviceContext"] = this.state["$serviceContext"];
+				}
+				else {
+					parameters["$serviceContext"] = this.$services.page.getPageInstance(this.page, this).getServiceContext();
+				}
 				this.loading = true;
 				if (!append) {
 					self.state.records.splice(0);

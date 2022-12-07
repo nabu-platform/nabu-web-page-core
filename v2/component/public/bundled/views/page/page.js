@@ -324,6 +324,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 						parameters[key] = self.$services.page.getBindingValue(self, state.bindings[key]);
 					}
 				});
+				if (!parameters["$serviceContext"]) {
+					parameters["$serviceContext"] = self.getServiceContext();
+				}
 				try {
 					// can throw hard errors
 					return self.$services.swagger.execute(state.operation, parameters).then(function(result) {
@@ -597,6 +600,18 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		getServiceContext: function() {
+			if (this.fragmentParent) {
+				return this.fragmentParent.getServiceContext();
+			}
+			if (!this.page.content.useFixedServiceContext && this.page.content.serviceContext) {
+				return this.get(this.page.content.serviceContext);
+			}
+			else if (this.page.content.useFixedServiceContext && this.page.content.fixedServiceContext) {
+				return this.page.content.fixedServiceContext;
+			}
+			return null;
+		},
 		updateTemplates: function() {
 			this.$services.page.updateToLatestTemplate(this.page.content, true);
 		},
@@ -1315,6 +1330,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 				var self = this;
 				this.$services.page.update(this.page).then(function() {
 					self.saved = new Date();
+					self.$services.notifier.push({
+						message: "Page '" + self.page.content.name + "' saved!",
+						severity: self.$services.page.notificationStyle
+					});
+				}, function(error) {
+					self.$services.notifier.push({
+						message: "Could not save page '" + self.page.content.name + "'",
+						severity: "danger-outline"
+					});
 				});
 				event.preventDefault();
 				event.stopPropagation();
@@ -1326,6 +1350,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 				 return [];
 			}
 			var parameters = this.$services.swagger.operations[operation].parameters;
+//			parameters["$serviceContext"] = {
+//				type: "string"
+//			};
 			if (explode) {
 				return this.$services.page.getSwaggerParametersAsKeys(this.$services.swagger.operations[operation]);
 			}
@@ -2578,6 +2605,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 					return x.refreshOn != null && x.refreshOn.indexOf(name) >= 0
 						&& (!x.condition || self.$services.page.isCondition(x.condition, self.variables, self));
 				}).map(function(state) {
+					// replaced with utility function
+					/*
 					if (state.inherited) {
 						return self.$services.page.reloadState(state.applicationName).then(function(result) {
 							//Vue.set(self.variables, state.name, result ? result : null);
@@ -2589,6 +2618,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 						Object.keys(state.bindings).map(function(key) {
 							parameters[key] = self.$services.page.getBindingValue(self, state.bindings[key]);
 						});
+						if (!parameters["$serviceContext"]) {
+							parameters["$serviceContext"] = self.get("page.$serviceContext");
+						}
 						try {
 							// can throw hard errors
 							return self.$services.swagger.execute(state.operation, parameters).then(function(result) {
@@ -2634,7 +2666,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 							promise.reject(exception);
 							return promise;
 						}
-					}
+					}*/
+					return self.loadInitialState(state, true);
 				}));
 			}
 			
@@ -2655,6 +2688,122 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 			});
 		},
+		loadState: function(name, initial) {
+			var promise = this.$services.q.defer();
+			var state = this.page.content.states.filter(function(x) {
+				return x.name == name;
+			})[0];
+			if (state) {
+				var result = this.loadInitialState(state, !initial);
+				if (result && result.then) {
+					result.then(promise, promise);
+				}
+				else {
+					promise.reject();
+				}
+			}
+			else {
+				this.loadParameterState(name, !initial);
+				promise.resolve();
+			}
+			return promise;
+		},
+		loadParameterState: function(parameter, reload) {
+			var self = this;
+			parameter = self.page.content.parameters.filter(function(x) {
+				return x == parameter || x.name == parameter;
+			})[0];
+			if (parameter) {
+				self.initializeDefaultParameters(true, [parameter.name], true);
+				if (reload) {
+					if (nabu.page.event.getName(parameter, "updatedEvent")) {
+						self.emit(
+							nabu.page.event.getName(parameter, "updatedEvent"),
+							nabu.page.event.getInstance(parameter, "updatedEvent", self.page, self)
+						);
+					}
+				}
+			}
+		},
+		loadInitialState: function(state, reload) {
+			// you can pass in the full state or the name of a state
+			state = this.page.content.states.filter(function(x) {
+				return x == state || x.name == state;
+			})[0];
+			if (state) {
+				var self = this;
+				var sendStateEvent = function(state) {
+					if (nabu.page.event.getName(state, "updateEvent")) {
+						self.emit(
+							nabu.page.event.getName(state, "updateEvent"),
+							nabu.page.event.getInstance(state, "updateEvent", self.page, self)
+						);
+					}
+				}
+				if (state.inherited) {
+					if (reload) {
+						return self.$services.page.reloadState(state.applicationName).then(function(result) {
+							//Vue.set(self.variables, state.name, result ? result : null);
+							sendStateEvent(state);
+						});
+					}
+				}
+				else {
+					var parameters = {};
+					Object.keys(state.bindings).map(function(key) {
+						parameters[key] = self.$services.page.getBindingValue(self, state.bindings[key]);
+					});
+					if (!parameters["$serviceContext"]) {
+						parameters["$serviceContext"] = self.getServiceContext();
+					}
+					try {
+						// can throw hard errors
+						return self.$services.swagger.execute(state.operation, parameters).then(function(result) {
+							if (self.variables[state.name] != null) {
+								if (self.variables[state.name] instanceof Array) {
+									self.variables[state.name].splice(0);
+									if (result instanceof Array) {
+										nabu.utils.arrays.merge(self.variables[state.name], result);
+									}
+									else if (result) {
+										self.variables[state.name].push(result);
+									}
+								}
+								// can be resetting to null
+								else if (!result) {
+									Vue.set(self.variables, state.name, null);
+								}
+								else {
+									var resultKeys = Object.keys(result);
+									Object.keys(self.variables[state.name]).forEach(function(key) {
+										if (resultKeys.indexOf(key) < 0) {
+											self.variables[state.name][key] = null;
+										}
+									});
+									// make sure we use vue.set to trigger other reactivity
+									resultKeys.forEach(function(key) {
+										Vue.set(self.variables[state.name], key, result[key]);
+									});
+									// TODO: do a proper recursive merge to maintain reactivity with deeply nested
+									
+									//nabu.utils.objects.merge(self.variables[state.name], result);
+								}
+							}
+							else {
+								Vue.set(self.variables, state.name, result ? result : null);
+							}
+							sendStateEvent(state);
+						});
+					}
+					catch (exception) {
+						console.error("Could not execute", state.operation, exception);
+						var promise = self.$services.q.defer();
+						promise.reject(exception);
+						return promise;
+					}
+				}
+			}
+		},
 		addGlobalEvent: function() {
 			if (!this.page.content.globalEvents) {
 				Vue.set(this.page.content, "globalEvents", []);
@@ -2671,11 +2820,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 			return this.$services.page.getValue(this.labels, name);	
 		},
 		get: function(name) {
-			
 			// probably not filled in the value yet
 			if (!name) {
 				return null;
 			}
+//			if (this.fragmentParent && (name == "$serviceContext" || name == "page.$serviceContext")) {
+//				return this.fragmentParent.get(name);
+//			}
 			if (name == "page") {
 				return this.fragmentParent ? this.fragmentParent.get(name) : this.variables;
 			}
@@ -3251,14 +3402,22 @@ Vue.component("n-page-row", {
 				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				Object.keys(target.rendererBindings).forEach(function(key) {
-					self.$services.page.setValue(result, key, self.$services.page.getBindingValue(pageInstance, target.rendererBindings[key]));
+					var value = self.$services.page.getBindingValue(pageInstance, target.rendererBindings[key]);
+					if (value != null) {
+						self.$services.page.setValue(result, key, value);
+					}
 				});
 			}
 			return result;
 		},
 		copyArisStyling: function(event, target) {
 			if (target.aris) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				this.$services.page.copiedStyling = JSON.parse(JSON.stringify(target.aris));
+				this.$services.notifier.push({
+					message: "Copied styling for '" + this.$services.page.formatPageItem(pageInstance, target) + "'",
+					severity: this.$services.page.notificationStyle
+				});
 			}
 			event.stopPropagation();
 			event.preventDefault();
@@ -3270,8 +3429,13 @@ Vue.component("n-page-row", {
 						components: {}
 					});
 				}
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				Vue.set(target, "aris", this.$services.page.copiedStyling);
 				this.$services.page.setRerender(target.aris);
+				this.$services.notifier.push({
+					message: "Pasted styling onto '" + this.$services.page.formatPageItem(pageInstance, target) + "'",
+					severity: this.$services.page.notificationStyle
+				});
 			}
 			event.stopPropagation();
 			event.preventDefault();
@@ -3814,7 +3978,7 @@ Vue.component("n-page-row", {
 			}
 			else if (!!row.permissionContext) {
 				if (this.$services.user.permissions.filter(function(x) {
-							return x.indexOf(":") > 0 && x.split(":")[0] == row.permissionContext;
+							return x.indexOf(":") > 0 && x.split(":")[0] == row.permissionContext && x != row.permissionContext + ":context.switch";
 						}).length == 0) {
 					return false;
 				}
@@ -4026,7 +4190,8 @@ Vue.component("n-page-row", {
 			}
 			else if (!!cell.permissionContext) {
 				if (this.$services.user.permissions.filter(function(x) {
-							return x.indexOf(":") > 0 && x.split(":")[0] == cell.permissionContext;
+							// specifically the context switch is not enough to indicate an actual permission there!
+							return x.indexOf(":") > 0 && x.split(":")[0] == cell.permissionContext && x != cell.permissionContext + ":context.switch";
 						}).length == 0) {
 					return false;
 				}
@@ -5373,6 +5538,22 @@ Vue.component("renderer-bindings", {
 			}
 			console.log("fields are", fields);
 			return fields;
+		}
+	},
+	data: function() {
+		return {
+			automapFrom: null
+		}
+	},
+	methods: {
+		automap: function() {
+			if (this.automapFrom) {
+				var generator = nabu.page.providers("page-generator").filter(function(x) {
+					return x.name.toLowerCase() == "form";
+				})[0];
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				generator.automap(this.target, pageInstance, this.automapFrom);
+			}
 		}
 	}
 });

@@ -183,7 +183,12 @@ Vue.component("renderer-form", {
 			// do an operation call
 			if (this.target.form.operation && this.target.form.formType == "operation") {
 				try {
-					return this.$services.swagger.execute(this.target.form.operation, this.state).then(function() {
+					var cloned = nabu.utils.objects.clone(this.state);
+					if (!cloned["$serviceContext"]) {
+						var pageInstance = this.$services.page.getPageInstance(this.page, this);
+						cloned["$serviceContext"] = pageInstance.getServiceContext();
+					}
+					return this.$services.swagger.execute(this.target.form.operation, cloned).then(function() {
 						// synchronize the changes back to the binding if relevant
 						if (self.target.form.synchronize) {
 							self.$services.page.applyRendererParameters(self.$services.page.getPageInstance(self.page, self), self.target, self.state);
@@ -204,16 +209,17 @@ Vue.component("renderer-form", {
 									var pageInstance = self.$services.page.getPageInstance(self.page, self);
 									pageInstance.emit(self.target.form.errorEvent, error);
 								}
-								// the default says nothing
-								if (error.title == "Internal Server Error") {
-									error.title = "%{Could not submit your form}";
-								}
-								var translated = self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message);
+								var codes = self.target.form.codes ? self.target.form.codes : [];
+								var applicableCode = codes.filter(function(x) { return x.code == error.code })[0];
+								var translated = applicableCode 
+									? self.$services.page.translate(applicableCode.title)
+									: self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message);
 								self.error = translated;
 								self.messages.push({
 									type: "request",
 									severity: "error",
-									title: translated
+									title: translated,
+									code: error.code
 								})
 							}
 							catch (exception) {

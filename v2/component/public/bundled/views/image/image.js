@@ -167,6 +167,11 @@ Vue.view("page-image", {
 						properties[operation["x-temporary-id"]] = authorization.authenticationId;
 						properties[operation["x-temporary-secret"]] = authorization.secret;
 						self.href = self.$services.swagger.parameters(operation.id, properties).url;
+						var pageInstance = self.$services.page.getPageInstance(self.page, self);
+						var serviceContext = pageInstance.getServiceContext();
+						if (serviceContext) {
+							self.href += (self.href.indexOf("?") >= 0 ? "&" : "?") + "$serviceContext=" + serviceContext;
+						}
 					}, function(e) {
 						self.href = null;
 						console.log("Could not get ltp for", operation.id, e);
@@ -174,6 +179,11 @@ Vue.view("page-image", {
 				}
 				else {
 					self.href = self.$services.swagger.properties(operation.id, properties).url;
+					var pageInstance = self.$services.page.getPageInstance(self.page, self);
+					var serviceContext = pageInstance.getServiceContext();
+					if (serviceContext) {
+						self.href += (self.href.indexOf("?") >= 0 ? "&" : "?") + "$serviceContext=" + serviceContext;
+					}
 				}
 			}
 		},
@@ -208,8 +218,8 @@ Vue.component("page-image-configure", {
 	},
 	created: function() {
 		this.load();
-		if (!this.cell.state.imageBindings) {
-			Vue.set(this.cell.state, "imageBindings", {});
+		if (!this.cell.state.bindings) {
+			Vue.set(this.cell.state, "bindings", {});
 		}
 	},
 	computed: {

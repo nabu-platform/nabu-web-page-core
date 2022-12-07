@@ -117,11 +117,11 @@
 				</steps>
 				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 						disabled="false"
-						id="c681317e-9507-4b02-9cb3-45f82a1a4542"
+						id="f9dc1750-8ecc-4d7c-b898-5f3cc753823c"
 						mask="false"
 						optional="false"
 						fixedValue="true">
-					<from>application.context.switch</from>
+					<from>context.switch</from>
 					<to>string</to>
 				</steps>
 			</steps>

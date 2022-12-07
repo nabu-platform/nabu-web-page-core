@@ -109,7 +109,8 @@ nabu.services.VueService(Vue.extend({
 			useAris: true,
 			aris: null,
 			// you can copy styling for later pasting
-			copiedStyling: null
+			copiedStyling: null,
+			notificationStyle: "success-outline"
 		}
 	},
 	activate: function(done) {
@@ -125,7 +126,7 @@ nabu.services.VueService(Vue.extend({
 		var self = this;
 		// non-reactive
 		this.pageCounter = 0;
-		document.title = "%{Loading...}";
+		//document.title = "%{Loading...}";
 		window.addEventListener("paste", function(event) {
 			if (self.canEdit()) {
 				var data = event.clipboardData.getData("text/plain");
@@ -379,6 +380,9 @@ nabu.services.VueService(Vue.extend({
 							result.properties[key.name] = key;
 						}
 					});
+				}
+				result.properties["$serviceContext"] = {
+					type: "string"
 				}
 			}
 			return result;
@@ -1518,7 +1522,7 @@ nabu.services.VueService(Vue.extend({
 					self.injectEditIcon();
 					var editorPromises = [];
 					if (self.useAris) {
-						editorPromises.push(nabu.utils.ajax({url: application.configuration.root + "page/v2/api/aris-definitions"}).then(function(response) {
+						editorPromises.push(nabu.utils.ajax({url: "${nabu.web.application.Services.fragment(environment('webApplicationId'), 'nabu.web.page.core.v2.component')/fragment/path}page/aris-definitions"}).then(function(response) {
 							self.aris = {};
 							JSON.parse(response.responseText).forEach(function(component) {
 								self.aris[component.name] = component;
@@ -2043,7 +2047,7 @@ nabu.services.VueService(Vue.extend({
 			this.reloadSwagger();
 			var self = this;
 			if (!self.disableReload) {
-				nabu.utils.ajax({url:"${server.root()}page/v2/api/css-modified"}).then(function(response) {
+				nabu.utils.ajax({url:"${nabu.web.application.Services.fragment(environment('webApplicationId'), 'nabu.web.page.core.v2.component')/fragment/path}page/css-modified"}).then(function(response) {
 					if (response.responseText != null && !self.disableReload) {
 						var date = new Date(response.responseText);
 						if (!self.cssLastModified) {
@@ -2131,7 +2135,7 @@ nabu.services.VueService(Vue.extend({
 				throw exception;
 			}
 		},
-		getBindingValue: function(pageInstance, bindingValue, context) {
+		getBindingValue: function(pageInstance, bindingValue, context, customValueFunction) {
 			var self = this;
 			if (bindingValue && bindingValue.label) {
 				if (bindingValue.label == "fixed") {
@@ -2226,7 +2230,7 @@ nabu.services.VueService(Vue.extend({
 			var value = bindingValue.indexOf("fixed") == 0 ? this.translate(bindingValue.substring("fixed.".length)) : (pageInstance ? pageInstance.get(bindingValue) : null);
 			// if we have a fixed value that starts with a "=", interpret it
 			if (bindingValue.indexOf("fixed.=") == 0) {
-				value = this.interpret(value, pageInstance);
+				value = this.interpret(value, pageInstance, null, customValueFunction);
 			}
 			var key = bindingValue.split(".")[0];
 			// allow for enumerated values, if there is a provider with that name, check it
@@ -2710,9 +2714,13 @@ nabu.services.VueService(Vue.extend({
 			});*/
 			return state;
 		},
-		hasFeature: function(feature) {
+		hasFeature: function(feature, leadin) {
+			// we mostly use this to circumvent compilation optimization
+			if (!leading) {
+				leadin = "@";
+			}
 			// remove syntax if applicable
-			feature = feature.replace("@" + "{", "");
+			feature = feature.replace(leadin + "{", "");
 			feature = feature.replace("}", "");
 			return this.enabledFeatures.indexOf(feature) >= 0;
 		},
@@ -2753,10 +2761,12 @@ nabu.services.VueService(Vue.extend({
 			if (!condition) {
 				return null;
 			}
+			// compilation optimization
+			var leadin = condition ? "@" : "@@";
 			// replace all the enabled features with true
 			this.enabledFeatures.forEach(function(x) {
 				// avoid the regex matcher!
-				condition = condition.replace("@" + "{" + x + "}", "true");
+				condition = condition.replace(leadin + "{" + x + "}", "true");
 			});
 			// replace all the disabled features with false
 			condition = condition.replace(/@\{[^}]+\}/gm, "false");
@@ -3179,6 +3189,21 @@ nabu.services.VueService(Vue.extend({
 					//parameters: page.content.parameters ? page.content.parameters.map(function(x) { return x.name }) : [],
 					parameters: parameters,
 					enter: function(parameters, mask) {
+						var serviceContextVariable = page.content.serviceContext;
+						if (serviceContextVariable && serviceContextVariable.indexOf("page.") == 0) {
+							serviceContextVariable = serviceContextVariable.substring("page.".length);
+							// we want to allow "easy" use of service contexts in pages in a situation where it doesn't matter
+							// for example you design masterdata screens to be able to support service context
+							// but you also want to plug them in easily in an application that doesn't care
+							// if we are using a page variable that is derived from the path
+							if (pagePath && pagePath.indexOf("{" + serviceContextVariable + "}") >= 0) {
+								// and it does not have a value
+								if (!parameters[serviceContextVariable]) {
+									// set it to default, the swagger client knows that it should not send it in that case
+									parameters[serviceContextVariable] = "default";
+								}
+							}
+						}
 						if (page.content.initial) {
 							var found = !!self.findMain(page.content);
 							// check that there is a row/cell with the default anchor, if not, insert it
@@ -3857,6 +3882,13 @@ nabu.services.VueService(Vue.extend({
 			}
 			return false;
 		},
+		filterPageStartupParameters: function(page, value) {
+			var result = this.getPageStartupParameters(page);	
+			var keys = this.getSimpleKeysFor({properties: result}, true);
+			return value ? keys.filter(function(x) {
+				return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+			}) : keys;
+		},
 		// for example for initial state, we were using "getPageParameters" which only lists parameters available in the page itself (which is what we want)
 		// it should not, for instance, include events (which can not have triggered yet in initial state) nor runtime aliases from renderers (again, not yet available)
 		// but we DO need the parent state at that point
@@ -4282,6 +4314,9 @@ nabu.services.VueService(Vue.extend({
 						element.setAttribute("content", self.currentBranding[field]);
 						document.head.appendChild(element);
 					}
+					if (field == "title" && self.currentBranding[field] != null) {
+						document.title = self.currentBranding[field];
+					}
 				}
 				else if (field == "imageAlt") {
 					var element = document.head.querySelector("meta[name='twitter:image:alt']");
@@ -4565,7 +4600,8 @@ nabu.services.VueService(Vue.extend({
 					var div = document.createElement("div");
 					div.setAttribute("id", "nabu-console-instance");
 					document.body.appendChild(div);
-					this.$services.router.route("nabu-console", { initialTab: this.consoleTab }, div);
+					this.$services.router.route("nabu-console", { initialTab: "features" }, div);
+					//this.$services.router.route("nabu-console", { initialTab: this.consoleTab }, div);
 					document.body.classList.add("has-nabu-console");
 					this.consoleTab = null;
 				}

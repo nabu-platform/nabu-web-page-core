@@ -10,7 +10,7 @@
 				</ul>
 				<n-form-combo v-model="trigger.trigger" v-if="getTriggerNames().length >= 2" :filter="getTriggerNames" label="Trigger On"/>
 				
-				<n-form-combo label="Only if error type is" v-model="trigger.triggerError" v-if="trigger.trigger && trigger.trigger.indexOf(':error') > 0" :filter="getTriggerErrorTypes"/>
+				<n-form-combo label="Only if error type is" v-model="trigger.triggerError" v-if="trigger.trigger && trigger.trigger.indexOf(':error') > 0" :filter="getTriggerErrorTypes.bind($self, trigger)"/>
 				
 				<n-form-text v-model="trigger.condition" label="Condition" after="You can configure an additional condition that must evaluate to true before the trigger is activated"/>
 				<n-form-text v-if="false" v-model="trigger.confirmation" label="Confirmation message" after="You can prompt the user for additional confirmation before executing the trigger"/>

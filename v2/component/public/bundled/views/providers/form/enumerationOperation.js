@@ -317,8 +317,8 @@ Vue.component("page-form-input-enumeration-operation", {
 			}
 			var self = this;
 			// map any additional bindings
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			if (this.field.enumerationOperationBinding) {
-				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				Object.keys(this.field.enumerationOperationBinding).map(function(key) {
 					// if the binding is not set, we don't want to overwrite any parameters that are already there (e.g. the resolve field)
 					if (self.field.enumerationOperationBinding[key] != null) {
@@ -338,6 +338,9 @@ Vue.component("page-form-input-enumeration-operation", {
 						}
 					}
 				});
+			}
+			if (!parameters["$serviceContext"]) {
+				parameters["$serviceContext"] = pageInstance.getServiceContext();
 			}
 			return this.$services.swagger.execute(this.field.enumerationOperation, parameters, function(response) {
 				var result = null;

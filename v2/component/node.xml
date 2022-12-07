@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<node artifactManager="be.nabu.eai.module.web.component.WebComponentManager" created="2018-04-26T09:54:22.326+02:00" lastModified="2022-10-19T14:04:36.580+02:00" leaf="true" version="50">
+<node artifactManager="be.nabu.eai.module.web.component.WebComponentManager" created="2018-04-26T09:54:22.326+02:00" lastModified="2022-11-25T17:37:59.397+01:00" leaf="true" version="51">
     <environmentId>apollo</environmentId>
     <hidden>false</hidden>
+    <locked>false</locked>
     <properties/>
     <references>nabu.web.page.core.v2.rest.page.update</references>
     <references>nabu.web.page.core.v2.rest.page.delete</references>

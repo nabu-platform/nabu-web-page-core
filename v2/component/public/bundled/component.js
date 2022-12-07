@@ -1515,6 +1515,9 @@ window.addEventListener("load", function() {
 							}
 						}
 					});
+					if (!properties["$serviceContext"]) {
+						properties["$serviceContext"] = pageInstance.getServiceContext();
+					}
 				}
 				var result = $services.pageResolver.resolve(fragment.resolveOperation, fragment.resolveOperationIds, fragment.resolveOperationId, id, properties);
 				if (result && fragment.resolveOperationLabelComplex) {

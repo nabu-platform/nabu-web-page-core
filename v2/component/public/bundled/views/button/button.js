@@ -68,13 +68,48 @@ Vue.view("page-button", {
 		},
 		active: function() {
 			var active = false;
-			if (this.cell.state.active) {
+			var self = this;
+			if (this.activationType == "route") {
+				if (this.cell.state.activeRoutes && this.cell.state.activeRoutes.length) {
+					var activeRoutes = this.cell.state.activeRoutes.filter(function(x) {
+						if (x.route == self.$services.vue.route) {
+							return !x.condition
+								|| self.$services.page.isCondition(x.condition, self.$services.vue.parameters, self, function(value) {
+									return self.$services.page.getValue(self.$services.vue.parameters, value);
+								});
+						}
+						return false;
+					});
+					return activeRoutes.length > 0;
+				}
+				return this.$services.triggerable.getActiveRoutes(this.cell.state).indexOf(this.$services.vue.route) >= 0;
+			}
+			else if (this.activationType == "condition" && this.cell.state.active) {
 				return this.$services.page.isCondition(this.cell.state.active, null, this);
 			}
-			return this.$services.triggerable.getActiveRoutes(this.cell.state).indexOf(this.$services.vue.route) >= 0;
+			else if (this.activationType == "group") {
+				// todo?
+			}
 		},
 		disabled: function() {
 			return this.cell.state.disabled ? this.$services.page.isCondition(this.cell.state.disabled, null, this) : false;
+		},
+		activationType: function() {
+			var activationType = this.cell.state.activationType;
+			if (!this.cell.state.hasOwnProperty("activationType")) {
+				// we have group-based activation
+				if (this.cell.state.componentGroup) {
+					activationType = "group";
+				}
+				else if (this.cell.state.active) {
+					activationType = "condition";
+				}
+				// by default we use route-based activation
+				else {
+					activationType = "route";
+				}
+			}
+			return activationType;
 		}
 	},
 	ready: function() {
@@ -233,6 +268,20 @@ Vue.component("page-button-configure", {
 		}
 		if (!this.cell.state.activeRoutes) {
 			Vue.set(this.cell.state, "activeRoutes", []);
+		}
+		// for older buttons, we need to calculate what we need
+		if (!this.cell.state.hasOwnProperty("activationType")) {
+			// we have group-based activation
+			if (this.cell.state.componentGroup) {
+				Vue.set(this.cell.state, "activationType", "group");
+			}
+			else if (this.cell.state.active) {
+				Vue.set(this.cell.state, "activationType", "condition");
+			}
+			// by default we use route-based activation
+			else {
+				Vue.set(this.cell.state, "activationType", "route");
+			}
 		}
 	},
 	computed: {
