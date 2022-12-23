@@ -569,13 +569,27 @@ Vue.component("renderer-repeat", {
 			if (this.target.repeat.array) {
 				var self = this;
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				// if we are accessing parent state, we need to watch that
+				// in theory it could come from _any_ parent. realistically for now we are just checking the direct parent
+				if (this.target.repeat.array.indexOf("parent.") == 0) {
+					var parentPage = this.$services.page.pages.filter(function(x) {
+						return x.content.name == self.page.content.pageParent;
+					})[0];
+					if (parentPage != null) {
+						//result.parent = this.getPageParameters(parentPage);
+						pageInstance = this.$services.page.getPageInstance(parentPage, pageInstance);
+					}
+				}
 				var targetArray = this.target.repeat.array;
+				if (targetArray.indexOf("parent.") == 0) {
+					targetArray = targetArray.substring("parent.".length);
+				}
 				var current = pageInstance.get(targetArray);
 				// if it doesn't exist yet, keep an eye on the page state
 				// we tried to be more specific and watch direct parents but this _somehow_ failed
 				if (current == null) {
 					var unwatch = pageInstance.$watch("variables", function(newValue) {
-						var result = pageInstance.get(self.target.repeat.array);
+						var result = pageInstance.get(targetArray);
 						if (result != null) {
 							self.loadData();
 							unwatch();

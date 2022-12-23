@@ -107,12 +107,12 @@ Vue.service("typography", {
 								if (newContent != oldContent) {
 									element.querySelectorAll("[variable='" + variable + "']").forEach(function(x) {
 										x.classList.remove("is-placeholder");
-										if (!newValue && placeholder != null) {
+										if (!newContent && placeholder != null) {
 											x.classList.add("is-placeholder");
 											x.innerHTML = placeholder;
 										}
 										else {
-											x.innerHTML = newValue == null ? "" : newValue;
+											x.innerHTML = newContent == null ? "" : newContent;
 										}
 									})
 									oldContent = newContent;

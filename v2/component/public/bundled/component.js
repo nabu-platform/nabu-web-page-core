@@ -261,6 +261,38 @@ window.addEventListener("load", function() {
 			icon: "page/core/images/form-text.svg"
 		});
 		$services.router.register({
+			alias: "page-form-ace",
+			enter: function(parameters) {
+				// do not modify parameters directly, this may lead to rerendering issues
+				var cloneParameters = {};
+				nabu.utils.objects.merge(cloneParameters, parameters);
+				cloneParameters.formComponent = "page-form-input-ace";
+				cloneParameters.configurationComponent = "page-form-input-ace-configure";
+				return new nabu.page.views.FormComponent({propsData: cloneParameters});
+			},
+			form: "ace",
+			category: "Form",
+			name: "Ace",
+			description: "An ace editor",
+			icon: "page/core/images/form-text.svg"
+		});
+		$services.router.register({
+			alias: "page-form-hidden",
+			enter: function(parameters) {
+				// do not modify parameters directly, this may lead to rerendering issues
+				var cloneParameters = {};
+				nabu.utils.objects.merge(cloneParameters, parameters);
+				cloneParameters.formComponent = "page-form-input-hidden";
+				cloneParameters.configurationComponent = "page-form-input-text-configure";
+				return new nabu.page.views.FormComponent({propsData: cloneParameters});
+			},
+			form: "hidden",
+			category: "Form",
+			name: "Hidden",
+			description: "An input field with hidden content",
+			icon: "page/core/images/form-text.svg"
+		});
+		$services.router.register({
 			alias: "page-form-checkbox",
 			enter: function(parameters) {
 				// do not modify parameters directly, this may lead to rerendering issues

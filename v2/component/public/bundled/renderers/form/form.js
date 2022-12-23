@@ -180,6 +180,53 @@ Vue.component("renderer-form", {
 		submit: function() {
 			var self = this;
 			this.messages.splice(0);
+			var errorHandler = function(error) {
+				self.error = "Form submission failed";
+				// if we get an XMLHTTPResponse thingy, parse it
+				if (error && error.responseText) {
+					error = JSON.parse(error.responseText);
+				}
+				// we get a (hopefully) standardized event back
+				if (error) {
+					if (!error.code) {
+						error.code = "HTTP-" + (error.status != null ? error.status : 500);
+					}
+					try {
+						if (self.target.form.errorEvent) {
+							var pageInstance = self.$services.page.getPageInstance(self.page, self);
+							pageInstance.emit(self.target.form.errorEvent, error);
+						}
+						var codes = self.target.form.codes ? self.target.form.codes : [];
+						var applicableCode = codes.filter(function(x) { return x.code == error.code })[0];
+						var translated = applicableCode 
+							? self.$services.page.translate(applicableCode.title)
+							: self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message);
+						self.error = translated;
+						self.messages.push({
+							type: "request",
+							severity: "error",
+							title: translated,
+							code: error.code
+						})
+					}
+					catch (exception) {
+						self.messages.push({
+							type: "request",
+							severity: "error",
+							title: self.$services.page.translateErrorCode(error.status ? "HTTP-" + error.status : "HTTP-500")
+						})
+					}
+				}
+				else {
+					self.messages.push({
+						type: "request",
+						severity: "error",
+						title: self.$services.page.translateErrorCode("HTTP-500")
+					});
+				}
+				self.doingIt = false;
+				stop(self.error);
+			};
 			// do an operation call
 			if (this.target.form.operation && this.target.form.formType == "operation") {
 				try {
@@ -193,53 +240,7 @@ Vue.component("renderer-form", {
 						if (self.target.form.synchronize) {
 							self.$services.page.applyRendererParameters(self.$services.page.getPageInstance(self.page, self), self.target, self.state);
 						}
-					}, function(error) {
-						self.error = "Form submission failed";
-						// if we get an XMLHTTPResponse thingy, parse it
-						if (error && error.responseText) {
-							error = JSON.parse(error.responseText);
-						}
-						// we get a (hopefully) standardized event back
-						if (error) {
-							if (!error.code) {
-								error.code = "HTTP-" + (error.status != null ? error.status : 500);
-							}
-							try {
-								if (self.target.form.errorEvent) {
-									var pageInstance = self.$services.page.getPageInstance(self.page, self);
-									pageInstance.emit(self.target.form.errorEvent, error);
-								}
-								var codes = self.target.form.codes ? self.target.form.codes : [];
-								var applicableCode = codes.filter(function(x) { return x.code == error.code })[0];
-								var translated = applicableCode 
-									? self.$services.page.translate(applicableCode.title)
-									: self.$services.page.translateErrorCode(error.code, error.title ? error.title : error.message);
-								self.error = translated;
-								self.messages.push({
-									type: "request",
-									severity: "error",
-									title: translated,
-									code: error.code
-								})
-							}
-							catch (exception) {
-								self.messages.push({
-									type: "request",
-									severity: "error",
-									title: self.$services.page.translateErrorCode(error.status ? "HTTP-" + error.status : "HTTP-500")
-								})
-							}
-						}
-						else {
-							self.messages.push({
-								type: "request",
-								severity: "error",
-								title: self.$services.page.translateErrorCode("HTTP-500")
-							});
-						}
-						self.doingIt = false;
-						stop(self.error);
-					});
+					}, errorHandler);
 				}
 				catch (exception) {
 					console.error("Can not submit form", exception);
@@ -273,6 +274,8 @@ Vue.component("renderer-form", {
 						self.$services.page.applyRendererParameters(self.$services.page.getPageInstance(self.page, self), self.target, self.state);
 					})
 				}
+				
+				promise.then(function(){}, errorHandler);
 				
 				// not yet used
 				if (this.target.form.functionOutputEvent && false) {

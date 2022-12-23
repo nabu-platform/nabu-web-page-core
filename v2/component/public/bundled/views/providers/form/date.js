@@ -48,7 +48,7 @@ Vue.component("page-form-input-date", {
 			+ "		:edit='!readOnly'"
 			+ "		:schema='schema'"
 			+ "		v-bubble:label"
-			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		v-bubble:input"
 			+ "		:label='label'"
 			+ "		:value='value'"
 			+ "		:default='getDefault()'"

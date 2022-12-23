@@ -206,6 +206,19 @@
 										<n-form-text v-model="page.content.branding.twitterUserName" placeholder="@website-username" info="Mostly interesting for analytics" label="Your facebook app id" :timeout="600" @input="$services.page.saveConfiguration"/>
 									</div>
 								</n-collapsible>
+								<n-collapsible :only-one-open="true" title="Formatting" content-class="is-spacing-medium">
+									<n-collapsible :only-one-open="true" v-for="(formatter, index) in page.content.formatters" :title="formatter.name ? formatter.name : 'Unnamed'" content-class="is-spacing-medium">
+										<ul slot="buttons" class="is-menu is-variant-toolbar is-spacing-horizontal-right-small">
+											<li class="is-column"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="page.content.formatters.splice(index, 1)"><icon name="times"/></button></li>
+										</ul>
+										<n-form-text v-model="formatter.name" label="Name"/>
+										<n-form-switch v-model="formatter.global" label="Global" v-if="false"/>
+										<n-form-ace v-model="formatter.script" label="Script"  mode="javascript"/>
+									</n-collapsible>
+									<div class="is-row is-align-end is-spacing-horizontal-right-small">
+										<button class="is-button is-variant-primary-outline is-size-xsmall" @click="page.content.formatters.push({})"><icon name="plus"/><span class="is-text">Formatter</span></button>
+									</div>
+								</n-collapsible>
 							</div>
 							
 							<hr class="is-line is-size-large is-color-primary-light"/>
@@ -237,59 +250,64 @@
 										</div>
 									</div>
 									<div class="is-accordion" v-if="page.content.parameters">
-										<n-collapsible :only-one-open="true" class="is-color-primary-light" v-for="parameter in page.content.parameters" :title="parameter.name ? parameter.name : 'unnamed'" content-class="is-spacing-medium" after="Internal">
+										<n-collapsible :only-one-open="true" class="is-color-primary-light" v-for="parameter in page.content.parameters" :title="parameter.name ? parameter.name : 'unnamed'" after="Internal">
 											<ul slot="buttons" class="is-menu is-variant-toolbar is-spacing-horizontal-right-small">
 												<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="moveInternalUp(parameter)"><icon name="chevron-circle-up"/></button></li>
 												<li class="is-column"><button class="is-button is-size-xsmall is-variant-primary-outline" @click="moveInternalDown(parameter)"><icon name="chevron-circle-down"/></button></li>
 												<li class="is-column"><button class="is-button is-size-xsmall is-variant-danger-outline" @click="page.content.parameters.splice(page.content.parameters.indexOf(parameter), 1)"><icon name="times"/></button></li>
 											</ul>
-											<n-form-text v-model="parameter.name" :required="true" label="Name" :timeout="600"/>
-											<n-form-combo v-model="parameter.type" label="Type" :filter="getParameterTypes" :placeholder="parameter.default || parameter.defaultScript ? 'Calculated from default' : 'string'"/>
-											<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
-											<n-form-text v-model="parameter.default" label="Default Value" v-if="!parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
-											<n-form-ace mode="javascript" v-model="parameter.defaultScript" label="Default Value" v-if="parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
-											<n-form-switch v-model="parameter.complexDefault" label="Use script for default value"/>
-											
-											<div v-if="parameter.type && parameter.type.indexOf('.') > 0 && !parameter.default">
-												<h4 class="is-h4">Default Values</h4>
-												<p class="is-p is-size-small is-color-light">You can set separate default values for particular fields.</p>
-												<div class="is-row is-align-end">
-													<button class="is-button is-variant-primary-outline is-size-xsmall" @click="parameter.defaults ? parameter.defaults.push({query:null,value:null}) : $window.Vue.set(parameter, 'defaults', [{query:null,value:null}])"><icon name="plus"/>Default Value</button>
-												</div>
-												<div v-if="parameter.defaults">
-													<n-form-section class="is-column is-spacing-medium has-button-close is-color-body" v-for="defaultValue in parameter.defaults">
-														<n-form-combo v-model="defaultValue.query" placeholder="Query" :filter="listFields.bind($self, parameter.type)"/>
-														<n-form-text v-model="defaultValue.value" placeholder='Value'/>
-														<button class="is-button is-variant-close is-size-small" @click="parameter.defaults.splice(parameter.defaults.indexOf(defaultValue), 1)"><icon name="times"/></button>
-													</n-form-section>
-												</div>
-											</div>
-											<n-form-switch v-if="false" v-model="parameter.global" label="Is translation global?"/>
-											<h4 class="is-h4">Update Listener</h4>
-											<p class="is-p is-size-small is-color-light">Whenever an event is emitted, you can capture a value from it by configuring an update listener.</p>
-											<div class="is-row is-align-end">
-												<button class="is-button is-variant-primary-outline is-size-xsmall" @click="parameter.listeners.push({to:null, field: null})"><icon name="plus"/>Update Listener</button>
-											</div>
-											<div v-for="i in Object.keys(parameter.listeners)" class="is-row has-button-close is-spacing-medium is-color-body">
-												<n-form-combo v-model="parameter.listeners[i].to" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
-												<n-form-combo v-model="parameter.listeners[i].field" v-if="parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($self, parameter.type)" />
-												<button class="is-button is-variant-close is-size-small" @click="parameter.listeners.splice(i, 1)"><icon name="times"/></button>
-											</div>
-											<div v-if="(!parameter.complexDefault && parameter.default) || (parameter.complexDefault && parameter.defaultScript)" class="is-column is-spacing-vertical-gap-medium">
-												<h4 class="is-h4">Reset Listener</h4>
-												<p class="subscript">Whenever an event is emitted, you can recalculate the default value and set it.</p>
-												<div class="is-row is-align-end">
-													<button class="is-button is-variant-primary-outline is-size-xsmall" @click="parameter.resetListeners ? parameter.resetListeners.push({to:null, field: null}) : $window.Vue.set(parameter, 'resetListeners', [{to:null,field:null}])"><icon name="plus"/>Reset Listener</button>
-												</div>
-												<div v-if="parameter.resetListeners">
-													<div v-for="i in Object.keys(parameter.resetListeners)" class="is-column has-button-close is-spacing-medium is-color-body">
-														<n-form-combo v-model="parameter.resetListeners[i].to" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
-														<n-form-combo v-model="parameter.resetListeners[i].field" v-if="false && parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($self, parameter.type)" description="Not yet"  />
-														<button class="is-button is-variant-close is-size-small" @click="parameter.resetListeners.splice(i, 1)"><icon name="times"/></button>
+											<div class="is-column is-spacing-medium">
+												<n-form-text v-model="parameter.name" :required="true" label="Name" :timeout="600"/>
+												<n-form-combo v-model="parameter.type" label="Type" :filter="getParameterTypes" :placeholder="parameter.template ? 'Calculated from template' : (parameter.default || parameter.defaultScript ? 'Calculated from default' : 'string')"/>
+												<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
+												<n-form-text v-model="parameter.default" label="Default Value" v-if="!parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
+												<n-form-text v-model="parameter.template" label="Template Value" v-if="!parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)" after="You can use a template to determine the data type"/>
+												<n-form-ace mode="javascript" v-model="parameter.defaultScript" label="Default Value" v-if="parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
+												<n-form-switch v-model="parameter.complexDefault" label="Use script for default value"/>
+												
+												<div v-if="parameter.type && parameter.type.indexOf('.') > 0 && !parameter.default">
+													<h4 class="is-h4">Default Values</h4>
+													<p class="is-p is-size-small is-color-light">You can set separate default values for particular fields.</p>
+													<div class="is-row is-align-end">
+														<button class="is-button is-variant-primary-outline is-size-xsmall" @click="parameter.defaults ? parameter.defaults.push({query:null,value:null}) : $window.Vue.set(parameter, 'defaults', [{query:null,value:null}])"><icon name="plus"/>Default Value</button>
+													</div>
+													<div v-if="parameter.defaults">
+														<n-form-section class="is-column is-spacing-medium has-button-close is-color-body" v-for="defaultValue in parameter.defaults">
+															<n-form-combo v-model="defaultValue.query" placeholder="Query" :filter="listFields.bind($self, parameter.type)"/>
+															<n-form-text v-model="defaultValue.value" placeholder='Value'/>
+															<button class="is-button is-variant-close is-size-small" @click="parameter.defaults.splice(parameter.defaults.indexOf(defaultValue), 1)"><icon name="times"/></button>
+														</n-form-section>
 													</div>
 												</div>
-												<page-event-value :page="page" :container="parameter" title="State reset event" name="updatedEvent" @resetEvents="resetEvents" :inline="true"/>
+												<n-form-switch v-if="false" v-model="parameter.global" label="Is translation global?"/>
+												<h4 class="is-h4">Update Listener</h4>
+												<p class="is-p is-size-small is-color-light">Whenever an event is emitted, you can capture a value from it by configuring an update listener.</p>
+												<div class="is-row is-align-end">
+													<button class="is-button is-variant-primary-outline is-size-xsmall" @click="parameter.listeners.push({to:null, field: null})"><icon name="plus"/>Update Listener</button>
+												</div>
+												<div v-for="i in Object.keys(parameter.listeners)" class="is-row has-button-close is-spacing-medium is-color-body">
+													<n-form-combo v-model="parameter.listeners[i].to" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
+													<n-form-combo v-model="parameter.listeners[i].field" v-if="parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($self, parameter.type)" />
+													<button class="is-button is-variant-close is-size-small" @click="parameter.listeners.splice(i, 1)"><icon name="times"/></button>
+												</div>
+												<div v-if="(!parameter.complexDefault && parameter.default) || (parameter.complexDefault && parameter.defaultScript)" class="is-column is-spacing-vertical-gap-medium">
+													<h4 class="is-h4">Reset Listener</h4>
+													<p class="subscript">Whenever an event is emitted, you can recalculate the default value and set it.</p>
+													<div class="is-row is-align-end">
+														<button class="is-button is-variant-primary-outline is-size-xsmall" @click="parameter.resetListeners ? parameter.resetListeners.push({to:null, field: null}) : $window.Vue.set(parameter, 'resetListeners', [{to:null,field:null}])"><icon name="plus"/>Reset Listener</button>
+													</div>
+													<div v-if="parameter.resetListeners">
+														<div v-for="i in Object.keys(parameter.resetListeners)" class="is-column has-button-close is-spacing-medium is-color-body">
+															<n-form-combo v-model="parameter.resetListeners[i].to" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
+															<n-form-combo v-model="parameter.resetListeners[i].field" v-if="false && parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($self, parameter.type)" description="Not yet"  />
+															<button class="is-button is-variant-close is-size-small" @click="parameter.resetListeners.splice(i, 1)"><icon name="times"/></button>
+														</div>
+													</div>
+													<page-event-value :page="page" :container="parameter" title="State reset event" name="updatedEvent" @resetEvents="resetEvents" :inline="true"/>
+												</div>
+												<n-form-switch v-model="parameter.store" label="Store in browser"/>
 											</div>
+											<page-triggerable-configure :page="page" :target="parameter" :triggers="getStateEvents()"/>
 										</n-collapsible>
 									</div>
 								</n-collapsible>

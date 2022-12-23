@@ -1,7 +1,8 @@
 Vue.component("page-form-input-enumeration-array-configure", {
 	template: "<n-form-section class='enumeration'>"
 			+ " 	<n-form-switch v-model='field.disableTyping' label='Disable typing'/>"
-			+ " 	<n-form-switch v-model='field.showRadioView' label='Show radio visualisation'/>"
+			+ " 	<n-form-switch v-model='field.showRadioView' v-if='!field.showCheckboxView' label='Show radio visualisation'/>"
+			+ " 	<n-form-switch v-model='field.showCheckboxView' v-if='!field.showRadioView && supportsMultiple' label='Show checkbox visualisation (allows multiselect)'/>"
 			+ " 	<n-form-switch v-model='field.addEmptyState' label='Add empty state'/>"
 			+ " 	<n-form-text v-if='!!field.addEmptyState' v-model='field.emptyState' label='Empty state text'/>"
 			+ "		<n-form-text v-if='field.showRadioView' v-model='field.mustChoose' label='Must choose' placeholder='=true' allow-typing='true' />"
@@ -13,7 +14,8 @@ Vue.component("page-form-input-enumeration-array-configure", {
 			+ "			:filter='function() { return getEnumerationFields(field.enumerationArray) }'/>"
 			+ "		<n-form-combo v-if='field.enumerationArray' v-model='field.enumerationArrayValue' label='Enumeration Value'"
 			+ "			:filter='function() { return getEnumerationFields(field.enumerationArray) }' info='If nothing is selected, the entire document becomes the value'/>"
-			+ "		<page-fields-edit :allow-multiple='false' fields-name='enumerationFields' v-if='field.enumerationArray && field.enumerationArrayLabelComplex' :cell='{state:field}' :page='page' :keys='getEnumerationFields(field.enumerationArray)' :allow-editable='false'/>"
+			+ "		<n-form-text v-model='field.complexLabel' label='The complex text label' v-if='field.enumerationArrayLabelComplex'/>"
+			+ "		<typography-variable-replacer v-if='field.enumerationArrayLabelComplex && field.complexLabel' :content='field.complexLabel' :page='page' :container='field' :keys='getEnumerationFields(field.enumerationArray)' />"
 			+ "		<n-form-combo v-if='field.enumerationArray' :filter='function() { return getEnumerationFields(field.enumerationArray) }' v-model='field.enumerationCachingKey' label='Enumeration Caching Key'/>"    
 			+ "		<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"
 			+ "</n-form-section>",
@@ -38,6 +40,22 @@ Vue.component("page-form-input-enumeration-array-configure", {
 	computed: {
 		availableParameters: function() {
 			return this.$services.page.getAvailableParameters(this.page, this.cell, true);
+		},
+		supportsMultiple: function() {
+			if (this.cell.state.name) {
+				// this currently only works for page-based form fields
+				// in v2, all form fields "should" be page based though?
+				// only exception so far is inline form components in a data table
+				var result = this.$services.page.getPageParameters(this.page);
+				//var result = this.$services.page.getAvailableParameters(this.page, this.cell, true);
+				var name = this.cell.state.name;
+				if (name.indexOf("page.") == 0) {
+					name = name.substring("page.".length);
+				}
+				var childDefinition = this.$services.page.getChildDefinition(result, name);
+				return childDefinition ? childDefinition.type == "array" : false;
+			}
+			return false;
 		}
 	},
 	methods: {
@@ -62,9 +80,27 @@ Vue.component("page-form-input-enumeration-array-configure", {
 		},
 		getEnumerationFields: function(array) {
 			var properties = {};
-			var available = this.$services.page.getAllAvailableParameters(this.page, this.cell);
-			var variable = this.field.enumerationArray.substring(0, this.field.enumerationArray.indexOf("."));
-			var rest = this.field.enumerationArray.substring(this.field.enumerationArray.indexOf(".") + 1);
+			var available = null;
+			var variable = null;
+			var rest = null;
+			if (this.field.enumerationArray.indexOf("parent.") == 0) {
+				var self = this;
+				variable = this.field.enumerationArray.substring("parent.".length);
+				var parentPage = this.$services.page.pages.filter(function(x) {
+					return x.content.name == self.page.content.pageParent;
+				})[0];
+				if (parentPage != null) {
+					//result.parent = this.getPageParameters(parentPage);
+					available = this.$services.page.getAllAvailableParameters(parentPage);
+				}
+				rest = variable.substring(variable.indexOf(".") + 1);
+				variable = variable.substring(0, variable.indexOf("."));
+			}
+			else {
+				available = this.$services.page.getAllAvailableParameters(this.page, this.cell);
+				variable = this.field.enumerationArray.substring(0, this.field.enumerationArray.indexOf("."));
+				rest = this.field.enumerationArray.substring(this.field.enumerationArray.indexOf(".") + 1);
+			}
 			if (available[variable]) {
 				var childDefinition = this.$services.page.getChildDefinition(available[variable], rest);
 				if (childDefinition) {
@@ -80,8 +116,23 @@ Vue.component("page-form-input-enumeration-array-configure", {
 // it does not appear to add anything of value, if something does not work, this should be checked first
 // The code in question: ><template slot='label' scope='props'><label @click='props.select(props.value); $event.stopPropagation()' class='n-form-label' v-content='enumerationFormatter(props.value)'></label></template></n-form-radio
 Vue.component("page-form-input-enumeration-array", {
-	template: "<div>"
-			+ "<n-form-radio v-if='field.showRadioView'"
+	template: ""
+			+ " <n-form-checkbox-list v-if='field.showCheckboxView' :items='enumerationFilterAny(null)' ref='form'"
+			+ "		:edit='!readOnly'"
+			+ "		:placeholder='placeholder'"
+			+ "		v-bubble:input"
+			+ "		:formatter='enumerationFormatter'"
+			+ "		:label='label'"
+			+ "		:value='value'"
+			+ "		v-bubble:label"
+			+ "		:schema='schema'"
+			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
+			+ "		:descriptionType='field.descriptionType'"
+			+ "		:descriptionIcon='field.descriptionIcon'"
+			+ "		:required='required'"
+			+ "		:extracter='enumerationExtracter'"
+			+ "		:disabled='disabled'/>"
+			+ "<n-form-radio v-else-if='field.showRadioView'"
 			+ "		:items='enumerationFilterAny(null)'"
 			+ "		ref='form'"
 			+ "		:edit='!readOnly'"
@@ -117,7 +168,7 @@ Vue.component("page-form-input-enumeration-array", {
 			+ "		:description-type='field.descriptionType'"
 			+ "		:description-icon='field.descriptionIcon'"
 			+ "		:schema='schema'"
-			+ "		:disabled='disabled'/></div>",
+			+ "		:disabled='disabled'/>",
 	props: {
 		cell: {
 			type: Object,
@@ -236,6 +287,10 @@ Vue.component("page-form-input-enumeration-array", {
 			}
 			if (value && value.emptyState == true && this.field.addEmptyState == true && !!this.field.emptyState) {
 				return this.$services.page.interpret(this.$services.page.translate(this.field.emptyState), this);
+			}
+			else if (this.field.enumerationArrayLabelComplex) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				return !this.field.complexLabel ? this.field.complexLabel : this.$services.typography.replaceVariables(pageInstance, this.field, this.field.complexLabel, this.$services.q.reject(), value);
 			}
 			// we want complex labels
 			else if (this.field.enumerationArrayLabelComplex) {

@@ -283,7 +283,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					}
 				});
 			}
-			
+			self.registerStateListeners();
 			done();
 		};
 		if (this.page.content.states.length) {
@@ -600,6 +600,44 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		registerStateListeners: function() {
+			var watchers = {};
+			var self = this;
+			if (this.page.content.parameters) {
+				this.page.content.parameters.forEach(function(state) {
+					if ((state.triggers && state.triggers.length) || state.store) {
+						if (state.name) {
+							if (!watchers[state.name]) {
+								watchers[state.name] = [];
+								self.$watch("variables." + state.name, function() {
+									watchers[state.name].forEach(function(listener) {
+										listener();
+									});
+								}, {deep:true})
+							}
+							if (state.triggers && state.triggers.length) {
+								watchers[state.name].push(function() {
+									console.log("triggering change", state.name, state.triggers);
+									self.$services.triggerable.trigger(state, "change", {}, self);
+								});
+							}
+							if (state.store) {
+								watchers[state.name].push(function() {
+									// make sure the value is persisted
+									setTimeout(function() {
+										var value = self.variables[state.name];
+										if (value != null) {
+											value = JSON.stringify(value);
+										}
+										localStorage.setItem(self.page.content.name + "-" + self.getServiceContext() + "-state-" + state.name, value);
+									}, 1);
+								});
+							}
+						}
+					}
+				});
+			}
+		},
 		getServiceContext: function() {
 			if (this.fragmentParent) {
 				return this.fragmentParent.getServiceContext();
@@ -933,8 +971,18 @@ nabu.page.views.Page = Vue.component("n-page", {
 						if (self.initialStateLoaded.indexOf(x.name) < 0 || force) {
 							// if it is not passed in as input, we set the default value
 							if (self.parameters[x.name] == null) {
+								var value = null;
+								// check if we have local storage
+								if (x.store) {
+									value = localStorage.getItem(self.page.content.name + "-" + self.getServiceContext() + "-state-" + x.name);
+									if (value != null) {
+										value = JSON.parse(value);
+									}
+								}
 								// check if we have a content setting
-								var value = self.$services.page.getContent(x.global ? null : self.page.name, x.name);
+								//if (value == null) {
+								//	value = self.$services.page.getContent(x.global ? null : self.page.name, x.name);
+								//}
 								if (value == null) {
 									if (x.complexDefault) {
 										value = self.calculateVariable(x.defaultScript);
@@ -943,9 +991,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 										value = self.$services.page.interpret(x.default, self);
 									}
 								}
-								else {
-									value = value.content;
-								}
+								//else {
+								//	value = value.content;
+								//}
 								// inherit from global state (especially interesting for mails/pdfs...)
 								// basically you inject state in a global parameters application.state and it will be auto-bound
 								if (value == null && application.state && application.state[x.name] != null) {
@@ -1038,6 +1086,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 		},
 		goIntoEdit: function() {
 			if (!this.edit) {
+				// normalize
+				if (!this.page.content.formatters) {
+					Vue.set(this.page.content, "formatters", []);
+				}
 				if (this.$services.page.editing) {
 					if (this.$services.page.editing.edit) {
 						this.$services.page.editing.stopEdit();
@@ -1863,6 +1915,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 			});
 			return result;
 		},
+		getStateEvents: function() {
+			return {
+				"change": {}
+			};
+		},
 		getEvents: function() {
 			// non-watched cache property
 			// we have too many problems with update loops that are triggered by this method
@@ -2018,6 +2075,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 						if (name) {
 							events[name] = nabu.page.event.getType(state, "updateEvent");
 						}
+						if (state.triggers) {
+							nabu.utils.objects.merge(events, self.$services.triggerable.getEvents(self.page, state));
+						}
 					});
 				}
 				if (this.page.content.parameters) {
@@ -2025,6 +2085,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 						var name = nabu.page.event.getName(parameter, "updatedEvent");
 						if (name) {
 							events[name] = nabu.page.event.getType(parameter, "updatedEvent");
+						}
+						if (parameter.triggers) {
+							nabu.utils.objects.merge(events, self.$services.triggerable.getEvents(self.page, parameter));
 						}
 					});
 				}
@@ -2861,7 +2924,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 				// the potential problems can arise if there is a recursive loop possibly in this structure
 				var name = name.substring("parent.".length);
 				var parentInstance = this.page.content.pageParent ? this.$services.page.getPageInstanceByName(this.page.content.pageParent) : null;
-				var result = parentInstance ? parentInstance.get("page." + name) : null;
+				//var result = parentInstance ? parentInstance.get("page." + name) : null;
+				var result = parentInstance ? parentInstance.get(name) : null;
 				if (result == null) {
 					var parentInstance = this.$services.page.getParentPageInstance(parentInstance ? parentInstance.page : this.page, parentInstance ? parentInstance : this);
 					if (parentInstance) {

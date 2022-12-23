@@ -70,52 +70,60 @@ nabu.services.VueService(Vue.extend({
 			}
 		},
 		date: function(date, format) {
-			if (!date) {
-				return null;
+			if (date instanceof Array) {
+				var self = this;
+				return date.map(function(single) {
+					return self.date(single, format);
+				});
 			}
-			else if (typeof(date) == "string") {
-				date = new Date(date);
+			else {
+				if (!date) {
+					return null;
+				}
+				else if (typeof(date) == "string") {
+					date = new Date(date);
+				}
+				if (!format || format == "date") {
+					format = "yyyy-MM-dd";
+				}
+				else if (format == "dateTime") {
+					format = "yyyy-MM-ddTHH:mm:ss.SSS";
+				}
+				format = format.replace(/yyyy/g, date.getFullYear());
+				format = format.replace(/yy/g, ("" + date.getFullYear()).substring(2, 4));
+				format = format.replace(/dd/g, (date.getDate() < 10 ? "0" : "") + date.getDate());
+				format = format.replace(/d/g, date.getDate());
+				format = format.replace(/HH/g, (date.getHours() < 10 ? "0" : "") + date.getHours());
+				format = format.replace(/H/g, date.getHours());
+				format = format.replace(/mm/g, (date.getMinutes() < 10 ? "0" : "") + date.getMinutes());
+				format = format.replace(/m/g, date.getMinutes());
+				format = format.replace(/ss/g, (date.getSeconds() < 10 ? "0" : "") + date.getSeconds());
+				format = format.replace(/s/g, date.getSeconds());
+				format = format.replace(/[S]+/g, date.getMilliseconds());
+				// we get an offset in minutes
+				format = format.replace(/[X]+/g, Math.floor(date.getTimezoneOffset() / 60) + ":" + date.getTimezoneOffset() % 60);
+				// do months last as they can introduce named months which might conflict with expressions in the above
+				// e.g. "Sep" could trigger the millisecond replacement
+				// replacing a month with "May" could trigger the single "M" replacement though
+				// so first we replace the capital M with something that should never conflict
+				if (nabu.utils.dates.days) {
+					format = format.replace(/E/g, "#");
+				}
+				format = format.replace(/M/g, "=");
+				format = format.replace(/====/g, nabu.utils.dates.months()[date.getMonth()]);
+				format = format.replace(/===/g, nabu.utils.dates.months()[date.getMonth()].substring(0, 3));
+				format = format.replace(/==/g, (date.getMonth() < 9 ? "0" : "") + (date.getMonth() + 1));
+				format = format.replace(/=/g, date.getMonth() + 1);
+				
+				// this was added later, hence the defensive check for projects that don't have this yet
+				if (nabu.utils.dates.days) {
+					format = format.replace(/####/g, nabu.utils.dates.days()[nabu.utils.dates.dayOfWeek(date)]);
+					format = format.replace(/###/g, nabu.utils.dates.days()[nabu.utils.dates.dayOfWeek(date)].substring(0, 3));
+				}
+				format = format.replace(/##/g, (nabu.utils.dates.dayOfWeek(date) < 9 ? "0" : "") + (nabu.utils.dates.dayOfWeek(date) + 1));
+				format = format.replace(/#/g, nabu.utils.dates.dayOfWeek(date) + 1);
+				return format;
 			}
-			if (!format || format == "date") {
-				format = "yyyy-MM-dd";
-			}
-			else if (format == "dateTime") {
-				format = "yyyy-MM-ddTHH:mm:ss.SSS";
-			}
-			format = format.replace(/yyyy/g, date.getFullYear());
-			format = format.replace(/yy/g, ("" + date.getFullYear()).substring(2, 4));
-			format = format.replace(/dd/g, (date.getDate() < 10 ? "0" : "") + date.getDate());
-			format = format.replace(/d/g, date.getDate());
-			format = format.replace(/HH/g, (date.getHours() < 10 ? "0" : "") + date.getHours());
-			format = format.replace(/H/g, date.getHours());
-			format = format.replace(/mm/g, (date.getMinutes() < 10 ? "0" : "") + date.getMinutes());
-			format = format.replace(/m/g, date.getMinutes());
-			format = format.replace(/ss/g, (date.getSeconds() < 10 ? "0" : "") + date.getSeconds());
-			format = format.replace(/s/g, date.getSeconds());
-			format = format.replace(/[S]+/g, date.getMilliseconds());
-			// we get an offset in minutes
-			format = format.replace(/[X]+/g, Math.floor(date.getTimezoneOffset() / 60) + ":" + date.getTimezoneOffset() % 60);
-			// do months last as they can introduce named months which might conflict with expressions in the above
-			// e.g. "Sep" could trigger the millisecond replacement
-			// replacing a month with "May" could trigger the single "M" replacement though
-			// so first we replace the capital M with something that should never conflict
-			if (nabu.utils.dates.days) {
-				format = format.replace(/E/g, "#");
-			}
-			format = format.replace(/M/g, "=");
-			format = format.replace(/====/g, nabu.utils.dates.months()[date.getMonth()]);
-			format = format.replace(/===/g, nabu.utils.dates.months()[date.getMonth()].substring(0, 3));
-			format = format.replace(/==/g, (date.getMonth() < 9 ? "0" : "") + (date.getMonth() + 1));
-			format = format.replace(/=/g, date.getMonth() + 1);
-			
-			// this was added later, hence the defensive check for projects that don't have this yet
-			if (nabu.utils.dates.days) {
-				format = format.replace(/####/g, nabu.utils.dates.days()[nabu.utils.dates.dayOfWeek(date)]);
-				format = format.replace(/###/g, nabu.utils.dates.days()[nabu.utils.dates.dayOfWeek(date)].substring(0, 3));
-			}
-			format = format.replace(/##/g, (nabu.utils.dates.dayOfWeek(date) < 9 ? "0" : "") + (nabu.utils.dates.dayOfWeek(date) + 1));
-			format = format.replace(/#/g, nabu.utils.dates.dayOfWeek(date) + 1);
-			return format;
 		},
 		masterdata: function(id) {
 			if (!id) {

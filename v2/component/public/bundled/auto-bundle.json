@@ -94,9 +94,14 @@
 					"ace": {
 						"ace.js": {
 							"url": "components/ace/ace.js"
+						}
+					},
+					"data": {
+						"data.js": {
+							"url": "components/data/data.js"
 						}, 
-						"ace.gcss": {
-							"url": "components/ace/ace.gcss"
+						"data.tpl": {
+							"url": "components/data/data.tpl"
 						}
 					},
 					"event-value": {
@@ -471,6 +476,9 @@
 							}, 
 							"text.js": {
 								"url": "views/providers/form/text.js"
+							},
+							"ace.js": {
+								"url": "views/providers/form/ace.js"
 							}, 
 							"password.js": {
 								"url": "views/providers/form/password.js"

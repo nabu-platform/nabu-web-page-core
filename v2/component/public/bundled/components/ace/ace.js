@@ -39,6 +39,11 @@ Vue.component("n-form-ace", {
 		return {
 			messages: []
 		}
+	},
+	methods: {
+		validate: function(soft) {
+			return [];
+		}
 	}
 });
 Vue.component("n-ace", {

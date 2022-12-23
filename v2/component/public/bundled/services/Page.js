@@ -1091,7 +1091,7 @@ nabu.services.VueService(Vue.extend({
 			return "" + target.id;
 		},
 		getRootPage: function(pageInstance) {
-			while (pageInstance.fragmentParent) {
+			while (pageInstance && pageInstance.fragmentParent) {
 				pageInstance = pageInstance.fragmentParent;
 			}
 			return pageInstance;
@@ -1419,6 +1419,7 @@ nabu.services.VueService(Vue.extend({
 				if (configuration.pages) {
 					nabu.utils.arrays.merge(self.pages, configuration.pages);
 					self.loadPages(self.pages);
+					self.loadFormatters(self.pages);
 				}
 				if (configuration.properties) {
 					nabu.utils.arrays.merge(self.properties, configuration.properties);
@@ -3153,6 +3154,48 @@ nabu.services.VueService(Vue.extend({
 			});
 			return routes.map(function(x) { return x.alias });
 		},
+		loadFormatters: function(pages) {
+			if (!(pages instanceof Array)) {
+				pages = [pages];
+			}
+			var self = this;
+			pages.forEach(function(page) {
+				if (page.content.formatters && page.content.formatters.length) {
+					page.content.formatters.forEach(function(formatter) {
+						if (formatter.name && formatter.script) {
+							nabu.page.provide("page-format", {
+								format: function(value, fragment, page, cell, record, component) {
+									var $value = component ? component.$value : null;
+									if (!$value) {
+										var pageInstance = self.getPageInstance(page);
+										$value = pageInstance ? pageInstance.$value : function(value) { return null };
+									}
+									var result = (new Function('with(this) { return ' + formatter.script + ' }')).call({
+										value: value,
+										$value: $value,
+										state: {value:value},
+										$services: self.$services
+									});
+									//var result = eval(code);
+									if (result instanceof Function) {
+										result = result.bind(this);
+										result = result(value);
+									}
+									return result;
+								},
+								// in the future we can expose these parameters in the page itself
+								skipCompile: true,
+								html: true,
+								// and add a configuration if necessary
+								//configure: "page-format-resolver",
+								name: formatter.name,
+								namespace: "nabu.page.custom"
+							});
+						}
+					});
+				}
+			});
+		},
 		loadPages: function(pages) {
 			var self = this;
 			pages.map(function(page) {
@@ -3462,14 +3505,14 @@ nabu.services.VueService(Vue.extend({
 					return x.content.name == page.content.pageParent;
 				})[0];
 				if (parentPage != null) {
-					result.parent = this.getPageParameters(parentPage);
+					result.parent = {properties:this.getAllAvailableParameters(parentPage)};
 				}
 			}
 			// if not defined explicitly, we might still have a parent in this context?
 			else {
 				var parentInstance = self.$services.page.getParentPageInstance(page, context);
 				if (parentInstance && parentInstance.page) {
-					result["parent"] = this.getPageParameters(parentInstance.page);
+					result["parent"] = {properties:this.getAllAvailableParameters(parentInstance.page)};
 				}
 			}
 			
@@ -3486,7 +3529,7 @@ nabu.services.VueService(Vue.extend({
 				else {
 					operation = state.operation;
 				}
-				if (operation && self.$services.swagger.operation(operation).responses && self.$services.swagger.operation(operation).responses["200"]) {
+				if (operation && self.$services.swagger.operation(operation) && self.$services.swagger.operation(operation).responses && self.$services.swagger.operation(operation).responses["200"]) {
 					result[state.name] = self.$services.swagger.resolve(self.$services.swagger.operation(operation).responses["200"]).schema;
 				}
 			});
@@ -3642,14 +3685,16 @@ nabu.services.VueService(Vue.extend({
 					return x.content.name == page.content.pageParent;
 				})[0];
 				if (parentPage != null) {
-					result.parent = this.getPageParameters(parentPage);
+					//result.parent = this.getPageParameters(parentPage);
+					result["parent"] = {properties:this.getAvailableParameters(parentPage, null, includeAllEvents)};
 				}
 			}
 			// if not defined explicitly, we might still have a parent in this context?
 			else {
 				var parentInstance = self.$services.page.getParentPageInstance(page, self);
 				if (parentInstance && parentInstance.page) {
-					result["parent"] = this.getPageParameters(parentInstance.page);
+					//result["parent"] = this.getPageParameters(parentInstance.page);
+					result["parent"] = {properties:this.getAvailableParameters(parentInstance.page, null, includeAllEvents)};
 				}
 			}
 			// and the page itself
@@ -3979,7 +4024,14 @@ nabu.services.VueService(Vue.extend({
 					else {
 						parameters.properties[x.name] = self.$services.swagger.resolve(self.$services.swagger.definition(x.type))
 					}*/
-					parameters.properties[x.name] = self.getResolvedPageParameterType(x.type, pageInstance ? pageInstance.get(x.name) : null);
+					var currentValue = null;
+					if (x.template) {
+						currentValue = self.eval(x.template);
+					}
+					else {
+						currentValue = pageInstance ? pageInstance.get(x.name) : null;
+					}
+					parameters.properties[x.name] = self.getResolvedPageParameterType(x.type, currentValue);
 				});
 			}
 			
