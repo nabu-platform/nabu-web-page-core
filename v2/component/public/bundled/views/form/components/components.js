@@ -46,6 +46,9 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				return instance ? instance.variables : null;
 			},
 			disabled: function() {
+				if (this.running) {
+					return true;
+				}
 				var pageInstance = this.pageInstance;
 				if (!pageInstance) {
 					 return true;
@@ -65,6 +68,11 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			this.$refs.input.$on("hook:beforeDestroy", function() {
 				self.$destroy();
 			});
+		},
+		data: function() {
+			return {
+				running: false
+			}
 		},
 		methods: {
 			isRequired: function() {
@@ -150,7 +158,13 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				return fields;
 			},
 			update: function(value, label) {
+				this.running = true;
 				this.getPageInstance().set("page." + this.cell.state.name, value, label);
+				var self = this;
+				var done = function() {
+					self.running = false;
+				};
+				this.$services.triggerable.trigger(this.cell.state, "update", null, this).then(done, done);
 			},
 			validate: function () {
 				if (this.$refs && this.$refs.input) {

@@ -625,6 +625,136 @@ window.addEventListener("load", function() {
 			namespace: "nabu.page"
 		});
 		
+		nabu.page.provide("page-generator", {
+			name: "Table Button",
+			description: "Add as a delete button to an existing table",
+			icon: "th",
+			accept: function(type, content) {
+				return type == "operation" && $services.swagger.operations[content] && $services.swagger.operations[content].method && $services.swagger.operations[content].method.toLowerCase() == "delete";
+			},
+			initialize: function(type, content, pageInstance, rowGenerator, cellGenerator) {
+				console.log("generate", content);
+				var operation = $services.swagger.operations[content];
+				var name = $services.page.guessNameFromOperation(content);
+				if (name != null) {
+					name = name.substring(0, 1).toUpperCase() + name.substring(1);
+				}
+				var page = pageInstance.page;
+				// remove the last bit, for example if we have demo.rest.company.create, we want to find an operation
+				// that starts with demo.rest.company, for example "demo.rest.company.list"
+				var shared = content.replace(/\.[^.]+$/, "");
+				var getDataComponent = function(targets) {
+					for (var i = 0; i < targets.length; i++) {
+						var target = targets[i];
+						// do a minimalistic check
+						if (target.renderer == "repeat" && target.repeat && target.repeat.operation) {
+							if (target.repeat.operation.indexOf(shared) == 0) {
+								return [target];
+							}
+						}
+						if (target.rows) {
+							var dataComponent = getDataComponent(target.rows);
+							if (dataComponent != null) {
+								dataComponent.push(target);
+								return dataComponent;
+							}
+						}
+						else if (target.cells) {
+							var dataComponent = getDataComponent(target.cells);
+							if (dataComponent != null) {
+								dataComponent.push(target);
+								return dataComponent;
+							}
+						}
+					}
+					return null;
+				}
+				var dataComponent = getDataComponent(page.content.rows);
+				// we are looking for a repeat within a table renderer
+				// and it must not have a slot header or footer (if you for some reason put a repeat on that...?)
+				if (dataComponent != null && dataComponent.length >= 2 && dataComponent[1].renderer == "table" && ["header", "footer"].indexOf(dataComponent[0].rendererSlot) < 0) {
+					var table = dataComponent[1];
+					var repeat = dataComponent[0];
+					nabu.utils.vue.confirm({message:"Do you want to add a delete button to the existing table?"}).then(function() {
+						// find a repeat column that has the name "Local Actions"
+						var buttons = repeat.cells.filter(function(x) {
+							return x.name && x.name.toLowerCase() == "local actions";
+						})[0];
+						
+						if (!buttons) {
+							buttons = cellGenerator(repeat);
+							buttons.name = "Local actions";
+							// if we add a new column for the buttons, we also need to add it to the header
+							var headers = table.rows.filter(function(x) {
+								return x.rendererSlot == "header";
+							});
+							headers.forEach(function(x) {
+								var cell = cellGenerator(x);
+								cell.name = "Local actions header";
+							});
+							
+							// by default we generate no header content
+							// and we set the borders to be disabled on the local actions, that gives it a floaty feeling
+							application.services.page.normalizeAris(pageInstance.page, buttons, "cell", [{name:"table-column"}]);
+							buttons.aris.components["table-column"].options.push("border_none");
+							buttons.aris.components["table-column"].modifiers.push("small");
+						}
+						var buttonRow = null;
+						// if we don't have a row yet, add it
+						if (buttons.rows.length == 0) {
+							buttonRow = rowGenerator(buttons);
+							application.services.page.normalizeAris(pageInstance.page, buttonRow, "row");
+							buttonRow.aris.components["page-row"].options.push("gap_small");
+							buttonRow.aris.components["page-row"].options.push("wrap_none");
+						}
+						else {
+							buttonRow = buttons.rows[0];
+						}
+						
+						buttonCell = cellGenerator(buttonRow);
+						
+						eventName = "update" + (name ? name : "");
+						buttonCell.name = "Delete" + (name ? " " + name : "");
+						application.services.page.normalizeAris(pageInstance.page, buttonCell, "cell");
+						application.services.page.normalizeAris(pageInstance.page, buttonCell, "cell", [{name:"page-button"}]);
+						buttonCell.aris.components["page-button"].options.push("size_small");
+						buttonCell.aris.components["page-button"].options.push("border_none");
+						buttonCell.aris.components["page-button"].variant = "danger-outline";
+						
+						buttonCell.alias = "page-button";
+						var idField = operation.parameters ? operation.parameters.filter(function(x) {
+							return x.name.toLowerCase().indexOf("id") >= 0;
+						}).map(function(x) { return x.name })[0] : null;
+						var bindings = {};
+						if (idField) {
+							bindings[idField] = repeat.runtimeAlias + ".record.id";
+						}
+						buttonCell.state = {
+							// no label
+							content: null,
+							icon: "times",
+							triggers: [{
+								trigger: "activate",
+								actions: [{
+									type: "confirmation",
+									confirmation: "%" + "{Are you sure you want to delete this entry?}"
+								}, {
+									type: "operation",
+									operation: content,
+									bindings: bindings
+								}, {
+									type: "action",
+									action: "refresh",
+									actionTarget: repeat.id,
+									bindings: {}
+								}]
+							}]
+						}
+					});
+				}
+			}
+		});
+		
 		// -------------------------- generators
 		nabu.page.provide("page-generator", {
 			name: "Table",
@@ -1184,7 +1314,7 @@ window.addEventListener("load", function() {
 				if (buttonSubmit) {
 					if (buttonSubmit.state.triggers.length == 0) {
 						buttonSubmit.state.triggers.push({
-							trigger: "click",
+							trigger: "activate",
 							closeEvent: true,
 							actions: []
 						})
@@ -1391,7 +1521,7 @@ window.addEventListener("load", function() {
 									content: operation.method.toLowerCase() == "post" ? "%" + "{Create}" : null,
 									icon: operation.method.toLowerCase() == "post" ? "plus" : "pencil-alt",
 									triggers: [{
-										trigger: "click",
+										trigger: "activate",
 										actions: [{
 											type: "event",
 											event: {

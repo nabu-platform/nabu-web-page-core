@@ -78,7 +78,7 @@ Vue.service("typography", {
 				if (container.fragments && container.fragments[variable] && container.fragments[variable].key) {
 					var placeholder = container.fragments[variable].placeholder;
 					if (placeholder != null) {
-						placeholder = self.$services.page.interpret(self.$services.page.translate(placeholder), pageInstance);;
+						placeholder = self.$services.page.interpret(self.$services.page.translate(placeholder), pageInstance);
 					}
 					var formatted;
 					var oldContent;

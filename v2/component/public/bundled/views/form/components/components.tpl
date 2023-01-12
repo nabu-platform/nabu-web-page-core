@@ -52,5 +52,7 @@
 				<button class="is-button is-size-xsmall is-variant-primary-outline" @click="cell.state.codes ? cell.state.codes.push({code:null,title:null}) : $window.Vue.set(cell.state, 'codes', [{code:null,title:null}])"><icon name="plus"/><span class="is-text">Message</span></button>
 			</div>
 		</div>
+		
+		<page-triggerable-configure :page="page" :target="cell.state" :triggers="{'update': {}}" :allow-closing="true"/>
 	</div>
 </template>

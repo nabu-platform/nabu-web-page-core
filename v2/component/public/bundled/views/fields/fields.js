@@ -665,8 +665,18 @@ Vue.component("page-formatted-configure", {
 	}
 });
 
+/**
+ * For v2, we changed sanitization rules etc
+ * From now on, the "default" is text, this was already the case in most places except specifically in the "plain" option of v-content
+ * With the plain option now turned on in the default setting, we will get verbatim what you typed if we do nothing (so for example verbatim <b>test</b> rather than a bolded "test")
+ * 
+ * We will now _always_ sanitize, even for html-based components. There has not yet been a valid usecase (even for power-users) to actually inject javascript through script tags or href or...
+ * If a usecase pops up in the future, we can add an _explicit_ skipSanitize option.
+ * 
+ * Because of how widespread this component is used, this should severely reduce accidental XSS bugs
+ */
 Vue.component("page-formatted", {
-	template: "<component :is='tag' v-content.parameterized=\"{value:formatted,plain:fragment.format == 'text', sanitize: !isHtml, compile: (mustCompile || fragment.compile) && !skipCompile }\"/>",
+	template: "<component :is='tag' v-content.parameterized=\"{value:formatted,plain:!fragment.format || fragment.format == 'text', sanitize: !skipSanitize, compile: (mustCompile || fragment.compile) && !skipCompile }\"/>",
 	props: {
 		page: {
 			type: Object,
@@ -712,6 +722,12 @@ Vue.component("page-formatted", {
 			else {
 				return "span";
 			}
+		},
+		// we must skip sanitize because we use a vue component!
+		// this must be compiled before it can be sanitized...
+		// could also update the order in which it is compiled? or add a mandatory post-sanitize
+		skipSanitize: function() {
+			return this.fragment.format == "checkbox";
 		},
 		isHtml: function() {
 			if (!this.fragment.format) {

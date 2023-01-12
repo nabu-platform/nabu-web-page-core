@@ -145,7 +145,22 @@ Vue.service("data", {
 			var array = input.array ? input.array : (target ? target.array : null);
 			var bindings = input.bindings ? input.bindings : (target ? target.bindings : null);
 			var filter = input.filter ? input.filter : (instance && instance.state ? instance.state.filter : null);
-			var orderBy = input.orderBy ? input.orderBy : (instance && instance.state && instance.state.order ? instance.state.order.by : null);
+			var orderBy = input.orderBy ? input.orderBy : (instance && instance.state && instance.state.order ? instance.state.order.by : (target ? target.defaultOrderBy : null));
+			if (orderBy != null) {
+				if (!(orderBy instanceof Array)) {
+					orderBy = [orderBy];
+				}
+				orderBy = orderBy.map(function(single) {
+					// if it is an object, we assume the standard layout with "name" and "direction"
+					if (self.$services.page.isObject(single)) {
+						return single.name + (single.direction ? " " + single.direction : "");
+					}
+					// otherwise we assume already serialized order by
+					else {
+						return single;
+					}
+				});
+			}
 			var page = input.page ? input.page : (instance ? instance.page : null);
 			var pageInstance = input.pageInstance ? input.pageInstance : (page ? this.$services.page.getPageInstance(page, instance) : null);
 			var limit = input.limit;
@@ -511,6 +526,13 @@ Vue.service("data", {
 					if (watcher instanceof Function) {
 						watcher();
 					}
+					else if (watcher instanceof Array) {
+						watcher.forEach(function(child) {
+							if (child instanceof Function) {
+								child();
+							}
+						});
+					}
 				});
 			}
 		},
@@ -544,6 +566,7 @@ Vue.service("data", {
 								if (binding.indexOf("page.") == 0) {
 									binding = binding.substring("page.".length);
 								}
+								console.log("watching", binding, input.pageInstance.variables, input.handler);
 								watchers.push(input.pageInstance.$watch("variables." + binding, input.handler, {deep: true}));
 							}
 						}
