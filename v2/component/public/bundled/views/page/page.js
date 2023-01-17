@@ -2923,14 +2923,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 				// so instead of going up 1 level, we want to check all levels until we find a match
 				// the potential problems can arise if there is a recursive loop possibly in this structure
 				var name = name.substring("parent.".length);
-				var parentInstance = this.page.content.pageParent ? this.$services.page.getPageInstanceByName(this.page.content.pageParent) : null;
+				var parentInstance = this.page.content.pageParent ? this.$services.page.getPageInstanceByName(this.page.content.pageParent) : this.$services.page.getParentInstance(this);
 				//var result = parentInstance ? parentInstance.get("page." + name) : null;
 				var result = parentInstance ? parentInstance.get(name) : null;
-				if (result == null) {
-					var parentInstance = this.$services.page.getParentPageInstance(parentInstance ? parentInstance.page : this.page, parentInstance ? parentInstance : this);
-					if (parentInstance) {
-						result = parentInstance.get("parent." + name);
-					}
+				if (result == null && parentInstance) {
+					result = parentInstance.get("parent." + name);
+					//var parentInstance = this.$services.page.getParentPageInstance(parentInstance ? parentInstance.page : this.page, parentInstance ? parentInstance : this);
+					//if (parentInstance) {
+					//	result = parentInstance.get("parent." + name);
+					//}
 				}
 				return result;
 			}
@@ -4036,14 +4037,17 @@ Vue.component("n-page-row", {
 				}
 			}
 			if (!!row.permission) {
-				if (!this.$services.user.hasPermission(row.permission, row.permissionContext)) {
+				if (!this.$services.user.hasPermission(row.permission, row.permissionContext, row.permissionServiceContext)) {
 					return false;
 				}
 			}
 			else if (!!row.permissionContext) {
-				if (this.$services.user.permissions.filter(function(x) {
-							return x.indexOf(":") > 0 && x.split(":")[0] == row.permissionContext && x != row.permissionContext + ":context.switch";
-						}).length == 0) {
+				if (!this.$services.user.hasPermissionInContext(row.permissionContext, row.permissionServiceContext)) {
+					return false;
+				}
+			}
+			else if (!!row.permissionServiceContext) {
+				if (!this.$services.user.hasPermissionInServiceContext(row.permissionServiceContext)) {
 					return false;
 				}
 			}
@@ -4253,10 +4257,12 @@ Vue.component("n-page-row", {
 				}
 			}
 			else if (!!cell.permissionContext) {
-				if (this.$services.user.permissions.filter(function(x) {
-							// specifically the context switch is not enough to indicate an actual permission there!
-							return x.indexOf(":") > 0 && x.split(":")[0] == cell.permissionContext && x != cell.permissionContext + ":context.switch";
-						}).length == 0) {
+				if (!this.$services.user.hasPermissionInContext(cell.permissionContext, cell.permissionServiceContext)) {
+					return false;
+				}
+			}
+			else if (!!cell.permissionServiceContext) {
+				if (!this.$services.user.hasPermissionInServiceContext(cell.permissionServiceContext)) {
 					return false;
 				}
 			}

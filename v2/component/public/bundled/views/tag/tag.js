@@ -61,17 +61,17 @@ Vue.view("page-tag", {
 			}
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			var value = pageInstance.getLabel(this.cell.state.field);
-			if (!value) {
+			if (value == null) {
 				value = pageInstance.getLabel("page." + this.cell.state.field);
 				if (value) {
 					this.requiresPagePrefix = true;
 				}
 			}
-			if (!value) {
+			if (value == null) {
 				value = pageInstance.get(this.cell.state.field);
 			}
 			// toggle the cell
-			if (!!value) {
+			if (value != null) {
 				this.$emit("show");
 			}
 			else {

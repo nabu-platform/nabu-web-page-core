@@ -1969,6 +1969,16 @@ nabu.services.VueService(Vue.extend({
 			})[0];
 			return page ? this.getPageInstance(page, component) : null;
 		},
+		getParentInstance: function(pageInstance) {
+			var instance = pageInstance;
+			while (instance && instance.$parent) {
+				instance = instance.$parent;
+				if (instance.page && instance.page != pageInstance.page) {
+					return this.getPageInstance(instance.page, instance);
+				}
+			}
+			return null;
+		},
 		getParentPageInstance: function(page, component) {
 			var currentInstance = this.getPageInstance(page, component);
 			var parentInstance = null;

@@ -205,6 +205,14 @@
 							"components.tpl": {
 								"url": "views/form/components/components.tpl"
 							}
+						},
+						"dynamic": {
+							"dynamic.js": {
+								"url": "views/form/dynamic/dynamic.js"
+							},
+							"dynamic.tpl": {
+								"url": "views/form/dynamic/dynamic.tpl"
+							}
 						}
 					}, 
 					"custom-validator": {

@@ -14,6 +14,79 @@
 // especially for matrices we can opt to "normalize" them so every entry in the matrix contains an equal amount of entries
 // this does require a normalization key to be present in the data, this can be offset either against a predefined series of labels or a calculated sum total of all the labels in the original series
 // we can also normalize a basic series vs an expected list of labels if needed
+
+Vue.component("data-mixin", {
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		parameters: {
+			type: Object,
+			required: false
+		},
+		childComponents: {
+			type: Object,
+			required: false
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
+		edit: {
+			type: Boolean,
+			required: true
+		}
+	},
+	created: function() {
+		this.loadData();
+		this.watchAll();
+	},
+	data: function() {
+		return {
+			subscriptions: [],
+			records: [],
+			paging: {}
+		}
+	},
+	methods: {
+		clear: function() {
+			this.records.splice(0);
+		},
+		loadData: function() {
+			var self = this;
+			self.clear();
+			this.$services.data.load({
+				instance: this,
+				limit: 0,
+				handler: function(results, page) {
+					self.clear();
+					nabu.utils.arrays.merge(self.records, results);
+				}
+			});
+		},
+		unsubscribe: function() {
+			this.$services.data.unwatchAll(this.subscriptions);
+		},
+		watchAll: function() {
+			this.unsubscribe();
+			var self = this;
+			nabu.utils.arrays.merge(this.subscriptions, this.$services.data.watchAll({
+				instance: this,
+				target: this.cell.state,
+				handler: function() {
+					Vue.set(self, "data", null);
+					self.loadData();
+					self.watchAll();
+				}
+			}));
+		},
+	},
+	beforeDestroy: function() {
+		this.unsubscribe();
+	}
+})
+
 Vue.service("data", {
 	services: ["swagger"],
 	methods: {

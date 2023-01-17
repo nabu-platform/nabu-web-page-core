@@ -261,7 +261,7 @@
 												<n-form-combo v-model="parameter.type" label="Type" :filter="getParameterTypes" :placeholder="parameter.template ? 'Calculated from template' : (parameter.default || parameter.defaultScript ? 'Calculated from default' : 'string')"/>
 												<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
 												<n-form-text v-model="parameter.default" label="Default Value" v-if="!parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
-												<n-form-text v-model="parameter.template" label="Template Value" v-if="!parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)" after="You can use a template to determine the data type"/>
+												<n-form-text v-model="parameter.template" label="Template Value" v-if="(!parameter.defaults || !parameter.defaults.length)" after="You can use a template to determine the data type"/>
 												<n-form-ace mode="javascript" v-model="parameter.defaultScript" label="Default Value" v-if="parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
 												<n-form-switch v-model="parameter.complexDefault" label="Use script for default value"/>
 												
@@ -660,7 +660,8 @@
 								</div>
 							</div>
 							<n-form-text label="Show only if user has permission" v-model="cell.permission" placeholder="E.g. company.list"/>
-							<n-form-text :label="row.permission ? 'Optional permission context' : 'Show only if user has any permission in context'" v-model="cell.permissionContext" placeholder="E.g. crm" />
+							<n-form-text :label="cell.permission ? 'Optional permission context' : 'Show only if user has any permission in context'" v-model="cell.permissionContext" placeholder="E.g. crm" />
+							<n-form-text :label="cell.permission ? 'Optional permission service context' : 'Show only if user has any permission in service context'" v-model="cell.permissionServiceContext" placeholder="E.g. default" />
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Triggers" key="cell-triggers" class="is-highlight-left" v-if="getTriggersForCell(cell)">
 							<p class="is-p is-size-small is-spacing-medium">You can add triggers to react to user interaction with the content.</p>
@@ -761,6 +762,7 @@
 							</div>
 							<n-form-text label="Show only if user has permission" v-model="row.permission" placeholder="E.g. company.list"/>
 							<n-form-text :label="row.permission ? 'Optional permission context' : 'Show only if user has any permission in context'" v-model="row.permissionContext" placeholder="E.g. crm" />
+							<n-form-text :label="row.permission ? 'Optional permission service context' : 'Show only if user has any permission in service context'" v-model="row.permissionServiceContext" placeholder="E.g. default" />
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Triggers" key="row-triggers" class="is-highlight-left" v-if="getTriggersForCell(row)">
 							<p class="is-p is-size-small is-spacing-medium">You can add triggers to react to user interaction with the content.</p>
