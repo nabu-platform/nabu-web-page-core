@@ -1,13 +1,16 @@
 <template id="nabu-form-dynamic-component">
-	<div class="is-column">
+	<div class="is-column" :class="getChildComponentClasses('dynamic-field-container')">
 		<component v-for="record in records"
 			:is="getComponentFor(record)"
-			:value="getValueFor(record)",
-			@input="update.bind($self, record)"
+			:value="getValueFor(record)"
+			@input="function(value, label, field) { update(record, value) }"
 			:component-group="cell.state.componentGroup ? cell.state.componentGroup : 'form'"
 			:parent-value="getParentValue()"
+			:page="page"
+			:cell="getParametersFor(record)"
+			:field="getParametersFor(record).state"
 			:label="getLabelFor(record)"
-			:timeout="cell.state.timeout"/>
+			:timeout="cell.state.timeout"></component>
 	</div>
 </template>
 

@@ -11,6 +11,7 @@
 		:page-instance-id="pageInstanceId"
 		:stop-rerender="stopRerender"
 		:key="'page_' + pageInstanceId + '_row_' + page.content.rows[0].id"
+		@update="$emit('update')"
 		@select="selectItem"
 		@viewComponents="viewComponents = edit"
 		@removeRow="function(x) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(x), 1) }) }"/>
@@ -35,6 +36,7 @@
 
 <template id="nabu-page">
 	<component :edit="edit" :is="pageTag()" :inline-all="true" class="is-page is-grid" :body-class="bodyClasses" :page="page.name" 
+			@update="$emit('update')"
 			@drop="dropMenu($event)" @dragover="dragOver($event)"
 			:class="[classes, getGridClasses()]"
 			>
@@ -819,6 +821,7 @@
 
 <template id="page-row">
 	<component :is="rowTagFor(row)" :id="row.customId && !row.renderer ? row.customId : page.name + '_' + row.id" 
+			@update="$emit('update')"
 			:class="$window.nabu.utils.arrays.merge(['page-row-' + row.cells.length, row.class ? row.class : null, {'collapsed': row.collapsed}, {'empty': edit && (!row.cells || !row.cells.length) } ], rowClasses(row))"  
 			:key="'page_' + pageInstanceId + '_row_' + row.id"
 			:row-key="'page_' + pageInstanceId + '_row_' + row.id"
@@ -857,6 +860,7 @@
 		<template v-for="cell in row.cells">
 			<template v-if="edit">
 				<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+						@update="$emit('update')"
 						v-show="!edit || !row.collapsed"
 						:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 						:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
@@ -909,6 +913,7 @@
 						:stop-rerender="stopRerender"
 						v-bubble:viewComponents
 						v-bubble:select
+						@update="$emit('update')"
 						:slot="row.rendererSlot"
 						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					
@@ -921,6 +926,7 @@
 			<template v-else-if="shouldRenderCell(row, cell)">
 				<n-sidebar v-if="cell.target == 'sidebar'" @close="close(row, cell)" :popout="false" :autocloseable="!cell.preventAutoClose" class="content-sidebar" :style="getSideBarStyles(cell)">
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							@update="$emit('update')"
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
@@ -964,6 +970,7 @@
 							:stop-rerender="stopRerender"
 							v-bubble:viewComponents
 							v-bubble:select
+							@update="$emit('update')"
 							@close="close(row, cell, childRow)"
 							:slot="childRow.rendererSlot"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
@@ -971,6 +978,7 @@
 				</n-sidebar>
 				<n-prompt v-else-if="cell.target == 'prompt'" @close="close(row, cell)" :autoclose="cell.autoclose">
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							@update="$emit('update')"
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
@@ -1013,6 +1021,7 @@
 							:stop-rerender="stopRerender"
 							v-bubble:viewComponents
 							v-bubble:select
+							@update="$emit('update')"
 							@close="close(row, cell, childRow)"
 							:slot="childRow.rendererSlot"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
@@ -1020,6 +1029,7 @@
 				</n-prompt>
 				<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(row, cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right">          
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							@update="$emit('update')"
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
@@ -1062,6 +1072,7 @@
 							:stop-rerender="stopRerender"
 							v-bubble:viewComponents
 							v-bubble:select
+							@update="$emit('update')"
 							@close="close(row, cell, childRow)"
 							:slot="childRow.rendererSlot"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
@@ -1069,6 +1080,7 @@
 				</n-absolute>
 				<template v-else>
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							@update="$emit('update')"
 							v-show="!isContentHidden(cell)"
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
@@ -1112,6 +1124,7 @@
 							:stop-rerender="stopRerender"
 							v-bubble:viewComponents
 							v-bubble:select
+							@update="$emit('update')"
 							@close="close(row, cell, childRow)"
 							:slot="childRow.rendererSlot"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>

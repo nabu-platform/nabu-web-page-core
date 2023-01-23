@@ -177,7 +177,8 @@ Vue.service("triggerable", {
 		// the target we want to trigger on (cell, row,..)
 		// the name of the trigger (e.g. click)
 		// any value we received for the trigger, for instance an action or event might have data attached to it
-		trigger: function(target, trigger, value, instance) {
+		// with properties you can tweak other behaviors
+		trigger: function(target, trigger, value, instance, properties) {
 			// we don't always call this handler (immediately), so we separate the logic
 			var self = this;
 			
@@ -253,6 +254,38 @@ Vue.service("triggerable", {
 						return parameters;
 					}
 					
+					var addServiceContext = function(route, parameters) {
+						var resolvedRoute = self.$services.router.router.get(route);
+						if (resolvedRoute && resolvedRoute.isPage) {
+							var page = self.$services.page.pages.filter(function(x) {
+								return x.content.name == route;
+							})[0];
+							if (page) {
+								var serviceContextVariable = page.content.serviceContext;
+								var pagePath = resolvedRoute.url;
+								if (pagePath && serviceContextVariable && serviceContextVariable.indexOf("page.") == 0) {
+									serviceContextVariable = serviceContextVariable.substring("page.".length);
+									// we want to allow "easy" use of service contexts in pages in a situation where it doesn't matter
+									// for example you design masterdata screens to be able to support service context
+									// but you also want to plug them in easily in an application that doesn't care
+									// if we are using a page variable that is derived from the path
+									if (pagePath && pagePath.indexOf("{" + serviceContextVariable + "}") >= 0) {
+										// and it does not have a value
+										if (!parameters[serviceContextVariable]) {
+											// use context of current page by default
+											var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
+											// set it to default, the swagger client knows that it should not send it in that case
+											parameters[serviceContextVariable] = pageInstance.getServiceContext();
+											if (!parameters[serviceContextVariable]) {
+												parameters[serviceContextVariable] = "default";
+											}
+										}
+									}
+								}
+							}
+						}
+					};
+					
 					var handler = function() {
 						// event-based
 						if (action.type == "event" && nabu.page.event.getName(action, "event")) {
@@ -265,25 +298,29 @@ Vue.service("triggerable", {
 						// route based
 						else if (action.type == "route" && (action.route || action.routeFormula)) {
 							var route = action.routeAsFormula ? self.$services.page.eval(action.routeFormula, self.state, instance) : action.route;
+							var anchor = properties && properties.anchor ? properties.anchor : action.anchor;
 							// if we are using an anchor we are either rendering outside ($blank, $window etc) or in a very specific location which can likely not be reached on replay
 							// so we don't store it
-							if (!action.anchor) {
+							if (!anchor) {
 								self.$services.page.chosenRoute = route;
 							}
 							var parameters = getBindings();
-							if (action.anchor == "$blank") {
+							addServiceContext(route, parameters);
+							console.log("parameters are", parameters);
+							if (anchor == "$blank") {
 								window.open(self.$services.router.template(route, parameters));
 							}
-							else if (action.anchor == "$window") {
+							else if (anchor == "$window") {
 								window.location = self.$services.router.template(route, parameters);
 							}
 							else {
-								return self.$services.router.route(route, parameters, action.anchor, action.mask);
+								return self.$services.router.route(route, parameters, anchor, action.mask);
 							}
 						}
 						else if (action.type == "route" && action.url) {
 							var url = self.$services.page.interpret(action.url, instance, null, customValueFunction);
-							if (action.anchor == "$blank") {
+							var anchor = properties && properties.anchor ? properties.anchor : action.anchor;
+							if (anchor == "$blank") {
 								window.open(url);
 							}
 							else {

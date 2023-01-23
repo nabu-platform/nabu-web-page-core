@@ -1,5 +1,5 @@
 <template id="page-button">
-	<button class="is-button" @click="handle($event)" :disabled="running || disabled" :class="[getChildComponentClasses('page-button'), {'is-active': active || activated, 'has-tooltip': !!tooltip}]" 
+	<button class="is-button" @click="handle($event)" @click.middle="handle($event, true)" :disabled="running || disabled" :class="[getChildComponentClasses('page-button'), {'is-active': active || activated, 'has-tooltip': !!tooltip}]" 
 			:component-group="cell.state.componentGroup"
 			:type="cell.state.buttonType ? cell.state.buttonType : guessButtonType()">
 		<img :src="cell.state.icon.indexOf('http') == 0 ? cell.state.icon : $window.application.configuration.root + 'resources/' + cell.state.icon" v-if="cell.state.icon && cell.state.icon.match(/^.*\.[^.]+$/)" class="is-icon"/>

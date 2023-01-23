@@ -5,6 +5,7 @@
 				<component :is="getComponent()" v-for="(record, index) in state.records" :class="getCellClasses()" :page="page" :target="target">
 					<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
 						<n-page :page="fragmentPage"
+							@update="update.bind($self, record)"
 							@click.native="handleClick($event, record)"
 							:fragment-parent="getPageInstance()"
 							:record-index="index" class="is-repeat-content" 
@@ -18,6 +19,7 @@
 					</template>
 					<template v-else-if="!edit && !loading && state.records.length">
 						<n-page-optimized :page="fragmentPage"
+							@update="update.bind($self, record)"
 							@click.native="handleClick($event, record)"
 							:fragment-parent="getPageInstance()"
 							:record-index="index" class="is-repeat-content" 
@@ -34,6 +36,7 @@
 			<template v-else>
 				<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
 					<n-page :page="fragmentPage"
+						@update="update.bind($self, record)"
 						@click.native="handleClick($event, record)"
 						:fragment-parent="getPageInstance()"
 						v-for="(record, index) in state.records" :record-index="index" class="is-repeat-content" 
@@ -47,6 +50,7 @@
 				</template>
 				<template v-else-if="!edit && !loading && state.records.length">
 					<n-page-optimized :page="fragmentPage"
+						@update="update.bind($self, record)"
 						@click.native="handleClick($event, record)"
 						:fragment-parent="getPageInstance()"
 						v-for="(record, index) in state.records" :record-index="index" class="is-repeat-content" 
@@ -109,6 +113,5 @@
 			:to="operationParameters"
 			:from="{page:$services.page.getPageParameters(page)}" 
 			v-model="target.repeat.bindings"/>
-			
 	</div>
 </template>

@@ -170,7 +170,7 @@ Vue.view("page-button", {
 			}
 			return result;
 		},
-		handle: function($event) {
+		handle: function($event, middleMouseButton) {
 			// if you are in edit mode, you have to explicitly click alt to enable the button
 			// it seems that vue also intercepts spaces and sends it as a click event, meaning when you type in the rich text, it can trigger
 			if (!this.edit || ($event && $event.altKey)) {
@@ -185,9 +185,9 @@ Vue.view("page-button", {
 						}	
 					});
 				}
-				
+				console.log("click event", $event);
 				this.running = true;
-				var promise = this.$services.triggerable.trigger(this.cell.state, "activate", null, this);
+				var promise = this.$services.triggerable.trigger(this.cell.state, "activate", null, this, {anchor: middleMouseButton ? "$blank" : null});
 				
 				if (this.cell.state.stopPropagation && $event) {
 					$event.stopPropagation();

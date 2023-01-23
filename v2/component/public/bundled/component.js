@@ -895,7 +895,7 @@ window.addEventListener("load", function() {
 							tableBody.runtimeAlias = x.repeatName;	
 						}
 						var operation = $services.swagger.operations[content];
-						var blacklist = ["limit", "offset", "orderBy", "id"];
+						var blacklist = ["limit", "offset", "orderBy", "id", "$serviceContext"];
 						if (operation["x-temporary-secret"]) {
 							blacklist.push(operation["x-temporary-secret"]);
 						}
@@ -1185,7 +1185,7 @@ window.addEventListener("load", function() {
 				keys.forEach(function(key) {
 					// we don't generate a field for the id by default
 					// this should only be available in updates mostly unless you have weird naming conventions
-					if (key != "id" && (!blacklist || blacklist.indexOf(key) < 0)) {
+					if (!blacklist || blacklist.indexOf(key) < 0) {
 						var cell = cellGenerator(fields);
 						var child = application.services.page.getChildDefinition(definition, key);
 						cell.alias = "page-form-text";

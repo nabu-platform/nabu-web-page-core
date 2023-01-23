@@ -75,6 +75,9 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			}
 		},
 		methods: {
+			getEvents: function() {
+				return this.$services.triggerable.getEvents(this.page, this.cell.state);
+			},
 			isRequired: function() {
 				if (this.cell.state.required == "condition") {
 					return this.$services.page.isCondition(this.cell.state.requiredCondition, {}, this);
@@ -165,6 +168,9 @@ nabu.page.views.FormComponentGenerator = function(name) {
 					self.running = false;
 				};
 				this.$services.triggerable.trigger(this.cell.state, "update", null, this).then(done, done);
+				// emit it so parent components (like repeat) can take action
+				// we don't want to use the standard "input" to avoid accidental conflicts
+				this.$emit("update", value, label, this.cell.state.name);
 			},
 			validate: function () {
 				if (this.$refs && this.$refs.input) {

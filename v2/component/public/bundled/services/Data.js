@@ -61,6 +61,10 @@ Vue.component("data-mixin", {
 				limit: 0,
 				handler: function(results, page) {
 					self.clear();
+					// HOOK
+					if (self.postProcess) {
+						results = self.postProcess(results);
+					}
 					nabu.utils.arrays.merge(self.records, results);
 				}
 			});

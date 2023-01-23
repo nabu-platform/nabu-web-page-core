@@ -64,6 +64,20 @@ nabu.page.provide("page-renderer", {
 				console.error("Could not get trigger because we could not find the definition for: " + target.runtimeAlias);
 			}
 		}
+		if (pageInstance && target && target.runtimeAlias && target.repeat) {
+			var parameters = $services.page.getAllAvailableParameters(pageInstance.page);
+			// sometimes the record does not exist because the definition can not be found (e.g. you have removed the operation)
+			if (parameters[target.runtimeAlias] && parameters[target.runtimeAlias].properties.record) {
+				// this can be triggered by embedded form components that will emit the update
+				var trigger = {
+					update: {
+						type: "object",
+						properties: parameters[target.runtimeAlias].properties.record.properties
+					}
+				};
+				return trigger;
+			}
+		}
 	},
 	getState: function(container, page, pageParameters, $services) {
 		var result = {};
@@ -407,6 +421,9 @@ Vue.component("renderer-repeat", {
 		this.unloadPage();
 	},
 	methods: {
+		update: function(record, value, label, field) {
+			return this.$services.triggerable.trigger(this.target, "update", record, this);
+		},
 		mergeParameters: function() {
 			var self = this;
 			this.created = false;
