@@ -661,6 +661,11 @@ Vue.service("triggerable", {
 						}
 						else if (action.type == "visibility" && action.closeableTarget) {
 							var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
+							// if we don't have this target in our own page but we are a fragment of a larger page, check the parent!
+							// TODO: this might need to be a while loop for complex page setups with nested fragments...
+							if (!pageInstance.closed.hasOwnProperty(action.closeableTarget) && pageInstance.fragmentParent) {
+								pageInstance = pageInstance.fragmentParent;
+							}
 							// if we want to ensure visibility, we must wipe the "closed" state
 							if (action.closeableAction == "visible") {
 								Vue.set(pageInstance.closed, action.closeableTarget, null);
