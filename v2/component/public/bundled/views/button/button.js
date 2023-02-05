@@ -56,6 +56,13 @@ Vue.view("page-button", {
 		}
 	},
 	computed: {
+		tagName: function() {
+			if (this.cell.state.triggers && this.cell.state.triggers.length == 1 && this.cell.state.triggers[0].actions.length == 1 && 
+					this.cell.state.triggers[0].actions[0].type == "route") {
+				return "a";
+			}
+			return "button";
+		},
 		tooltip: function() {
 			if (this.cell.state.tooltip) {
 				return this.$services.page.interpret(this.$services.page.translate(this.cell.state.tooltip), this);
@@ -124,6 +131,12 @@ Vue.view("page-button", {
 		}
 	},
 	methods: {
+		getHref: function() {
+			if (this.tagName == "a") {
+				console.log("calculating href");
+				return this.$services.triggerable.calculateUrl(this.cell.state.triggers[0].actions[0], this, {});
+			}
+		},
 		guessButtonType: function() {
 			var isSubmit = false;
 			if (this.cell.state.triggers) {
@@ -170,6 +183,13 @@ Vue.view("page-button", {
 			}
 			return result;
 		},
+		// when you hit space bar in edit mode on a button, it ativates the button rather than inserting a space
+		// to be mutually exclusive with the alt+click, we check specifically for that key as well
+		hitSpace: function($event) {
+			if (this.edit && this.$refs.editor && !$event.altKey) {
+				document.execCommand("insertHTML", null, " ");
+			}
+		},
 		handle: function($event, middleMouseButton) {
 			// if you are in edit mode, you have to explicitly click alt to enable the button
 			// it seems that vue also intercepts spaces and sends it as a click event, meaning when you type in the rich text, it can trigger
@@ -185,9 +205,10 @@ Vue.view("page-button", {
 						}	
 					});
 				}
-				console.log("click event", $event);
 				this.running = true;
-				var promise = this.$services.triggerable.trigger(this.cell.state, "activate", null, this, {anchor: middleMouseButton ? "$blank" : null});
+				// on mac you can use CMD+left click to open in a new tab, this means the metakey will be set to true
+				// note that for links, the browser already does the right thing so we don't want to add that, it will open double!
+				var promise = this.$services.triggerable.trigger(this.cell.state, "activate", null, this, {anchor: this.tagName != "a" && (middleMouseButton || ($event && $event.metaKey)) ? "$blank" : null});
 				
 				if (this.cell.state.stopPropagation && $event) {
 					$event.stopPropagation();
@@ -205,7 +226,6 @@ Vue.view("page-button", {
 					}
 				}
 				promise.then(unlock, unlock);
-				
 				return promise;
 			}
 		},

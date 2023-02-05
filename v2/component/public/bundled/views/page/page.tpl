@@ -592,11 +592,11 @@
 							<renderer-bindings :target="cell" :page="page" v-if="cell.renderer"/>
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Content" key="cell-settings" content-class="is-spacing-medium" class="is-highlight-left">
-							<n-form-combo label="Route" :filter="$services.page.getRoutes" v-model="cell.alias"
+							<n-form-combo label="Route" :filter="$services.page.getEmbeddableRoutes" v-model="cell.alias"
 								v-if="!cell.renderer"
 								:key="'page_' + pageInstanceId + '_' + cell.id + '_alias'"
 								:required="true"
-								after="The component that should be routed into this cell"
+								after="The component that should be routed into this cell. Note that pages with configured parents can not be embedded."
 								@input="$services.page.normalizeAris(page, cell)"/>
 							<n-form-text label="Cell Name" v-model="cell.name" after="A descriptive name for this cell" :timeout="600"/>
 							<n-form-text label="Cell Id" v-model="cell.customId" after="Add a named container to render child content in." :timeout="600"/>

@@ -1308,7 +1308,7 @@ window.addEventListener("load", function() {
 				
 				// generate the fields for this form
 				// this is likely to be reused later in other settings!
-				generator.generateFields(type, content, pageInstance, root.runtimeAlias, formFields, rowGenerator, cellGenerator);
+				generator.generateFields(type, content, pageInstance, root.runtimeAlias, formFields, rowGenerator, cellGenerator, ["id", "$serviceContext"]);
 				
 				// update the submit button so it triggers the submit
 				if (buttonSubmit) {

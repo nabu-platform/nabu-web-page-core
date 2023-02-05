@@ -70,6 +70,11 @@
 		<template v-else-if="!edit && loading">
 			<component :is="getMessageComponent()" v-if="target.repeat.loadingPlaceholder"><span class="is-text" v-html="$services.page.translate(target.repeat.loadingPlaceholder)"></span></component>
 		</template>
+		<template v-else-if="edit && getComponent()">
+			<component :is="getComponent()" :page="page" :target="target" :class="getComponentClassesForEdit()">
+				<slot></slot>
+			</component>
+		</template>
 		<template v-else>
 			<slot></slot>
 		</template>

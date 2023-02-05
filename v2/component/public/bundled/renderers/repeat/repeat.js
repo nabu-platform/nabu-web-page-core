@@ -524,6 +524,21 @@ Vue.component("renderer-repeat", {
 			nabu.utils.arrays.merge(result, this.getChildComponentClasses(component));
 			return result;
 		},
+		getComponentClassesForEdit: function() {
+			var result = [];
+			if (this.getComponent() == "div") {
+				// we have a plain row
+				if (this.target.cells) {
+					result.push("page-row");
+					result.push("is-page-row");
+				}
+				else {
+					result.push("page-column");
+					result.push("is-page-column");
+				}
+			}
+			return result;
+		},
 		getComponent: function() {
 			var self = this;
 			var pageType = this.getPageType();

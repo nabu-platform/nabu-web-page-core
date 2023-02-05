@@ -2808,10 +2808,10 @@ nabu.services.VueService(Vue.extend({
 			}
 			else {
 				try {
-					var resultFunction = Function('"use strict";return (function(state, $services, $value, application) { return ' + condition + ' })')();
+					var resultFunction = Function('"use strict";return (function(state, $services, $value, application, value) { return ' + condition + ' })')();
 					// by default it is bound to "undefined"
 					resultFunction = resultFunction.bind(this);
-					var result = resultFunction(state, this.$services, customValueFunction ? customValueFunction : (instance ? instance.$value : function() { throw "No value function" }), application);
+					var result = resultFunction(state, this.$services, customValueFunction ? customValueFunction : (instance ? instance.$value : function() { throw "No value function" }), application, state && state.value ? state.value : null);
 				}
 				catch (exception) {
 					console.warn("Could not evaluate", condition, exception);
@@ -3419,8 +3419,22 @@ nabu.services.VueService(Vue.extend({
 			}
 			return routes;
 		},
-		getRoutes: function(newValue) {
-			var routes = this.$services.router.list().filter(function(x) { return !!x.alias }).map(function(x) { return x.alias });
+		// routes that can be embedded
+		getEmbeddableRoutes: function(newValue) {
+			return this.getRoutes(newValue, true);
+		},
+		getRoutes: function(newValue, embeddedOnly) {
+			var routes = this.$services.router.list().filter(function(x) { return !!x.alias });
+			if (embeddedOnly) {
+				routes = routes.filter(function(x) {
+					// if it's a page, it must NOT have a parent
+					// this can trigger some weird rerendering issues
+					// alternative is that masking is further applied on parent rerouting, but it is weird to embed a page with a parent
+					// you can split this up into a utility page and a wrapper that makes it bookmarkable with a parent
+					return !x.isPage || !x.parent;
+				});
+			}
+			routes = routes.map(function(x) { return x.alias });
 			if (newValue) {
 				routes = routes.filter(function(x) { return x.toLowerCase().indexOf(newValue.toLowerCase()) >= 0 });
 			}

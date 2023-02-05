@@ -16,7 +16,7 @@
 
 <template id="nabu-form-dynamic-component-configure">
 	<div class="data-trace-viewer-configure is-column is-spacing-medium">
-		<n-form-combo v-model="cell.state.name" label="Field Name" :filter="availableFields"/>
+		<n-form-combo v-model="cell.state.name" label="Field Name" :filter="availableFields" after="The array of key/values where you want to store the dynamic data"/>
 		<data-configure :target="cell.state" :page="page"/>
 	</div>
 </template>
