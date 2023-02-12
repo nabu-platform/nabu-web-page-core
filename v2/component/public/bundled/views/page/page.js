@@ -312,6 +312,27 @@ nabu.page.views.Page = Vue.component("n-page", {
 					sendStateEvent(state);
 				}, {deep:false});
 			});
+			this.page.content.states.filter(function(state) { return !!state.name && !state.inherited && state.enableParameterWatching }).forEach(function(state) {
+				var timeout = null;
+				Object.keys(state.bindings).map(function(key) {
+					var binding = state.bindings[key];
+					if (binding && binding.indexOf("parent.") != 0) {
+						if (binding.indexOf("page.") == 0) {
+							binding = binding.substring("page.".length);
+						}
+						self.$watch("variables." + binding, function() {
+							if (timeout != null) {
+								clearTimeout(timeout);
+								timeout = null;
+							}
+							// allow some time to stabilize in case of multiple changes or multiple triggers
+							timeout = setTimeout(function() {
+								self.loadInitialState(state, true);
+							}, 100);
+						});
+					}
+				});
+			});
 			var promises = this.page.content.states.filter(function(state) { 
 				// it must have a name and not be inherited
 				return !!state.name && !state.inherited
@@ -1483,6 +1504,20 @@ nabu.page.views.Page = Vue.component("n-page", {
 					// unset the state again so it can be reused
 					// or at the very least it is clear that it is gone
 					Vue.set(this.variables, component.getRuntimeAlias(), null);
+
+					// THIS DOES NOT WORK
+					// the problem is that often we set the rendering condition on some far away parent of the component that actually has the state
+					// this means we don't "cleanly" destroy it
+					// note that mountRenderer() has a beforedestroy hook that is also not correctly called
+					// the problem is mostly that they are keyed to the same cell, so they have the same instance
+					// because of this reuse, the destroy hooks are not correctly called until it is fully destroyed
+					var self = this;
+					// reset all he labels belonging to this state
+					Object.keys(self.labels).forEach(function(label) {
+						if (label == component.getRuntimeAlias() || label.indexOf(component.getRuntimeAlias() + ".") == 0) {
+							Vue.set(self.labels, label, null);
+						}
+					})
 				}
 			}
 			// this keeps track by cell id
@@ -2820,8 +2855,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 						parameters["$serviceContext"] = self.getServiceContext();
 					}
 					try {
+						var promise = self.$services.q.defer();
 						// can throw hard errors
-						return self.$services.swagger.execute(state.operation, parameters).then(function(result) {
+						self.$services.swagger.execute(state.operation, parameters).then(function(result) {
 							if (self.variables[state.name] != null) {
 								if (self.variables[state.name] instanceof Array) {
 									self.variables[state.name].splice(0);
@@ -2855,8 +2891,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 							else {
 								Vue.set(self.variables, state.name, result ? result : null);
 							}
+							// deprecated
 							sendStateEvent(state);
-						});
+							
+							// the triggerInitial is a boolean we might add if we want to trigger on initial load as well
+							self.$services.triggerable.trigger(state, reload ? "update" : "initial", null, self).then(promise, promise);
+						}, promise);
 					}
 					catch (exception) {
 						console.error("Could not execute", state.operation, exception);
@@ -2880,6 +2920,17 @@ nabu.page.views.Page = Vue.component("n-page", {
 			this.page.content.globalEventSubscriptions.push({localName: null, globalName: null});
 		},
 		getLabel: function(name) {
+			// state can be dynamically inserted and removed without triggering new labels
+			// usually when state is manipulated into an actual value, it _does_ go through the proper channels, but specifically state resets are generally not well supported
+			// check comments in destroyComponent()
+			
+			// the workaround is getting the original value. if its null, we assume there is no label value either
+			// note that this prevents setting a label for null though...
+			// for "default" values that are set when rerendering, this will not work if you have an actual label. most fields don't have labels though
+			var value = this.get(name);
+			if (value == null) {
+				return null;
+			}
 			return this.$services.page.getValue(this.labels, name);	
 		},
 		get: function(name) {
@@ -3110,7 +3161,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 				}
 				Vue.set(target, parts[parts.length - 1], value);
 				// always set label (can be an unset)
-				this.$services.page.setValue(this.labels, name, label == null ? value : label);
+				// in the past we set the label to the value if not filled in. however, this means we _have_ to clean it up every time
+				// it is not perfect but by setting the label to null, we at least narrow the cleanup routines to those values that actually have a label
+				// unclear if all components support this!
+				this.$services.page.setValue(this.labels, name, label == null || label == value ? null : label);
 				if (updateUrl) {
 					var route = this.$services.router.get(this.$services.page.alias(this.page));
 					if (route.url != null) {

@@ -264,7 +264,7 @@
 												<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
 												<n-form-text v-model="parameter.default" label="Default Value" v-if="!parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
 												<n-form-text v-model="parameter.template" label="Template Value" v-if="(!parameter.defaults || !parameter.defaults.length)" after="You can use a template to determine the data type"/>
-												<n-form-ace mode="javascript" v-model="parameter.defaultScript" label="Default Value" v-if="parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
+												<n-form-ace mode="javascript" v-model="parameter.defaultScript" label="Default Value" v-if="parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)" @input="initializeDefaultParameters(true, [parameter.name], true)"/>
 												<n-form-switch v-model="parameter.complexDefault" label="Use script for default value"/>
 												
 												<div v-if="parameter.type && parameter.type.indexOf('.') > 0 && !parameter.default">
@@ -331,24 +331,28 @@
 											<div v-if="state.inherited">
 												<n-form-combo v-model="state.applicationName" :filter="$services.page.getApplicationStateNames" label="Application State" />
 											</div>
-											<div v-else>
+											<div v-else class="is-column is-spacing-gap-medium">
 												<n-form-combo :value="state.operation" :filter="getStateOperations" label="Operation" @input="function(newValue) { setStateOperation(state, newValue) }"/>
 												<n-page-mapper v-if="state.operation && Object.keys($services.page.getPageParameters(page)).length" :to="getOperationParameters(state.operation)"
 													:from="$services.page.getPageStartupParameters(page)" 
 													v-model="state.bindings"/>
+												<n-form-switch v-model="state.enableParameterWatching" v-if="Object.keys(state.bindings).length > 0" label="Watch input bindings for change"/>
 											</div>
-											<page-event-value :page="page" :container="state" title="Successful Update Event" name="updateEvent" @resetEvents="resetEvents" :inline="true"/>
 											<n-form-ace mode="javascript" v-model="state.condition" label="Condition" info="If left empty it will always run. If filled in, it will only run if the condition returns true." :timeout="600"/>
-											<h4 class="is-h4">Refresh Events</h4>
-											<p class="is-p is-size-small is-color-light">You can refresh this state when a particular event occurs.</p>
-											<div class="list" v-if="state.refreshOn">
-												<div v-for="i in Object.keys(state.refreshOn)" class="has-button-close">
-													<n-form-combo v-model="state.refreshOn[i]" :filter="getAvailableEvents" placeholder="event"/>
-													<button class="is-button is-variant-close is-size-small is-spacing-horizontal-right-large" @click="state.refreshOn.splice(i, 1)"><icon name="times"/></button>
+											<page-triggerable-configure :page="page" :target="state" :triggers="{'initial': {}, 'update': {}}"/>
+											<page-event-value :page="page" :container="state" title="Successful Update Event" name="updateEvent" @resetEvents="resetEvents" :inline="true" v-if="state.updateEvent && state.updateEvent.name" after="This is deprecated and should be replaced with triggers"/>
+											<div class="is-column is-spacing-gap-medium" v-if="state.refreshOn && state.refreshOn.length > 0">
+												<h4 class="is-h4">Refresh Events</h4>
+												<p class="is-p is-size-small is-color-light">You can refresh this state when a particular event occurs. This is deprecated and should be replaced with parameter watching.</p>
+												<div class="list" v-if="state.refreshOn">
+													<div v-for="i in Object.keys(state.refreshOn)" class="has-button-close">
+														<n-form-combo v-model="state.refreshOn[i]" :filter="getAvailableEvents" placeholder="event"/>
+														<button class="is-button is-variant-close is-size-small is-spacing-horizontal-right-large" @click="state.refreshOn.splice(i, 1)"><icon name="times"/></button>
+													</div>
 												</div>
-											</div>
-											<div class="is-row is-align-end">
-												<button class="is-button is-variant-primary-outline is-size-xsmall" @click="state.refreshOn ? state.refreshOn.push('') : $window.Vue.set(state, 'refreshOn', [''])"><icon name="plus"/>Refresh Event</button>
+												<div class="is-row is-align-end">
+													<button class="is-button is-variant-primary-outline is-size-xsmall" @click="state.refreshOn ? state.refreshOn.push('') : $window.Vue.set(state, 'refreshOn', [''])"><icon name="plus"/>Refresh Event</button>
+												</div>
 											</div>
 										</n-collapsible>
 									</div>
@@ -511,7 +515,7 @@
 									</div>
 									<n-collapsible :only-one-open="true" class="is-color-primary-light" :title="(analysis.chainEvent && analysis.chainEvent.name ? analysis.chainEvent.name : 'unnamed')" :after="analysis.on ? 'on ' + analysis.on : 'no trigger yet'" v-for="analysis in page.content.analysis" content-class="is-spacing-medium">
 										<div slot="buttons" class="is-row is-spacing-horizontal-right-small">
-											<button @click="page.content.analysis.splice(page.content.analysis.indexOf(analysis), 1)"><icon name="times"/></button>
+											<button class="is-button is-size-xsmall is-variant-danger-outline" @click="page.content.analysis.splice(page.content.analysis.indexOf(analysis), 1)"><icon name="times"/></button>
 										</div>
 										<n-form-combo v-model="analysis.on" label="Trigger On" :filter="getAvailableEvents"/>
 										<n-form-text v-model="analysis.condition" label="Condition" v-if="analysis.on" :timeout="600"/>

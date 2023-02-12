@@ -63,7 +63,7 @@ Vue.view("page-tag", {
 			var value = pageInstance.getLabel(this.cell.state.field);
 			if (value == null) {
 				value = pageInstance.getLabel("page." + this.cell.state.field);
-				if (value) {
+				if (value != null) {
 					this.requiresPagePrefix = true;
 				}
 			}
