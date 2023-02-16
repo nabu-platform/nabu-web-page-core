@@ -581,7 +581,7 @@
 								<n-form-combo label="Cell Renderer" v-if="!cell.alias" v-model="cell.renderer" :items="$services.page.getRenderers('cell')" 
 									after="You can set a custom renderer for this cell"
 									empty-value="No renderers found"
-									:formatter="function(x) { return x.name }" 
+									:formatter="function(x) { return x.title ? x.title : x.name }"
 									:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
 									
 								<div v-if="cell.renderer && $services.page.getRendererState(cell.renderer, cell, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">

@@ -857,10 +857,6 @@ Vue.component("page-triggerable-configure", {
 				name: "event"
 			});
 			types.push({
-				title: "Show a notification to the user",
-				name: "notification"
-			})
-			types.push({
 				title: "Redirect the user to another page",
 				name: "route"
 			});
@@ -868,17 +864,15 @@ Vue.component("page-triggerable-configure", {
 				title: "Scroll to a particular position in the page",
 				name: "scroll"
 			});
-			types.push({
-				title: "Execute javascript",
-				name: "javascript"
-			});
+			/*
 			types.push({
 				title: "Reset other events",
 				name: "reset"
 			});
+			*/
 			types.push({
-				title: "Call a function",
-				name: "function"
+				title: "Show a notification to the user",
+				name: "notification"
 			});
 			types.push({
 				title: "Ask for confirmation",
@@ -887,6 +881,14 @@ Vue.component("page-triggerable-configure", {
 			types.push({
 				title: "Change visibility of cell or row",
 				name: "visibility"
+			});
+			types.push({
+				title: "Call a function",
+				name: "function"
+			});
+			types.push({
+				title: "Execute javascript",
+				name: "javascript"
 			});
 			return types;
 		}
