@@ -1,8 +1,9 @@
 <template id="typography-template">
-	<component :is="tag" class="is-content is-typography" :class="['is-' + tag, getChildComponentClasses('typography')]">
+	<component :is="tag" class="is-content is-typography" :class="['is-' + tag, getChildComponentClasses('typography'), {'has-tooltip': cell.state.tooltip }]">
 		<slot name="before"></slot>
 		<img :src="cell.state.icon.indexOf('http') == 0 ? cell.state.icon : '${server.root()}resources/' + cell.state.icon" v-if="cell.state.icon && cell.state.icon.match(/^.*\.[^.]+$/)" class="is-icon"/>
 		<icon :name="cell.state.icon" v-if="cell.state.icon"/>
+		<span :class="getChildComponentClasses('tooltip')" class='is-tooltip' v-if='cell.state.tooltip' v-content.sanitize="$services.page.translate($services.page.interpret(cell.state.tooltip, $self))"></span>
 		<span class="is-inline-editor" v-if="false && edit && !cell.state.highlight" :contenteditable="true"
 			 @keyup="update" @blur="update" @input="update" ref="editor" v-html-once="cell.state.content ? cell.state.content : null"
 			 :placeholder="placeholder ? placeholder : tag + ' placeholder'"></span>
@@ -31,6 +32,7 @@
 <template id="typography-template-configure">
 	<div class="typography-template-configure is-column is-spacing-medium">
 		<n-form-text v-model="cell.state.icon" label="Icon" v-if="icon"/>
+		<n-form-text v-model="cell.state.tooltip" label="Tooltip"/>
 		<n-form-switch v-model="cell.state.highlight" label="Highlight" v-if="highlightable && canHighlight" after="This will perform syntax highlighting, based on the format. If no format is configured, a best effort guess is made"/>
 		<n-form-combo v-model="cell.state.highlightFormat" label="Highlight Format" v-if="cell.state.highlight" :items="['html', 'bash', 'sql', 'yaml', 'css', 'scss', 'javascript', 'java', 'c++', 'xml', 'json', 'markdown', 'latex', 'http']" />
 		<typography-variable-replacer :content="cell.state.content" :container="cell.state" :page="page"/>

@@ -271,12 +271,21 @@ Vue.component("typography-core", {
 			return highlighter ? highlighter.format(content, this.cell.state.highlightFormat ? "language-" + this.cell.state.highlightFormat : null) : content;
 		},
 		getChildComponents: function() {
-			return [{
+			var components = [{
 				title: "Typography",
 				name: "typography",
 				defaultVariant: "typography-" + this.tag,
 				component: "content"
-			}]
+			}];
+			if (this.cell.state.tooltip) {
+				components.push({
+					title: "Tooltip",
+					name: "tooltip",
+					defaultVariant: "tooltip-" + this.tag,
+					component: "tooltip"
+				});
+			}
+			return components;
 		},
 		configurator: function() {
 			return "typography-core-configure";

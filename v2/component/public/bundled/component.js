@@ -881,6 +881,8 @@ window.addEventListener("load", function() {
 						tableBody.repeat.emptyPlaceholder = "%" + "{No data available}";
 						// by default we allow selection
 						tableBody.repeat.selectable = true;
+						// and we want to change our content based on the bound input
+						tableBody.repeat.enableParameterWatching = true;
 						tableBody.runtimeAlias = repeatName;
 						tableBody.name = "Table Body " + name;
 						pickResult = generator.generateFields(type, content, pageInstance, root, tableBody, tableHeader, rowGenerator, cellGenerator);
@@ -1137,12 +1139,33 @@ window.addEventListener("load", function() {
 				if (!target.rendererBindings) {
 					Vue.set(target, "rendererBindings", {});
 				}
+				
+				// we want to optimize a form update to use the full record -> body mapping if possible
+				// the assumption is we are working with an update event that emits the full record, and the form matches that record structure
+				// currently we don't validate that the structures match, we just generate it like that
+				// in the future we can do further checks or ask the user what they want to generate
+				var hasBodyMapping = false;
+				// we actually don't split out the non-simple keys so we can't check explicitly for body itself, only for its children
+				var hasBodyKey = keys.filter(function(x) { return x.indexOf("body.") == 0 }).length > 0;
+				// if we have a body to map to, check if we have a record to map from
+				if (hasBodyKey) {
+					var recordIndex = sourceKeys.indexOf(mapFrom + ".record");
+					var hasRecordKey = sourceKeys.filter(function(x) { return x.indexOf("record.") == 0 }).length > 0;
+					if (hasRecordKey) {
+						hasBodyMapping = true;
+						target.rendererBindings["body"] = mapFrom + ".record";
+					}
+				}
+				
 				keys.forEach(function(key) {
+					// check that it is not mapped to the body
+					var skipMapping = hasBodyMapping && key.indexOf("body.") == 0;
 					// if we don't have a binding yet, try to find one in the source
-					if (target.rendererBindings[key] == null) {
+					if (target.rendererBindings[key] == null && !skipMapping) {
 						var name = key.replace(/^.*\.([^.]+)$/, "$1");
 						var match = sourceKeys.filter(function(x) {
-							return x.indexOf("." + name) == x.length - name.length - 1;
+							// ends with...
+							return x.length > name.length && x.indexOf("." + name) == x.length - name.length - 1;
 						})[0];
 						if (match) {
 							Vue.set(target.rendererBindings, key, mapFrom + "." + match);
@@ -1479,7 +1502,6 @@ window.addEventListener("load", function() {
 								buttonCell.name = "Update" + (name ? " " + name : "");
 								application.services.page.normalizeAris(pageInstance.page, buttonCell, "cell");
 								application.services.page.normalizeAris(pageInstance.page, buttonCell, "cell", [{name:"page-button"}]);
-								console.log("buttonCell aris", buttonCell);
 								buttonCell.aris.components["page-button"].options.push("size_small");
 								buttonCell.aris.components["page-button"].variant = "ghost";
 								root.form.synchronize = true;

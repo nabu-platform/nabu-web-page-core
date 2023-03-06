@@ -1,3 +1,4 @@
+// the v-html directive actually allows for self-XSS so switched it to sanitized content
 Vue.view("page-tag", {
 	props: {
 		page: {

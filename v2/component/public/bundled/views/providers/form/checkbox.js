@@ -3,6 +3,10 @@ Vue.component("page-form-input-checkbox-configure", {
 			+ "	<n-form-text v-model='field.info' label='Info Content'/>" 
 			+ "	<n-form-switch v-model='field.invert' label='Invert Boolean'/>" 
 			+ "	<n-form-text v-model='field.infoIcon' label='Info Icon'/>"
+			+ "	<n-form-text v-model='field.before' label='Before Content' :timeout='600'/>"
+			+ "	<n-form-text v-model='field.beforeIcon' label='Before Icon' v-if='field.before && false' :timeout='600'/>"
+			+ "	<n-form-text v-model='field.after' label='After Content' :timeout='600'/>"
+			+ "	<n-form-text v-model='field.afterIcon' label='After Icon' v-if='field.after && false' :timeout='600'/>"
 			+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"item\"]'/>"
 			+ "</div>",
 	props: {
@@ -44,6 +48,8 @@ Vue.component("page-form-input-checkbox", {
 			+ "		:item='getItem()'"
 			+ "		:value='value'"
 			+ "		:timeout='timeout'"
+			+ "		:before='field.before ? $services.page.interpret($services.page.translate(field.before), $self) : null'"
+			+ "		:after='field.after ? $services.page.interpret($services.page.translate(field.after), $self) : null'"
 			+ "		:invert='!!field.invert'"
 			+ "		:disabled='disabled'/>",
 	props: {

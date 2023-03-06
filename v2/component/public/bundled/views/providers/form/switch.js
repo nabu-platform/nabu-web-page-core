@@ -1,6 +1,10 @@
 Vue.component("page-form-input-switch-configure", {
 	template: "<div>"
 		+ "	<n-form-switch v-model='field.invert' label='Invert Boolean'/>"
+		+ "	<n-form-text v-model='field.before' label='Before Content' :timeout='600'/>"
+		+ "	<n-form-text v-model='field.beforeIcon' label='Before Icon' v-if='field.before && false' :timeout='600'/>"
+		+ "	<n-form-text v-model='field.after' label='After Content' :timeout='600'/>"
+		+ "	<n-form-text v-model='field.afterIcon' label='After Icon' v-if='field.after && false' :timeout='600'/>"
 		+ "</div>",
 	props: {
 		cell: {
@@ -26,6 +30,8 @@ Vue.component("page-form-input-switch", {
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
+			+ "		:before='field.before ? $services.page.interpret($services.page.translate(field.before), $self) : null'"
+			+ "		:after='field.after ? $services.page.interpret($services.page.translate(field.after), $self) : null'"
 			+ "		:timeout='timeout'"
 			+ "		:invert='!!field.invert'"
 			+ "		:disabled='disabled'/>",

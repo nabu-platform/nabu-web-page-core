@@ -10,7 +10,7 @@
 				@keyup="update" @blur="update" @input="update"
 				:contenteditable="true"
 				placeholder="Tag label"></span>
-			<span class="is-text-value" v-html="getValue()"></span>
+			<span class="is-text-value" v-content.sanitize="getValue()"></span>
 		</span>
 	</div>
 </template>

@@ -333,37 +333,67 @@ nabu.page.views.Page = Vue.component("n-page", {
 					}
 				});
 			});
+			
+			// first we make empty promises! that way we can let state interdepend on one another and resolve eventually
+			var promiseMap = {};
+			this.page.content.states.filter(function(state) { 
+				// it must have a name and not be inherited
+				return !!state.name && !state.inherited
+					&& (!state.condition || self.$services.page.isCondition(state.condition, self.variables, self));
+			}).forEach(function(state) {
+				promiseMap[state.name] = self.$services.q.defer();	
+			});
 			var promises = this.page.content.states.filter(function(state) { 
 				// it must have a name and not be inherited
 				return !!state.name && !state.inherited
 					&& (!state.condition || self.$services.page.isCondition(state.condition, self.variables, self));
 			}).map(function(state) {
-				var parameters = {};
+				var promise = promiseMap[state.name];
+				
+				// we have dependencies on other promises before we can resolve
+				// for instance you might want to chain rest invokes
+				var promisesToWaitFor = [];
 				Object.keys(state.bindings).map(function(key) {
 					//parameters[key] = self.get(state.bindings[key]);
 					if (state.bindings[key] != null) {
-						parameters[key] = self.$services.page.getBindingValue(self, state.bindings[key]);
+						// if we have a dependency to page-related information at this point, we may need to wait for promises
+						if (state.bindings[key].indexOf("page.") == 0) {
+							Object.keys(promiseMap).forEach(function(promiseKey) {
+								if (state.bindings[key].indexOf("page." + promiseKey + ".") == 0) {
+									promisesToWaitFor.push(promiseMap[promiseKey]);
+								}
+							});
+						}
 					}
 				});
-				if (!parameters["$serviceContext"]) {
-					parameters["$serviceContext"] = self.getServiceContext();
-				}
-				try {
-					// can throw hard errors
-					return self.$services.swagger.execute(state.operation, parameters).then(function(result) {
-						if (result != null) {
-							self.initialStateLoaded.push(state.name);
+				self.$services.q.all(promisesToWaitFor).then(function() {
+					var parameters = {};
+					Object.keys(state.bindings).map(function(key) {
+						//parameters[key] = self.get(state.bindings[key]);
+						if (state.bindings[key] != null) {
+							parameters[key] = self.$services.page.getBindingValue(self, state.bindings[key]);
 						}
-						Vue.set(self.variables, state.name, result ? result : null);
-						self.updatedVariable(state.name);
 					});
-				}
-				catch (exception) {
-					console.error("Could not execute", state.operation, exception);
-					var promise = self.$services.q.defer();
-					promise.reject(exception);
-					return promise;
-				}
+					if (!parameters["$serviceContext"]) {
+						parameters["$serviceContext"] = self.getServiceContext();
+					}
+					try {
+						// can throw hard errors
+						self.$services.swagger.execute(state.operation, parameters).then(function(result) {
+							if (result != null) {
+								self.initialStateLoaded.push(state.name);
+							}
+							Vue.set(self.variables, state.name, result ? result : null);
+							self.updatedVariable(state.name);
+							promise.resolve(result);
+						}, promise);
+					}
+					catch (exception) {
+						console.error("Could not execute", state.operation, exception);
+						promise.reject(exception);
+					}
+				}, promise);
+				return promise;
 			});
 			var inSelf = this.page.content.errorInSelf;
 			var routeError = function(error, counter) {
