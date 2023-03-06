@@ -366,6 +366,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 					}
 				});
+				console.log("state", state.name, promisesToWaitFor);
 				self.$services.q.all(promisesToWaitFor).then(function() {
 					var parameters = {};
 					Object.keys(state.bindings).map(function(key) {
@@ -373,6 +374,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 						if (state.bindings[key] != null) {
 							parameters[key] = self.$services.page.getBindingValue(self, state.bindings[key]);
 						}
+						console.log("mapping", key, state.bindings[key], parameters[key]);
 					});
 					if (!parameters["$serviceContext"]) {
 						parameters["$serviceContext"] = self.getServiceContext();
@@ -380,6 +382,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					try {
 						// can throw hard errors
 						self.$services.swagger.execute(state.operation, parameters).then(function(result) {
+							console.log("loaded", state.name, state.operation, result);
 							if (result != null) {
 								self.initialStateLoaded.push(state.name);
 							}
@@ -413,12 +416,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 					// if at least one response indicates an offline server, we are going with the offline story!
 					if (error instanceof Array) {
 						error.forEach(function(x) {
-							if (x.status == 503 || x.status == 502) {
+							if (x && (x.status == 503 || x.status == 502)) {
 								route = "offline";
 							}
 						})
 					}
-					else if (error.status == 503 || error.status == 502) {
+					else if (error && (error.status == 503 || error.status == 502)) {
 						route = "offline";
 					}
 					
@@ -438,11 +441,19 @@ nabu.page.views.Page = Vue.component("n-page", {
 					
 					console.log("error route is", route);
 					
-					// masked route so we can reload
-					self.$services.router.route(route, {
-						code: "page-load-failed",
-						message: "%{error:The page you requested could not be loaded, please&nbsp;<a class='is-color-link' href='javascript:void(0)' @click='$window.location.reload()'>try again</a>}"
-					}, inSelf && self.$el ? nabu.utils.router.self(self.$el) : null, true);
+					if (!self.$services.page.canEdit()) {
+						// masked route so we can reload
+						self.$services.router.route(route, {
+							code: "page-load-failed",
+							message: "%{error:The page you requested could not be loaded, please&nbsp;<a class='is-color-link' href='javascript:void(0)' @click='$window.location.reload()'>try again</a>}"
+						}, inSelf && self.$el ? nabu.utils.router.self(self.$el) : null, true);
+					}
+					else {
+						self.$services.notifier.push({
+							message: "Blocking error routing to '" + route + "' due to editor permissions",
+							severity: self.$services.page.notificationStyle
+						});
+					}
 				}
 			};
 			this.$services.q.all(promises).then(finalize, function(error) {
