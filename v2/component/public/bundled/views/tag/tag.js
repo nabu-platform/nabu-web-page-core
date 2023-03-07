@@ -34,13 +34,24 @@ Vue.view("page-tag", {
 	},
 	data: function() {
 		return {
-			requiresPagePrefix: false
+			requiresPagePrefix: false,
+			running: false
 		}
 	},
 	computed: {
 		icon: function() {
 			var icon = this.cell.state.icon;
 			return icon ? icon : "times";
+		},
+		computedValue: function() {
+			try {
+				var instance = this.$services.page.getPageInstance(this.page, this);
+				return this.cell.state.useComputed && this.cell.state.computed ? this.$services.page.eval(this.cell.state.computed, {}, this) : null;
+			}
+			catch(exception) {
+				console.error("Could not calculate computed", exception);
+				return null;
+			}
 		}
 	},
 	methods: {
@@ -48,28 +59,44 @@ Vue.view("page-tag", {
 			return this.getValue() == null;	
 		},
 		reset: function() {
-			if (this.cell.state.field) {
-				var pageInstance = this.$services.page.getPageInstance(this.page, this);
-				pageInstance.set(this.cell.state.field, null);
-				if (this.requiresPagePrefix) {
-					pageInstance.set("page." + this.cell.state.field, null);	
+			if (!this.running) {
+				var originalValue = this.getValue();
+				if (this.cell.state.field) {
+					var pageInstance = this.$services.page.getPageInstance(this.page, this);
+					pageInstance.set(this.cell.state.field, null);
+					if (this.requiresPagePrefix) {
+						pageInstance.set("page." + this.cell.state.field, null);	
+					}
 				}
-			}	
+				
+				var self = this;
+				var done = function() {
+					self.running = false;
+				};
+				this.running = true;
+				this.$services.triggerable.trigger(this.cell.state, "remove", {value:originalValue}, this).then(done, done);
+			}
+		},
+		getEvents: function() {
+			return this.$services.triggerable.getEvents(this.page, this.cell.state);
 		},
 		getValue: function() {
-			if (!this.cell.state.field) {
-				return null;
+			var value = null;
+			if (this.cell.state.useComputed) {
+				value = this.computedValue;
 			}
-			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			var value = pageInstance.getLabel(this.cell.state.field);
-			if (value == null) {
-				value = pageInstance.getLabel("page." + this.cell.state.field);
-				if (value != null) {
-					this.requiresPagePrefix = true;
+			if (this.cell.state.field) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				value = pageInstance.getLabel(this.cell.state.field);
+				if (value == null) {
+					value = pageInstance.getLabel("page." + this.cell.state.field);
+					if (value != null) {
+						this.requiresPagePrefix = true;
+					}
 				}
-			}
-			if (value == null) {
-				value = pageInstance.get(this.cell.state.field);
+				if (value == null) {
+					value = pageInstance.get(this.cell.state.field);
+				}
 			}
 			// toggle the cell
 			if (value != null) {

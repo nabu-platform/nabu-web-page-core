@@ -6,7 +6,7 @@
 		:class="getChildComponentClasses('form-component')"
 		@blur="blur"
 		:component-group="cell.state.componentGroup ? cell.state.componentGroup : 'form'"
-		:value="value"
+		:value="cell.state.useComputed ? computedValue : value"
 		:parent-value="parentValue"
 		:label="$services.page.translate(cell.state.label)"
 		:timeout="cell.state.timeout"
@@ -23,7 +23,9 @@
 <template id="nabu-form-component-configuration">
 	<div>
 		<div class="is-column is-spacing-medium">
-			<n-form-combo v-model="cell.state.name" label="Field Name" :filter="availableFields"/>
+			<n-form-switch v-model="cell.state.useComputed" label="Use computed value" after="Instead of binding directly to a field, you can calculate the original value and update it through change listeners"/>
+			<n-form-combo v-model="cell.state.name" label="Field Name" :filter="availableFields" v-if="!cell.state.useComputed"/>
+			<n-form-ace v-model="cell.state.computed" label="Initial value for computed" v-else/>
 			<n-form-text v-model="cell.state.label" label="Label"/>
 			<n-form-text v-model="cell.state.placeholder" label="Placeholder"/>
 			<n-form-text v-model="cell.state.timeout" label="Timeout"/>

@@ -89,7 +89,7 @@
 			:formatter="function(x) { return x.id }"
 			:extracter="function(x) { return x.id }"/>
 		<n-form-combo label="Array" v-model="target.repeat.array"
-			:filter="function(value) { return $services.page.getAllArrays(page) }"
+			:filter="function(value) { return $services.page.suggestArray(page, value) }"
 			v-if="!target.repeat.operation"/>
 			
 		<n-form-text v-model="target.repeat.emptyPlaceholder" label="Empty Place Holder"/>

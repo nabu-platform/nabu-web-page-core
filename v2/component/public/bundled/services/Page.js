@@ -3808,6 +3808,11 @@ nabu.services.VueService(Vue.extend({
 			}
 			return null;
 		},
+		suggestArray: function(page, value) {
+			return this.getAllArrays(page).filter(function(x) {
+				return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0
+			});
+		},
 		getAllArrays: function(page, targetId) {
 			var self = this;
 			var arrays = [];

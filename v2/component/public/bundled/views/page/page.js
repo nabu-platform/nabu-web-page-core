@@ -374,7 +374,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 						if (state.bindings[key] != null) {
 							parameters[key] = self.$services.page.getBindingValue(self, state.bindings[key]);
 						}
-						console.log("mapping", key, state.bindings[key], parameters[key]);
 					});
 					if (!parameters["$serviceContext"]) {
 						parameters["$serviceContext"] = self.getServiceContext();

@@ -193,6 +193,21 @@ Vue.component("n-page-mapper", {
 				? this.value[field].substring(this.value[field].indexOf(".") + 1)
 				: null;
 		},
+		isComputedValue: function(field) {
+			var value = this.getValueFor(field);
+			return value && value.indexOf("=") == 0;
+		},
+		switchComputed: function(field) {
+			var value = this.getValueFor(field);
+			// go to non-computed
+			if (value && value.indexOf("=") == 0) {
+				value = value.substring(1);
+			}
+			else {
+				value = "=" + value;
+			}
+			this.setValue(field, value, 'fixed');
+		},
 		getLabelFor: function(field) {
 			// if we have an object
 			if (this.value[field] && this.value[field].label) {

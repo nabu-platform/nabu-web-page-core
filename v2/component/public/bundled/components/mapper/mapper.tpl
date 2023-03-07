@@ -63,11 +63,19 @@
 		
 		<div v-for="field in mappedFields" class="has-button-close is-column is-spacing-vertical-top-medium">
 			
-			<n-form-text 
-				:label="'Map to ' + field" 
-				v-if="isFixedValue(field)"
-				:value="getValueFor(field)"
-				@input="function(newValue, formatted, rawValue, selectedLabel) { setValue(field, newValue, 'fixed') }"/>
+			<div v-if="isFixedValue(field)" class="is-column is-spacing-gap-small">
+				<n-form-ace
+					mode="javascript"
+					:label="'Map to ' + field" 
+					v-if="isComputedValue(field)"
+					:value="getValueFor(field).substring(1)"
+					@input="function(newValue, formatted, rawValue, selectedLabel) { setValue(field, '=' + newValue, 'fixed') }"/>
+				<n-form-text v-else
+					:label="'Map to ' + field" 
+					:value="getValueFor(field)"
+					@input="function(newValue, formatted, rawValue, selectedLabel) { setValue(field, '=' + newValue, 'fixed') }"/>
+				<n-form-switch :value="isComputedValue(field)" @input="switchComputed(field)" label="Computed value"/>
+			</div>
 			
 			<n-form-combo 
 				v-else

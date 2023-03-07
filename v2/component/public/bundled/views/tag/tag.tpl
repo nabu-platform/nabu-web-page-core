@@ -17,11 +17,12 @@
 
 <template id="page-tag-configure">
 	<div class="is-column">
-		
 		<div class="is-column is-spacing-medium">
-			<n-form-combo v-model="cell.state.field" :filter="$services.page.getAllAvailableKeys.bind($self, page, false)" label="Field value to show"/>
+			<n-form-switch v-model="cell.state.useComputed" label="Use computed value" after="Instead of binding directly to a field, you can calculate the original value and update it through change listeners"/>
+			<n-form-combo v-model="cell.state.field" :filter="$services.page.getAllAvailableKeys.bind($self, page, false)" label="Field value to show" v-if="!cell.state.useComputed"/>
+			<n-form-ace v-model="cell.state.computed" label="Initial value for computed" v-else/>
 			<n-form-text v-model="cell.state.icon" label="Icon" placeholder="times"/>
 		</div>
-		
+		<page-triggerable-configure :page="page" :target="cell.state" :triggers="{'remove': {}}" :allow-closing="true"/>
 	</div>
 </template>

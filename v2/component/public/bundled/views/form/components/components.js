@@ -37,6 +37,10 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			pageInstance: function() {
 				return this.$services.page.getPageInstance(this.page, this);
 			},
+			computedValue: function() {
+				var instance = this.pageInstance;
+				return this.cell.state.useComputed && this.cell.state.computed ? this.$services.page.eval(this.cell.state.computed, {}, this) : null;
+			},
 			value: function() {
 				var instance = this.pageInstance;
 				return instance && this.cell.state.name ? instance.get('page.' + this.cell.state.name) : null;
@@ -167,7 +171,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				var done = function() {
 					self.running = false;
 				};
-				this.$services.triggerable.trigger(this.cell.state, "update", null, this).then(done, done);
+				this.$services.triggerable.trigger(this.cell.state, "update", {value:value}, this).then(done, done);
 				// emit it so parent components (like repeat) can take action
 				// we don't want to use the standard "input" to avoid accidental conflicts
 				this.$emit("update", value, label, this.cell.state.name);
