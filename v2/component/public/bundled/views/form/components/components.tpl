@@ -8,7 +8,7 @@
 		:component-group="cell.state.componentGroup ? cell.state.componentGroup : 'form'"
 		:value="cell.state.useComputed ? computedValue : value"
 		:parent-value="parentValue"
-		:label="$services.page.translate(cell.state.label)"
+		:label="$services.page.translate($services.page.interpret(cell.state.label, $self))"
 		:timeout="cell.state.timeout"
 		:disabled="disabled"
 		:schema="getSchema()"

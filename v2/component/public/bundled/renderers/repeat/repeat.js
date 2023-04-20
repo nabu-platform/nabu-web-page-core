@@ -924,6 +924,11 @@ Vue.component("renderer-repeat", {
 				var result = this.$services.page.getPageInstance(this.page, this).get(this.target.repeat.array);
 
 				if (result) {
+					if (this.target.repeat.arrayFilter) {
+						result = result.filter(function(x) {
+							return self.$services.page.isCondition(self.target.repeat.arrayFilter, x, self)	;
+						});
+					}
 					nabu.utils.arrays.merge(this.state.records, result);
 				}
 				self.uniquify();

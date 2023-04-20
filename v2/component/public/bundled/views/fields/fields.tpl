@@ -73,6 +73,7 @@
 	<div class="page-formatted-configure is-column is-spacing-vertical-gap-medium">
 		<n-form-combo v-model="fragment.format" label="Format as" :items="types"/>
 		<n-form-text label="Max Length" v-model="fragment.maxLength" v-if="fragment.format == 'text'"/>
+		<n-form-switch v-model="fragment.inverse" label="Inverse value" v-if="fragment.format == 'checkbox'"/>
 		<n-form-switch v-model="fragment.compile" label="Compile content" v-if="!skipCompile && !mustCompile"/>
 		<n-form-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
 		<n-form-ace v-if="fragment.format == 'html'" mode="html" v-model="fragment.html"/>

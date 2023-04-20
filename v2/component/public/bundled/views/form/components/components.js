@@ -165,16 +165,29 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				return fields;
 			},
 			update: function(value, label) {
-				this.running = true;
 				this.getPageInstance().set("page." + this.cell.state.name, value, label);
 				var self = this;
-				var done = function() {
-					self.running = false;
-				};
-				this.$services.triggerable.trigger(this.cell.state, "update", {value:value}, this).then(done, done);
-				// emit it so parent components (like repeat) can take action
-				// we don't want to use the standard "input" to avoid accidental conflicts
-				this.$emit("update", value, label, this.cell.state.name);
+				// because going this route actually disables the component while it is performing the update, it will remove focus
+				// if used in combination with say a text field, you probably want to set a timeout on the text field
+				if (self.cell.state.triggers && self.cell.state.triggers.length > 0) {
+					this.running = true;
+					var done = function() {
+						self.running = false;
+					};
+					// because the value might not have existed before, we need to give vue time to propagate the vue.set to everywhere
+					// we had a race condition where often the update would trigger a form submit that would in turn trigger a validate
+					// this validate failed because from that components perspective, the value had not yet arrived
+					// if we incrementally increased a timeout to allow for propagation, the amount of failures went down
+					Vue.nextTick(function() {
+						self.$services.triggerable.trigger(self.cell.state, "update", {value:value}, self).then(done, done);
+						// emit it so parent components (like repeat) can take action
+						// we don't want to use the standard "input" to avoid accidental conflicts
+						self.$emit("update", value, label, self.cell.state.name);
+					})
+				}
+				else {
+					self.$emit("update", value, label, self.cell.state.name);
+				}
 			},
 			validate: function () {
 				if (this.$refs && this.$refs.input) {

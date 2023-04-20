@@ -11,7 +11,7 @@
 		:page-instance-id="pageInstanceId"
 		:stop-rerender="stopRerender"
 		:key="'page_' + pageInstanceId + '_row_' + page.content.rows[0].id"
-		@update="$emit('update')"
+		@update="updateEvent"
 		@select="selectItem"
 		@viewComponents="viewComponents = edit"
 		@removeRow="function(x) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { page.content.rows.splice(page.content.rows.indexOf(x), 1) }) }"/>
@@ -19,6 +19,7 @@
 
 <template id="nabu-optimized-page">
 	<n-page-row 
+		@update="updateEvent"
 		:row="page.content.rows[0]"
 		:page="page" 
 		:edit="edit"
@@ -36,7 +37,7 @@
 
 <template id="nabu-page">
 	<component :edit="edit" :is="pageTag()" :inline-all="true" class="is-page is-grid" :body-class="bodyClasses" :page="page.name" 
-			@update="$emit('update')"
+			@update="updateEvent"
 			@drop="dropMenu($event)" @dragover="dragOver($event)"
 			:class="[classes, getGridClasses()]"
 			>
@@ -308,6 +309,7 @@
 													<page-event-value :page="page" :container="parameter" title="State reset event" name="updatedEvent" @resetEvents="resetEvents" :inline="true"/>
 												</div>
 												<n-form-switch v-model="parameter.store" label="Store in browser"/>
+												<n-form-switch v-model="parameter.emitUpdate" label="Emit to parent"/>
 											</div>
 											<page-triggerable-configure :page="page" :target="parameter" :triggers="getStateEvents()"/>
 										</n-collapsible>
@@ -744,6 +746,8 @@
 							
 							<n-form-combo label="The event that has to occur" v-model="row.on" :filter="getAvailableEvents" v-if="row.state.hideMode == 'event'"/>
 							
+							<n-form-switch label="Start visible" v-model="row.startVisible" v-if="row.state.hideMode == 'toggle'" />
+							
 							<n-form-switch label="Hide by default" v-model="row.closeable"
 								v-if="false"/>
 								
@@ -801,6 +805,7 @@
 		
 		<template v-if="page.content.rows">
 			<n-page-row 
+				@update="updateEvent"
 				v-for="row in page.content.rows"
 				:row="row"
 				:page="page" 
@@ -825,7 +830,7 @@
 
 <template id="page-row">
 	<component :is="rowTagFor(row)" :id="row.customId && !row.renderer ? row.customId : page.name + '_' + row.id" 
-			@update="$emit('update')"
+			@update="updateEvent"
 			:class="$window.nabu.utils.arrays.merge(['page-row-' + row.cells.length, row.class ? row.class : null, {'collapsed': row.collapsed}, {'empty': edit && (!row.cells || !row.cells.length) } ], rowClasses(row))"  
 			:key="'page_' + pageInstanceId + '_row_' + row.id"
 			:row-key="'page_' + pageInstanceId + '_row_' + row.id"
@@ -844,6 +849,10 @@
 			@click.alt="$emit('select', row, null, 'row')"
 			@click="clickOnRow(row, $event)"
 			@click.native="clickOnRow(row, $event)"
+			@contextmenu.prevent.ctrl="goto($event, row, null, 'layout')"
+			@contextmenu.prevent.ctrl.native="goto($event, row, null, 'layout')"
+			@click.alt.prevent.native="pasteArisStyling($event, row)"
+			@contextmenu.prevent.alt.native="copyArisStyling($event, row)"
 			:placeholder="row.name ? row.name : null"
 			:target="row"
 			:edit="edit"
@@ -864,7 +873,7 @@
 		<template v-for="cell in row.cells">
 			<template v-if="edit">
 				<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
-						@update="$emit('update')"
+						@update="updateEvent"
 						v-show="!edit || !row.collapsed"
 						:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 						:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
@@ -917,7 +926,7 @@
 						:stop-rerender="stopRerender"
 						v-bubble:viewComponents
 						v-bubble:select
-						@update="$emit('update')"
+						@update="updateEvent"
 						:slot="row.rendererSlot"
 						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					
@@ -930,7 +939,7 @@
 			<template v-else-if="shouldRenderCell(row, cell)">
 				<n-sidebar v-if="cell.target == 'sidebar'" @close="close(row, cell)" :popout="false" :autocloseable="!cell.preventAutoClose" class="content-sidebar" :style="getSideBarStyles(cell)">
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
-							@update="$emit('update')"
+							@update="updateEvent"
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
@@ -974,7 +983,7 @@
 							:stop-rerender="stopRerender"
 							v-bubble:viewComponents
 							v-bubble:select
-							@update="$emit('update')"
+							@update="updateEvent"
 							@close="close(row, cell, childRow)"
 							:slot="childRow.rendererSlot"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
@@ -982,7 +991,7 @@
 				</n-sidebar>
 				<n-prompt v-else-if="cell.target == 'prompt'" @close="close(row, cell)" :autoclose="cell.autoclose">
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
-							@update="$emit('update')"
+							@update="updateEvent"
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
@@ -1025,7 +1034,7 @@
 							:stop-rerender="stopRerender"
 							v-bubble:viewComponents
 							v-bubble:select
-							@update="$emit('update')"
+							@update="updateEvent"
 							@close="close(row, cell, childRow)"
 							:slot="childRow.rendererSlot"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
@@ -1033,7 +1042,7 @@
 				</n-prompt>
 				<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(row, cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right">          
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
-							@update="$emit('update')"
+							@update="updateEvent"
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
@@ -1076,7 +1085,7 @@
 							:stop-rerender="stopRerender"
 							v-bubble:viewComponents
 							v-bubble:select
-							@update="$emit('update')"
+							@update="updateEvent"
 							@close="close(row, cell, childRow)"
 							:slot="childRow.rendererSlot"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
@@ -1084,7 +1093,7 @@
 				</n-absolute>
 				<template v-else>
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
-							@update="$emit('update')"
+							@update="updateEvent"
 							v-show="!isContentHidden(cell)"
 							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
@@ -1128,7 +1137,7 @@
 							:stop-rerender="stopRerender"
 							v-bubble:viewComponents
 							v-bubble:select
-							@update="$emit('update')"
+							@update="updateEvent"
 							@close="close(row, cell, childRow)"
 							:slot="childRow.rendererSlot"
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
@@ -1142,7 +1151,7 @@
 
 <template id="page-rows">
 	<component :is="rowsTag()" class="is-grid">
-		<n-page-row v-for="row in rows" :row="row" :page="page" :edit="edit" :parameters="parameters" :root="root" :stop-rerender="stopRerender" :depth="depth"/>
+		<n-page-row v-for="row in rows" :row="row" :page="page" :edit="edit" :parameters="parameters" :root="root" :stop-rerender="stopRerender" :depth="depth" @update="updateEvent"/>
 	</component>
 </template>
 
@@ -1280,7 +1289,7 @@
 								:ref="'cell_' + cell.id"
 								tabindex="-10">
 							<icon name="cube" class="is-size-xsmall is-position-cross-center" @click.native="function() { editing = null; aliasing = aliasing == cell.id ? null : cell.id }" v-if="false"/>
-							<icon name="cube" class="is-size-xsmall is-position-cross-center" />
+							<icon :name="getCellIcon(cell)" class="is-size-xsmall is-position-cross-center" />
 							<n-form-text v-if="editing == cell.id" v-model="cell.name" class="is-variant-inline is-size-xsmall" :placeholder="cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : cell.id" :autofocus="true"
 								ref="editor"
 								:commit="true"

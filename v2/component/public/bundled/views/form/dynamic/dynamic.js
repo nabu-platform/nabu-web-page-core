@@ -55,7 +55,7 @@ Vue.view("nabu-form-dynamic-component", {
 			}];
 		},
 		postProcess: function(records) {
-			var parentValue = this.parentValue;
+			var parentValue = this.getArray();
 			if (parentValue == null) {
 				parentValue = [];
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
@@ -123,7 +123,7 @@ Vue.view("nabu-form-dynamic-component", {
 		},
 		getTargetFor: function(record) {
 			var name = record[this.nameField];
-			var parentValue = this.parentValue;
+			var parentValue = this.getArray();
 			var self = this;
 			return parentValue.filter(function(x) {
 				return x[self.targetKeyField] == name;
@@ -136,6 +136,10 @@ Vue.view("nabu-form-dynamic-component", {
 		update: function(record, value, label) {
 			var target = this.getTargetFor(record);
 			target[this.targetValueField] = value;
+		},
+		getArray: function() {
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			return pageInstance && this.cell.state.name ? pageInstance.get('page.' + this.cell.state.name) : null;
 		},
 		getParentValue: function() {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);

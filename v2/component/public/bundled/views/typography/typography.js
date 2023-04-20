@@ -127,7 +127,9 @@ Vue.service("typography", {
 						cell: {state: container},
 						value: state ? self.$services.page.getValue(state, container.fragments[variable].key) : pageInstance.get(container.fragments[variable].key),
 						fragment: container.fragments[variable],
-						updater: updateFunction
+						updater: updateFunction,
+						// we might need it
+						allowDataAttributes: true
 					}, updated: updateFunction, ready: updateFunction, watch: {
 						formatted: function(newValue) {
 							updateContent(newValue);
@@ -246,7 +248,6 @@ Vue.component("typography-core", {
 				if (content.substring(content.length - 1) == "}") {
 					content = content.substring(0, content.length - 1);
 				}
-				console.log("content is '" + content + "'");
 				// if we don't have spaces, we camel case it (e.g. in the variable example)
 				if (content.indexOf(" ") < 0) {
 					content = this.$services.page.prettify(content);
@@ -268,6 +269,7 @@ Vue.component("typography-core", {
 			var highlighter = nabu.page.providers("page-format").filter(function(x) {
 				 return x.name == "highlight";
 			})[0];
+			console.log("highlighting", content);
 			return highlighter ? highlighter.format(content, this.cell.state.highlightFormat ? "language-" + this.cell.state.highlightFormat : null) : content;
 		},
 		getChildComponents: function() {
@@ -449,7 +451,7 @@ Vue.component("typography-blockquote-configure", {
 	},
 	data: function() {
 		return {
-			highlightable: true
+			highlightable: false
 		}
 	}
 })

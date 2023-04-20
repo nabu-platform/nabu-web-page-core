@@ -405,10 +405,13 @@ nabu.services.VueService(Vue.extend({
 			}
 			return result;
 		},
-		listCloseableItems: function(page, value) {
+		listCloseableItems: function(page, value, includeEventBased) {
 			var result = [];
 			var search = function(container) {
 				if (container.closeable) {
+					result.push(container);
+				}
+				else if (container.on && includeEventBased) {
 					result.push(container);
 				}
 				if (container.cells) {
@@ -665,6 +668,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		// do the reverse from input binding: apply the renderer state to the pageInstance
 		applyRendererParameters: function(pageInstance, target, state, dumbMerge) {
+			console.log("applying parameters", target, state, dumbMerge);
 			if (target && target.rendererBindings) {
 				var self = this;
 				// note that we also explicitly set null values to allow you to unset
@@ -2811,7 +2815,7 @@ nabu.services.VueService(Vue.extend({
 					var resultFunction = Function('"use strict";return (function(state, $services, $value, application, value) { return ' + condition + ' })')();
 					// by default it is bound to "undefined"
 					resultFunction = resultFunction.bind(this);
-					var result = resultFunction(state, this.$services, customValueFunction ? customValueFunction : (instance ? instance.$value : function() { throw "No value function" }), application, state && state.value ? state.value : null);
+					var result = resultFunction(state, this.$services, customValueFunction ? customValueFunction : (instance ? instance.$value : function() { throw "No value function" }), application, state && state.value ? state.value : state);
 				}
 				catch (exception) {
 					console.warn("Could not evaluate", condition, exception);

@@ -31,6 +31,13 @@ Vue.view("page-badge", {
 	ready: function() {
 		this.elementPromise.resolve(this.$el);	
 	},
+	computed: {
+		tooltip: function() {
+			if (this.cell.state.tooltip) {
+				return this.$services.page.interpret(this.$services.page.translate(this.cell.state.tooltip), this);
+			}	
+		}
+	},
 	methods: {
 		getContentWithVariables: function(content) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);

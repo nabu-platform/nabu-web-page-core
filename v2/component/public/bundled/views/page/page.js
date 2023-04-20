@@ -528,7 +528,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 		// stuff that should be hidden, is hidden by default
 		// for events, it was enough to detect the event, but with the new generic closeable, we need to specifically set this
 		// it should continue to work for events as well though
-		this.$services.page.listCloseableItems(this.page).forEach(function(x) {
+		this.$services.page.listCloseableItems(this.page, null, true).forEach(function(x) {
 			if (!x.startVisible) {
 				Vue.set(self.closed, x.id, x.on ? x.on : "$any");
 			}
@@ -661,12 +661,24 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		updateEvent: function(value, label, name) {
+			this.$emit("update", value, label, name);
+			/*
+			var parent = this.$parent;
+			while (parent) {
+				if (parent.updateEvent) {
+					parent.updateEvent(value, label, name);
+				}
+				parent = parent.$parent;
+			}
+			*/
+		},
 		registerStateListeners: function() {
 			var watchers = {};
 			var self = this;
 			if (this.page.content.parameters) {
 				this.page.content.parameters.forEach(function(state) {
-					if ((state.triggers && state.triggers.length) || state.store) {
+					if ((state.triggers && state.triggers.length) || state.store || state.emitUpdate) {
 						if (state.name) {
 							if (!watchers[state.name]) {
 								watchers[state.name] = [];
@@ -693,6 +705,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 										localStorage.setItem(self.page.content.name + "-" + self.getServiceContext() + "-state-" + state.name, value);
 									}, 1);
 								});
+							}
+							if (state.emitUpdate) {
+								// always send out an update?
+								watchers[state.name].push(function() {
+									setTimeout(function() {
+										self.updateEvent(self.variables[state.name], self.labels[state.name], state.name);
+									}, 1);
+								})
 							}
 						}
 					}
@@ -1645,6 +1665,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 					self.$services.page.rendering--;
 				});
 			}
+			
+			component.$on("update", function(value, label, name) {
+				if (cell.bindings && cell.bindings[name]) {
+					self.set(cell.bindings[name], value, label);
+				}
+			})
 			
 			component.$on("close", function() {
 				var closed = false;
@@ -3551,6 +3577,9 @@ Vue.component("n-page-row", {
 		});
 	},
 	methods: {
+		updateEvent: function(value, label, name) {
+			this.$emit("update", value, label, name);
+		},
 		isContentHidden: function(target) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			return pageInstance.isContentHidden(target);
@@ -4852,6 +4881,18 @@ Vue.component("page-sidemenu", {
 		}	
 	},
 	methods: {
+		getCellIcon: function(cell) {
+			var self = this;
+			if (cell.templateIcon) {
+				return cell.templateIcon;
+			}
+			if (cell.templateReferenceId) {
+				var current = this.$services.page.templates.filter(function(x) {
+					return x.id == cell.templateReferenceId;
+				})[0];
+			}
+			return current && current.icon ? current.icon : "cube";
+		},
 		formatPageItem: function(target) {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);

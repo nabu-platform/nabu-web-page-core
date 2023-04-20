@@ -282,10 +282,20 @@ Vue.service("triggerable", {
 			// we don't always call this handler (immediately), so we separate the logic
 			var self = this;
 			
+			var customValueFunction = function(path, literal) {
+				// look up in local state so you can evaluate that
+				var result = value == null ? null : self.$services.page.getValue(value, path);
+				// fallback to global value function!
+				if (result == null) {
+					result = instance.$value(path, literal);
+				}
+				return result;
+			}
+			
 			// TODO: the name "triggers" is actually configurable
 			var triggers = target.triggers ? target.triggers.filter(function(x) {
 				return x.trigger == trigger
-					&& (!x.condition || self.$services.page.isCondition(x.condition, value, instance))
+					&& (!x.condition || self.$services.page.isCondition(x.condition, value, instance, customValueFunction))
 					&& (!x.triggerError || (value && value.errorType == x.triggerError));
 			}) : [];
 			

@@ -206,6 +206,7 @@ Vue.component("n-page-mapper", {
 			else {
 				value = "=" + value;
 			}
+			console.log("switching computed", field, this.getValueFor(field), value);
 			this.setValue(field, value, 'fixed');
 		},
 		getLabelFor: function(field) {

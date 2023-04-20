@@ -92,6 +92,7 @@
 			:filter="function(value) { return $services.page.suggestArray(page, value) }"
 			v-if="!target.repeat.operation"/>
 			
+		<n-form-ace v-model="target.repeat.arrayFilter" label="Filter the array" v-if="target.repeat.array"/>
 		<n-form-text v-model="target.repeat.emptyPlaceholder" label="Empty Place Holder"/>
 		<n-form-text v-model="target.repeat.loadingPlaceholder" label="Loading Place Holder" v-if="target.repeat.operation"/>
 		

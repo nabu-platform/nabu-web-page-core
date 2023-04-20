@@ -676,7 +676,7 @@ Vue.component("page-formatted-configure", {
  * Because of how widespread this component is used, this should severely reduce accidental XSS bugs
  */
 Vue.component("page-formatted", {
-	template: "<component :is='tag' v-content.parameterized=\"{value:formatted,plain:!fragment.format || fragment.format == 'text', sanitize: !skipSanitize, compile: (mustCompile || fragment.compile) && !skipCompile }\"/>",
+	template: "<component :is='tag' v-content.parameterized=\"{value:formatted,plain:isPlain, sanitize: !skipSanitize, compile: (mustCompile || fragment.compile) && !skipCompile, allowDataAttributes: allowDataAttributes }\"/>",
 	props: {
 		page: {
 			type: Object,
@@ -703,16 +703,18 @@ Vue.component("page-formatted", {
 		updater: {
 			required: false,
 			type: Function
+		},
+		allowDataAttributes: {
+			required: false,
+			default: false
 		}
 	},
 	computed: {
 		nativeTypes: function() {
 			var types = ['date', 'number', 'masterdata', 'javascript', 'literal'];
-			if (this.allowHtml) {
-				types.push('link');
-				types.push('html');
-				types.push('checkbox');
-			}
+			types.push('link');
+			types.push('html');
+			types.push('checkbox');
 			return types;
 		},
 		tag: function() {
@@ -752,6 +754,20 @@ Vue.component("page-formatted", {
 		mustCompile: function() {
 			return this.fragment.format == "checkbox";	
 		},
+		isPlain: function() {
+			var self = this;
+			if (!this.fragment.format || this.fragment.format == 'text') {
+				return true;
+			}
+			else if (this.nativeTypes.indexOf(this.fragment.format) >= 0) {
+				return false;
+			}
+			else {
+				var provider =  nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0];
+				// if we can't find the provider, we want to treat it as text
+				return !provider;
+			}
+		},
 		formatted: function() {
 			// slow retrofit for array support
 			// unsure if we always simply take the first or concat them all or...
@@ -763,7 +779,12 @@ Vue.component("page-formatted", {
 				return null;
 			}
 			if (this.fragment.format == "checkbox") {
-				return "<n-form-checkbox :value='value' />";
+				if (this.fragment.inverse) {
+					return "<n-form-checkbox :value='!value' />";	
+				}
+				else {
+					return "<n-form-checkbox :value='value' />";
+				}
 			}
 			else if (value == null || typeof(value) == "undefined") {
 				return null;
@@ -800,8 +821,12 @@ Vue.component("page-formatted", {
 			// otherwise we are using a provider
 			else {
 				var self = this;
-				var result = nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0]
-					.format(this.value, this.fragment, this.page, this.cell, this.state, this, this.updater);
+				// if the provider is not known, we still want to provide the basic content
+				var provider =  nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0];
+				if (!provider) {
+					return this.value;
+				}
+				var result = provider.format(this.value, this.fragment, this.page, this.cell, this.state, this, this.updater);
 				return result;
 			}
 		}

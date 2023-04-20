@@ -1,9 +1,9 @@
 Vue.component("n-form-ace", {
 	template: "<div class='is-form-ace'>"
-		+ "	<div class='is-label-wrapper' v-if='label'><label class='is-label' v-html='label'></label></div>"
+		+ "	<div class='is-label-wrapper is-row is-spacing-gap-small' v-if='label'><label class='is-label' v-html='label'></label><button @click='magnify' class='is-button is-size-xsmall is-variant-ghost'><icon name='search'/></button></div>"
 		+ "	<div class='is-content-before' v-if='before' v-html='before'></div>"
 		+ "	<div class='is-content-wrapper'>"
-		+ "		<n-ace :mode='mode' :timeout='timeout' :value='value' v-bubble:input/>"
+		+ "		<n-ace :mode='mode' :timeout='timeout' :value='value' v-bubble:input ref='ace'/>"
 		+ "	</div>"
 		+ "	<n-messages :messages='messages' v-if='messages && messages.length'/>"
 		+ "	<div class='is-content-after' v-if='after' v-html='after'></div>"
@@ -19,7 +19,7 @@ Vue.component("n-form-ace", {
 		mode: {
 			type: String,
 			required: false,
-			default: "scss"
+			default: "javascript"
 		},
 		timeout: {
 			type: Number,
@@ -43,6 +43,19 @@ Vue.component("n-form-ace", {
 	methods: {
 		validate: function(soft) {
 			return [];
+		}, 
+		magnify: function() {
+			var self = this;
+			this.$prompt(function() {
+				var component = Vue.component("big-ace");
+				var instance = new component({propsData: {value: self.value, mode: self.mode }});
+				instance.$on("input", function(value) {
+					self.$emit("input", value);
+					// visually update the value
+					self.$refs.ace.editor.setValue(value);
+				})
+				return instance;
+			});
 		}
 	}
 });

@@ -94,6 +94,15 @@
 					"ace": {
 						"ace.js": {
 							"url": "components/ace/ace.js"
+						},
+						"big-ace.js": {
+							"url": "components/ace/big-ace.js"
+						},
+						"big-ace.scss": {
+							"url": "components/ace/big-ace.scss"
+						},
+						"big-ace.tpl": {
+							"url": "components/ace/big-ace.tpl"
 						}
 					},
 					"data": {

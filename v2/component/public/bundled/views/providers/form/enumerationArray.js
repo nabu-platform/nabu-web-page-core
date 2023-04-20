@@ -4,11 +4,13 @@ Vue.component("page-form-input-enumeration-array-configure", {
 			+ " 	<n-form-switch v-model='field.showRadioView' v-if='!field.showCheckboxView' label='Show radio visualisation'/>"
 			+ " 	<n-form-switch v-model='field.showCheckboxView' v-if='!field.showRadioView && supportsMultiple' label='Show checkbox visualisation (allows multiselect)'/>"
 			+ " 	<n-form-switch v-model='field.addEmptyState' label='Add empty state'/>"
+			+ "		<n-form-text v-model='field.emptyValue' label='Empty text'/>"
 			+ " 	<n-form-text v-if='!!field.addEmptyState' v-model='field.emptyState' label='Empty state text'/>"
 			+ "		<n-form-text v-if='field.showRadioView' v-model='field.mustChoose' label='Must choose' placeholder='=true' allow-typing='true' />"
 			+ "		<n-form-combo v-model='field.enumerationArray'"
 			+ "			label='Enumeration Array'"
 			+ "			:filter='getEnumerationArrays'/>"
+			+ " 	<n-form-ace v-if='field.enumerationArray' label='Filter' v-model='field.filter'/>"
 			+ "		<n-form-switch v-model='field.enumerationArrayLabelComplex' label='Complex Enumeration Label'/>"
 			+ "		<n-form-combo v-if='field.enumerationArray && !field.enumerationArrayLabelComplex' v-model='field.enumerationArrayLabel' label='Enumeration Label'"
 			+ "			:filter='function() { return getEnumerationFields(field.enumerationArray) }'/>"
@@ -137,7 +139,7 @@ Vue.component("page-form-input-enumeration-array", {
 			+ "		ref='form'"
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
-			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		v-bubble:input"
 			+ "		:label='label ? $services.page.interpret(label, $self) : null'"
 			+ "		:value='value'"
 			+ "		:description='field.description ? $services.page.translate(field.description) : null'"
@@ -157,9 +159,10 @@ Vue.component("page-form-input-enumeration-array", {
 			+ "		:edit='!readOnly'"
 			+ "		:required='required'"
 			+ "		:placeholder='placeholder'"
-			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
+			+ "		v-bubble:input"
 			+ "		v-bubble:label"
 			+ "		:timeout='600'"
+			+ "		:empty-value='field.emptyValue'"
 			+ "		:label='label ? $services.page.interpret(label, $self) : null'"
 			+ "		:value='value'"
 			+ "		:allow-typing='!field.disableTyping'"		
@@ -238,6 +241,11 @@ Vue.component("page-form-input-enumeration-array", {
 				var array = [];
 				if (pageArray && pageArray.length) {
 					nabu.utils.arrays.merge(array, pageArray);
+				}
+				if (this.field.filter) {
+					array = array.filter(function(x) {
+						return self.$services.page.isCondition(self.field.filter, x, self);
+					})
 				}
 					
 				if (array && array.length) {
