@@ -40,9 +40,9 @@
 			<n-form-combo v-model="cell.state.contentTypeValue" :filter="getAllKeys" label="Content type field" placeholder="image/jpeg" v-if="false"/>
 		</div>
 		
-		<div v-if="cell.state.imageType">
+		<div v-if="cell.state.imageType" class="is-column is-spacing-gap-medium">
 			<n-form-text v-model="cell.state.title" label="Title"/>
-			
+			<n-form-text v-model="cell.state.emptyImage" label="The placeholder image to show if no image is available"/>
 			<div class="is-row is-align-end is-spacing-vertical-medium">
 				<button class="is-button is-variant-danger-outline is-size-xsmall" @click="cell.state.imageType = null">Reset Image Type</button>
 			</div>
@@ -51,7 +51,7 @@
 </template>
 
 <template id="page-image">
-	<img :src="href || !edit ? href : $window.application.configuration.root + 'resources/modules/image/placeholder.svg'"
+	<img :src="calculatedUrl || !edit ? calculatedUrl : emptyImage"
 		class="is-image"
 		:class="getChildComponentClasses('image')"
 		:title="title"/>

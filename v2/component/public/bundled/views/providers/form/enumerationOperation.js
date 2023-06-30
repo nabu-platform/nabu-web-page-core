@@ -166,6 +166,9 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 						}
 					}
 				});
+				result.properties["$serviceContext"] = {
+					type: "string"
+				}
 			}
 			return result;
 		},

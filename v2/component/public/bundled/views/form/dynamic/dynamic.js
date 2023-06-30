@@ -102,7 +102,19 @@ Vue.view("nabu-form-dynamic-component", {
 		getComponentFor: function(record) {
 			var type = record[this.typeField];
 			var name = record[this.nameField];
-			// TODO: allow custom mapping of data types
+			if (this.cell.state.custom) {
+				var custom = this.cell.state.custom.filter(function(x) {
+					return x.component && x.name == type;
+				})[0];
+				if (custom) {
+					var resolved = nabu.page.providers("page-form-input").filter(function(x) {
+						return x.name == custom.component;	
+					})[0];
+					if (resolved) {
+						return resolved.component;
+					}
+				}
+			}
 			if (type == "boolean") {
 				return "page-form-input-checkbox";
 			}
@@ -117,6 +129,16 @@ Vue.view("nabu-form-dynamic-component", {
 			}
 		},
 		getParametersFor: function(record) {
+			var type = record[this.typeField];
+			var name = record[this.nameField];
+			if (this.cell.state.custom) {
+				var custom = this.cell.state.custom.filter(function(x) {
+					return x.name == type;
+				})[0];
+				if (custom) {
+					return {state: custom.configuration};
+				}
+			}
 			// stuff like mandatory, placeholder etc etc
 			// because we want to emulate a cell, we use "state" to do it
 			return {state: {}};
@@ -172,7 +194,24 @@ Vue.component("nabu-form-dynamic-component-configure", {
 			required: true
 		}
 	},
+	created: function() {
+		if (!this.cell.state.custom) {
+			Vue.set(this.cell.state, "custom", []);
+		}
+	},
 	methods: {
+		getCustomConfiguration: function(custom) {
+			var component = nabu.page.providers("page-form-input").filter(function(x) {
+				return x.name == custom.component;	
+			})[0];
+			var result = component && component.configure ? component.configure : custom.component + "-configure";
+			return Vue.component(result) ? result : null;
+		},
+		getAvailableComponents: function(value) {
+			return nabu.page.providers("page-form-input").filter(function(x) {
+				return !value || x.name.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+			});
+		},
 		availableFields: function(value) {
 			var parameters = this.$services.page.getAllArrays(this.page);
 			parameters.sort();

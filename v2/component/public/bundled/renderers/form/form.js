@@ -93,6 +93,10 @@ nabu.page.provide("page-renderer", {
 				errors: ["submit", "validate"]
 			});
 		}
+		actions.push({
+			title: "Toggle Readonly",
+			name: "toggle-readonly"
+		});
 		return actions;
 	}
 });
@@ -335,7 +339,19 @@ Vue.component("renderer-form", {
 					// we likely have the codes on the "wrapper" component
 					// vue can render multiple components on the same $el (e.g. if the root of a component is another component)
 					// this is the case for form components in the page, so we likely find it in the parent
-					var localCodes = x.__vue__.codes ? x.__vue__.codes : (x.__vue__.$parent && x.__vue__.$parent.codes ? x.__vue__.$parent.codes : []);
+					var localCodes = null;
+					var component = x.__vue__;
+					while (component && !localCodes) {
+						localCodes = component.codes;
+						component = component.$parent;
+						if (!component || component.$el != x) {
+							break;
+						}
+					}
+					if (!localCodes) {
+						localCodes = [];
+					}
+					//var localCodes = x.__vue__.codes ? x.__vue__.codes : (x.__vue__.$parent && x.__vue__.$parent.codes ? x.__vue__.$parent.codes : []);
 					
 					var allCodes = [];
 					// the LAST hit wins, so we want the most specific one to win...
@@ -383,6 +399,22 @@ Vue.component("renderer-form", {
 					}
 				}, promise);
 				return promise;
+			}
+			else if (name == "toggle-readonly") {
+				// you can set a custom component group to only validate those particular elements?
+				var componentGroup = this.target.form.componentGroup ? this.target.form.componentGroup : "form";
+				this.$el.querySelectorAll("[component-group='" + componentGroup + "']").forEach(function(x) {
+					var component = x.__vue__;
+					while (component) {
+						if (Object.keys(component).indexOf("editable") >= 0) {
+							component.editable = !component.editable;
+							break;
+						}
+						else {
+							component = component.$parent;
+						}
+					}
+				});
 			}
 		}
 	}

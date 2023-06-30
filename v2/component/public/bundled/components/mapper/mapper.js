@@ -14,6 +14,26 @@ Vue.component("n-page-mapper", {
 		value: {
 			type: Object,
 			required: true
+		},
+		plain: {
+			type: Boolean,
+			default: false
+		},
+		allowComputed: {
+			type: Boolean,
+			default: true
+		},
+		watchForChanges: {
+			type: Boolean,
+			default: false
+		},
+		dropUnused: {
+			type: Boolean,
+			default: false
+		},
+		allowRecursiveMapping: {
+			type: Boolean,
+			default: false
 		}
 	},
 	computed: {
@@ -22,13 +42,15 @@ Vue.component("n-page-mapper", {
 			var sources = Object.keys(this.from);
 			// allow fixed values
 			sources.push("fixed");
-			if (this.$services.page.functions.length > 0) {
-				sources.push("$function");
+			if (!this.plain) {
+				if (this.$services.page.functions.length > 0) {
+					sources.push("$function");
+				}
+				// allow enumerations
+				nabu.utils.arrays.merge(sources, nabu.page.providers("page-enumerate").map(function(x) {
+					return x.name;
+				}).filter(function(x) { return sources.indexOf(x) < 0 }));
 			}
-			// allow enumerations
-			nabu.utils.arrays.merge(sources, nabu.page.providers("page-enumerate").map(function(x) {
-				return x.name;
-			}).filter(function(x) { return sources.indexOf(x) < 0 }));
 			sources.sort();
 			return sources;
 		},
@@ -45,25 +67,40 @@ Vue.component("n-page-mapper", {
 			// adding field?
 			adding: false,
 			fieldToAdd: null,
+			fieldToMapRecursively: null,
 			fieldMode: null,
 			mappedFields: []
 		}
 	},
 	created: function() {
-		if (this.to instanceof Array) {
-			nabu.utils.arrays.merge(this.fieldsToMap, this.to);
-		}
-		else if (this.to) {
-			nabu.utils.arrays.merge(this.fieldsToMap, this.$services.page.getSimpleKeysFor(this.to, true, true));
-		}
-		var self = this;
-		this.fieldsToMap.forEach(function(x) {
-			if (self.value[x] != null) {
-				self.mappedFields.push(x);
-			}
-		});
+		this.calculateFieldsToMap();
 	},
 	methods: {
+		calculateFieldsToMap: function() {
+			this.fieldsToMap.splice(0);
+			this.mappedFields.splice(0);
+			
+			if (this.to instanceof Array) {
+				nabu.utils.arrays.merge(this.fieldsToMap, this.to);
+			}
+			else if (this.to) {
+				nabu.utils.arrays.merge(this.fieldsToMap, this.$services.page.getSimpleKeysFor(this.to, true, true));
+			}
+			
+			var self = this;
+			this.fieldsToMap.forEach(function(x) {
+				if (self.value[x] != null) {
+					self.mappedFields.push(x);
+				}
+			});
+			if (this.dropUnused) {
+				Object.keys(this.value).forEach(function(key) {
+					if (self.fieldsToMap.indexOf(key) < 0) {
+						delete self.value[key];
+					}
+				})
+			}
+		},
 		removeField: function(field) {
 			this.setValue(field, null, null);
 			var index = this.mappedFields.indexOf(field);
@@ -84,6 +121,9 @@ Vue.component("n-page-mapper", {
 				}
 			}
 			this.resetField();
+		},
+		mapRecursively: function() {
+			
 		},
 		// get the possible field names for this label
 		fieldsFrom: function(value, label, fields) {
@@ -168,6 +208,25 @@ Vue.component("n-page-mapper", {
 				});
 				this.value[field].lambdable = def && !def.async;
 			}
+			else if (this.fieldMode == "mapRecursive" && label != "fixed") {
+				var self = this;
+				this.getUnmappedField().forEach(function(x) {
+					// if it is a child 
+					if (x == "$all" || x.indexOf(field + ".") == 0) {
+						var xname = x.replace(/^.*\.([^.]+)$/, "$1");
+						self.fieldsFrom(null, label).forEach(function(y) {
+							if (newValue == "$all" || y.indexOf(newValue + ".") == 0) {
+								var yname = y.replace(/^.*\.([^.]+)$/, "$1");
+								if (xname == yname) {
+									Vue.set(self.value, x, label + "." + y);
+									self.mappedFields.push(x);
+								}
+							}
+						})
+					}
+				});
+				this.resetField();
+			}
 			else {
 				Vue.set(this.value, field, label && (newValue || label == "fixed") ? label + '.' + (newValue ? newValue : "") : null);
 			}
@@ -194,6 +253,9 @@ Vue.component("n-page-mapper", {
 				: null;
 		},
 		isComputedValue: function(field) {
+			if (!this.allowComputed) {
+				return false;
+			}
 			var value = this.getValueFor(field);
 			return value && value.indexOf("=") == 0;
 		},
@@ -220,6 +282,19 @@ Vue.component("n-page-mapper", {
 		},
 		isLambdable: function(field) {
 			return this.value[field] && this.value[field].lambdable;
+		}
+	},
+	watch: {
+		to: function() {
+			if (this.watchForChanges) {
+				this.calculateFieldsToMap();
+			}
+		},
+		value: {
+			deep: true,
+			handler: function() {
+				this.$emit("changed");
+			}
 		}
 	}
 });

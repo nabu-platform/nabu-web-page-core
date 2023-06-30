@@ -875,6 +875,19 @@ nabu.services.VueService(Vue.extend({
 			this.consoleTab = "inspect";
 			this.showConsole = true;
 		},
+		downloadBlob: function(blob, fileName) {
+			var reader = new FileReader();
+			reader.readAsDataURL(blob);
+			reader.onload = function() {
+				var url = reader.result;
+				var tag = document.createElement("a");
+				document.body.appendChild(tag);
+				tag.setAttribute("download", fileName ? fileName : (blob.name ? blob.name : ""));
+				tag.setAttribute("href", url);
+				tag.click();
+				document.body.removeChild(tag);
+			};
+		},
 		download: function(url, errorHandler) {
 			// use iframes to better handle problems when they occur (e.g. a 500)
 			var iframe = iframe = document.createElement('iframe');
@@ -1541,6 +1554,10 @@ nabu.services.VueService(Vue.extend({
 								try {
 									var content = JSON.parse(template.content);
 									if (content.type == "page") {
+										self.pageTemplates.push(template);
+									}
+									// multiple pages combined!
+									else if (content.type == "pages") {
 										self.pageTemplates.push(template);
 									}
 									else {

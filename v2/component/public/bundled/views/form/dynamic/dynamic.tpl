@@ -18,5 +18,16 @@
 	<div class="data-trace-viewer-configure is-column is-spacing-medium">
 		<n-form-combo v-model="cell.state.name" label="Field Name" :filter="availableFields" after="The array of key/values where you want to store the dynamic data"/>
 		<data-configure :target="cell.state" :page="page"/>
+		
+		<div v-for="custom in cell.state.custom" class="is-column is-spacing-medium">
+			<n-form-text v-model="custom.name" label="Type name"/>
+			<n-form-combo v-model="custom.component" label="Component" :filter="getAvailableComponents" :formatter="function(x) { return x.name ? x.name : x.component }" :extracter="function(x) { return x.name }"/>
+			<component v-if="getCustomConfiguration(custom)" :is="getCustomConfiguration(custom)" :page="page" :cell="cell" 
+				:field="custom.configuration"
+				class="is-column is-spacing-gap-medium"/>
+		</div>
+		<div class="is-row is-align-end is-spacing-vertical-small">
+			<button class="is-button is-size-xsmall is-variant-primary-outline" @click="cell.state.custom.push({configuration:{}})"><icon name="plus"/><span class="is-text">Custom type</span></button>
+		</div>
 	</div>
 </template>

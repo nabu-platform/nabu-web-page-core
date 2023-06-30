@@ -73,7 +73,7 @@ Vue.component("page-collapsible", {
 		}
 	},
 	methods: {
-		toggle: function() {
+		toggle: function($event) {
 			var self = this;
 			var closeRest = function() {
 				if (self.target.collapsible.closeSiblings) {
@@ -111,6 +111,10 @@ Vue.component("page-collapsible", {
 				else {
 					this.show = false;
 					this.$emit("hide", this);
+				}
+				if (this.target.collapsible.stopPropagation && $event) {
+					$event.stopPropagation();
+					$event.preventDefault();
 				}
 			}
 		}

@@ -12,7 +12,7 @@
 		:timeout="cell.state.timeout"
 		:disabled="disabled"
 		:schema="getSchema()"
-		:readOnly="false"
+		:readOnly="!editable"
 		:required="isRequired()"
 		:placeholder="$services.page.interpret($services.page.translate(cell.state.placeholder), $self)"
 		:child-components="childComponents"
@@ -25,6 +25,7 @@
 		<div class="is-column is-spacing-medium">
 			<n-form-switch v-model="cell.state.useComputed" label="Use computed value" after="Instead of binding directly to a field, you can calculate the original value and update it through change listeners"/>
 			<n-form-combo v-model="cell.state.name" label="Field Name" :filter="availableFields" v-if="!cell.state.useComputed"/>
+			<n-form-combo v-model="cell.state.rawName" label="Raw Field Name" :filter="availableFields" v-if="!cell.state.useComputed" after="In some cases the value is derived from a raw value that might also be interesting, you can capture that here"/>
 			<n-form-ace v-model="cell.state.computed" label="Initial value for computed" v-else/>
 			<n-form-text v-model="cell.state.label" label="Label"/>
 			<n-form-text v-model="cell.state.placeholder" label="Placeholder"/>
@@ -32,6 +33,7 @@
 			<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
 			<n-form-text v-model="cell.state.disabled" label="Disable if" />
 			<n-form-switch v-model="cell.state.validateOnBlur" label="Validate on blur"/>
+			<n-form-switch v-model="cell.state.readOnly" label="Render as read only"/>
 			<n-form-combo v-model="cell.state.required" label="Required" :items="[{value: true, title: 'Always'}, {value: false, title: 'Depends on the schema'}, {value: 'condition', title: 'Based on a condition'}]"
 				:extracter="function(x) { return x.value }"
 				:formatter="function(x) { return x.title }"/>

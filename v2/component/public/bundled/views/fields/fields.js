@@ -676,7 +676,7 @@ Vue.component("page-formatted-configure", {
  * Because of how widespread this component is used, this should severely reduce accidental XSS bugs
  */
 Vue.component("page-formatted", {
-	template: "<component :is='tag' v-content.parameterized=\"{value:formatted,plain:isPlain, sanitize: !skipSanitize, compile: (mustCompile || fragment.compile) && !skipCompile, allowDataAttributes: allowDataAttributes }\"/>",
+	template: "<component :is='tag' v-content.parameterized=\"{value:formatted,plain:isPlain, sanitize: !skipSanitize, compile: (mustCompile || fragment.compile) && !skipCompile, allowDataAttributes: allowDataAttributes, allowLinkIds: allowLinkIds }\"/>",
 	props: {
 		page: {
 			type: Object,
@@ -707,6 +707,10 @@ Vue.component("page-formatted", {
 		allowDataAttributes: {
 			required: false,
 			default: false
+		},
+		allowLinkIds: {
+			required: false,
+			default: false
 		}
 	},
 	computed: {
@@ -729,7 +733,15 @@ Vue.component("page-formatted", {
 		// this must be compiled before it can be sanitized...
 		// could also update the order in which it is compiled? or add a mandatory post-sanitize
 		skipSanitize: function() {
-			return this.fragment.format == "checkbox";
+			if (this.fragment.format == "checkbox") {
+				return true;
+			}
+			else if (this.fragment.skipSanitize) {
+				return true;
+			}
+			var self = this;
+			var formatter = nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0];
+			return formatter && formatter.skipSanitize;
 		},
 		isHtml: function() {
 			if (!this.fragment.format) {
@@ -752,7 +764,12 @@ Vue.component("page-formatted", {
 			return formatter && formatter.skipCompile;
 		},
 		mustCompile: function() {
-			return this.fragment.format == "checkbox";	
+			if (this.fragment.format == "checkbox") {
+				return true;
+			}
+			var self = this;
+			var formatter = nabu.page.providers("page-format").filter(function(x) { return x.name == self.fragment.format })[0];
+			return formatter && formatter.mustCompile;
 		},
 		isPlain: function() {
 			var self = this;
@@ -807,7 +824,12 @@ Vue.component("page-formatted", {
 				return this.fragment.html ? this.fragment.html : this.value;
 			}
 			else if (this.fragment.format == "link") {
-				return "<a target='_blank' class='is-button is-variant-link is-spacing-none' ref='noopener noreferrer nofollow' href='" + value + "'>" + value.replace(/http[s]*:\/\/([^/]+).*/, "$1") + "</a>";
+				var label = this.fragment.label;
+				if (!label) {
+					label = value.replace(/http[s]*:\/\/([^/]+).*/, "$1");
+				}
+				label = this.$services.page.translate(this.$services.page.interpret(label, this));
+				return "<a target='_blank' class='is-button is-variant-link is-spacing-none' ref='noopener noreferrer nofollow' href='" + value + "'>" + label + "</a>";
 			}
 			// if it is native, format it that way
 			else if (this.nativeTypes.indexOf(this.fragment.format) >= 0) {

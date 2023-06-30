@@ -38,27 +38,24 @@ nabu.page.provide("page-renderer", {
 		// anyway, the repeat WITHOUT a runtime alias is quite useless as you can't bind to any data anyway
 		// we do know however that there is a select, and we want you to be able to configure it immediately
 		// so if we can't resolve the state yet (no runtime alias), we already expose the trigger without any data
+		var triggers = {};
 		if (pageInstance && target && target.runtimeAlias && target.repeat && target.repeat.selectable) {
 			// we need the definition for this
 			var parameters = $services.page.getAllAvailableParameters(pageInstance.page);
 			// sometimes the record does not exist because the definition can not be found (e.g. you have removed the operation)
 			if (parameters[target.runtimeAlias] && parameters[target.runtimeAlias].properties.record) {
-				var trigger = {
-					select: {
+				triggers.select = {
+					items: {
+						type: "array",
 						items: {
-							type: "array",
-							items: {
-								type: "object",
-								properties: parameters[target.runtimeAlias].properties.record.properties
-							}
+							type: "object",
+							properties: parameters[target.runtimeAlias].properties.record.properties
 						}
-					},
-					// we want to trigger on deselect so we can for example show a placeholder
-					deselect: {
-						
 					}
 				};
-				return trigger;
+				// we want to trigger on deselect so we can for example show a placeholder
+				triggers.deselect = {
+				};
 			}
 			else {
 				console.error("Could not get trigger because we could not find the definition for: " + target.runtimeAlias);
@@ -69,15 +66,13 @@ nabu.page.provide("page-renderer", {
 			// sometimes the record does not exist because the definition can not be found (e.g. you have removed the operation)
 			if (parameters[target.runtimeAlias] && parameters[target.runtimeAlias].properties.record) {
 				// this can be triggered by embedded form components that will emit the update
-				var trigger = {
-					update: {
-						type: "object",
-						properties: parameters[target.runtimeAlias].properties.record.properties
-					}
+				triggers.update = {
+					type: "object",
+					properties: parameters[target.runtimeAlias].properties.record.properties
 				};
-				return trigger;
 			}
 		}
+		return triggers;
 	},
 	getState: function(container, page, pageParameters, $services) {
 		var result = {};
@@ -167,6 +162,10 @@ nabu.page.provide("page-renderer", {
 				result.record = {properties:record};
 				result.records = {type: "array", items: {properties:record}};
 				*/
+			}
+			// check if there is a provider for this repeat
+			else {
+				
 			}
 			if (result.record && container.repeat.selectable) {
 				result["selected"] = {

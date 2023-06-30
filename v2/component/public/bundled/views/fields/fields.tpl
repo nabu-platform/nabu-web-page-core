@@ -73,13 +73,15 @@
 	<div class="page-formatted-configure is-column is-spacing-vertical-gap-medium">
 		<n-form-combo v-model="fragment.format" label="Format as" :items="types"/>
 		<n-form-text label="Max Length" v-model="fragment.maxLength" v-if="fragment.format == 'text'"/>
+		<n-form-text label="Link label" v-model="fragment.label" v-if="fragment.format == 'link'"/>
 		<n-form-switch v-model="fragment.inverse" label="Inverse value" v-if="fragment.format == 'checkbox'"/>
 		<n-form-switch v-model="fragment.compile" label="Compile content" v-if="!skipCompile && !mustCompile"/>
+		<n-form-switch v-if="false" v-model="fragment.skipSanitize" :invert="true" label="Sanitize" v-if="fragment.compile"/>
 		<n-form-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
 		<n-form-ace v-if="fragment.format == 'html'" mode="html" v-model="fragment.html"/>
 		<n-form-text v-if="fragment.format == 'number'" v-model="fragment.amountOfDecimals" label="Amount of decimals"/>
 		<n-form-switch v-if="fragment.format == 'number'" v-model="fragment.retainTrailing" label="Retain trailing 0"/>
-		<n-form-combo label="Date Format" v-if="fragment.format == 'date'" v-model="fragment.dateFormat" :filter="function(value) { return [value, 'date', 'dateTime', '\'yy MMM dd', '\'yy MMM dd HH:mm', 'MMMM dd, yyyy'] }"/>
+		<n-form-combo label="Date Format" v-if="fragment.format == 'date'" v-model="fragment.dateFormat" :filter="function(value) { return [value, 'date', 'dateTime', 'yyyy MMM dd', 'yyyy MMM dd HH:mm', 'MMMM dd, yyyy', 'dd/MM/yyyy HH:mm:ss.S'] }"/>
 		<n-form-switch label="Is timestamp in milliseconds?" v-model="fragment.isTimestamp" v-if="fragment.format == 'date' && !fragment.isSecondsTimestamp"/>
 		<n-form-switch label="Is timestamp in seconds?" v-model="fragment.isSecondsTimestamp" v-if="fragment.format == 'date' && !fragment.isTimestamp"/>
 		<n-form-combo label="Type" v-model="fragment.tag" :items="['span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div']"/>

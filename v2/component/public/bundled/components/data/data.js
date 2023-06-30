@@ -78,6 +78,7 @@ Vue.component("data-configure", {
 					if (parameters) {
 						nabu.utils.arrays.merge(result, parameters.map(function(x) { return x.name }));
 					}
+					result.push("$serviceContext");
 				}
 			}
 			return result;

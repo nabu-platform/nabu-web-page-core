@@ -43,8 +43,8 @@
 				serviceId="nabu.utils.Resource.list"
 				resultName="result07dbd0a2091b49fab562c4ac74d6e23a"
 				temporaryMapping="true"
-				x="226"
-				y="110"
+				x="383"
+				y="31"
 				invocationOrder="0"
 				asynchronous="false"
 				recache="false">
@@ -56,6 +56,15 @@
 					fixedValue="true">
 				<from>="repository:" + input/webApplicationId + ":/public/resources/" + input/query/path</from>
 				<to>uri</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="ebc2205ae8804266bb63788a495134ee"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>.*</from>
+				<to>fileFilter</to>
 			</steps>
 		</steps>
 		<steps xsi:type="be.nabu.libs.services.vm.step.Link"

@@ -61,6 +61,16 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				return !!this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, state, this);
 			}
 		},
+		created: function() {
+			// if we have a raw value capture, we want to unset it when rendering this component
+			// it can only be validly set by the component after it receives the actual value (if any)
+			if (this.cell.state.rawName) {
+				this.getPageInstance().set("page." + this.cell.state.rawName, null);
+			}
+			if (this.cell.state.readOnly) {
+				this.editable = false;
+			}
+		},
 		// for some reason enumeration (and all derivatives of enumeration) did not get destroyed correctly
 		// if you remove the alias for example for form-text, the destroy is called correctly at all levels
 		// same for all other tested form components (date, checkbox,...)
@@ -75,7 +85,8 @@ nabu.page.views.FormComponentGenerator = function(name) {
 		},
 		data: function() {
 			return {
-				running: false
+				running: false,
+				editable: true
 			}
 		},
 		methods: {
@@ -110,7 +121,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			getPageInstance: function() {
 				var instance =  this.$services.page.getPageInstance(this.page, this);
 				//console.log("resolving cell state", this.cell.state.name, instance, instance.get("page." + this.cell.state.name));
-				return this.$services.page.getPageInstance(this.page, this);	
+				return instance;	
 			},
 			isDisabled: function() {
 				var self = this;
@@ -164,8 +175,11 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				}
 				return fields;
 			},
-			update: function(value, label) {
+			update: function(value, label, rawValue) {
 				this.getPageInstance().set("page." + this.cell.state.name, value, label);
+				if (this.cell.state.rawName) {
+					this.getPageInstance().set("page." + this.cell.state.rawName, rawValue != null ? rawValue : value, label);
+				}
 				var self = this;
 				// because going this route actually disables the component while it is performing the update, it will remove focus
 				// if used in combination with say a text field, you probably want to set a timeout on the text field
@@ -179,12 +193,17 @@ nabu.page.views.FormComponentGenerator = function(name) {
 					// this validate failed because from that components perspective, the value had not yet arrived
 					// if we incrementally increased a timeout to allow for propagation, the amount of failures went down
 					Vue.nextTick(function() {
-						self.$services.triggerable.trigger(self.cell.state, "update", {value:value}, self).then(done, done);
-						// emit it so parent components (like repeat) can take action
-						// we don't want to use the standard "input" to avoid accidental conflicts
-						self.$emit("update", value, label, self.cell.state.name);
+						// even waiting for the next tick is not enough to guarantee availability of data, but breaking out of that seems to do the trick...
+						setTimeout(function() {
+							self.$services.triggerable.trigger(self.cell.state, "update", {value:value}, self).then(done, done);
+							// emit it so parent components (like repeat) can take action
+							// we don't want to use the standard "input" to avoid accidental conflicts
+							self.$emit("update", value, label, self.cell.state.name);
+						}, 1);
 					})
 				}
+				// when combined with triggers, it waits until the triggers are done
+				// without triggers, we emit immediately
 				else {
 					self.$emit("update", value, label, self.cell.state.name);
 				}

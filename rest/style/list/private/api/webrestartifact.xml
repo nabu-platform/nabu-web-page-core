@@ -3,8 +3,12 @@
     <method>GET</method>
     <path>/style</path>
     <role>editor</role>
-    <permissionContext>="webApplication:" + input/webApplicationId</permissionContext>
     <permissionAction>style.read</permissionAction>
+    <permissionContext>="webApplication:" + input/webApplicationId</permissionContext>
+    <useServiceContextAsPermissionContext>false</useServiceContextAsPermissionContext>
+    <useWebApplicationAsPermissionContext>false</useWebApplicationAsPermissionContext>
+    <useProjectAsPermissionContext>false</useProjectAsPermissionContext>
+    <useGlobalPermissionContext>false</useGlobalPermissionContext>
     <output>nabu.web.page.core.types.rest.styleList</output>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
@@ -21,5 +25,11 @@
     <source>false</source>
     <allowRaw>false</allowRaw>
     <domain>false</domain>
+    <origin>false</origin>
     <ignoreOffline>true</ignoreOffline>
+    <allowRootArrays>false</allowRootArrays>
+    <captureErrors>false</captureErrors>
+    <captureSuccessful>false</captureSuccessful>
+    <limitedToInterface>false</limitedToInterface>
+    <allowExplicitResponseCode>false</allowExplicitResponseCode>
 </restInterface>

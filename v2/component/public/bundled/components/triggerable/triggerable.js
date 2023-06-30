@@ -416,7 +416,8 @@ Vue.service("triggerable", {
 							if (anchor == "$blank") {
 								window.open(url);
 							}
-							else if (anchor == "$window") {
+							// if we have no explicit anchor, in local
+							else if (anchor == "$window" || !anchor) {
 								window.location = url;
 							}
 						}

@@ -129,7 +129,8 @@ Vue.service("typography", {
 						fragment: container.fragments[variable],
 						updater: updateFunction,
 						// we might need it
-						allowDataAttributes: true
+						allowDataAttributes: true,
+						allowLinkIds: true
 					}, updated: updateFunction, ready: updateFunction, watch: {
 						formatted: function(newValue) {
 							updateContent(newValue);

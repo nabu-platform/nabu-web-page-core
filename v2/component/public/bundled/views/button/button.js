@@ -133,7 +133,6 @@ Vue.view("page-button", {
 	methods: {
 		getHref: function() {
 			if (this.tagName == "a") {
-				console.log("calculating href");
 				return this.$services.triggerable.calculateUrl(this.cell.state.triggers[0].actions[0], this, {});
 			}
 		},
@@ -186,14 +185,24 @@ Vue.view("page-button", {
 		// when you hit space bar in edit mode on a button, it ativates the button rather than inserting a space
 		// to be mutually exclusive with the alt+click, we check specifically for that key as well
 		hitSpace: function($event) {
+			// no longer necessary?
+			/*
 			if (this.edit && this.$refs.editor && !$event.altKey) {
 				document.execCommand("insertHTML", null, " ");
 			}
+			*/
 		},
 		handle: function($event, middleMouseButton) {
 			// if you are in edit mode, you have to explicitly click alt to enable the button
 			// it seems that vue also intercepts spaces and sends it as a click event, meaning when you type in the rich text, it can trigger
-			if (!this.edit || ($event && $event.altKey)) {
+			if (!this.edit || ($event && $event.altKey)){ 
+				// left is for normal systems like linux and windows. the metakey is for those relegated to using inferior apple devices
+				var isNewTab = $event.button == 1 || ($event.metaKey == true && $event.button == 0);
+				// if we have a link opening in a new tab, we don't want local routing
+				if (this.tagName == "a" && isNewTab) {
+					return true;
+				}
+				
 				// if we are part of a component group, we will first untrigger any existing active component group buttons
 				// we rather have an intermittent situation where no buttons are active than where two buttons are active
 				if (this.cell.state.componentGroup) {
@@ -226,7 +235,22 @@ Vue.view("page-button", {
 					}
 				}
 				promise.then(unlock, unlock);
-				return promise;
+				// if we have a link 
+				if (this.tagName == "a") {
+					$event.preventDefault();
+					return false;
+				}
+				else {
+					return promise;
+				}
+			}
+			// we want to prevent default behavior in edit mode
+			else if ($event) {
+				// we want to stop the browser for executing the a but we do want the click to propagate to the cell so you can do ctrl+click to focus etc
+				if (this.tagName == "a") {
+					//$event.stopPropagation();
+					$event.preventDefault();
+				}
 			}
 		},
 		deactivate: function() {

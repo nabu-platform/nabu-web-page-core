@@ -414,6 +414,12 @@
 						},
 						"paging.tpl": {
 							"url": "views/paging/paging.tpl"
+						},
+						"paging-next.js": {
+							"url": "views/paging/paging-next.js"
+						},
+						"paging-next.tpl": {
+							"url": "views/paging/paging-next.tpl"
 						}
 					},
 					"providers": {

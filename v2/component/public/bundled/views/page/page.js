@@ -1670,6 +1670,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				if (cell.bindings && cell.bindings[name]) {
 					self.set(cell.bindings[name], value, label);
 				}
+				self.$emit("update", value, label, name);
 			})
 			
 			component.$on("close", function() {
@@ -2243,7 +2244,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 			this.subscriptions[event].push(handler);
 			var self = this;
 			return function() {
-				self.subscriptions[event].splice(self.subscriptions[event].indexOf(handler), 1);
+				var index = self.subscriptions[event].indexOf(handler);
+				if (index >= 0) {
+					self.subscriptions[event].splice(index, 1);
+				}
 			};
 		},
 		reset: function(name) {
@@ -2963,6 +2967,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 							// the triggerInitial is a boolean we might add if we want to trigger on initial load as well
 							self.$services.triggerable.trigger(state, reload ? "update" : "initial", null, self).then(promise, promise);
 						}, promise);
+						return promise;
 					}
 					catch (exception) {
 						console.error("Could not execute", state.operation, exception);
@@ -3010,8 +3015,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 			if (name == "page") {
 				return this.fragmentParent ? this.fragmentParent.get(name) : this.variables;
 			}
-			else if (name == "page.$this") {
+			else if (name == "page.$this" || name == "$page") {
 				return this.fragmentParent ? this.fragmentParent.get(name) : this;
+			}
+			else if (name == "parent.$this" || name == "$parent") {
+				var parentInstance = this.page.content.pageParent ? this.$services.page.getPageInstanceByName(this.page.content.pageParent) : null;
+				return parentInstance;
 			}
 			else if (name == "parent") {
 				var parentInstance = this.page.content.pageParent ? this.$services.page.getPageInstanceByName(this.page.content.pageParent) : null;
@@ -4177,9 +4186,16 @@ Vue.component("n-page-row", {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			if (row.on) {
-				if (!pageInstance.get(row.on)) {
+				// if we explicitly closed it, leave it closed until it is reset
+				if (pageInstance.closed[row.id]) {
 					return false;
 				}
+				else if (!pageInstance.get(row.on)) {
+					return false;
+				}
+			}
+			else if (this.$services.page.isCloseable(row) && pageInstance.closed[row.id]) {
+				return false;
 			}
 			if (this.$services.page.isCloseable(row)) {
 				return !pageInstance.closed[row.id];
@@ -4243,7 +4259,9 @@ Vue.component("n-page-row", {
 					classes.push("is-page-column");
 				}
 				else if (cell.target == "prompt" || cell.target == "sidebar" || cell.target == "absolute") {
-					classes.push("is-page-prompt");
+					//classes.push("is-page-prompt");
+					// @2023-06-01 we want to be able to apply default column styling, in v1 we differentiated between the two
+					classes.push("is-page-column");
 				}
 				//{'is-page-column': edit || !cell.target || cell.target == 'page', 'page-prompt': cell.target == 'prompt' || cell.target == 'sidebar' || cell.target == 'absolute' }
 			}
@@ -4802,6 +4820,10 @@ Vue.component("n-absolute", {
 		autoclose: {
 			type: Boolean,
 			required: false
+		},
+		snapPoint: {
+			type: String,
+			default: "top-left"
 		}
 	},
 	data: function() {
@@ -4844,6 +4866,12 @@ Vue.component("n-absolute", {
 				styles.push({"top": + y + "px"});
 				//styles.push({"left": + JSON.parse(JSON.stringify(this.$services.page.mouseX)) + "px" });
 				//styles.push({"top": + JSON.parse(JSON.stringify(this.$services.page.mouseY)) + "px"});
+			}
+			else {
+				// we want the positioning (left, top...) to be to a different point than the default top left
+				if (this.snapPoint == "center") {
+					styles.push({"transform": "translate(-50%, -50%)"});
+				}
 			}
 			// can also use fixed positioning
 			if (this.fixed) {

@@ -89,8 +89,27 @@ Vue.view("page-image", {
 	computed: {
 		title: function() {
 			return this.cell.state.title ? this.$services.page.interpret(this.$services.page.translate(this.cell.state.title), this) : null;
+		},
+		emptyImage: function() {
+			var defaultPlaceholder = $window.application.configuration.root + 'resources/modules/image/placeholder.svg';
+			return this.cell.state.emptyImage ? this.cell.state.emptyImage : defaultPlaceholder;
+		},
+		// we put this in a computed because we want this to be reactive
+		calculatedUrl: function() {
+			if (this.cell.state.imageType == "operation") {
+				this.calculateRESTUrl();
+			}
+			else if (this.cell.state.imageType == "static") {
+				this.calculateFixedUrl();
+			}
+			else if (this.cell.state.imageType == "bytes") {
+				this.calculateByteUrl();
+			}
+			return this.href;
 		}
 	},
+	// replaced with computed for reactivity!
+	/*
 	created: function() {
 		if (this.cell.state.imageType == "operation") {
 			this.calculateRESTUrl();
@@ -102,6 +121,7 @@ Vue.view("page-image", {
 			this.calculateByteUrl();
 		}
 	},
+	*/
 	methods: {
 		calculateByteUrl: function() {
 			if (this.cell.state.byteValue) {

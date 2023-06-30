@@ -1679,6 +1679,91 @@ window.addEventListener("load", function() {
 			icons: []
 		});
 		
+		nabu.page.provide("page-format", {
+			html: true,
+			name: "markdown",
+			namespace: "nabu",
+			skipCompile: false,
+			skipSanitize: false,
+			format: function(value, fragment, page, cell, record, updater) {
+				if (nabu.formatters && nabu.formatters.markdown) {
+					nabu.formatters.markdown.syntaxProviders.form = function(content, parameters) {
+						return "<n-form-text v-model='value' label='" + content + "'/><div>test</div>";
+					}
+					var blocks = nabu.formatters.markdown.parse(value);
+					console.log("blocks are", blocks);
+					var parameters = {};
+					var self = this;
+					parameters.tagUrl = "http://google.com?q=";
+					parameters.variables = {
+						right: "left"
+					}
+					var result = nabu.formatters.markdown.asHtml(blocks, parameters);
+					// if we have promises, we need to do some retroactive resolving
+					if (Object.keys(result.promises).length > 0) {
+						// we wait until at least this is rendered (just in case we have fast resolving promises)
+						Vue.nextTick(function() {
+							nabu.formatters.markdown.replacePromises(result.promises);
+						})
+					}
+					return "<article class='is-article'>" + result.content + "</article>";
+				}
+				return value;
+			}
+		});
+		
+		nabu.page.provide("page-format", {
+			html: true,
+			name: "code",
+			namespace: "nabu",
+			skipCompile: false,
+			skipSanitize: false,
+			format: function(value, fragment, page, cell, record, updater) {
+				if (nabu.formatters && nabu.formatters.markdown) {
+					var format = fragment.codeFormat ? fragment.codeFormat : "";
+					nabu.formatters.markdown.syntaxProviders.form = function(content, parameters) {
+						return "<n-form-text v-model='value' label='" + content + "'/><div>test</div>";
+					}
+					var blocks = nabu.formatters.markdown.parse("```" + format + "\n" + value + "\n```");
+					var parameters = {};
+					var self = this;
+					parameters.tagUrl = "http://google.com?q=";
+					parameters.variables = {
+						right: "left"
+					}
+					var result = nabu.formatters.markdown.asHtml(blocks, parameters);
+					// if we have promises, we need to do some retroactive resolving
+					if (Object.keys(result.promises).length > 0) {
+						// we wait until at least this is rendered (just in case we have fast resolving promises)
+						Vue.nextTick(function() {
+							nabu.formatters.markdown.replacePromises(result.promises);
+						})
+					}
+					return "<article class='is-article'>" + result.content + "</article>";
+				}
+				return value;
+			},
+			configure: "page-format-code-configure"
+		});
+		Vue.component("page-format-code-configure", {
+			props: {
+				page: {
+					type: Object,
+					required: true
+				},
+				cell: {
+					type: Object,
+					required: true
+				},
+				fragment: {
+					type: Object,
+					required: true
+				}
+			},
+			template: "<div><n-form-combo v-model='fragment.codeFormat' label='Code format' :items=\"['xml', 'json', 'css', 'sql', 'glue', 'java', 'javascript', 'python']\"/></div>"
+		});
+		
+		
 		// formatters
 		nabu.page.provide("page-format", {
 			format: function(id, fragment, page, cell, record, updater) {

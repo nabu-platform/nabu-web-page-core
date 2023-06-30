@@ -1,1 +1,11 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?><node artifactManager="be.nabu.eai.module.services.vm.VMServiceManager" created="2018-10-31T14:07:10.789+01:00" lastModified="2018-10-31T14:15:27.514+01:00" leaf="true" version="4"><environmentId>hyperion</environmentId><hidden>false</hidden><properties/><references>nabu.utils.Resource.list</references><references>java.util.Date</references><references>java.lang.String</references><references>be.nabu.libs.resources.api.ResourceProperties</references></node>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<node artifactManager="be.nabu.eai.module.services.vm.VMServiceManager" created="2018-10-31T14:07:10.789+01:00" lastModified="2023-06-12T15:25:27.348+02:00" leaf="true" version="5">
+    <environmentId>apollo</environmentId>
+    <hidden>false</hidden>
+    <locked>false</locked>
+    <properties/>
+    <references>nabu.utils.Resource.list</references>
+    <references>java.util.Date</references>
+    <references>java.lang.String</references>
+    <references>be.nabu.libs.resources.api.ResourceProperties</references>
+</node>

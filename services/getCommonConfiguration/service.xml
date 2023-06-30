@@ -96,6 +96,15 @@
 				<from>true</from>
 				<to>recursive</to>
 			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="d902dc549dba4d9a9029e335b44d0b47"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>.*</from>
+				<to>fileFilter</to>
+			</steps>
 		</steps>
 		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 				disabled="false"

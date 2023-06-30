@@ -15,7 +15,8 @@ boolean body ?= false
 buildTime = date.format('yyyyMMddHHmmssSSS', date: date.date())
 additional ?= ""
 # interesting values: no-referrer, no-referrer-when-downgrade, same-origin, origin, strict-origin, origin-when-crossorigin, strict-origin-when-crossorigin, unsafe-url
-referrer ?= "origin"
+# we need the full referer for language detection on our own applications
+referrer ?= "strict-origin-when-cross-origin"
 noresolve ?= false
 defaultTemplate ?= true
 

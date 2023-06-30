@@ -136,6 +136,7 @@ nabu.page.views.Pages = Vue.extend({
 		dropOnPages: function(event) {
 			if (this.$services.page.getDragData(event, "template-content")) {
 				var content = JSON.parse(this.$services.page.getDragData(event, "template-content"));
+				console.log("dropped", content);
 				// row drop from templates
 				if (content.type == "page") {
 					console.log("dropped", content);
@@ -144,13 +145,23 @@ nabu.page.views.Pages = Vue.extend({
 						content: content.content
 					});
 				}
+				else if (content.type == "pages") {
+					var self = this;
+					// we assume the content is an array of pages in this case
+					content.content.forEach(function(content) {
+						self.$services.page.update({
+							name: content.name,
+							content: content
+						});
+					});
+				}
 			}
 		},
 		dragOverPages: function(event) {
 			if (this.$services.page.getDragData(event, "template-content")) {
 				var content = JSON.parse(this.$services.page.getDragData(event, "template-content"));
 				// row drop from templates
-				if (content.type == "page") {
+				if (content.type == "page" || content.type == "pages") {
 					event.preventDefault();
 				}
 			}

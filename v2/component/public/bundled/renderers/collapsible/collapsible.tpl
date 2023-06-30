@@ -15,5 +15,6 @@
 		<n-form-text v-model="target.collapsible.iconOpen" label="Icon open" placeholder="chevron-up"/>
 		<n-form-switch v-model="target.collapsible.startOpen" label="Start open"/>
 		<n-form-switch v-model="target.collapsible.closeSiblings" label="Close siblings"/>
+		<n-form-switch v-model="target.collapsible.stopPropagation" label="Stop click propagation"/>
 	</div>
 </template>

@@ -7,7 +7,7 @@ Vue.component("page-form-input-password-configure", {
 		+ "	<n-form-text v-model='field.repeatLabel' label='Label for password repeat'/>"
 		+ "	<n-form-text v-model='field.repeatPlaceholder' label='Placeholder for password repeat'/>"
 		+ "	<n-form-text v-model='field.regex' label='Security Regex'/>"
-		+ "	<n-form-text v-model='field.regexLabel' label='Regex Label' placholder='%{The password should be at least 8 characters long and contain one capital, one lowercase letter and a number}'/>"
+		+ "	<n-form-text v-model='field.regexLabel' label='Regex Label' placholder='%{validation::The password should be at least 8 characters long and contain one capital, one lowercase letter and a number}'/>"
 		+ "	<n-form-text v-model='field.forgotLabel' label='Forgot Password Label'/>"
 		+ "	<n-form-combo v-model='field.forgotRoute' :filter='$services.page.filterRoutes' label='Forgot Password Route'/>"
 		+ "</n-form-section>",
@@ -58,7 +58,7 @@ Vue.component("page-form-input-password", {
 			+ "		:timeout='timeout'"
 			+ "		:validator='validatePassword'"
 			+ "		:disabled='disabled'/>"
-			+ "	<a class='forgot-password-link' v-route='{alias:field.forgotRoute}' v-if='field.forgotRoute && !readOnly'>{{ field.forgotLabel ? $services.page.translate(field.forgotLabel) : '%{login:Forgot your password?}' }}</a>"
+			+ "	<a class='forgot-password-link' v-route='{alias:field.forgotRoute}' v-if='field.forgotRoute && !readOnly'>{{ field.forgotLabel ? $services.page.translate(field.forgotLabel) : '%{default::Forgot your password?}' }}</a>"
 			+ "</n-form-section>",
 	props: {
 		cell: {
@@ -127,7 +127,7 @@ Vue.component("page-form-input-password", {
 					soft: true,
 					code: "same",
 					severity: "error",
-					title: "%{The two passwords don't match}"
+					title: "%{validation::The two passwords don't match}"
 				});
 			}
 			return messages;

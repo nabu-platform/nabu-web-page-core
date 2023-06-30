@@ -41,12 +41,18 @@ Vue.component("data-mixin", {
 	created: function() {
 		this.loadData();
 		this.watchAll();
+		Vue.set(this.state, "filter", this.filter);
+		Vue.set(this.state, "records", this.records);
+		Vue.set(this.state, "selected", this.selected);
 	},
 	data: function() {
 		return {
 			subscriptions: [],
 			records: [],
-			paging: {}
+			selected: [],
+			paging: {},
+			state: {},
+			filter: {}
 		}
 	},
 	methods: {
@@ -69,6 +75,17 @@ Vue.component("data-mixin", {
 				}
 			});
 		},
+		select: function(record, append) {
+			if (!append) {
+				this.selected.splice(0);
+			}
+			if (record instanceof Array) {
+				nabu.utils.arrays.merge(this.selected, record);
+			}
+			else if (record) {
+				this.selected.push(record);
+			}
+		},
 		unsubscribe: function() {
 			this.$services.data.unwatchAll(this.subscriptions);
 		},
@@ -84,6 +101,33 @@ Vue.component("data-mixin", {
 					self.watchAll();
 				}
 			}));
+		},
+		getRuntimeAlias: function () {
+			return this.cell.state.runtimeAlias;
+		},
+		getRuntimeState: function () {
+			return this.state;
+		},
+		getState: function () {
+			return {
+				properties: {
+					filter: this.$services.data.getInputParameters(this.cell.state.operation),
+					records: {
+						type: "array",
+						items: {
+							type: "object",
+							properties: this.$services.data.getDataDefinition({instance: this})
+						}
+					},
+					selected: {
+						type: "array",
+						items: {
+							type: "object",
+							properties: this.$services.data.getDataDefinition({instance: this})
+						}
+					}
+				}
+			};
 		},
 	},
 	beforeDestroy: function() {
@@ -221,7 +265,8 @@ Vue.service("data", {
 			var operation = input.operation ? input.operation : (target ? target.operation : null);
 			var array = input.array ? input.array : (target ? target.array : null);
 			var bindings = input.bindings ? input.bindings : (target ? target.bindings : null);
-			var filter = input.filter ? input.filter : (instance && instance.state ? instance.state.filter : null);
+			// if you have a filter object on your instance itself (e.g. for data components), we use that
+			var filter = input.filter ? input.filter : (instance.filter ? instance.filter : (instance && instance.state ? instance.state.filter : null));
 			var orderBy = input.orderBy ? input.orderBy : (instance && instance.state && instance.state.order ? instance.state.order.by : (target ? target.defaultOrderBy : null));
 			if (orderBy != null) {
 				if (!(orderBy instanceof Array)) {
@@ -525,7 +570,7 @@ Vue.service("data", {
 				if (input.serviceContext) {
 					parameters["$serviceContext"] = input.serviceContext;
 				}
-				else {
+				if (!parameters["$serviceContext"]) {
 					parameters["$serviceContext"] = input.pageInstance.getServiceContext();
 				}
 				this.$services.swagger.execute(input.operation, parameters).then(function(list) {
