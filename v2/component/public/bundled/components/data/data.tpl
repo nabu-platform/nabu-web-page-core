@@ -1,13 +1,22 @@
 <template id="data-configure">
 	<div class="is-column is-spacing-gap-medium">
+		<n-form-combo label="Data type" 
+			v-if="!target.type"
+			v-model="target.type" :filter="getRepeatTypes"
+			:formatter="function(x) { return x.title }"
+			:extracter="function(x) { return x.name }"/>
+		
 		<n-form-combo label="Operation" v-model="target.operation" 
 			:filter="$services.page.getArrayOperations"
-			v-if="!target.array"
+			v-if="target.type == 'operation'"
 			:formatter="function(x) { return x.id }"
 			:extracter="function(x) { return x.id }"/>
 		<n-form-combo label="Array" v-model="target.array"
 			:filter="function(value) { return $services.page.getAllArrays(page) }"
-			v-if="!target.operation"/>
+			v-else-if="target.type == 'array'"
+			/>
+			
+		<component v-if="getRepeatConfigurator()" :is="getRepeatConfigurator()" :target="target" :page="page"/>
 			
 		<n-form-text v-model="target.emptyPlaceholder" label="Empty Place Holder" after="Can be shown if there is no data"/>
 		<n-form-text v-model="target.loadingPlaceholder" label="Loading Place Holder" v-if="target.operation" after="Can be shown while the operation is loading data"/>

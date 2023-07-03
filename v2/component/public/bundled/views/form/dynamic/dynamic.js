@@ -72,7 +72,7 @@ Vue.view("nabu-form-dynamic-component", {
 				if (current == null) {
 					current = {};
 					current[self.targetKeyField] = name;
-					current[self.targetValueField] = self.removed[name];
+					current[self.targetValueField] = self.removed[name] == null ? null : self.removed[name];
 					parentValue.push(current);
 				}
 				// set up a list of keys we want
@@ -157,7 +157,8 @@ Vue.view("nabu-form-dynamic-component", {
 		},
 		update: function(record, value, label) {
 			var target = this.getTargetFor(record);
-			target[this.targetValueField] = value;
+			Vue.set(target, this.targetValueField, value);
+			//target[this.targetValueField] = value;
 		},
 		getArray: function() {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);

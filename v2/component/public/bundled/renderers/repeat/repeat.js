@@ -1,3 +1,24 @@
+/*
+# Repeat providers
+
+Fields:
+
+- name: a logical name
+- title: a human readable name
+
+Methods:
+
+- getDefinition(container): get the record definition for the given container
+- getActions(target, pageInstance, $services): get all the available actions
+- getSpecifications(target): get all the specifications
+- loadData(target, state, page, append): load the required data for the given target
+	note that you get the full state of the repeat, so you can modify the records and the paging as needed
+	it should return a promise
+- configurator: the name of the component that can be used for configuration
+
+*/
+
+
 // TODO: currently we repeat the content within, not the cell/row itself
 // it seems more natural to repeat the thing the renderer is _on_ rather than the content?
 
@@ -165,7 +186,12 @@ nabu.page.provide("page-renderer", {
 			}
 			// check if there is a provider for this repeat
 			else {
-				
+				nabu.page.providers("page-repeat").forEach(function(provider) {
+					if (provider.name == container.repeat.type) {
+						result.record = {properties:provider.getDefinition(container)};
+						result.records = {type: "array", items: result.record};
+					}
+				})
 			}
 			if (result.record && container.repeat.selectable) {
 				result["selected"] = {
@@ -210,6 +236,14 @@ nabu.page.provide("page-renderer", {
 				};
 			}
 			actions.push(action);
+		}
+		else if (target.repeat) {
+			var provider = nabu.page.providers("page-repeat").filter(function(provider) {
+				return provider.name == target.repeat.type;
+			})[0];
+			if (provider && provider.getActions) {
+				nabu.utils.arrays.merge(provider.getActions(target, pageInstance, $services));
+			}
 		}
 		if (pageInstance && target && target.runtimeAlias && target.repeat && target.repeat.selectable) {
 			// we need the definition for this
@@ -256,6 +290,14 @@ nabu.page.provide("page-renderer", {
 				if (parameters.indexOf("orderBy") >= 0) {
 					specifications.push("orderable");
 				}
+			}
+		}
+		else if (target.repeat) {
+			var provider = nabu.page.providers("page-repeat").filter(function(provider) {
+				return provider.name == target.repeat.type;
+			})[0];
+			if (provider && provider.getSpecifications) {
+				nabu.utils.arrays.merge(provider.getSpecifications(target));
 			}
 		}
 		return specifications;
@@ -335,7 +377,7 @@ Vue.component("renderer-repeat", {
 		var self = this;
 		
 		// first map the default order by, we might overwrite it with the input mappings
-		if (this.target.repeat.defaultOrderBy) {
+		if (this.target.repeat && this.target.repeat.defaultOrderBy) {
 			nabu.utils.arrays.merge(this.state.order.by, this.target.repeat.defaultOrderBy.map(function(x) {
 				return x.name + " " + (x.direction ? x.direction : "asc");
 			}));
@@ -366,7 +408,7 @@ Vue.component("renderer-repeat", {
 			var parameters = {};
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			var self = this;
-			if (this.target.repeat.bindings) {
+			if (this.target.repeat && this.target.repeat.bindings) {
 				Object.keys(this.target.repeat.bindings).map(function(name) {
 					if (self.target.repeat.bindings[name]) {
 						var value = self.$services.page.getBindingValue(pageInstance, self.target.repeat.bindings[name], self);
@@ -597,7 +639,7 @@ Vue.component("renderer-repeat", {
 			this.$services.page.setDragData(event, "data-" + name, JSON.stringify(record));
 		},
 		watchArray: function() {
-			if (this.target.repeat.array) {
+			if (this.target.repeat && this.target.repeat.array) {
 				var self = this;
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				// if we are accessing parent state, we need to watch that
@@ -658,7 +700,7 @@ Vue.component("renderer-repeat", {
 				return record["$position"];
 			}
 			else {
-				return this.records.indexOf(record);
+				return this.state.records.indexOf(record);
 			}
 		},
 		handleClick: function(event, record) {
@@ -934,6 +976,14 @@ Vue.component("renderer-repeat", {
 				self.created = true;
 				return this.$services.q.resolve(result);
 			}
+			else {
+				var provider = nabu.page.providers("page-repeat").filter(function(provider) {
+					return provider.name == self.target.repeat.type;
+				})[0];
+				if (provider && provider.loadData) {
+					return provider.loadData(self.target, self.state, page, append);
+				}
+			}
 		},
 		// create a custom route for rendering
 		loadPage: function() {
@@ -1103,11 +1153,19 @@ Vue.component("renderer-repeat-configure", {
 		if (!this.target.repeat.defaultOrderBy) {
 			Vue.set(this.target.repeat, "defaultOrderBy", []);
 		}
+		if (!this.target.repeat.type) {
+			if (this.target.repeat.operation) {
+				Vue.set(this.target.repeat, "type", "operation");
+			}
+			else if (this.target.repeat.array) {
+				Vue.set(this.target.repeat, "type", "array");
+			}
+		}
 	},
 	computed: {
 		operationParameters: function() {
 			var result = [];
-			if (this.target.repeat.operation) {
+			if (this.target.repeat && this.target.repeat.operation) {
 				// could be an invalid operation?
 				if (this.$services.swagger.operations[this.target.repeat.operation]) {
 					var parameters = this.$services.swagger.operations[this.target.repeat.operation].parameters;
@@ -1120,6 +1178,34 @@ Vue.component("renderer-repeat-configure", {
 		}
 	},
 	methods: {
+		getRepeatTypes: function(value) {
+			var types = [];
+			types.push({
+				name: "operation",
+				title: "The return value of a REST call"
+			});
+			types.push({
+				name: "array",
+				title: "The values available in an array"
+			});
+			nabu.utils.arrays.merge(types, nabu.page.providers("page-repeat"));
+			if (value) {
+				types = types.filter(function(x) {
+					return (x.name && x.name.toLowerCase().indexOf(value.toLowerCase()) >= 0)
+						|| (x.title && x.title.toLowerCase().indexOf(value.toLowerCase()) >= 0)
+				})
+			}
+			return types;
+		},
+		getRepeatConfigurator: function() {
+			var self = this;
+			if (this.target.repeat.type && this.target.repeat.type != "operation" && this.target.repeat.type != "array") {
+				var type = nabu.page.providers("page-repeat").filter(function(x) {
+					return x.name == self.target.repeat.type;
+				})[0];
+				return type ? type.configurator : null;
+			}	
+		},
 		getOrderByFields: function(value) {
 			var result = [];
 			if (this.target.repeat && this.target.repeat.operation) {

@@ -83,14 +83,23 @@
 
 <template id="renderer-repeat-configure">
 	<div class="is-column is-spacing-vertical-gap-medium">
+		<n-form-combo label="Repeat over" 
+			v-if="!target.repeat.type"
+			v-model="target.repeat.type" :filter="getRepeatTypes"
+			:formatter="function(x) { return x.title }"
+			:extracter="function(x) { return x.name }"/>
+			
 		<n-form-combo label="Operation" v-model="target.repeat.operation" 
 			:filter="$services.page.getArrayOperations"
-			v-if="!target.repeat.array"
+			v-else-if="target.repeat.type == 'operation'"
 			:formatter="function(x) { return x.id }"
 			:extracter="function(x) { return x.id }"/>
 		<n-form-combo label="Array" v-model="target.repeat.array"
 			:filter="function(value) { return $services.page.suggestArray(page, value) }"
-			v-if="!target.repeat.operation"/>
+			v-else-if="target.repeat.type == 'array'"
+			/>
+			
+		<component v-if="getRepeatConfigurator()" :is="getRepeatConfigurator()" :target="target.repeat" :page="page"/>
 			
 		<n-form-ace v-model="target.repeat.arrayFilter" label="Filter the array" v-if="target.repeat.array"/>
 		<n-form-text v-model="target.repeat.emptyPlaceholder" label="Empty Place Holder"/>

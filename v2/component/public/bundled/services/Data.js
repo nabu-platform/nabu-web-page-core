@@ -624,6 +624,25 @@ Vue.service("data", {
 				var result = input.pageInstance.get(input.array);
 				handler(result ? result : [], {});
 			}
+			else if (input.type) {
+				var provider = nabu.page.providers("page-repeat").filter(function(provider) {
+					return provider.name == input.type;
+				})[0];
+				if (provider && provider.loadData) {
+					var state = {
+						records: []
+					}
+					var result = provider.loadData(input.target, state, {}, false);
+					if (result.then) {
+						result.then(function() {
+							promise.resolve(state.records);
+						}, promise);
+					}
+					else {
+						promise.resolve(state.records);
+					}
+				}
+			}
 			return promise;
 		},
 		uniquify: function(records) {

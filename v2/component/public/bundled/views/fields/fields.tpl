@@ -76,7 +76,7 @@
 		<n-form-text label="Link label" v-model="fragment.label" v-if="fragment.format == 'link'"/>
 		<n-form-switch v-model="fragment.inverse" label="Inverse value" v-if="fragment.format == 'checkbox'"/>
 		<n-form-switch v-model="fragment.compile" label="Compile content" v-if="!skipCompile && !mustCompile"/>
-		<n-form-switch v-if="false" v-model="fragment.skipSanitize" :invert="true" label="Sanitize" v-if="fragment.compile"/>
+		<n-form-switch v-model="fragment.skipSanitize" :invert="true" label="Sanitize" v-if="false || fragment.compile"/>
 		<n-form-ace v-if="fragment.format == 'javascript'" mode="javascript" v-model="fragment.javascript"/>
 		<n-form-ace v-if="fragment.format == 'html'" mode="html" v-model="fragment.html"/>
 		<n-form-text v-if="fragment.format == 'number'" v-model="fragment.amountOfDecimals" label="Amount of decimals"/>

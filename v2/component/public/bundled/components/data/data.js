@@ -67,6 +67,14 @@ Vue.component("data-configure", {
 		if (!this.target.defaultOrderBy) {
 			Vue.set(this.target, "defaultOrderBy", []);
 		}
+		if (!this.target.type) {
+			if (this.target.operation) {
+				Vue.set(this.target, "type", "operation");
+			}
+			else if (this.target.array) {
+				Vue.set(this.target, "type", "array");
+			}
+		}
 	},
 	computed: {
 		operationParameters: function() {
@@ -85,6 +93,34 @@ Vue.component("data-configure", {
 		}
 	},
 	methods: {
+		getRepeatTypes: function(value) {
+			var types = [];
+			types.push({
+				name: "operation",
+				title: "The return value of a REST call"
+			});
+			types.push({
+				name: "array",
+				title: "The values available in an array"
+			});
+			nabu.utils.arrays.merge(types, nabu.page.providers("page-repeat"));
+			if (value) {
+				types = types.filter(function(x) {
+					return (x.name && x.name.toLowerCase().indexOf(value.toLowerCase()) >= 0)
+						|| (x.title && x.title.toLowerCase().indexOf(value.toLowerCase()) >= 0)
+				})
+			}
+			return types;
+		},
+		getRepeatConfigurator: function() {
+			var self = this;
+			if (this.target.type && this.target.type != "operation" && this.target.type != "array") {
+				var type = nabu.page.providers("page-repeat").filter(function(x) {
+					return x.name == self.target.type;
+				})[0];
+				return type ? type.configurator : null;
+			}	
+		},
 		getOrderByFields: function() {
 			var result = [];
 			if (this.target && this.target.operation) {
