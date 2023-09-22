@@ -5,7 +5,7 @@
 				<component :is="getComponent()" v-for="(record, index) in state.records" :class="getCellClasses()" :page="page" :target="target">
 					<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
 						<n-page :page="fragmentPage"
-							@update="update.bind($self, record)"
+							@update="function() { update(record) }"
 							@click.native="handleClick($event, record)"
 							:fragment-parent="getPageInstance()"
 							:record-index="index" class="is-repeat-content" 
@@ -19,7 +19,7 @@
 					</template>
 					<template v-else-if="!edit && !loading && state.records.length">
 						<n-page-optimized :page="fragmentPage"
-							@update="update.bind($self, record)"
+							@update="function() { update(record) }"
 							@click.native="handleClick($event, record)"
 							:fragment-parent="getPageInstance()"
 							:record-index="index" class="is-repeat-content" 
@@ -36,7 +36,7 @@
 			<template v-else>
 				<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
 					<n-page :page="fragmentPage"
-						@update="update.bind($self, record)"
+						@update="function() { update(record) }"
 						@click.native="handleClick($event, record)"
 						:fragment-parent="getPageInstance()"
 						v-for="(record, index) in state.records" :record-index="index" class="is-repeat-content" 
@@ -50,7 +50,7 @@
 				</template>
 				<template v-else-if="!edit && !loading && state.records.length">
 					<n-page-optimized :page="fragmentPage"
-						@update="update.bind($self, record)"
+						@update="function() { update(record) }"
 						@click.native="handleClick($event, record)"
 						:fragment-parent="getPageInstance()"
 						v-for="(record, index) in state.records" :record-index="index" class="is-repeat-content" 
@@ -84,14 +84,13 @@
 <template id="renderer-repeat-configure">
 	<div class="is-column is-spacing-vertical-gap-medium">
 		<n-form-combo label="Repeat over" 
-			v-if="!target.repeat.type"
 			v-model="target.repeat.type" :filter="getRepeatTypes"
 			:formatter="function(x) { return x.title }"
 			:extracter="function(x) { return x.name }"/>
 			
 		<n-form-combo label="Operation" v-model="target.repeat.operation" 
 			:filter="$services.page.getArrayOperations"
-			v-else-if="target.repeat.type == 'operation'"
+			v-if="target.repeat.type == 'operation'"
 			:formatter="function(x) { return x.id }"
 			:extracter="function(x) { return x.id }"/>
 		<n-form-combo label="Array" v-model="target.repeat.array"
@@ -106,6 +105,8 @@
 		<n-form-text v-model="target.repeat.loadingPlaceholder" label="Loading Place Holder" v-if="target.repeat.operation"/>
 		
 		<n-form-switch v-model="target.repeat.enableParameterWatching" label="Watch bound values for change"/>
+		<n-form-switch v-model="target.repeat.waitForPageLoad" label="Wait for page rendering to complete"
+			after="The repeat will only load data once the full page has been rendered, this makes sure that all filters have finished all calculations"/>
 		
 		<n-form-switch v-model="target.repeat.enableDrag" label="Enable dragging"/>
 		<n-form-text v-model="target.repeat.dragName" label="Drag source name" v-if="target.repeat.enableDrag" placeholder="default"/>

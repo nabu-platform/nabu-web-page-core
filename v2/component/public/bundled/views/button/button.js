@@ -197,7 +197,7 @@ Vue.view("page-button", {
 			// it seems that vue also intercepts spaces and sends it as a click event, meaning when you type in the rich text, it can trigger
 			if (!this.edit || ($event && $event.altKey)){ 
 				// left is for normal systems like linux and windows. the metakey is for those relegated to using inferior apple devices
-				var isNewTab = $event.button == 1 || ($event.metaKey == true && $event.button == 0);
+				var isNewTab = $event && ($event.button == 1 || ($event.metaKey == true && $event.button == 0));
 				// if we have a link opening in a new tab, we don't want local routing
 				if (this.tagName == "a" && isNewTab) {
 					return true;

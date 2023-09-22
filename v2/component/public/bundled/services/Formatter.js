@@ -131,11 +131,11 @@ nabu.services.VueService(Vue.extend({
 			}
 			var entry = this.$services.masterdata.entry(id);
 			if (entry) {
-				return entry.label;
+				return entry.title ? entry.title : entry.name;
 			}
 			var category = this.$services.masterdata.category(id);
 			if (category) {
-				return category.label;
+				return category.title ? category.title : category.name;
 			}
 			return this.$services.masterdata.resolve(id);
 		},

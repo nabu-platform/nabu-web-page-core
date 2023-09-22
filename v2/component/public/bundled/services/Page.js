@@ -212,6 +212,25 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		// the handler will be called with the resulting component instance once it is done rendering
+		renderComponent: function(page, cell, currentInstance, routeAlias, bindings, handler, customValueFunction) {
+			var properties = {};
+			if (bindings) {
+				var self = this;
+				var pageInstance = this.$services.page.getPageInstance(page, currentInstance);
+				Object.keys(bindings).forEach(function(key) {
+					var binding = bindings[key];
+					if (binding != null) {
+						var value = customValueFunction ? customValueFunction(binding) : self.$services.page.getBindingValue(pageInstance, binding, self);
+						if (value != null) {
+							self.$services.page.setValue(properties, key, value);
+						}
+					}
+				});
+			}
+			var target = document.createElement("div");
+			this.$services.router.route(routeAlias, properties, target, true).then(handler);
+		},
 		isPartOfTemplate: function(target) {
 			return target.templateReferenceId && !target.templateVersion;
 		},
@@ -3462,6 +3481,9 @@ nabu.services.VueService(Vue.extend({
 			routes.sort();
 			return routes;
 		},
+		// TODO: if the route is a page, we want to have more detailed information about the page parameters
+		// for example if you have a complex internal variable in the page with definition etc, the route parameters will only state that there is _a_ variable, not the actual definition
+		// either we enrich routes with this information already present when loading pages or we have a better way to go from the route to the actual page so we can use getPageParameters
 		getRouteParameters: function(route) {
 			var result = {
 				properties: {}

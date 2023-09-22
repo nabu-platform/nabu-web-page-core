@@ -1617,8 +1617,18 @@ nabu.page.views.Page = Vue.component("n-page", {
 		// can do an explicit renderer mount
 		mountRenderer: function(target, component) {
 			if (target.renderer && target.runtimeAlias && component.getRuntimeState) {
+				var toMerge = null;
+				if (target.mergeState) {
+					// if there is already state, let's merge it
+					if (this.variables[target.runtimeAlias] != null) {
+						toMerge = this.variables[target.runtimeAlias];
+					}
+				}
 				Vue.set(this.variables, target.runtimeAlias, component.getRuntimeState());
 				if (!target.retainState) {
+				}
+				if (toMerge != null) {
+					this.$services.page.mergeObject(this.variables[target.runtimeAlias], toMerge);
 				}
 			}
 			// link back for certain functions like beforeDestroy untriggering

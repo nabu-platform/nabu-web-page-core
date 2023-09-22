@@ -395,7 +395,9 @@ Vue.component("renderer-repeat", {
 		
 		// note that this is NOT an activate, we can not stop the rendering until the call is done
 		// in the future we could add a "working" icon or a placeholder logic
-		this.loadData();
+		if (!this.target.repeat || !this.target.repeat.waitForPageLoad) {
+			this.loadData();
+		}
 	},
 	mounted: function() {
 		
@@ -422,6 +424,19 @@ Vue.component("renderer-repeat", {
 		}
 	},
 	watch: {
+		'$services.page.stable': function(stable) {
+			if (stable && !this.created && this.target.repeat && this.target.repeat.waitForPageLoad) {
+				this.created = true;
+				this.loadData();
+			}	
+		},
+		'$services.page.editing': function(editing) {
+			// if we leave edit mode, the stable boolean is not triggered, use the edit boolean to achieve the same result
+			if (!editing && !this.created && this.target.repeat && this.target.repeat.waitForPageLoad) {
+				this.created = true;
+				this.loadData();
+			}	
+		},
 		// the parameters that are passed in by the page are calculated against the global state maintained in "variables"
 		// by doing a loadData, we update the state in the repeat which is exposed globally as well in the variables
 		// even though the actual parameter values are not changed, the container that holds them, has been so this triggers a recalculate of parameters at the page level

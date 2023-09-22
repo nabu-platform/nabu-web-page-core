@@ -589,6 +589,7 @@
 								<div v-if="cell.renderer && $services.page.getRendererState(cell.renderer, cell, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
 									<n-form-text v-model="cell.runtimeAlias" label="Runtime alias for renderer state"/>
 									<n-form-switch v-model="cell.retainState" label="Retain state once cell is destroyed" v-if="cell.runtimeAlias"/>
+									<n-form-switch v-model="cell.mergeState" label="Merge existing state when the rendered is created" v-if="cell.runtimeAlias"/>
 								</div>
 								<div v-if="cell.renderer && $services.page.getRendererConfiguration(cell.renderer)">
 									<component :is="$services.page.getRendererConfiguration(cell.renderer)" :target="cell" :page="page"/>
