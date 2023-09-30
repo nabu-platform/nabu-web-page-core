@@ -7,7 +7,7 @@
 		<span class="is-inline-editor" v-if="false && edit && !cell.state.highlight" :contenteditable="true"
 			 @keyup="update" @blur="update" @input="update" ref="editor" v-html-once="cell.state.content ? cell.state.content : null"
 			 :placeholder="placeholder ? placeholder : tag + ' placeholder'"></span>
-		<n-form-richtext v-model="cell.state.content" :support-blocks="false" v-if="edit && !cell.state.highlight" :placeholder="placeholder ? placeholder : tag + ' placeholder'"/>
+		<n-form-richtext v-model="cell.state.content" :support-blocks="false" v-if="edit && !cell.state.highlight" :placeholder="placeholder ? placeholder : tag + ' placeholder'" :show-menu="$services.page.isActiveView('richtext')"/>
 		<n-form-text type="area" v-else-if="edit && cell.state.highlight" v-model="cell.state.content"/>
 		<span class="is-text" v-else-if="cell.state.content" 
 			v-html="cell.state.highlight ? highlight(getContentWithVariables($services.page.translate($services.page.interpret(cell.state.content, $self)))) : getContentWithVariables($services.page.translate($services.page.interpret(cell.state.content, $self)))"></span>

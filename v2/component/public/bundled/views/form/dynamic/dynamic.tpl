@@ -16,7 +16,15 @@
 
 <template id="nabu-form-dynamic-component-configure">
 	<div class="data-trace-viewer-configure is-column is-spacing-medium">
-		<n-form-combo v-model="cell.state.name" label="Field Name" :filter="availableFields" after="The array of key/values where you want to store the dynamic data"/>
+		<n-form-switch v-model="cell.state.stringified" label="Stringified value" after="By default this component expects an array but you can also work on a JSON stringified string that contains an array of key/values. This is primarily useful if it is also stored as such."/>
+		<n-form-combo v-model="cell.state.name" label="Field Name" :filter="availableFields" :after="cell.state.stringified ? 'The string field that contains a JSON stringified array' : 'The array of key/values where you want to store the dynamic data'"/>
+		
+		<p class="is-content is-variant-subscript" v-if="cell.state.stringified">
+			The stringified version will be an object where all properties are expressed as a simple key with a string value, for example: { "exampleKey": "exampleValue" }.
+			This can be parsed in the backend with a json unmarshal on an object that has a list of properties (e.g. nabu.utils.types.Property).
+			It is not stored in the structure of the target object because this component is often used for configuration where values might still need further interpretation based on rules. If such a rule based value were to exist in an integer field however, it could never be parsed correctly.
+		</p>
+		
 		<data-configure :target="cell.state" :page="page"/>
 		
 		<div v-for="custom in cell.state.custom" class="is-column is-spacing-medium">

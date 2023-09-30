@@ -572,6 +572,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 			var classes = [];
 			if (this.edit) {
 				classes.push("is-editing");
+				if (this.$services.page.activeViews.length) {
+					classes.push("is-active-view");	
+				}
+				this.$services.page.activeViews.forEach(function(view) {
+					classes.push("is-active-view-" + view);
+				});
 			}
 			if (this.page.content.class) {
 				classes.push(this.page.content.class);
@@ -596,6 +602,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 	},
 	data: function() {
 		return {
+			// you can have active views that enrich information, usually only one is active
+			activeViews: ["main"],
 			selectedItemPath: [],
 			autoRefreshTimeout: null,
 			refs: {},
@@ -661,6 +669,13 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		isActiveView: function(view) {
+			return this.$services.page.activeViews.indexOf(view) >= 0;
+		},
+		acivateView: function(view) {
+			this.activeViews.splice(0);
+			this.activeViews.push(view);
+		},
 		updateEvent: function(value, label, name) {
 			this.$emit("update", value, label, name);
 			/*
@@ -3582,6 +3597,12 @@ Vue.component("n-page-row", {
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		activeViews: {
+			type: Array,
+			default: function() {
+				return []
+			}
 		}
 	},
 	data: function() {
@@ -3596,6 +3617,16 @@ Vue.component("n-page-row", {
 		});
 	},
 	methods: {
+		isNoActiveView: function() {
+			return this.$services.page.activeViews.length == 0;
+		},
+		isActiveView: function(view) {
+			return this.$services.page.activeViews.indexOf(view) >= 0;
+		},
+		acivateView: function(view) {
+			this.activeViews.splice(0);
+			this.activeViews.push(view);
+		},
 		updateEvent: function(value, label, name) {
 			this.$emit("update", value, label, name);
 		},
@@ -3651,6 +3682,7 @@ Vue.component("n-page-row", {
 			if (this.edit) {
 				this.$emit("select", row, cell, cell ? "cell" : "row", tab ? tab : "selected");
 				var doDefault = true;
+				var scrollTo = null;
 				// if we have a cell target with a configuration, show that, otherwise, we do the generic configuration
 				if (cell != null) {
 					if (this.canConfigureInline(cell)) {
@@ -3665,9 +3697,16 @@ Vue.component("n-page-row", {
 							doDefault = false;
 						}
 					}
+					scrollTo = document.getElementById("layout-entry-" + cell.id);
+				}
+				else {
+					scrollTo = document.getElementById("layout-entry-" + row.id);
 				}
 				if (doDefault) {
 					this.configuring = cell ? cell.id : row.id;
+				}
+				if (scrollTo) {
+					scrollTo.scrollIntoView();
 				}
 				event.stopPropagation();
 			}

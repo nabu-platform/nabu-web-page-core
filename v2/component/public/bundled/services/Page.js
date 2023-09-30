@@ -24,6 +24,8 @@ nabu.services.VueService(Vue.extend({
 	services: ["swagger", "user", "cookies"],
 	data: function() {
 		return {
+			// you can globally activate views
+			activeViews: [],
 			chosenRoute: null,
 			mouseX: 0,
 			mouseY: 0,
@@ -209,9 +211,40 @@ nabu.services.VueService(Vue.extend({
 					self.$services.router.route("login", null, null, true);
 				}
 			}
+			else if (event.key && event.key.toLowerCase() == "f1") {
+				if (self.activeViews.indexOf("conditions") < 0) {
+					self.activeViews.push("conditions");
+				}
+				event.stopPropagation();
+				event.preventDefault();
+			}
+			else if (event.key && event.key.toLowerCase() == "f2") {
+				if (self.activeViews.indexOf("styling") < 0) {
+					self.activeViews.push("styling");
+				}
+				event.stopPropagation();
+				event.preventDefault();
+			}
 		});
+		document.addEventListener("keyup", function(event) {
+			if (event.key && event.key.toLowerCase() == "f1") {
+				var index = self.activeViews.indexOf("conditions");
+				if (index >= 0) {
+					self.activeViews.splice(index, 1);
+				}
+			}
+			else if (event.key && event.key.toLowerCase() == "f2") {
+				var index = self.activeViews.indexOf("styling");
+				if (index >= 0) {
+					self.activeViews.splice(index, 1);
+				}
+			}
+		})
 	},
 	methods: {
+		isActiveView: function(view) {
+			return this.activeViews.indexOf(view) >= 0;
+		},
 		// the handler will be called with the resulting component instance once it is done rendering
 		renderComponent: function(page, cell, currentInstance, routeAlias, bindings, handler, customValueFunction) {
 			var properties = {};
@@ -792,6 +825,10 @@ nabu.services.VueService(Vue.extend({
 			return devices;
 		},
 		device: function(operator, name) {
+			if (name == null) {
+				name = operator.replace(/.*?([\w]+).*?/, "$1").trim();
+				operator = operator.replace(/([^\w]+)?.*/, "$1").trim();
+			}
 			return this.isDevice([{operator: operator, name: name}]);
 		},
 		isDevice: function(devices) {

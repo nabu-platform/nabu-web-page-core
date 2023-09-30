@@ -719,14 +719,15 @@ Vue.component("renderer-repeat", {
 			}
 		},
 		handleClick: function(event, record) {
-			if (this.target.repeat && this.target.repeat.selectable) {
+			if (this.target.repeat && this.target.repeat.selectable && !this.target.repeat.disableMouseSelection) {
 				this.runAction("select", {
 					items: [record],
-					append: event.metaKey || event.ctrlKey
+					append: event.ctrlKey || event.metaKey || this.target.repeat.alwaysMultiselect
 				});
 			}
 		},
 		runAction: function(action, value) {
+			var self = this;
 			if (action == "jump-page") {
 				return this.loadData(value.page);
 			}
@@ -741,7 +742,6 @@ Vue.component("renderer-repeat", {
 				if (!value.append) {
 					this.state.order.by.splice(0);
 				}
-				var self = this;
 				if (value.by) {
 					// for example "name desc". we want a list of all the fields involved, e.g. "name" so we can remove any other mentions of this field
 					value.by.map(function(x) {
@@ -766,7 +766,16 @@ Vue.component("renderer-repeat", {
 						this.state.selected.splice(0);
 					}
 					if (value.items) {
-						nabu.utils.arrays.merge(this.state.selected, value.items);
+						value.items.forEach(function(item) {
+							// if we have already selected the item, don't add it again
+							if (self.state.selected.indexOf(item) < 0) {
+								self.state.selected.push(item);
+							}
+							// otherwise, if we are selecting only one item and you have append mode on, we actually remove it, because it acts as a toggle
+							else if (value.append && value.items.length == 1) {
+								self.state.selected.splice(self.state.selected.indexOf(item), 1);
+							}
+						})
 					}
 					if (this.state.selected.length) {
 						return this.$services.triggerable.trigger(this.target, "select", this.state.selected, this);

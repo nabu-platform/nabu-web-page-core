@@ -195,7 +195,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 					Vue.nextTick(function() {
 						// even waiting for the next tick is not enough to guarantee availability of data, but breaking out of that seems to do the trick...
 						setTimeout(function() {
-							self.$services.triggerable.trigger(self.cell.state, "update", {value:value}, self).then(done, done);
+							self.$services.triggerable.trigger(self.cell.state, "update", {value:value, rawValue: rawValue}, self).then(done, done);
 							// emit it so parent components (like repeat) can take action
 							// we don't want to use the standard "input" to avoid accidental conflicts
 							self.$emit("update", value, label, self.cell.state.name);

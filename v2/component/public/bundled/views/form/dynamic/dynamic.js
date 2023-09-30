@@ -17,7 +17,9 @@ Vue.view("nabu-form-dynamic-component", {
 			// this is _necessary_ when the definitions for the actual keys arrive after we get the values
 			// because we will first remove them, then re-add the keys
 			// additionally if you change definitions a couple of times, you might need the same parameters from time to time
-			removed: {}
+			removed: {},
+			// the array we are working on
+			array: null
 		}
 	},
 	computed: {
@@ -56,11 +58,6 @@ Vue.view("nabu-form-dynamic-component", {
 		},
 		postProcess: function(records) {
 			var parentValue = this.getArray();
-			if (parentValue == null) {
-				parentValue = [];
-				var pageInstance = this.$services.page.getPageInstance(this.page, this);
-				pageInstance.set("page." + this.cell.state.name, parentValue);
-			}
 			var self = this;
 			var existingKeys = [];
 			records.forEach(function(x) {
@@ -161,12 +158,66 @@ Vue.view("nabu-form-dynamic-component", {
 			//target[this.targetValueField] = value;
 		},
 		getArray: function() {
-			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			return pageInstance && this.cell.state.name ? pageInstance.get('page.' + this.cell.state.name) : null;
+			if (!this.array) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				//return pageInstance && this.cell.state.name ? pageInstance.get('page.' + this.cell.state.name) : null;
+				var parentValue = pageInstance && this.cell.state.name ? pageInstance.get('page.' + this.cell.state.name) : null; 
+				if (parentValue == null) {
+					if (this.cell.state.stringified) {
+						parentValue = "{}";
+						Vue.set(this, "array", []);
+					}
+					// we work directly on an array
+					else {
+						parentValue = [];
+						Vue.set(this, "array", parentValue);
+					}
+					var pageInstance = this.$services.page.getPageInstance(this.page, this);
+					if (pageInstance) {
+						pageInstance.set("page." + this.cell.state.name, parentValue);
+					}
+				}
+				else {
+					if (this.cell.state.stringified) {
+						var parsed = JSON.parse(parentValue);
+						var array = [];
+						Object.keys(parsed).forEach(function(key) {
+							array.push({
+								key: key,
+								value: parsed[key]
+							});
+						})
+						Vue.set(this, "array", array);
+					}
+					else {
+						Vue.set(this, "array", parentValue);
+					}
+				}
+			}
+			return this.array;
 		},
 		getParentValue: function() {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			return pageInstance ? pageInstance.variables : null;
+		}
+	},
+	watch: {
+		"array": {
+			deep: true,
+			handler: function() {
+				if (this.cell.state.stringified) {
+					var result = {};
+					this.array.forEach(function(entry) {
+						if (entry.value != null) {
+							result[entry.key] = entry.value;
+						}
+					});
+					var pageInstance = this.$services.page.getPageInstance(this.page, this);
+					if (pageInstance) {
+						pageInstance.set("page." + this.cell.state.name, JSON.stringify(result, null, 2));
+					}
+				}
+			}
 		}
 	}
 })
@@ -214,12 +265,27 @@ Vue.component("nabu-form-dynamic-component-configure", {
 			});
 		},
 		availableFields: function(value) {
-			var parameters = this.$services.page.getAllArrays(this.page);
-			parameters.sort();
-			if (value) {
-				parameters = parameters.filter(function(x) {
-					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
-				});
+			if (this.cell.state.stringified) {
+				var fields = [];
+				var parameters = this.$services.page.getPageParameters(this.page);
+				nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor(parameters, true, true));
+				//console.log("fields are", fields);
+				fields.sort();
+				if (value) {
+					fields = fields.filter(function(x) {
+						return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+					});
+				}
+				return fields;
+			}
+			else {
+				var parameters = this.$services.page.getAllArrays(this.page);
+				parameters.sort();
+				if (value) {
+					parameters = parameters.filter(function(x) {
+						return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+					});
+				}
 			}
 			return parameters;
 		}

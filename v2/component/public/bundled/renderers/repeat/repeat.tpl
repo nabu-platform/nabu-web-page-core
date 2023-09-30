@@ -113,6 +113,8 @@
 		
 		<n-form-switch v-model="target.repeat.selectable" label="Enable item selection"/>
 		<n-form-switch v-model="target.repeat.multiSelectable" v-if="target.repeat.selectable" label="Enable multiselect"/>
+		<n-form-switch v-model="target.repeat.alwaysMultiselect" v-if="target.repeat.selectable && target.repeat.multiSelectable" label="Multiselect without ctrl/cmd" after="If you enable this switch, multiselection can be done by clicking without the need for holding ctrl/cmd"/>
+		<n-form-switch v-model="target.repeat.disableMouseSelection" v-if="target.repeat.selectable" label="Disable mouse selection"/>
 			
 		<div v-for="(defaultOrderBy, index) in target.repeat.defaultOrderBy" class="has-button-close">
 			<div class="is-row">

@@ -148,6 +148,9 @@
 					"Resizer.js": {
 						"url": "services/Resizer.js"
 					}, 
+					"Aris.js": {
+						"url": "services/Aris.js"
+					},
 					"Page.js": {
 						"url": "services/Page.js",
 						"template": true

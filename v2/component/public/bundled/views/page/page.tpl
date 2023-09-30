@@ -807,6 +807,7 @@
 		
 		<template v-if="page.content.rows">
 			<n-page-row 
+				:active-views="activeViews"
 				@update="updateEvent"
 				v-for="row in page.content.rows"
 				:row="row"
@@ -866,8 +867,8 @@
 			class="page-row"
 			v-auto-close="$services.page.isCloseable(row) && row.autocloseable ? function() { autocloseCell(row) } : null"
 			>
-		<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit && false" @mouseenter="menuHover" @mouseleave="menuUnhover">
-			<button class="is-button is-variant-primary is-size-xsmall has-tooltip is-wrap-none" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-text">Configure row</span></button>
+		<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
+			<button class="is-button is-variant-primary is-size-xsmall has-tooltip is-wrap-none" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-text">{{row.renderer ? row.renderer : 'Row'}}</span></button>
 		</div>
 		
 		<div class="is-row-content" v-if="row.customId && row.renderer" :id="row.customId" :anchor="row.customId"></div>
@@ -917,6 +918,8 @@
 					<div class="is-column-content" v-if="cell.customId && (cell.renderer || cell.alias || cell.rows.length)" :id="cell.customId" :anchor="cell.customId"></div>
 					
 					<n-page-row v-for="row in cell.rows"
+						:active-views="activeViews"
+						locked="true"
 						:row="row"
 						:page="page" 
 						:edit="edit"
@@ -932,9 +935,24 @@
 						:slot="row.rendererSlot"
 						@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					
-					<div class="is-column-menu is-layout is-align-main-center is-spacing-vertical-xsmall" @mouseenter="menuHover" @mouseleave="menuUnhover" v-if="false">
-						<button v-if="cell.alias" class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="configureCell($event, row, cell)"><icon name="cog"/><span class="is-text">Configure {{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
-						<button v-else class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="goto($event, row, cell)"><icon name="magic"/><span class="is-text">Configure {{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
+					<div locked="true" class="is-column-menu is-layout is-align-main-center is-spacing-vertical-xsmall" @mouseenter="menuHover" @mouseleave="menuUnhover" v-if="true">
+						<div v-if="isNoActiveView()">
+							<button v-if="cell.alias" class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="goto($event, row, cell)"><icon name="cog"/><span class="is-text">{{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
+							<button v-else class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="goto($event, row, cell)"><icon name="magic"/><span class="is-text">{{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
+							<span class="is-badge is-color-danger" v-if="cell.condition">On condition</span>
+							<span class="is-badge is-color-warning" v-if="cell.on">On event</span>
+							<span class="is-badge is-color-neutral" v-if="cell.state.hideMode == 'toggle'">On toggle</span>
+						</div>
+						<div v-else-if="isActiveView('conditions')">
+							<span class="is-badge is-color-danger" v-if="cell.condition">{{cell.condition}}</span>
+							<span class="is-badge is-color-warning" v-if="cell.on">{{cell.on}}</span>
+							<span class="is-badge is-color-neutral" v-if="cell.state.hideMode == 'toggle'">On toggle</span>
+						</div>
+						<div v-else-if="isActiveView('styling')">
+							<div v-for="component in $services.page.getCellComponents(page, cell)" v-if="$services.aris.listActive(cell.aris, component).length">
+								<span class="is-badge is-color-secondary">{{component.name}}</span><span v-for="option in $services.aris.listActive(cell.aris, component)" class="is-badge is-color-neutral"><span class="is-content is-variant-subscript">{{option.dimension}}</span><b>{{option.name}}</b><span v-if="option.condition" class="is-content is-color-danger-outline"> {{option.condition}}</span></span>
+							</div>
+						</div>
 					</div>
 				</component>
 			</template>
@@ -1237,7 +1255,7 @@
 <template id="page-sidemenu">
 	<div class="is-column is-pattern-basic-alternating">
 		<div v-for="row in rows" class="is-column is-spacing-small is-spacing-horizontal-right-none is-spacing-vertical-gap-small" :class="{'is-selected': selected && selected.id == row.id}">
-			<div class="is-row" :class="{'is-color-primary-outline':row.renderer}">
+			<div class="is-row" :class="{'is-color-primary-outline':row.renderer}" :id="'layout-entry-' + row.id">
 				<div @mouseout="mouseOut($event, row)"
 						@dragover="acceptDragRow($event, row)"
 						@dragend="$services.page.clearDrag($event)"
@@ -1271,7 +1289,7 @@
 			</div>
 			<div v-show="row.cells && row.cells.length && opened.indexOf(row.id) >= 0" class="is-column is-pattern-basic-alternating">
 				<div v-for="cell in row.cells" class="is-column is-spacing-small is-sidemenu-cell is-spacing-horizontal-right-none" :class="{'is-selected': selected && selected.id == cell.id}">
-					<div class="is-row" :class="{'is-color-primary-outline':cell.renderer}">
+					<div class="is-row" :class="{'is-color-primary-outline':cell.renderer}" :id="'layout-entry-' + cell.id">
 						<div @mouseout="mouseOut($event, row, cell)" 
 								:key="'sidemenu-' + row.id + '_' + cell.id"
 								@dragend="$services.page.clearDrag($event)"

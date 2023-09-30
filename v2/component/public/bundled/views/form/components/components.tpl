@@ -31,7 +31,7 @@
 			<n-form-text v-model="cell.state.placeholder" label="Placeholder"/>
 			<n-form-text v-model="cell.state.timeout" label="Timeout"/>
 			<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
-			<n-form-text v-model="cell.state.disabled" label="Disable if" />
+			<n-form-ace mode="javascript" v-model="cell.state.disabled" label="Disable if" />
 			<n-form-switch v-model="cell.state.validateOnBlur" label="Validate on blur"/>
 			<n-form-switch v-model="cell.state.readOnly" label="Render as read only"/>
 			<n-form-combo v-model="cell.state.required" label="Required" :items="[{value: true, title: 'Always'}, {value: false, title: 'Depends on the schema'}, {value: 'condition', title: 'Based on a condition'}]"
