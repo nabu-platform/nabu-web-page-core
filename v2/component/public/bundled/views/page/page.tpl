@@ -867,7 +867,7 @@
 			class="page-row"
 			v-auto-close="$services.page.isCloseable(row) && row.autocloseable ? function() { autocloseCell(row) } : null"
 			>
-		<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit" @mouseenter="menuHover" @mouseleave="menuUnhover">
+		<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit && false" @mouseenter="menuHover" @mouseleave="menuUnhover">
 			<button class="is-button is-variant-primary is-size-xsmall has-tooltip is-wrap-none" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-text">{{row.renderer ? row.renderer : 'Row'}}</span></button>
 		</div>
 		

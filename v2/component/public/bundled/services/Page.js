@@ -2459,6 +2459,9 @@ nabu.services.VueService(Vue.extend({
 						result = this.eval(value, pageInstance.variables, component, customValueFunction);
 					}
 				}
+				else {
+					result = this.eval(value, {}, component, customValueFunction);
+				}
 				value = result;
 			}
 			if (typeof(value) == "string") {

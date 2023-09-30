@@ -205,7 +205,6 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				// when combined with triggers, it waits until the triggers are done
 				// without triggers, we emit immediately
 				else {
-					console.log("form component emitting update", value, self.cell.state.name, self);
 					self.$emit("update", value, label, self.cell.state.name);
 				}
 			},

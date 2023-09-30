@@ -3040,7 +3040,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			if (name == "page") {
 				return this.fragmentParent ? this.fragmentParent.get(name) : this.variables;
 			}
-			else if (name == "page.$this" || name == "$page") {
+			else if (name == "page.$this" || name == "$page" || name == "$this") {
 				return this.fragmentParent ? this.fragmentParent.get(name) : this;
 			}
 			else if (name == "parent.$this" || name == "$parent") {
