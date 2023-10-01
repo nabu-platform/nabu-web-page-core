@@ -185,11 +185,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 				self.oldTitle = document.title;
 				document.title = self.$services.page.translate(self.$services.page.interpret(self.page.content.title, self));
 			}
+			// we now do this on the ready hook, assuming any async data is available
+			/*
 			if (self.page.content.branding) {
 				// don't copy it by reference, it will be updated...
 				self.oldBranding = nabu.utils.objects.deepClone(self.$services.page.currentBranding);
 				self.$services.page.updateBranding(self.page.content.branding);
 			}
+			*/
 			if (self.page.content.autoRefresh) {
 				self.autoRefreshTimeout = setTimeout(function() {
 					if (!self.edit && !self.$services.page.wantEdit) {
@@ -497,6 +500,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 		this.postRender.splice(0).forEach(function(x) { x() });
 		this.emit("$load", {});
 		this.$emit("ready", this);
+		var self = this;
+		if (self.page.content.branding) {
+			// don't copy it by reference, it will be updated...
+			self.oldBranding = nabu.utils.objects.deepClone(self.$services.page.currentBranding);
+			self.$services.page.updateBranding(self.page.content.branding, this);
+		}
 	},
 	created: function() {
 		// we want to be able to push data to the page
