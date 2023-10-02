@@ -621,6 +621,7 @@
 						<n-collapsible :only-one-open="true" title="Location" key="cell-location" content-class="is-spacing-medium" class="is-highlight-left">
 							<p class="is-p is-size-small">By default the cell will render in the page, following its natural positioning.</p>
 							<n-form-combo label="Render in" :items="['page', 'sidebar', 'prompt', 'absolute', 'pane']" v-model="cell.target" />
+							<n-form-switch v-if="cell.target == 'absolute'" v-model="cell.targetInEdit" label="Show absolute positioning in edit mode as well"/>
 							<n-form-switch label="Prevent Auto Close" v-model="cell.preventAutoClose" v-if="cell.target == 'sidebar'"
 								after="The sidebar will automatically close when the user clicks elsewhere unless this is toggled"/>
 							<n-form-switch label="Optimize (may result in stale content)" v-model="cell.optimizeVueKey" v-if="cell.on"/>
@@ -876,6 +877,7 @@
 		<template v-for="cell in row.cells">
 			<template v-if="edit">
 				<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+						v-if="cell.target != 'absolute' || !cell.targetInEdit"
 						@update="updateEvent"
 						v-show="!edit || !row.collapsed"
 						:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
@@ -955,6 +957,86 @@
 						</div>
 					</div>
 				</component>
+				
+				<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(row, cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right" :snap-point="cell.snapPoint">          
+					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							@update="updateEvent"
+							v-show="!edit || !row.collapsed"
+							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
+							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
+							:key="cellId(cell)"
+							:cell-id="cell.id"
+							@close="close(row, cell)"
+							@click="clickOnCell(row, cell, $event)"
+							@click.ctrl="goto($event, row, cell)"
+							@click.meta="goto($event, row, cell)"
+							@click.alt.prevent="pasteArisStyling($event, cell)"
+							@contextmenu.prevent.alt="copyArisStyling($event, cell)"
+							@click.native="clickOnCell(row, cell, $event)"
+							@click.ctrl.native="goto($event, row, cell)"
+							@click.meta.native="goto($event, row, cell)"
+							@click.alt.prevent.native="pasteArisStyling($event, cell)"
+							@contextmenu.prevent.alt.native="copyArisStyling($event, cell)"
+							@contextmenu.prevent.ctrl="goto($event, row, cell, 'layout')"
+							@contextmenu.prevent.ctrl.native="goto($event, row, cell, 'layout')"
+							@mouseout="mouseOut($event, row, cell)"
+							@mouseout.native="mouseOut($event, row, cell)"
+							@mouseover="mouseOver($event, row, cell)"
+							@mouseover.native="mouseOver($event, row, cell)"
+							@dragend="$services.page.clearDrag($event)"
+							@dragover="dragOverCell($event, row, cell)"
+							@dragexit="dragExitCell($event, row, cell)"
+							@drop="dropCell($event, row, cell)"
+							:target="cell"
+							:edit="edit"
+							:page="page"
+							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
+							:parameters="getRendererParameters(cell)"
+							:anchor="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : null"
+							v-route-render="{ alias: !cell.customId && !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.customId && !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							:slot="cell.rendererSlot"
+							>
+						
+						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.customId || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
+						<div class="is-column-content" v-if="cell.customId && (cell.renderer || cell.alias || cell.rows.length)" :id="cell.customId" :anchor="cell.customId"></div>
+						<n-page-row v-for="childRow in cell.rows"
+							:row="childRow"
+							:page="page" 
+							:edit="edit"
+							:depth="depth + 1"
+							:parameters="parameters"
+							:ref="page.name + '_' + cell.id + '_rows'"
+							:local-state="getLocalState(childRow, cell)"
+							:page-instance-id="pageInstanceId"
+							:stop-rerender="stopRerender"
+							v-bubble:viewComponents
+							v-bubble:select
+							@update="updateEvent"
+							@close="close(row, cell, childRow)"
+							:slot="childRow.rendererSlot"
+							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
+							
+						<div locked="true" class="is-column-menu is-layout is-align-main-center is-spacing-vertical-xsmall" @mouseenter="menuHover" @mouseleave="menuUnhover" v-if="true">
+							<div v-if="isNoActiveView()">
+								<button v-if="cell.alias" class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="goto($event, row, cell)"><icon name="cog"/><span class="is-text">{{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
+								<button v-else class="is-button is-variant-secondary is-size-xsmall has-tooltip is-wrap-none" @click="goto($event, row, cell)"><icon name="magic"/><span class="is-text">{{ cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : "Cell" }}</span></button>
+								<span class="is-badge is-color-danger" v-if="cell.condition">On condition</span>
+								<span class="is-badge is-color-warning" v-if="cell.on">On event</span>
+								<span class="is-badge is-color-neutral" v-if="cell.state.hideMode == 'toggle'">On toggle</span>
+							</div>
+							<div v-else-if="isActiveView('conditions')">
+								<span class="is-badge is-color-danger" v-if="cell.condition">{{cell.condition}}</span>
+								<span class="is-badge is-color-warning" v-if="cell.on">{{cell.on}}</span>
+								<span class="is-badge is-color-neutral" v-if="cell.state.hideMode == 'toggle'">On toggle</span>
+							</div>
+							<div v-else-if="isActiveView('styling')">
+								<div v-for="component in $services.page.getCellComponents(page, cell)" v-if="$services.aris.listActive(cell.aris, component).length">
+									<span class="is-badge is-color-secondary">{{component.name}}</span><span v-for="option in $services.aris.listActive(cell.aris, component)" class="is-badge is-color-neutral"><span class="is-content is-variant-subscript">{{option.dimension}}</span><b>{{option.name}}</b><span v-if="option.condition" class="is-content is-color-danger-outline"> {{option.condition}}</span></span>
+								</div>
+							</div>
+						</div>
+					</component>
+				</n-absolute>
 			</template>
 			<template v-else-if="shouldRenderCell(row, cell)">
 				<n-sidebar v-if="cell.target == 'sidebar'" @close="close(row, cell)" :popout="false" :autocloseable="!cell.preventAutoClose" class="content-sidebar" :style="getSideBarStyles(cell)">

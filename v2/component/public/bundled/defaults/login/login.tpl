@@ -1,5 +1,5 @@
 <template id="default-login">
-	<div class="is-row is-align-center is-height-fixed-max">
+	<div class="is-row is-align-center is-height-fixed-max is-fill-normal">
 		<n-form ref="form" class="is-form is-width-min-xsmall is-spacing-large is-variant-underline is-color-background is-shadow-xsmall is-border-radius-medium" content-class="is-spacing-gap-large">
 			<h1 class="is-h3">{{$services.page.translate("%{default::Login}")}}</h1>
 			<n-form-text name="username" v-focus v-timeout:input.form="validate" placeholder="%{default::Username}" v-model="username" :required="true"/>
