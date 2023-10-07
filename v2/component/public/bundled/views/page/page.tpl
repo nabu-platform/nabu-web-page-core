@@ -676,6 +676,10 @@
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Triggers" key="cell-triggers" class="is-highlight-left" v-if="getTriggersForCell(cell)">
 							<p class="is-p is-size-small is-spacing-medium">You can add triggers to react to user interaction with the content.</p>
+							<div class="is-column is-spacing-medium">
+								<n-form-switch v-model="cell.state.stopClickPropagation" label="Stop click propagation"/>
+								<n-form-switch v-model="cell.state.stopHoverPropagation" label="Stop hover propagation"/>
+							</div>
 							<page-triggerable-configure :page="page" :target="cell" :triggers="getTriggersForCell(cell)" :allow-closing="cell.target && cell.target != 'page'"/>
 						</n-collapsible>
 						<n-collapsible :only-one-open="true" title="Eventing" key="cell-events" content-class="is-spacing-medium" class="is-highlight-left" v-if="false">
@@ -1290,7 +1294,7 @@
 					@input="container.components[childComponent.name].modifiers.splice(0)"/>
 			</div>
 			<n-collapsible v-if="getAvailableModifierNames(childComponent).length > 0" title="modifier" class="is-highlight-left is-color-secondary-light" 
-					content-class="is-spacing-medium is-spacing-vertical-gap-xsmall"
+					content-class="is-spacing-medium is-spacing-vertical-gap-xsmall is-color-background"
 					:after="listActiveModifiers(childComponent)"
 					@show="conditioning = null">
 				<div class="is-row" v-for="(modifier, index) in getAvailableModifierNames(childComponent)">
@@ -1312,7 +1316,7 @@
 			</n-collapsible>
 			<n-collapsible v-for="dimension in getAvailableDimensions(childComponent)" :only-one-open="true" :title="dimension.name" class="is-highlight-left is-color-secondary-light" 
 					v-if="hasAnySearchHits(dimension)"
-					content-class="is-spacing-medium is-spacing-vertical-gap-none"
+					content-class="is-spacing-medium is-spacing-vertical-gap-none is-color-background"
 					:after="listActiveOptions(childComponent, dimension)"
 					@show="conditioning = null">
 				<div class="is-row" v-for="option in dimension.options" v-if="hasAnySearchHits(dimension, option)">

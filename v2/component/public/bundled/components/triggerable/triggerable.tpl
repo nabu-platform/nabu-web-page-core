@@ -141,6 +141,9 @@
 					
 					<div v-else-if="action.type == 'scroll'" class="is-column is-spacing-gap-medium">
 						<n-form-text v-model="action.scrollTo" label="Scroll to" placeholder="e.g. .is-messages" :timeout="600"/>
+						<n-form-combo v-model="action.scrollBehavior" :items="['smooth', 'instant']" placeholder="smooth" label="Scroll behavior"/>
+						<n-form-combo v-model="action.scrollBlock" :items="['start', 'center', 'end', 'nearest']" placeholder="start" label="Vertical scroll position"/>
+						<n-form-combo v-model="action.scrollInline" :items="['start', 'center', 'end', 'nearest']" placeholder="nearest" label="Horizontal scroll position"/>
 					</div>
 					
 					<div v-else-if="action.type == 'operation'" class="is-column is-spacing-gap-medium">

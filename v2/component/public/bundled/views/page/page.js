@@ -4634,6 +4634,9 @@ Vue.component("n-page-row", {
 			return result;
 		},
 		clickOnCell: function(row, cell, $event) {
+			if (!this.edit && cell.state.stopClickPropagation) {
+				$event.stopPropagation();
+			}
 			if (!this.edit && this.$services.triggerable.canTrigger(cell, "click")) {
 				if ($event) {
 					$event.preventDefault();
@@ -4817,6 +4820,9 @@ Vue.component("n-page-row", {
 			}
 			// in non-edit mode, we want to trigger the hover
 			else {
+				if (cell && cell.state.stopHoverPropagation) {
+					event.stopPropagation();
+				}
 				if (cell) {
 					this.$services.triggerable.trigger(cell, "hover", null, this);
 				}
@@ -5789,7 +5795,8 @@ Vue.component("aris-editor", {
 				if (newValue && !newValue.hasOwnProperty("rerender")) {
 					Object.defineProperty(newValue, "rerender", {
 						value: true,
-						enumerable: false
+						enumerable: false,
+						writable: true
 					});
 				}
 				else {

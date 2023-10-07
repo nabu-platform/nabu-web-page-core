@@ -1298,7 +1298,8 @@ nabu.services.VueService(Vue.extend({
 			if (cell && !cell.hasOwnProperty("rerender")) {
 				Object.defineProperty(cell, "rerender", {
 					value: true,
-					enumerable: false
+					enumerable: false,
+					writable: true
 				});
 			}
 			else if (cell) {
@@ -3890,6 +3891,18 @@ nabu.services.VueService(Vue.extend({
 				}
 			}
 			return null;
+		},
+		suggestField: function(page, value) {
+			var fields = [];
+			var parameters = this.getAvailableParameters(page, null, true);
+			nabu.utils.arrays.merge(fields, this.getSimpleKeysFor({properties:parameters}, true, true));
+			fields.sort();
+			if (value) {
+				fields = fields.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				});
+			}
+			return fields;
 		},
 		suggestArray: function(page, value) {
 			return this.getAllArrays(page).filter(function(x) {

@@ -122,7 +122,7 @@ nabu.page.provide("page-renderer", {
 						});
 					}
 					result.record = {properties:properties};
-					result.records = {type: "array", items: {properties:record}};	
+					result.records = {type: "array", items: {type:"object",properties:result.record.properties}};	
 					
 					var filters = {};
 					// we also want to expose the parameters as input
@@ -209,6 +209,18 @@ nabu.page.provide("page-renderer", {
 		return [{
 			title: "Repeat Content",
 			name: "repeat-content",
+			component: target.rows ? "row" : "column"
+		}, {
+			title: "Repeat Message",
+			name: "repeat-message",
+			component: target.rows ? "row" : "column"
+		}, {
+			title: "Repeat Empty Message",
+			name: "repeat-empty",
+			component: target.rows ? "row" : "column"
+		}, {
+			title: "Repeat Loading Message",
+			name: "repeat-loading",
 			component: target.rows ? "row" : "column"
 		}];
 	},
@@ -595,6 +607,21 @@ Vue.component("renderer-repeat", {
 			}
 			return result;
 		},
+		getComponentClassesForMessage: function() {
+			var result = [];
+			if (this.getMessageComponent() == "div") {
+				// we have a plain row
+				if (this.target.cells) {
+					result.push("page-row");
+					result.push("is-page-row");
+				}
+				else {
+					result.push("page-column");
+					result.push("is-page-column");
+				}
+			}
+			return result;
+		},
 		getComponent: function() {
 			var self = this;
 			var pageType = this.getPageType();
@@ -733,7 +760,7 @@ Vue.component("renderer-repeat", {
 			}
 			else if (action == "refresh") {
 				var retainOffset = value && value.retainOffset;
-				return this.loadData(retainOffset ? this.state.paging.page : 0);
+				return this.loadData(retainOffset ? this.state.paging.current : 0);
 			}
 			else if (action == "list-available") {
 				return this.$services.q.resolve({available: this.getOrderByFields()});

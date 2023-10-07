@@ -693,8 +693,12 @@ Vue.service("triggerable", {
 						else if (action.type == "scroll" && action.scrollTo) {
 							var element = document.querySelector(action.scrollTo);
 							if (element) {
+								var properties = {};
+								properties.behavior = action.scrollBehavior ? action.scrollBehavior : "smooth";
+								properties.block = action.scrollBlock ? action.scrollBlock : "center";
+								properties.inline = action.scrollInline ? action.scrollInline : "nearest";
 								// TODO: make the block target configurable, center is "generally" acceptable
-								element.scrollIntoView({behavior: "smooth", block: "center"});
+								element.scrollIntoView(properties);
 								return self.$services.q.resolve(element);
 							}
 							else {
