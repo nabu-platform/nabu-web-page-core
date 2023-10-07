@@ -2895,7 +2895,7 @@ nabu.services.VueService(Vue.extend({
 					var result = resultFunction(state, this.$services, customValueFunction ? customValueFunction : (instance ? instance.$value : function() { throw "No value function" }), application, state && state.value ? state.value : state);
 				}
 				catch (exception) {
-					console.warn("Could not evaluate", condition, exception);
+					console.error("Could not evaluate", condition, exception);
 					return null;
 				}
 				if (result instanceof Function) {
@@ -3367,7 +3367,8 @@ nabu.services.VueService(Vue.extend({
 									type: "browse",
 									group: page.content.category,
 									event: page.content.name,
-									path: page.content.path
+									path: page.content.path,
+									data: parameters
 								});
 							}, 1);
 						}

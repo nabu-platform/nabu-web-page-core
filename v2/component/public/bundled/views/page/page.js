@@ -2520,11 +2520,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 									event: action.name
 								});
 							}
-							// DEPRECATED
-							if (self.$services.analysis && self.$services.analysis.emit && action.name) {
-								self.$services.analysis.emit("trigger-" + self.page.name, action.name, 
-									{time: new Date().getTime() - date.getTime(), error: error}, true);
-							}
 						};
 						
 						if (nabu.page.event.getName(action, "chainEvent")) {
