@@ -181,6 +181,7 @@ window.addEventListener("load", function() {
 								cell.state.ok = "%{Create}";
 								// trigger on this create
 								cell.on = "create" + (name ? name : "");
+								cell.hideMode = "event";
 								// push an action to the datacomponent
 								dataComponent.state.actions.push({
 									name: "create" + (name ? name : ""),
@@ -205,6 +206,7 @@ window.addEventListener("load", function() {
 								cell.state.ok = "%{Update}";
 								// trigger on this create
 								cell.on = "update" + (name ? name : "");
+								cell.hideMode = "event";
 								// push an action to the datacomponent
 								dataComponent.state.actions.push({
 									name: "update" + (name ? name : ""),
@@ -1530,6 +1532,7 @@ window.addEventListener("load", function() {
 							
 							if (eventName) {
 								root.on = eventName;
+								root.hideMode = "event";
 								// we want the form in a prompt
 								root.target = "prompt";
 								

@@ -788,6 +788,17 @@ Vue.service("triggerable", {
 						runAction(0);
 					}
 				}
+				/*
+				// if we have no actions but we do have an interval, we want to try again
+				// it could very well be that it was simply conditions
+				// TODO: there is currently no easy way to trigger it again apart from calling trigger() in full
+				else if (x.interval) {
+					instance["$$triggerPromise" + triggerIndex] = triggerPromise;
+					instance["$$triggerTimer" + triggerIndex] = setTimeout(function() {
+						runAction(0);
+					}, x.timeout);
+				}
+				*/
 				// nothing happened, resolve immediately
 				else {
 					triggerPromise.resolve();

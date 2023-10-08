@@ -2626,10 +2626,9 @@ nabu.services.VueService(Vue.extend({
 		// operations where you can download data
 		getDownloadOperations: function(value) {
 			return this.getOperations(function(operation) {
-				var binaryDownload = operation && operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream"
-					&& (!value || operation.id.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+				var binaryDownload = operation && operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream";
 				var regularDownload = operation && operation["x-downloadable"] == "true";
-				return binaryDownload || regularDownload;
+				return (binaryDownload || regularDownload) && (!value || operation.id.toLowerCase().indexOf(value.toLowerCase()) >= 0);
 			});
 		},
 		// operations where you can retrieve state (e.g. for initial state) from the backend

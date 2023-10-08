@@ -103,6 +103,7 @@
 		<n-form-ace v-model="target.repeat.arrayFilter" label="Filter the array" v-if="target.repeat.array"/>
 		<n-form-text v-model="target.repeat.emptyPlaceholder" label="Empty Place Holder"/>
 		<n-form-text v-model="target.repeat.loadingPlaceholder" label="Loading Place Holder" v-if="target.repeat.operation"/>
+		<n-form-text v-model="target.repeat.refreshInterval" label="Refresh interval" :timeout="600" v-if="target.repeat.operation"/>
 		
 		<n-form-switch v-model="target.repeat.enableParameterWatching" label="Watch bound values for change"/>
 		<n-form-switch v-model="target.repeat.waitForPageLoad" label="Wait for page rendering to complete"

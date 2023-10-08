@@ -587,7 +587,7 @@
 									:extracter="function(x) { return x.name }" info="Use a specific renderer for this cell"/>
 									
 								<div v-if="cell.renderer && $services.page.getRendererState(cell.renderer, cell, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
-									<n-form-text v-model="cell.runtimeAlias" label="Runtime alias for renderer state"/>
+									<n-form-text v-model="cell.runtimeAlias" label="Runtime alias for renderer state" :timeout="600"/>
 									<n-form-switch v-model="cell.retainState" label="Retain state once cell is destroyed" v-if="cell.runtimeAlias"/>
 									<n-form-switch v-model="cell.mergeState" label="Merge existing state when the rendered is created" v-if="cell.runtimeAlias"/>
 								</div>
@@ -727,7 +727,7 @@
 								
 								<n-form-combo label="Row Renderer" v-model="row.renderer" :items="$services.page.getRenderers('row')"  :formatter="function(x) { return x.title ? x.title : x.name }" :extracter="function(x) { return x.name }"/>
 								<div v-if="row.renderer && $services.page.getRendererState(row.renderer, row, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
-									<n-form-text v-model="row.runtimeAlias" label="Runtime alias for renderer state"/>
+									<n-form-text v-model="row.runtimeAlias" label="Runtime alias for renderer state" :timeout="600"/>
 									<n-form-switch v-model="row.retainState" label="Retain state once row is destroyed" v-if="row.runtimeAlias"/>
 								</div>
 								<div v-if="row.renderer && $services.page.getRendererConfiguration(row.renderer)">

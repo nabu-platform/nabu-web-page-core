@@ -25,8 +25,17 @@ nabu.page.provide("page-renderer", {
 			else if (container.form.fields) {
 				var result = {};
 				container.form.fields.forEach(function(x) {
-					result[x.name] = {
-						type: x.type ? x.type : "string"
+					var definition = x.type ? $services.swagger.resolve(x.type) : null;
+					if (definition) {
+						result[x.name] = {
+							type: "object",
+							properties:definition.properties
+						}
+					}
+					else {
+						result[x.name] = {
+							type: x.type ? x.type : "string"
+						}
 					}
 				});
 				return {properties:result};

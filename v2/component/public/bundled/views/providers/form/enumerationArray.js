@@ -14,10 +14,15 @@ Vue.component("page-form-input-enumeration-array-configure", {
 			+ "		<n-form-switch v-model='field.enumerationArrayLabelComplex' label='Complex Enumeration Label'/>"
 			+ "		<n-form-combo v-if='field.enumerationArray && !field.enumerationArrayLabelComplex' v-model='field.enumerationArrayLabel' label='Enumeration Label'"
 			+ "			:filter='function() { return getEnumerationFields(field.enumerationArray) }'/>"
+			+ "		<n-form-switch v-model='field.enumerationArrayPrettyLabelComplex' label='Complex Pretty Enumeration Label'/>"
+			+ "		<n-form-combo v-if='field.enumerationArray && !field.enumerationArrayPrettyLabelComplex' v-model='field.enumerationArrayPrettyLabel' label='Pretty enumeration Label'"
+			+ "			:filter='function() { return getEnumerationFields(field.enumerationArray) }'/>"
+			+ "		<n-form-text v-model='field.complexPrettyLabel' label='The complex pretty label' v-if='field.enumerationArrayPrettyLabelComplex'/>"
 			+ "		<n-form-combo v-if='field.enumerationArray' v-model='field.enumerationArrayValue' label='Enumeration Value'"
 			+ "			:filter='function() { return getEnumerationFields(field.enumerationArray) }' info='If nothing is selected, the entire document becomes the value'/>"
 			+ "		<n-form-text v-model='field.complexLabel' label='The complex text label' v-if='field.enumerationArrayLabelComplex'/>"
 			+ "		<typography-variable-replacer v-if='field.enumerationArrayLabelComplex && field.complexLabel' :content='field.complexLabel' :page='page' :container='field' :keys='getEnumerationFields(field.enumerationArray)' />"
+			+ "		<typography-variable-replacer v-if='field.enumerationArrayPrettyLabelComplex && field.complexPrettyLabel' :content='field.complexPrettyLabel' :page='page' :container='field' :keys='getEnumerationFields(field.enumerationArray)' />"
 			+ "		<n-form-combo v-if='field.enumerationArray' :filter='function() { return getEnumerationFields(field.enumerationArray) }' v-model='field.enumerationCachingKey' label='Enumeration Caching Key'/>"    
 			+ "		<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"
 			+ "</n-form-section>",
@@ -154,6 +159,7 @@ Vue.component("page-form-input-enumeration-array", {
 			+ "		:disabled='disabled'/>"
 			+ "<n-form-combo ref='form' v-else"
 			+ "		:filter='enumerationFilter'"
+			+ "		:pretty-formatter='enumerationPrettyFormatter'"
 			+ "		:formatter='enumerationFormatter'"
 			+ " 	:extracter='enumerationExtracter'"
 			+ "		:edit='!readOnly'"
@@ -288,6 +294,24 @@ Vue.component("page-form-input-enumeration-array", {
 				}
 			}
 			return [];
+		},
+		enumerationPrettyFormatter: function(value) {
+			if (value == null) {
+				return null;
+			}
+			if (value && value.emptyState == true && this.field.addEmptyState == true && !!this.field.emptyState) {
+				return this.$services.page.interpret(this.$services.page.translate(this.field.emptyState), this);
+			}
+			else if (this.field.enumerationArrayPrettyLabelComplex) {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				return !this.field.complexPrettyLabel ? this.field.complexPrettyLabel : this.$services.typography.replaceVariables(pageInstance, this.field, this.field.complexPrettyLabel, this.$services.q.reject(), value);
+			}
+			else if (this.field.enumerationArrayPrettyLabel) {
+				return value[this.field.enumerationArrayPrettyLabel];
+			}
+			else {
+				return this.enumerationFormatter(value);
+			}
 		},
 		enumerationFormatter: function(value) {
 			if (value == null) {

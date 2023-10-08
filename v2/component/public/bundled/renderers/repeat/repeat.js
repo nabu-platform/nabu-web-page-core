@@ -347,6 +347,7 @@ Vue.component("renderer-repeat", {
 	},
 	data: function() {
 		return {
+			repeatTimer: null,
 			created: false,
 			loadCounter: 0,
 			// the instance counter is used to manage our pages on the router
@@ -487,6 +488,9 @@ Vue.component("renderer-repeat", {
 	},
 	beforeDestroy: function() {
 		this.unloadPage();
+		if (this.repeatTimer) {
+			clearTimeout(this.repeatTimer);
+		}
 	},
 	methods: {
 		update: function(record, value, label, field) {
@@ -918,6 +922,10 @@ Vue.component("renderer-repeat", {
 		loadData: function(page, append) {
 			this.loadCounter++;
 			var self = this;
+			if (self.repeatTimer) {
+				clearTimeout(self.repeatTimer);
+				self.repeatTimer = null;
+			}
 			// trigger an unselect
 			if (this.state.selected.length > 0) {
 				this.unselectAll();
@@ -1003,6 +1011,11 @@ Vue.component("renderer-repeat", {
 					self.uniquify();
 					self.loading = false;
 					self.created = true;
+					if (self.target.repeat.refreshInterval) {
+						self.repeatTimer = setTimeout(function() {
+							self.loadData(page)
+						}, self.target.repeat.refreshInterval);
+					}
 				}, function(error) {
 					// TODO: what in case of error?
 					self.loading = false;
