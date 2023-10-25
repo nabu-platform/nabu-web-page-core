@@ -86,6 +86,7 @@ window.addEventListener("load", function() {
 				nabu.utils.objects.merge(cloneParameters, parameters);
 				cloneParameters.formComponent = "page-form-combo";
 				cloneParameters.configurationComponent = "page-form-combo-configure";
+				cloneParameters.subTabs = ["data"];
 				return new nabu.page.views.FormComponent({propsData: cloneParameters});
 			},
 			form: "combo",

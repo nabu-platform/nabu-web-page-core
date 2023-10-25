@@ -30,6 +30,9 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			},
 			edit: {
 				type: Boolean
+			},
+			subTabs: {
+				type: Array
 			}
 		},
 		computed: {
@@ -90,6 +93,23 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			}
 		},
 		methods: {
+			getTriggers: function() {
+				return {
+					"update": {
+						
+					}
+				}	
+			},
+			getAvailableSubTabs: function() {
+				var tabs = ["component"];
+				if (this.subTabs) {
+					nabu.utils.arrays.merge(tabs, this.subTabs);
+				}
+				tabs.push("form");
+				tabs.push("validation");
+				return tabs;
+				//return this.subTabs == null || this.subTabs.length == 0 ? ["component"] : this.subTabs;
+			},
 			getEvents: function() {
 				return this.$services.triggerable.getEvents(this.page, this.cell.state);
 			},
@@ -181,9 +201,18 @@ nabu.page.views.FormComponentGenerator = function(name) {
 					this.getPageInstance().set("page." + this.cell.state.rawName, rawValue != null ? rawValue : value, label);
 				}
 				var self = this;
+				var triggers = [];
+				// Deprecated!
+				if (self.cell.state.triggers) {
+					nabu.utils.arrays.merge(triggers, self.cell.state.triggers);
+				}
+				// general cell triggers
+				if (self.cell.triggers) {
+					nabu.utils.arrays.merge(triggers, self.cell.triggers);
+				}
 				// because going this route actually disables the component while it is performing the update, it will remove focus
 				// if used in combination with say a text field, you probably want to set a timeout on the text field
-				if (self.cell.state.triggers && self.cell.state.triggers.length > 0) {
+				if (triggers.length > 0) {
 					this.running = true;
 					var done = function() {
 						self.running = false;
@@ -195,7 +224,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 					Vue.nextTick(function() {
 						// even waiting for the next tick is not enough to guarantee availability of data, but breaking out of that seems to do the trick...
 						setTimeout(function() {
-							self.$services.triggerable.trigger(self.cell.state, "update", {value:value, rawValue: rawValue}, self).then(done, done);
+							self.$services.triggerable.trigger({triggers:triggers}, "update", {value:value, rawValue: rawValue}, self).then(done, done);
 							// emit it so parent components (like repeat) can take action
 							// we don't want to use the standard "input" to avoid accidental conflicts
 							self.$emit("update", value, label, self.cell.state.name);

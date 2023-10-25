@@ -135,6 +135,17 @@ Vue.view("page-button", {
 		}
 	},
 	methods: {
+		getTriggers: function() {
+			var triggers = {"activate": {}};
+			if (this.cell.triggers) {
+				if (this.cell.triggers.map(function(x) {
+						return x.trigger;
+					}).indexOf("activate") >= 0) {
+					triggers.deactivate = {};	
+				}
+			}
+			return triggers;
+		},
 		getHref: function() {
 			if (this.tagName == "a") {
 				return this.$services.triggerable.calculateUrl(this.cell.state.triggers[0].actions[0], this, {});
@@ -196,6 +207,19 @@ Vue.view("page-button", {
 			}
 			*/
 		},
+		getTriggerObject: function() {
+			var triggers = [];
+			var self = this;
+			// Deprecated!
+			if (self.cell.state.triggers) {
+				nabu.utils.arrays.merge(triggers, self.cell.state.triggers);
+			}
+			// general cell triggers
+			if (self.cell.triggers) {
+				nabu.utils.arrays.merge(triggers, self.cell.triggers);
+			}
+			return {triggers:triggers};
+		},
 		handle: function($event, middleMouseButton) {
 			// if you are in edit mode, you have to explicitly click alt to enable the button
 			// it seems that vue also intercepts spaces and sends it as a click event, meaning when you type in the rich text, it can trigger
@@ -221,7 +245,7 @@ Vue.view("page-button", {
 				this.running = true;
 				// on mac you can use CMD+left click to open in a new tab, this means the metakey will be set to true
 				// note that for links, the browser already does the right thing so we don't want to add that, it will open double!
-				var promise = this.$services.triggerable.trigger(this.cell.state, "activate", null, this, {anchor: this.tagName != "a" && (middleMouseButton || ($event && $event.metaKey)) ? "$blank" : null});
+				var promise = this.$services.triggerable.trigger(this.getTriggerObject(), "activate", null, this, {anchor: this.tagName != "a" && (middleMouseButton || ($event && $event.metaKey)) ? "$blank" : null});
 				
 				if (this.cell.state.stopPropagation && $event) {
 					$event.stopPropagation();
@@ -259,7 +283,8 @@ Vue.view("page-button", {
 		},
 		deactivate: function() {
 			if (this.activated) {
-				this.$services.triggerable.untrigger(this.cell.state, "activate", this);
+				this.$services.triggerable.untrigger(this.getTriggerObject(), "activate", this);
+				this.$services.triggerable.trigger(this.getTriggerObject(), "deactivate", this);
 				this.activated = false;	
 			}
 		},

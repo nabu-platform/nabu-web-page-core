@@ -49,14 +49,6 @@
 			<n-form-text v-model='field.calculatingValue' label='Calculating Value Text' info='The text to show while the result is being calculated'/>
 			<n-form-text v-model='field.resetValue' label='Reset Value Text' info='The text to show to reset the current value'/>
 			<n-form-text v-model='field.selectAllValue' label='Select all value' info='The text to show to select all values or deselectt all'/>
-			
-			<n-form-text v-model='field.info' label='Info Content'/>
-			<n-form-text v-model='field.before' label='Before Content'/>
-			<n-form-text v-model='field.beforeIcon' label='Before Icon' v-if='field.before'/>
-			<n-form-text v-model='field.after' label='After Content'/>
-			<n-form-text v-model='field.afterIcon' label='After Icon' v-if='field.after'/>
-			<n-form-text v-model='field.suffix' label='Suffix' v-if='!field.suffixIcon'/>
-			<n-form-text v-model='field.suffixIcon' label='Suffix Icon' v-if='!field.suffix'/>
 		</template>
 	</div>
 </template>

@@ -1,17 +1,23 @@
 <template id="page-form-combo-configure">
 	<div class="page-form-combo-configure">
-		<div class="is-column is-spacing-medium">
-			<n-form-switch v-model='field.useCheckbox' label='Add checkboxes'/>
-			<n-form-switch v-model='field.showTags' label='Show tags'/>
-			<n-form-text v-model='field.maxAmountOfTags' label='Max amount of tags visible' placeholder='3' after='Set to 0 to show all tags'/>
-			<n-form-switch v-model='field.showAmount' label='Show amount'/>
-			<n-form-switch :invert='true' v-model='field.allowTyping' label='Disable typing' after='Can the user type to search?'/>
-			<n-form-switch v-model='field.readOnly' label='Read only' after='Read only mode means the form element is replaced with a readable version'/>
-			<n-form-switch v-model='field.selectFirstIfEmpty' label='Select the first value if none has been selected yet'/>
-		</div>
-		<n-collapsible title="Enumeration data" content-class="is-column is-spacing-medium">
-			<enumeration-provider-configure :field="field" :page="page" :cell="cell"/>		
-		</n-collapsible>
+		<template v-if="$services.page.activeSubTab == 'component'">
+			<h2 class="section-title">Combo box</h2>
+			<div class="is-column is-spacing-medium">
+				<n-form-switch v-model='field.useCheckbox' label='Add checkboxes' info="Each entry will have a checkbox as will the select all and reset value"/>
+				<n-form-switch v-model='field.showTags' label='Show selected tags' info="Visualize the currently selected items with tags"/>
+				<n-form-text v-if="field.showTags" v-model='field.maxAmountOfTags' label='Max amount of tags visible' placeholder='3' info='Choose how many tags should maximum be visible at any given time, set to 0 to show all tags'/>
+				<n-form-switch v-model='field.showAmount' label='Show selected amount' info="Show a counter of how many items are selected"/>
+				<n-form-switch :invert='true' v-model='field.allowTyping' label='Disable typing' info='Can the user type to search?'/>
+				<n-form-switch v-model='field.selectFirstIfEmpty' label='Select the first value if none has been selected yet'/>
+				
+			</div>
+		</template>
+		<template v-else-if="$services.page.activeSubTab == 'data'">
+			<h2 class="section-title">Data Source</h2>
+			<div class="is-column is-spacing-medium">
+				<enumeration-provider-configure :field="field" :page="page" :cell="cell"/>		
+			</div>
+		</template>
 	</div>
 </template>
 

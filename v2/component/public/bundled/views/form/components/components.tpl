@@ -22,27 +22,44 @@
 
 <template id="nabu-form-component-configuration">
 	<div>
-		<div class="is-column is-spacing-medium">
-			<n-form-switch v-model="cell.state.useComputed" label="Use computed value" after="Instead of binding directly to a field, you can calculate the original value and update it through change listeners"/>
-			<n-form-combo v-model="cell.state.name" label="Field Name" :filter="availableFields" v-if="!cell.state.useComputed"/>
-			<n-form-combo v-model="cell.state.rawName" label="Raw Field Name" :filter="availableFields" v-if="!cell.state.useComputed" after="In some cases the value is derived from a raw value that might also be interesting, you can capture that here"/>
-			<n-form-ace v-model="cell.state.computed" label="Initial value for computed" v-else/>
-			<n-form-text v-model="cell.state.label" label="Label"/>
-			<n-form-text v-model="cell.state.placeholder" label="Placeholder"/>
-			<n-form-text v-model="cell.state.timeout" label="Timeout"/>
-			<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
-			<n-form-ace mode="javascript" v-model="cell.state.disabled" label="Disable if" />
-			<n-form-switch v-model="cell.state.validateOnBlur" label="Validate on blur"/>
-			<n-form-switch v-model="cell.state.readOnly" label="Render as read only"/>
-			<n-form-combo v-model="cell.state.required" label="Required" :items="[{value: true, title: 'Always'}, {value: false, title: 'Depends on the schema'}, {value: 'condition', title: 'Based on a condition'}]"
-				:extracter="function(x) { return x.value }"
-				:formatter="function(x) { return x.title }"/>
-			<n-form-ace v-if="cell.state.required == 'condition'" v-model="cell.state.requiredCondition" label="Required" after="You can force this field to be mandatory"/>
-		</div>
-		
-		<component :is="configurationComponent" :page="page" :cell="cell" :field="cell.state" :possible-fields="availableFields()" />
+		<template v-if="$services.page.activeSubTab == 'form'">
+			<h2 class="section-title">Value binding</h2>
+			<div class="is-column is-spacing-medium">
+				<n-form-switch v-model="cell.state.useComputed" label="Use computed value" after="Instead of binding directly to a field, you can calculate the original value and update it through change listeners"/>
+				<n-form-combo v-model="cell.state.name" label="Field Name" :filter="availableFields" v-if="!cell.state.useComputed"/>
+				<n-form-combo v-model="cell.state.rawName" label="Raw Field Name" :filter="availableFields" v-if="!cell.state.useComputed" after="In some cases the value is derived from a raw value that might also be interesting, you can capture that here"/>
+				<n-form-ace v-model="cell.state.computed" label="Initial value for computed" v-else/>
+				<n-form-text v-model="cell.state.timeout" label="Timeout" info="How long should the system wait before the new value is applied?"/>
+			</div>
+			<h2 class="section-title">Visualisation</h2>
+			<div class="is-column is-spacing-medium">
+				<n-form-text v-model="cell.state.label" label="Label"/>
+				<n-form-text v-model="cell.state.placeholder" label="Placeholder"/>
+				<n-form-text v-model='cell.state.info' label='Info Content'/>
+				<n-form-text v-model='cell.state.before' label='Before Content'/>
+				<n-form-text v-model='cell.state.beforeIcon' label='Before Icon' v-if='cell.state.before'/>
+				<n-form-text v-model='cell.state.after' label='After Content'/>
+				<n-form-text v-model='cell.state.afterIcon' label='After Icon' v-if='cell.state.after'/>
+				<n-form-text v-model='cell.state.suffix' label='Suffix' v-if='!cell.state.suffixIcon'/>
+				<n-form-text v-model='cell.state.suffixIcon' label='Suffix Icon' v-if='!cell.state.suffix'/>
+			</div>
+			<h2 class="section-title">Misc</h2>
+			<div class="is-column is-spacing-medium">
+				<n-form-ace mode="javascript" v-model="cell.state.disabled" label="Disable if" />
+				<n-form-switch v-model="cell.state.validateOnBlur" label="Validate on blur"/>
+				<n-form-combo v-model="cell.state.required" label="Required" :items="[{value: true, title: 'Always'}, {value: false, title: 'Depends on the schema'}, {value: 'condition', title: 'Based on a condition'}]"
+					:extracter="function(x) { return x.value }"
+					:formatter="function(x) { return x.title }"/>
+				<n-form-ace v-if="cell.state.required == 'condition'" v-model="cell.state.requiredCondition" label="Required" after="You can force this field to be mandatory"/>
+				<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
+				<n-form-switch v-model="cell.state.readOnly" label="Render as read only"/>
+			</div>
 			
-		<div class="is-column is-spacing-medium">
+		</template>
+		
+		<component :is="configurationComponent" :page="page" :cell="cell" :field="cell.state" :possible-fields="availableFields()" v-if="$services.page.activeSubTab != 'form' && $services.page.activeSubTab != 'validation'"/>
+		
+		<div class="is-column is-spacing-medium" v-if="$services.page.activeSubTab == 'validation'">
 			<h3 class="is-h3">Validation Messages</h3>
 			<p class="is-p is-size-small">You can remap specific validation codes to provide the user with a different message than the default message available for that code.</p>
 			<div v-if='cell.state.codes' class="is-column is-spacing-vertical-gap-medium">
@@ -57,6 +74,6 @@
 			</div>
 		</div>
 		
-		<page-triggerable-configure :page="page" :target="cell.state" :triggers="{'update': {}}" :allow-closing="true"/>
+		<page-triggerable-configure v-if="cell.state.triggers && cell.state.triggers.length" :page="page" :target="cell.state" :triggers="{'update': {}}" :allow-closing="true"/>
 	</div>
 </template>

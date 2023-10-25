@@ -24,6 +24,14 @@ nabu.services.VueService(Vue.extend({
 	services: ["swagger", "user", "cookies"],
 	data: function() {
 		return {
+			// the active tab on a page, we want to be able to add additional tabs and keep the last active for the duration of the editing session
+			// we want the component configuration by default
+			// other options are: container (cell/row), styling (aris), triggers
+			activeSubTab: "component",
+			// by default we assume a single configuration tab, but more complex components might have more
+			availableSubTabs: [],
+			showBreadcrumbs: true,
+			
 			// you can globally activate views
 			activeViews: [],
 			chosenRoute: null,

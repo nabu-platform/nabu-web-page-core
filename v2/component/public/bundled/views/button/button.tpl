@@ -57,7 +57,7 @@
 			
 		</div>
 		
-		<page-triggerable-configure :page="page" :target="cell.state" :triggers="triggers" :allow-closing="true"/>
+		<page-triggerable-configure :page="page" :target="cell.state" :triggers="triggers" :allow-closing="true" v-if="cell.state.triggers && cell.state.triggers.length"/>
 		
 		<typography-variable-replacer :content="cell.state.content" :container="cell.state" :page="page"/>
 	</div>

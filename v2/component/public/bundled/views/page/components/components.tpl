@@ -1,10 +1,9 @@
 <template id="page-components-overview">
 	<div class="page-components-overview" @drop.prevent="function($event) { $event.stopPropagation() }">
-		<ul class="is-menu is-variant-toolbar is-spacing-horizontal-sides-medium">
-			<li class="is-column"><button class="is-button is-border-underline is-size-small" @click="selected = 'components'" :class="{'is-active': selected == 'components'}">Components</button></li>
-			<li v-if="false" class="is-column"><button class="is-button is-border-underline is-size-small" @click="selected = 'templates'" :class="{'is-active': selected == 'templates'}">Templates</button></li>
-			<li class="is-column"><button class="is-button is-border-underline is-size-small" @click="selected = 'operations'" :class="{'is-active': selected == 'operations'}">Operations</button></li>
-		</ul>
+		<div class="tabbed-menu is-row is-spacing-xsmall is-spacing-vertical-bottom-none">
+			<button @click="selected = 'components'" class="is-button is-size-xsmall" :class="{'is-active': selected == 'components'}">Components</button>
+			<button @click="selected = 'operations'" class="is-button is-size-xsmall" :class="{'is-active': selected == 'operations'}">Operations</button>
+		</div>
 		<p class="is-p is-size-small is-color-light is-spacing-medium">Drag and drop a component of your choice into a row.</p>
 		<div v-if="selected == 'components'">
 			<n-collapsible :only-one-open="true" v-for="category in componentCategories" :title="prettyPrint(category)" content-class="is-pattern-underline">

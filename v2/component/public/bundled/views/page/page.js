@@ -3,6 +3,16 @@ if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 if (!nabu.page.mixins) { nabu.page.mixins = {} }
 
+Vue.component("shortkey", {
+	template: "#page-shortkey",
+	props: {
+		ctrl: {
+			type: Boolean,
+			default: false
+		}
+	}
+});
+
 // on created, we want to inject the state of the page into this component so we can access all the data
 Vue.mixin({
 	props: {
@@ -671,9 +681,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 			oldBodyClasses: [],
 			initialStateLoaded: [],
 			activeTab: "layout",
-			// we want the component configuration by default
-			// other options are: container (cell/row), styling (aris), triggers
-			activeSubTab: "component",
 			// anything waiting for a mount
 			waitingForMount: {},
 			// in most cases we write conditions on cells to hide themselves or show themselves
@@ -1164,6 +1171,29 @@ nabu.page.views.Page = Vue.component("n-page", {
 					this.selectedItemPath.splice(0);
 					nabu.utils.arrays.merge(this.selectedItemPath, path);
 				}
+			}
+			
+			var component = this.canConfigureInline(cell);
+			this.$services.page.availableSubTabs.splice(0);
+			if (component) {
+				if (component.getAvailableSubTabs) {
+					nabu.utils.arrays.merge(this.$services.page.availableSubTabs, component.getAvailableSubTabs());
+				}
+			}
+			var availableTabs = ["container", "styling", "triggers"];
+			
+			if (this.$services.page.availableSubTabs.length) {
+				nabu.utils.arrays.merge(availableTabs, this.$services.page.availableSubTabs);
+			}
+			else if (cell) {
+				availableTabs.push("component");
+			}
+			else {
+				availableTabs.push("container");
+			}
+			// whatever tab we had is no longer valid, reset it
+			if (availableTabs.indexOf(this.$services.page.activeSubTab) < 0) {
+				this.$services.page.activeSubTab = availableTabs[0];
 			}
 		},
 		stopEdit: function() {
@@ -3378,9 +3408,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 		},
 		*/
 		canConfigureInline: function(cell) {
+			if (!cell) {
+				return false;
+			}
 			var pageInstance = this;
 			var component = pageInstance.getComponentForCell(cell.id);
-			return component && component.configurator;
+			if (component && component.configurator) {
+				return component;
+			}
+			return false;
 		},
 		getCellConfigurator: function(cell) {
 			var pageInstance = this;
@@ -3719,7 +3755,8 @@ Vue.component("n-page-row", {
 				var scrollTo = null;
 				// if we have a cell target with a configuration, show that, otherwise, we do the generic configuration
 				if (cell != null) {
-					if (this.canConfigureInline(cell)) {
+					var component = this.canConfigureInline(cell);
+					if (component) {
 						this.configuring = cell.id;
 					}
 					else {
@@ -3742,7 +3779,9 @@ Vue.component("n-page-row", {
 				if (scrollTo) {
 					scrollTo.scrollIntoView();
 				}
-				event.stopPropagation();
+				if (event) {
+					event.stopPropagation();
+				}
 			}
 		},
 		suggesPageRowClasses: function(value) {
@@ -4198,7 +4237,10 @@ Vue.component("n-page-row", {
 		canConfigureInline: function(cell) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			var component = pageInstance.getComponentForCell(cell.id);
-			return component && component.configurator;
+			if (component && component.configurator) {
+				return component;
+			}
+			return false;
 		},
 		configureCell: function(event, row, cell) {
 			var self = this;
@@ -4994,10 +5036,31 @@ Vue.component("page-sidemenu", {
 		return {
 			opened: [],
 			editing: null,
-			aliasing: null
+			aliasing: null,
+			showMenuItem: null,
+			showMenuType: null,
+			offsetX: 0,
+			offsetY: 0
 		}	
 	},
 	methods: {
+		showMenu: function(row, cell, $event) {
+			this.offsetX = $event.offsetX;
+			this.offsetY = $event.offsetY;
+			console.log("offset", this.offsetX, this.offsetY);
+			if (cell) {
+				this.showMenuType = "cell";
+				this.showMenuItem = cell;
+			}
+			else if (row) {
+				this.showMenuType = "row";
+				this.showMenuItem = row;
+			}
+		},
+		closeMenu: function() {
+			this.showMenuType = null;
+			this.showMenuItem = null;
+		},
 		getCellIcon: function(cell) {
 			var self = this;
 			if (cell.templateIcon) {
@@ -5061,6 +5124,10 @@ Vue.component("page-sidemenu", {
 				var replacement = this.rows[index - 1];
 				this.rows.splice(index - 1, 1, row);
 				this.rows.splice(index, 1, replacement);
+				// focus so you can do more commands
+				Vue.nextTick(function() {
+					document.getElementById("layout-entry-" + row.id).querySelector("[tabindex]").focus();
+				})
 			}
 		},
 		down: function(row) {
@@ -5069,6 +5136,10 @@ Vue.component("page-sidemenu", {
 				var replacement = this.rows[index + 1];
 				this.rows.splice(index + 1, 1, row);
 				this.rows.splice(index, 1, replacement);
+				// focus so you can do more commands
+				Vue.nextTick(function() {
+					document.getElementById("layout-entry-" + row.id).querySelector("[tabindex]").focus();
+				})
 			}
 		},
 		cellDown: function(row, cell) {
@@ -6016,6 +6087,25 @@ document.addEventListener("keydown", function(event) {
 	}
 	else if (event.key == "d" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
 		application.services.page.editing.activeTab = 'layout';
+		event.preventDefault();
+		event.stopPropagation();
+	}
+	else if (event.key == "g" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
+		if (application.services.page.editing.cell || application.services.page.editing.row) {
+			application.services.page.editing.activeTab = 'selected';
+			event.preventDefault();
+		}
+		event.stopPropagation();
+	}
+	else if (event.key == "s" && event.altKey && application.services.page.editing) {
+		application.services.page.editing.activeTab = "selected";
+		application.services.page.activeSubTab = 'styling';
+		event.preventDefault();
+		event.stopPropagation();
+	}
+	else if (event.key == "t" && event.altKey && application.services.page.editing) {
+		application.services.page.editing.activeTab = "selected";
+		application.services.page.activeSubTab = 'triggers';
 		event.preventDefault();
 		event.stopPropagation();
 	}
