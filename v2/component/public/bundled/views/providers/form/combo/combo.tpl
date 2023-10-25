@@ -13,10 +13,7 @@
 			</div>
 		</template>
 		<template v-else-if="$services.page.activeSubTab == 'data'">
-			<h2 class="section-title">Data Source</h2>
-			<div class="is-column is-spacing-medium">
-				<enumeration-provider-configure :field="field" :page="page" :cell="cell"/>		
-			</div>
+			<enumeration-provider-configure :field="field" :page="page" :cell="cell"/>		
 		</template>
 	</div>
 </template>

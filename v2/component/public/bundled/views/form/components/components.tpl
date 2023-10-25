@@ -31,7 +31,7 @@
 				<n-form-ace v-model="cell.state.computed" label="Initial value for computed" v-else/>
 				<n-form-text v-model="cell.state.timeout" label="Timeout" info="How long should the system wait before the new value is applied?"/>
 			</div>
-			<h2 class="section-title">Visualisation</h2>
+			<h2 class="section-title">Copywriting</h2>
 			<div class="is-column is-spacing-medium">
 				<n-form-text v-model="cell.state.label" label="Label"/>
 				<n-form-text v-model="cell.state.placeholder" label="Placeholder"/>

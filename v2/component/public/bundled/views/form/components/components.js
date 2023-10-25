@@ -64,6 +64,18 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				return !!this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, state, this);
 			}
 		},
+		watch: {
+			value: function() {
+				// first hit is for computation
+				if (!this.computed) {
+					this.computed = true;
+				}
+				// array values don't pass via the usual "update", instead they manipulate the arrays directly
+				else if (this.value instanceof Array) {
+					this.notifyUpdate();
+				}
+			}
+		},
 		created: function() {
 			// if we have a raw value capture, we want to unset it when rendering this component
 			// it can only be validly set by the component after it receives the actual value (if any)
@@ -89,7 +101,8 @@ nabu.page.views.FormComponentGenerator = function(name) {
 		data: function() {
 			return {
 				running: false,
-				editable: true
+				editable: true,
+				computed: false
 			}
 		},
 		methods: {
@@ -200,6 +213,9 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				if (this.cell.state.rawName) {
 					this.getPageInstance().set("page." + this.cell.state.rawName, rawValue != null ? rawValue : value, label);
 				}
+				this.notifyUpdate();
+			},
+			notifyUpdate: function(value, label, rawValue) {
 				var self = this;
 				var triggers = [];
 				// Deprecated!
