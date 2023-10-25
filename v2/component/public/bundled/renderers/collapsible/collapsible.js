@@ -117,6 +117,12 @@ Vue.component("page-collapsible", {
 					$event.preventDefault();
 				}
 			}
+		},
+		checkPrevent: function($event) {
+			if (this.target.collapsible.stopPropagation && $event) {
+				$event.stopPropagation();
+				$event.preventDefault();
+			}
 		}
 	}
 });

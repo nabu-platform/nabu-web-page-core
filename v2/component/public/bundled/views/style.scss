@@ -1,3 +1,86 @@
 .nabu-pages {
 	flex-grow: 1;
 }
+
+body[page-editing="small"] {
+	padding-left: 3rem;
+}
+body[page-editing="large"] {
+	padding-left: 30rem;
+}
+
+.is-sidebar.is-page-editing {
+	.is-page-editing-small-menu {
+		overflow: visible;
+	}
+	&.is-page-editing-small {
+		width: 3rem;
+		min-width: 3rem !important;
+	}
+	&.is-page-editing-large {
+		width: 30rem;
+	}
+	header, footer {
+		display: none;
+	}
+	main {
+		overflow: unset;
+		height: 100vh;
+	}
+	.is-page-editing-small-menu {
+		height: 100vh;
+		background-color: #252a2a;
+		.page-name {
+			rotate: -90deg;
+			color: $color-neutral-lightest;
+			margin-bottom:1rem;			
+		}
+		button {
+			color: $color-neutral-lightest;
+			border: none;
+			background-color: transparent;
+			&.is-active {
+				background-color: #666;
+			}
+		}
+		.bottom-container {
+			margin-top: auto;
+			margin-bottom: 1rem;
+		}
+	}
+	.is-tooltip {
+		pointer-events: none;
+	}
+	.menu-content {
+		max-height: 100vh;
+		overflow: auto;
+	    overflow-x: hidden;
+	}
+	.breadcrumbs {
+		background-color: #3a3a3a;
+		button {
+			color: $color-neutral-lightest;
+			border: none;
+			background-color: transparent;
+			&.has-renderer {
+				color: $color-primary-base;
+			}
+		}
+		&.is-active {
+			background-color: #666;
+		}
+	}
+	
+	.tabbed-menu {
+		background-color: #3a3a3a;
+		button {
+			color: white;
+			background-color: transparent;
+			border-bottom-left-radius: 0;
+			border-bottom-right-radius: 0;
+			&.is-active {
+				background-color: #666;
+			}
+		}
+	}
+}

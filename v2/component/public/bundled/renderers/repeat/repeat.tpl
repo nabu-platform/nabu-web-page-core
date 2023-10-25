@@ -121,6 +121,7 @@
 			<div class="is-row">
 				<n-form-combo v-model="defaultOrderBy.name" :filter="getOrderByFields" placeholder="Order by field"/>
 				<n-form-combo v-model="defaultOrderBy.direction" :items="['asc', 'desc']" placeholder="Direction"/>
+				<n-form-combo v-model="defaultOrderBy.nulls" :items="['nulls first', 'nulls last']"/>
 			</div>
 			<button class="is-button is-variant-close is-size-small is-spacing-horizontal-right-large" @click="target.repeat.defaultOrderBy.splice(index, 1)"><icon name="times"/></button>
 		</div>

@@ -3,7 +3,7 @@
 		<typography-h3 :page="page" :cell="target" :parameters="parameters" :edit="edit" :child-components="childComponents" @click.native="toggle" class="is-title">
 			<icon slot="after" :name="show || edit ? iconOpen : iconClosed"></icon>
 		</typography-h3>
-		<div class="is-collapsible-content" :class="contentClass" v-if="show || edit">
+		<div class="is-collapsible-content" :class="contentClass" v-if="show || edit" @click.native="checkPrevent">
 			<slot></slot>
 		</div>
 	</div>

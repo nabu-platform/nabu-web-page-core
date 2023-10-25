@@ -867,27 +867,39 @@ Vue.component("page-triggerable-configure", {
 		actionTypes: function() {
 			var types = [];
 			types.push({
-				title: "Call a REST operation in the backend",
+				title: "REST call",	// Call a REST operation in the backend
 				name: "operation"
 			});
 			types.push({
-				title: "Download data from the backend",
+				title: "Download data",	// Download data from the backend
 				name: "download"
 			})
 			types.push({
-				title: "Call an action on another component",
+				title: "Run action", // Call an action on another component
 				name: "action"
 			});
 			types.push({
-				title: "Send an event to the entire page",
+				title: "Run function",	// Call a function
+				name: "function"
+			});
+			types.push({
+				title: "Show / hide",	// Change visibility of cell or row
+				name: "visibility"
+			});
+			types.push({
+				title: "Send event",	// Send an event to the entire page
 				name: "event"
 			});
 			types.push({
-				title: "Redirect the user to another page",
+				title: "Send notification",	// Show a notification to the user
+				name: "notification"
+			});
+			types.push({
+				title: "Redirect",	// Redirect the user to another page
 				name: "route"
 			});
 			types.push({
-				title: "Scroll to a particular position in the page",
+				title: "Scroll",		// Scroll to a particular position in the page
 				name: "scroll"
 			});
 			/*
@@ -897,25 +909,19 @@ Vue.component("page-triggerable-configure", {
 			});
 			*/
 			types.push({
-				title: "Show a notification to the user",
-				name: "notification"
-			});
-			types.push({
-				title: "Ask for confirmation",
+				title: "Ask confirmation",	// Ask for confirmation
 				name: "confirmation"
-			});
-			types.push({
-				title: "Change visibility of cell or row",
-				name: "visibility"
-			});
-			types.push({
-				title: "Call a function",
-				name: "function"
 			});
 			types.push({
 				title: "Execute javascript",
 				name: "javascript"
 			});
+			/*
+			types.push({
+				title: "Set variable",
+				name: "variable"
+			});
+			*/
 			return types;
 		}
 	},

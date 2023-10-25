@@ -611,6 +611,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 	},
 	data: function() {
 		return {
+			// whether or not to collapse the menu
+			collapsedMenu: false,
 			// you can have active views that enrich information, usually only one is active
 			activeViews: ["main"],
 			selectedItemPath: [],
@@ -669,6 +671,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 			oldBodyClasses: [],
 			initialStateLoaded: [],
 			activeTab: "layout",
+			// we want the component configuration by default
+			// other options are: container (cell/row), styling (aris), triggers
+			activeSubTab: "component",
 			// anything waiting for a mount
 			waitingForMount: {},
 			// in most cases we write conditions on cells to hide themselves or show themselves
@@ -756,7 +761,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 			return null;
 		},
 		updateTemplates: function() {
-			this.$services.page.updateToLatestTemplate(this.page.content, true);
+			var self = this;
+			this.$confirm({
+				message: "Are you sure you want to update all templates?"
+			}).then(function() {
+				self.$services.page.updateToLatestTemplate(self.page.content, true);
+			})
 		},
 		isContentHidden: function(target) {
 			if (this.hidden[target.id] == null) {
@@ -1187,6 +1197,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 				document.querySelectorAll(".is-hovering").forEach(function(element) {
 					element.classList.remove("is-hovering", "is-hover-top", "is-hover-bottom", "is-hover-left", "is-hover-right");
 				});
+				document.body.removeAttribute("page-editing");
 			}
 		},
 		goIntoEdit: function() {
@@ -3492,6 +3503,25 @@ nabu.page.views.Page = Vue.component("n-page", {
 			deep: true,
 			handler: function(newValue) {
 				this.$services.page.setRerender(newValue);
+			}
+		},
+		edit: function(newValue) {
+			if (newValue) {
+				document.body.setAttribute("page-editing", this.collapsedMenu ? "small" : "large");
+			}
+			else {
+				document.body.removeAttribute("page-editing");
+			}
+		},
+		collapsedMenu: function(newValue) {
+			if (this.edit) {
+				document.body.setAttribute("page-editing", newValue ? "small" : "large");
+			}
+		},
+		// if you choose a tab, open it
+		activeTab: function(newValue) {
+			if (this.edit) {
+				this.collapsedMenu = false;
 			}
 		}
 	}

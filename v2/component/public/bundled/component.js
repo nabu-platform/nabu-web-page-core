@@ -1694,7 +1694,6 @@ window.addEventListener("load", function() {
 						return "<n-form-text v-model='value' label='" + content + "'/><div>test</div>";
 					}
 					var blocks = nabu.formatters.markdown.parse(value);
-					console.log("blocks are", blocks);
 					var parameters = {};
 					var self = this;
 					parameters.tagUrl = "http://google.com?q=";

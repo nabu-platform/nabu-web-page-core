@@ -21,20 +21,27 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 			+ "		<n-form-combo v-if='field.enumerationOperation && field.enumerationOperationValue' :filter='function() { return getEnumerationParameters(field.enumerationOperation) }' v-model='field.enumerationOperationResolve' label='Resolve Field'/>"
 			+ "		<n-form-text v-model='field.complexLabel' label='The complex text label' v-if='field.enumerationOperation && field.enumerationOperationLabelComplex'/>"
 			+ "		<typography-variable-replacer v-if='field.enumerationOperation && field.enumerationOperationLabelComplex && field.complexLabel' :content='field.complexLabel' :page='page' :container='field' :keys='getEnumerationFields(field.enumerationOperation)' />"
-			+ "		<n-form-text v-if='!field.showRadioView' v-model='field.emptyValue' label='Empty Value Text'/>"
-			+ "		<n-form-text v-if='!field.showRadioView' v-model='field.calculatingValue' label='Calculating Value Text' info='The text to show while the result is being calculated'/>"
-			+ "		<n-form-text v-if='!field.showRadioView' v-model='field.resetValue' label='Reset Value Text' info='The text to show to reset the current value'/>"
-			+ " 	<n-form-switch v-if='!field.showRadioView' v-model='field.readOnly' label='Read only' />"
-			+ " 	<n-form-switch v-model='field.showRadioView' label='Show radio visualisation'/>"
+			+ "		<n-form-text v-if=\"field.visualisation != 'radio'\" v-model='field.emptyValue' label='Empty Value Text'/>"
+			+ "		<n-form-text v-if=\"field.visualisation != 'radio'\" v-model='field.calculatingValue' label='Calculating Value Text' info='The text to show while the result is being calculated'/>"
+			+ "		<n-form-text v-if=\"field.visualisation != 'radio'\" v-model='field.resetValue' label='Reset Value Text' info='The text to show to reset the current value'/>"
+			+ "		<n-form-text v-if=\"field.visualisation == 'combo'\" v-model='field.selectAllValue' label='Select all value' info='The text to show to select all values or deselectt all'/>"
+			+ "		<n-form-switch v-if=\"field.visualisation == 'combo'\" v-model='field.useCheckbox' label='Add checkboxes'/>"
+			+ "		<n-form-switch v-if=\"field.visualisation == 'combo'\" v-model='field.showTags' label='Show tags'/>"
+			+ "		<n-form-text v-if=\"field.visualisation == 'combo'\" v-model='field.maxAmountOfTags' label='Max amount of tags visible' placeholder='3' after='Set to 0 to show all tags'/>"
+			+ "		<n-form-switch v-if=\"field.visualisation == 'combo'\" v-model='field.showAmount' label='Show amount'/>"
+			+ " 	<n-form-switch :invert='true' v-if=\"field.visualisation != 'radio'\" v-model='field.allowTyping' label='Disable typing' after='Can the user type to search?'/>"
+			+ " 	<n-form-switch v-model='field.readOnly' label='Read only' after='Read only mode means the form element is replaced with a readable version'/>"
+			+ " 	<n-form-switch v-if='field.showRadioView' v-model='field.showRadioView' label='Show radio visualisation'/>"
 			+ " 	<n-form-switch v-model='field.selectFirstIfEmpty' label='Select the first value if none has been selected yet'/>"
 			+ "		<n-form-text v-if='field.showRadioView' v-model='field.mustChoose' label='Must choose' allow-typing='true' />"
-			+ "	<n-form-text v-model='field.info' label='Info Content'/>"
-			+ "	<n-form-text v-model='field.before' label='Before Content'/>"
-			+ "	<n-form-text v-model='field.beforeIcon' label='Before Icon' v-if='field.before'/>"
-			+ "	<n-form-text v-model='field.after' label='After Content'/>"
-			+ "	<n-form-text v-model='field.afterIcon' label='After Icon' v-if='field.after'/>"
-			+ "	<n-form-text v-model='field.suffix' label='Suffix' v-if='!field.suffixIcon'/>"
-			+ "	<n-form-text v-model='field.suffixIcon' label='Suffix Icon' v-if='!field.suffix'/>"
+			+ "		<n-form-combo :items=\"['combo', 'combo-with-labels', 'radio']\" label='Visualisation' v-model='field.visualisation'/>"
+			+ "		<n-form-text v-model='field.info' label='Info Content'/>"
+			+ "		<n-form-text v-model='field.before' label='Before Content'/>"
+			+ "		<n-form-text v-model='field.beforeIcon' label='Before Icon' v-if='field.before'/>"
+			+ "		<n-form-text v-model='field.after' label='After Content'/>"
+			+ "		<n-form-text v-model='field.afterIcon' label='After Icon' v-if='field.after'/>"
+			+ "		<n-form-text v-model='field.suffix' label='Suffix' v-if='!field.suffixIcon'/>"
+			+ "		<n-form-text v-model='field.suffixIcon' label='Suffix Icon' v-if='!field.suffix'/>"
 			+ "		<n-page-mapper v-model='field.bindings' :from='availableParameters' v-if='false' :to='[\"validator\"]'/>"
 			+ "</n-form-section>",
 	props: {
@@ -60,6 +67,14 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 	created: function() {
 		if (!this.field.enumerationProvider) {
 			Vue.set(this.field, "enumerationProvider", null);
+		}
+		if (this.field.showRadioView) {
+			this.field.visualisation = "radio";
+			delete this.field.showRadioView;
+		}
+		// backwards compatibility
+		else if (!this.field.hasOwnProperty("visualisation")) {
+			this.field.visualisation = "combo-with-labels";	
 		}
 		this.normalize(this.field);
 	},
@@ -181,7 +196,7 @@ Vue.component("page-form-input-enumeration-operation-configure", {
 
 Vue.component("page-form-input-enumeration-operation", {
 	template: ""
-			+ "<n-form-radio v-if='field.showRadioView'"
+			+ "<n-form-radio v-if=\"field.showRadioView || field.visualisation == 'radio'\""
 			+ "		:items='resolvedItems'"
 			+ "		ref='form'"
 			+ "		:edit='!readOnly'"
@@ -200,6 +215,7 @@ Vue.component("page-form-input-enumeration-operation", {
 			+ "		:extracter='enumerationExtracter'"
 			+ "		:disabled='disabled'/>"
 			+ "<n-form-combo v-else ref='form' :filter='enumerationFilter' :formatter='enumerationFormatter' :extracter='enumerationExtracter' :resolver='enumerationResolver'"
+			+ "		:combo-type=\"field.visualisation == 'combo' ? 'n-input-combo2' : 'n-input-combo'\""
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='placeholder'"
 			+ "		@input=\"function(newValue, label, rawValue, selectedLabel) { $emit('input', newValue, label, rawValue, selectedLabel) }\""
@@ -209,7 +225,7 @@ Vue.component("page-form-input-enumeration-operation", {
 			+ "		:label='label'"
 			+ "		:value='value'"
 			+ "		:required='required'"
-			+ "		:allow-typing='!field.readOnly'"
+			+ "		:allow-typing='field.allowTyping'"
 			+ "		:empty-value='field.emptyValue ? $services.page.translate($services.page.interpret(field.emptyValue)) : null'"
 			+ "		:calculating-value='field.calculatingValue ? $services.page.translate($services.page.interpret(field.calculatingValue)) : null'"
 			+ "		:reset-value='field.resetValue ? $services.page.translate($services.page.interpret(field.resetValue)) : null'"
@@ -222,7 +238,13 @@ Vue.component("page-form-input-enumeration-operation", {
 			+ "		:description-type='field.descriptionType'"
 			+ "		:description-icon='field.descriptionIcon'"
 			+ "		:schema='schema'"
-			+ "		:disabled='disabled'/>",
+			+ "		:disabled='disabled'"
+			+ "		:select-all-value='field.selectAllValue ? $services.page.translate($services.page.interpret(field.selectAllValue)) : null'"
+			+ "		:use-checkbox='field.useCheckbox'"
+			+ "		:show-tags='field.showTags'"
+			+ "		:show-amount='field.showAmount'"
+			+ "		:max-amount-of-tags='field.maxAmountOfTags'"
+			+ "		/>",
 	props: {
 		cell: {
 			type: Object,
@@ -278,6 +300,10 @@ Vue.component("page-form-input-enumeration-operation", {
 		}
 	},
 	created: function() {
+		if (Object.keys(this.field).length == 0) {
+			// if we have no configuration at all yet, set visualisation to "new" combo
+			Vue.set(this.field, "visualisation", "combo");
+		}
 		if (this.field.showRadioView) {
 			var self = this;
 			this.enumerationFilterAny(null, false).then(function(x) {

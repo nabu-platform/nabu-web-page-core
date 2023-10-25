@@ -39,8 +39,8 @@
 				:formatter="function(x) { return x.title }"/>
 			<n-form-ace v-if="cell.state.required == 'condition'" v-model="cell.state.requiredCondition" label="Required" after="You can force this field to be mandatory"/>
 		</div>
-		<component :is="configurationComponent" :page="page" :cell="cell" :field="cell.state" :possible-fields="availableFields()"
-			class="is-column is-spacing-medium"/>
+		
+		<component :is="configurationComponent" :page="page" :cell="cell" :field="cell.state" :possible-fields="availableFields()" />
 			
 		<div class="is-column is-spacing-medium">
 			<h3 class="is-h3">Validation Messages</h3>

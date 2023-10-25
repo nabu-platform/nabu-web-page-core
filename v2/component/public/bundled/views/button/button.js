@@ -80,7 +80,6 @@ Vue.view("page-button", {
 				if (this.cell.state.activeRoutes && this.cell.state.activeRoutes.length) {
 					var activeRoutes = this.cell.state.activeRoutes.filter(function(x) {
 						if (x.route == self.$services.vue.route) {
-							console.log("checking condition", x.condition);
 							return !x.condition
 								|| self.$services.page.isCondition(x.condition, self.$services.vue.parameters, self, function(value) {
 									var result = self.$services.page.getValue(self.$services.vue.parameters, value);

@@ -190,6 +190,16 @@
 						"image.scss": {
 							"url": "views/image/image.scss"
 						}
+					},
+					"markdown": {
+						"markdown.tpl": {
+							"url": "views/markdown/markdown.tpl",
+							"template": true
+						}, 
+						"markdown.js": {
+							"url": "views/markdown/markdown.js",
+							"template": true
+						}
 					}, 
 					"pages": {
 						"pages.js": {
@@ -463,6 +473,22 @@
 							}
 						}, 
 						"form": {
+							"enumeration": {
+								"enumeration.js": {
+									"url": "views/providers/form/enumeration/enumeration.js"
+								},
+								"enumeration.tpl": {
+									"url": "views/providers/form/enumeration/enumeration.tpl"
+								}
+							},
+							"combo": {
+								"combo.js": {
+									"url": "views/providers/form/combo/combo.js"
+								},
+								"combo.tpl": {
+									"url": "views/providers/form/combo/combo.tpl"
+								}
+							},
 							"list": {
 								"predefined": {
 									"predefined.js": {

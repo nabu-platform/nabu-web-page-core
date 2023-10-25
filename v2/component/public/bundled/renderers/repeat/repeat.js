@@ -347,6 +347,7 @@ Vue.component("renderer-repeat", {
 	},
 	data: function() {
 		return {
+			destroyed: false,
 			repeatTimer: null,
 			created: false,
 			loadCounter: 0,
@@ -392,7 +393,7 @@ Vue.component("renderer-repeat", {
 		// first map the default order by, we might overwrite it with the input mappings
 		if (this.target.repeat && this.target.repeat.defaultOrderBy) {
 			nabu.utils.arrays.merge(this.state.order.by, this.target.repeat.defaultOrderBy.map(function(x) {
-				return x.name + " " + (x.direction ? x.direction : "asc");
+				return x.name + " " + (x.direction ? x.direction : "asc") + (x.nulls ? " " + x.nulls : "");
 			}));
 		}
 		
@@ -487,6 +488,7 @@ Vue.component("renderer-repeat", {
 		}
 	},
 	beforeDestroy: function() {
+		this.destroyed = true;
 		this.unloadPage();
 		if (this.repeatTimer) {
 			clearTimeout(this.repeatTimer);
@@ -1011,7 +1013,8 @@ Vue.component("renderer-repeat", {
 					self.uniquify();
 					self.loading = false;
 					self.created = true;
-					if (self.target.repeat.refreshInterval) {
+					// only repeat if we are not yet destroyed
+					if (self.target.repeat.refreshInterval && !self.destroyed) {
 						self.repeatTimer = setTimeout(function() {
 							self.loadData(page)
 						}, self.target.repeat.refreshInterval);
