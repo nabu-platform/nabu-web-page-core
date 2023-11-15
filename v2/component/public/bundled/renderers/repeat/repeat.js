@@ -99,7 +99,7 @@ nabu.page.provide("page-renderer", {
 		var result = {};
 		if (container.repeat) {
 			result["recordIndex"] = {type: "int64"};
-			if (container.repeat.operation) {
+			if (container.repeat.type == "operation" && container.repeat.operation) {
 				var operation = $services.swagger.operations[container.repeat.operation];
 				if (operation && operation.responses && operation.responses["200"] && operation.responses["200"].schema) {
 					var properties = {};
@@ -141,7 +141,7 @@ nabu.page.provide("page-renderer", {
 //					}
 				}
 			}
-			else if (container.repeat.array) {
+			else if (container.repeat.type == "array" && container.repeat.array) {
 				var record = {};
 				var available = pageParameters;
 				var arrayName = container.repeat.array;
@@ -291,7 +291,7 @@ nabu.page.provide("page-renderer", {
 		// TODO: check that it is an operation _and_ it has limit/offset capabilities
 		//return [];
 		var specifications = [];
-		if (target.repeat && target.repeat.operation) {
+		if (target.repeat && target.repeat.type == "operation" && target.repeat.operation) {
 			var operation = application.services.swagger.operations[target.repeat.operation];
 			if (operation) {
 				var parameters = operation.parameters.map(function(x) { return x.name });
@@ -933,7 +933,7 @@ Vue.component("renderer-repeat", {
 				this.unselectAll();
 			}
 			// we want to call an operation
-			if (this.target.repeat && this.target.repeat.operation) {
+			if (this.target.repeat && this.target.repeat.type == "operation" && this.target.repeat.operation) {
 				var parameters = {}
 				nabu.utils.objects.merge(parameters, this.operationParameters);
 				// local state variables win from passed in ones!
@@ -1025,7 +1025,7 @@ Vue.component("renderer-repeat", {
 					self.created = true;
 				})
 			}
-			else if (this.target.repeat && this.target.repeat.array) {
+			else if (this.target.repeat && this.target.repeat.type == "array" && this.target.repeat.array) {
 				if (!append) {
 					this.state.records.splice(0, this.state.records.length);
 				}

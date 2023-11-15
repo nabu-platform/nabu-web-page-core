@@ -318,9 +318,13 @@ Vue.service("triggerable", {
 					return result;
 				}
 				
+				// executing during run!
+				var actions = x.actions;
+				/*
 				var actions = x.actions.filter(function(y) {
 					return !y.condition || self.$services.page.isCondition(y.condition, value, instance, customValueFunction);
 				});
+				*/
 				
 				// local state we have built up, we can get variables from there
 				
@@ -333,6 +337,9 @@ Vue.service("triggerable", {
 				// actions can be immediately run or chained
 				var runAction = function(index, lastPromise) {
 					var action = actions[index];
+					if (action.condition && !self.$services.page.isCondition(action.condition, value, instance, customValueFunction)) {
+						return self.$services.q.resolve();
+					}
 					var getBindings = function() {
 						return self.getBindings(action, instance, state);
 /*						var parameters = {};

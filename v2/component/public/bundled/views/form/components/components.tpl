@@ -30,6 +30,7 @@
 				<n-form-combo v-model="cell.state.rawName" label="Raw Field Name" :filter="availableFields" v-if="!cell.state.useComputed" after="In some cases the value is derived from a raw value that might also be interesting, you can capture that here"/>
 				<n-form-ace v-model="cell.state.computed" label="Initial value for computed" v-else/>
 				<n-form-text v-model="cell.state.timeout" label="Timeout" info="How long should the system wait before the new value is applied?"/>
+				<n-form-switch v-model="cell.state.initializeArray" label="Initialize empty array if null" v-if="isArrayField()"/>
 			</div>
 			<h2 class="section-title">Copywriting</h2>
 			<div class="is-column is-spacing-medium">

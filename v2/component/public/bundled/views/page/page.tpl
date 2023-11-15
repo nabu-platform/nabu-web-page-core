@@ -102,7 +102,7 @@
 			<div class="is-row">
 				<div class="is-column is-width-fixed-3 is-column is-align-cross-center is-align-main-start is-page-editing-small-menu is-spacing-gap-small">
 					<div class="is-column is-spacing-vertical-medium is-spacing-gap-small">
-						<button class="is-button is-size-small" @click="stopEdit"><icon name="times"/></button>
+						<button class="is-button is-size-small has-tooltip" @click="stopEdit"><icon name="times"/><span class="is-tooltip is-position-bottom">Stop editing <shortkey :ctrl="true">E</shortkey></span></button>
 						<button class="is-button is-size-small has-tooltip" @click="save"><icon name="save"/><span class="is-tooltip">Last saved: {{saved ? $services.formatter.date(saved, 'HH:mm:ss') : 'never' }}<shortkey :ctrl="true">S</shortkey></span></button>
 					</div>
 					<div class="is-column is-spacing-vertical-medium is-spacing-gap-small">
@@ -127,6 +127,9 @@
 					</div>
 					
 					<div v-show="edit && page.content.rows && activeTab  == 'layout'" class="layout">
+						<div class="tabbed-menu is-row is-spacing-xsmall is-spacing-vertical-bottom-none">
+							<button class="is-button is-size-xsmall">Layout</button>
+						</div>
 						<page-sidemenu :rows="page.content.rows" :page="page"
 							:selected="cell ? cell : row"
 							@select="selectItem"

@@ -92,7 +92,6 @@ Vue.view("page-image", {
 		},
 		emptyImage: function() {
 			var defaultPlaceholder = application.configuration.root + 'resources/modules/image/placeholder.svg';
-			console.log("calculating empty", this.cell.state.emptyImage, this.$services.page.interpret(this.cell.state.emptyImage));
 			return this.cell.state.emptyImage ? this.$services.page.interpret(this.cell.state.emptyImage) : defaultPlaceholder;
 		},
 		// we put this in a computed because we want this to be reactive

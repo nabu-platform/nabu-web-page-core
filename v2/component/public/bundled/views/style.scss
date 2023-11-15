@@ -12,6 +12,12 @@ body[page-editing="large"] {
 	padding-left: $page-sidebar-width-large;
 }
 
+.is-badge.shortkey {
+	margin-left: 0.3rem;
+	margin-right: 0.3rem;
+	background-color: #252a2a;
+	border: none;
+}
 
 .is-sidebar.is-page-editing {
 	.is-page-editing-small-menu {
@@ -52,7 +58,11 @@ body[page-editing="large"] {
 		.page-name {
 			rotate: -90deg;
 			color: $color-neutral-lightest;
-			margin-bottom:1rem;			
+		    position: absolute;
+		    bottom: 5rem;
+		    white-space: nowrap;
+		    transform-origin: bottom left;
+		    left: 2rem;
 		}
 		button {
 			color: $color-neutral-lightest;
@@ -138,12 +148,6 @@ body[page-editing="large"] {
 		margin: 0;
 		padding: 0;
 	}
-	.shortkey {
-		margin-left: 0.3rem;
-		margin-right: 0.3rem;
-		background-color: #252a2a;
-		border: none;
-	}
 	.is-info {
 		position: static;
 		.is-info-content-wrapper {
@@ -156,7 +160,7 @@ body[page-editing="large"] {
 		.is-label-wrapper {
 			border-radius: 0;
 			label {
-				color: indianred;
+				color: $color-primary-dark; // indianred
 				font-size: 0.7rem;
 				// we position a 1px line exactly over the border of the input field below it
 				// the alternative is that we give the full label a white background which works very well if everything is white

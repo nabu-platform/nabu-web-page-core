@@ -77,6 +77,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			}
 		},
 		created: function() {
+			this.initializeArray();
 			// if we have a raw value capture, we want to unset it when rendering this component
 			// it can only be validly set by the component after it receives the actual value (if any)
 			if (this.cell.state.rawName) {
@@ -106,6 +107,29 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			}
 		},
 		methods: {
+			initializeArray: function() {
+				// if we don't have a value yet and it is an array, initialize as empty array
+				if (this.value == null) {
+					if (this.cell.state.initializeArray && this.isArrayField()) {
+						this.computed = false;
+						this.update([]);
+					}
+					/*
+					var arrays = this.$services.page.getAllArrays(this.page, this);
+					if (arrays.indexOf(this.cell.state.name) >= 0 || arrays.indexOf("page." + this.cell.state.name) >= 0) {
+						this.computed = false;
+						this.update([]);
+					}
+					*/
+				}
+			},
+			isArrayField: function() {
+				var arrays = this.$services.page.getAllArrays(this.page, this);
+				if (this.cell.state.name && arrays.indexOf(this.cell.state.name) >= 0 || arrays.indexOf("page." + this.cell.state.name) >= 0) {
+					return true;
+				}
+				return false;
+			},
 			getTriggers: function() {
 				return {
 					"update": {

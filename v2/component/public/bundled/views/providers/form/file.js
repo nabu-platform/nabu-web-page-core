@@ -1,20 +1,24 @@
 Vue.component("page-form-input-file-configure", {
-	template: "<n-form-section>"
-		+ "	<n-form-section v-for='i in Object.keys(field.fileTypes)' class='list-row'>"
-		+ "		<n-form-text v-model='field.fileTypes[i]' label='File Type' placeholder='image/*' :timeout='600'/>"
-		+ "		<span @click='field.fileTypes.splice(i)' class='fa fa-times'></span>"
-		+ "</n-form-section>"
-		+ "<button @click=\"field.fileTypes ? field.fileTypes.push(null) : $window.Vue.set(field, 'fileTypes', [null])\"><span class='fa fa-plus'></span>Filetype</button>"
+	template: "<div class='input-file-configure'>"
+		+ "		<h2 class='section-title'>File upload</h2>"
+		+ "		<div class='is-column is-spacing-medium'>"
 		// ignore body as this presumes a pure binary upload, we use headers then
 		+ "<n-form-text label='Label drop' v-model='field.dropLabel' :timeout='600'/>"
 		+ "<n-form-text label='Label browse' v-model='field.browseLabel' :timeout='600'/>"
 		+ "<n-form-text label='Icon browse' v-model='field.browseIcon' :timeout='600'/>"
 		+ "<n-form-text label='Max file size (bytes)' v-model='field.maxFileSize' :timeout='600'/>"
-		+ "<n-form-switch label='Show selected files' v-model='field.visualiseSelectedFiles'/>"
-		+ "<n-form-text v-if='field.visualiseSelectedFiles' label='Delete icon' v-model='field.deleteIcon' :timeout='600'/>"
+		+ "<n-form-switch label='Show selected files' v-model='field.visualizeFileNames'/>"
+		+ "<n-form-text v-if='field.visualizeFileNames' label='Delete icon' v-model='field.deleteIcon' :timeout='600'/>"
+		+ "	<n-form-section v-for='i in Object.keys(field.fileTypes)' class='list-row'>"
+		+ "		<n-form-text v-model='field.fileTypes[i]' label='File Type' placeholder='image/*' :timeout='600'/>"
+		+ "		<span @click='field.fileTypes.splice(i)' class='fa fa-times'></span>"
+		+ "</n-form-section>"
+		+ "		<div class='is-row is-align-end'>"
+		+ "			<button class='is-button is-variant-primary-outline is-size-xsmall' @click=\"field.fileTypes ? field.fileTypes.push(null) : $window.Vue.set(field, 'fileTypes', [null])\"><span class='fa fa-plus'></span>Filetype</button>"
+		+ "		</div>"
 		+ "<n-form-combo v-if=\"field.name && field.name != 'body'\" v-model='field.contentType' label='Field to store content type' :items='possibleFields'/>"
 		+ "<n-form-combo v-if=\"field.name && field.name != 'body'\" v-model='field.fileName' label='Field to store file name' :items='possibleFields'/>"
-		+ "</n-form-section>",
+		+ "</div></div>",
 	props: {
 		cell: {
 			type: Object,
@@ -50,11 +54,16 @@ Vue.component("page-form-input-file", {
 			+ "		:label='label'"
 			+ "		:value='files'"
 			+ "		:name='field.name'"
-			+ " 	:dropLabel='field.dropLabel ? $services.page.translate(field.dropLabel) : null'"
-			+ " 	:browseLabel='field.browseLabel ? $services.page.translate(field.browseLabel) : null'"
-			+ " 	:browseIcon='field.browseIcon'"
-			+ " 	:visualiseSelectedFiles='field.visualiseSelectedFiles'"
-			+ " 	:deleteIcon='field.deleteIcon'"
+			+ " 	:drop-label='field.dropLabel ? $services.page.translate(field.dropLabel) : null'"
+			+ " 	:browse-label='field.browseLabel ? $services.page.translate(field.browseLabel) : null'"
+			+ " 	:browse-icon='field.browseIcon'"
+			+ " 	:visualize-file-names='field.visualizeFileNames'"
+			+ " 	:delete-icon='field.deleteIcon'"
+			+ "		:button-class=\"getChildComponentClasses('file-upload-button')\""
+			+ "		:file-name-class=\"getChildComponentClasses('file-upload-name')\""
+			+ "		:file-name-container-class=\"getChildComponentClasses('file-upload-name-container')\""
+			+ "		:file-name-row-class=\"getChildComponentClasses('file-upload-name-row')\""
+			+ "		:file-name-delete-class=\"getChildComponentClasses('file-upload-name-delete')\""
 			+ "		:timeout='timeout'"
 			+ "		:max-file-size='field.maxFileSize ? parseInt(field.maxFileSize) : null'"
 			+ "		:disabled='disabled'/>",
@@ -92,6 +101,9 @@ Vue.component("page-form-input-file", {
 		readOnly: {
 			type: Boolean,
 			required: false
+		},
+		childComponents: {
+			required: false
 		}
 	},
 	data: function() {
@@ -104,6 +116,7 @@ Vue.component("page-form-input-file", {
 		if (this.value instanceof File) {
 			this.files.push(this.value);
 		}
+		console.log("child components", this.childComponents);
 	},
 	computed: {
 		textType: function() {
@@ -111,6 +124,29 @@ Vue.component("page-form-input-file", {
 		}
 	},
 	methods: {
+		getChildComponents: function() {
+			return [{
+				title: "Upload button",
+				name: "file-upload-button",
+				component: "button"
+			}, {
+				title: "File Name List",
+				name: "file-upload-name-container",
+				component: "column"
+			}, {
+				title: "File Name Container",
+				name: "file-upload-name-row",
+				component: "row"
+			}, {
+				title: "File Name",
+				name: "file-upload-name",
+				component: "content"
+			}, {
+				title: "File Name Delete Button",
+				name: "file-upload-delete-button",
+				component: "button"
+			}];
+		},
 		changed: function(newValue) {
 			var file = newValue && newValue.length ? newValue[0] : null;
 			if (this.field.contentType) {

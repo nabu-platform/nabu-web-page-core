@@ -1717,7 +1717,7 @@ nabu.services.VueService(Vue.extend({
 		injectEditIcon: function() {
 			var div = document.createElement("div");
 			div.setAttribute("id", "page-edit-icon");
-			div.setAttribute("class", "is-column");
+			div.setAttribute("class", "is-column has-tooltip");
 			div.setAttribute("style", "position: fixed; bottom: 1rem; left: 1rem;");
 			var button = document.createElement("button");
 			div.appendChild(button);
@@ -1727,11 +1727,17 @@ nabu.services.VueService(Vue.extend({
 			document.body.appendChild(div);
 			var self = this;
 			
+			var tooltip = document.createElement("span");
+			tooltip.setAttribute("class", "is-tooltip is-wrap-none");
+			tooltip.innerHTML = "Show rendered pages <span class='shortkey is-badge'>" + (navigator.platform.toLowerCase().indexOf("mac") >= 0 ? "CMD" : "CTRL") + "+ALT+X</span>";
+			div.appendChild(tooltip);
+			
 			var pages = document.createElement("div");
 			pages.setAttribute("style", "position: absolute; bottom: 100%; left: 0;");
 			//pages.style.display = "none";
 			div.appendChild(pages);
 			var showPages = function() {
+				div.removeChild(tooltip);
 				nabu.utils.elements.clear(pages);
 				var button = document.createElement("button");
 				button.setAttribute("style", "background-color: #333; color: #fff; white-space:nowrap; border: none; padding: 0.7rem; border: solid 1px #333; margin-bottom: 0.3rem; border-radius: 10px; cursor: pointer; display: flex;");
@@ -1786,6 +1792,7 @@ nabu.services.VueService(Vue.extend({
 			}
 			button.onclick = function(event) {
 				if (pages.firstChild) {
+					div.appendChild(tooltip);
 					nabu.utils.elements.clear(pages);	
 				}
 				else {
@@ -1796,14 +1803,16 @@ nabu.services.VueService(Vue.extend({
 			// make sure it closes when you click somewhere
 			document.addEventListener("click", function() {
 				if (pages.firstChild) {
+					div.appendChild(tooltip);
 					nabu.utils.elements.clear(pages);
 				}
 			});
 			// add the same shortkey as before to open it
 			document.addEventListener("keydown", function(event) {
-				if (event.ctrlKey && event.altKey && event.keyCode == 88) {
+				if ((event.ctrlKey || event.metaKey) && event.altKey && event.keyCode == 88) {
 					if (self.canEdit()) {
 						if (pages.firstChild) {
+							div.appendChild(tooltip);
 							nabu.utils.elements.clear(pages);	
 						}
 						else {

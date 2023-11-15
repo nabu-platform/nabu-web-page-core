@@ -62,13 +62,18 @@ Vue.view("page-tag", {
 			if (!this.running) {
 				var originalValue = this.getValue();
 				if (this.cell.state.field) {
-					var pageInstance = this.$services.page.getPageInstance(this.page, this);
-					pageInstance.set(this.cell.state.field, null);
-					if (this.requiresPagePrefix) {
-						pageInstance.set("page." + this.cell.state.field, null);	
+					// for arrays we simply empty them out rather than deleting them
+					if (originalValue instanceof Array) {
+						originalValue.splice(0);
+					}
+					else {
+						var pageInstance = this.$services.page.getPageInstance(this.page, this);
+						pageInstance.set(this.cell.state.field, null);
+						if (this.requiresPagePrefix) {
+							pageInstance.set("page." + this.cell.state.field, null);	
+						}
 					}
 				}
-				
 				var self = this;
 				var done = function() {
 					self.running = false;
@@ -97,6 +102,10 @@ Vue.view("page-tag", {
 				if (value == null) {
 					value = pageInstance.get(this.cell.state.field);
 				}
+			}
+			// an empty array is the same as null!
+			if (value instanceof Array && !value.length) {
+				value = null;
 			}
 			// toggle the cell
 			if (value != null) {
