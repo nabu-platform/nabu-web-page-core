@@ -39,6 +39,8 @@ nabu.services.VueService(Vue.extend({
 			mouseY: 0,
 			counter: 1,
 			title: null,
+			theme: null,
+			restrictToTheme: true,
 			home: null,
 			homeUser: null,
 			pages: [],
@@ -250,6 +252,13 @@ nabu.services.VueService(Vue.extend({
 		})
 	},
 	methods: {
+		isThemeCompliant: function(entry) {
+			console.log("theme compliant", entry, this.theme, this.restrictToTheme);
+			if (this.theme != null && this.restrictToTheme) {
+				return entry.theme == this.theme;
+			}
+			return true;
+		},
 		isActiveView: function(view) {
 			return this.activeViews.indexOf(view) >= 0;
 		},
@@ -1515,6 +1524,9 @@ nabu.services.VueService(Vue.extend({
 				self.ensureDevices();
 				if (configuration.title) {
 					self.title = configuration.title;
+				}
+				if (configuration.theme) {
+					self.theme = configuration.theme;
 				}
 				if (configuration.home) {
 					self.home = configuration.home;
@@ -3002,6 +3014,7 @@ nabu.services.VueService(Vue.extend({
 			return this.$services.swagger.execute("nabu.web.page.core.v2.rest.configuration.update", {
 				body: {
 					title: this.title,
+					theme: this.theme,
 					home: this.home,
 					homeUser: this.homeUser,
 					users: this.users,

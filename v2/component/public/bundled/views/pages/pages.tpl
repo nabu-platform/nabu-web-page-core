@@ -36,6 +36,7 @@
 								<n-form-combo v-model="$services.page.homeUser" label="User Home Page" :filter="$services.page.getRoutes" @input="$services.page.saveConfiguration"/>
 								<n-form-text v-model="$services.page.googleSiteVerification" label="Google site verification code" :timeout="600" @input="$services.page.saveConfiguration" v-if="false"/>
 								<n-form-text v-model="$services.page.geoRefusalTimeout" label="Timeout (in hours) that a geo refusal is stored" info="No timeout means we have no geo enabled" type="number" :timeout="600" @input="$services.page.saveConfiguration"/>
+								<n-form-text v-model="$services.page.theme" label="The theme to use for this application" :timeout="600" @input="$services.page.saveConfiguration"/>
 							</div>
 						</div>
 						<div class="pane">

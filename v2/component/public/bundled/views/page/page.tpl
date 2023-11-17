@@ -1221,6 +1221,7 @@
 	<div class="aris-editor">
 		<div class="is-column is-spacing-medium">
 			<n-form-text v-model="search" :timeout="600" placeholder="Search styling options"/>
+			<n-form-switch v-if="$services.page.theme" label="Restrict to theme" v-model="$services.page.restrictToTheme"/>
 		</div>
 		<n-collapsible v-for="childComponent in childComponents" :only-one-open="true" class="is-highlight-left is-color-primary-light" :title="childComponent.title" :after="childComponent.component + getFormattedAmountOfAppliedOptions(childComponent)" ref="collapsibles">
 			<ul class="is-menu is-variant-toolbar is-align-end is-spacing-horizontal-right-small" slot="buttons">

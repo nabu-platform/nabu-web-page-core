@@ -4,6 +4,7 @@
     <field minOccurs="0" name="homeUser" type="java.lang.String"/>
     <field minOccurs="0" name="googleSiteVerification" type="java.lang.String"/>
     <field comment="Amount of hours to wait before asking again after the user explicitly refused." minOccurs="0" name="geoRefusalTimeout" type="java.lang.Integer"/>
+    <field minOccurs="0" name="theme" type="java.lang.String"/>
     <field minOccurs="0" name="defaultLocale" type="java.lang.String"/>
     <structure minOccurs="0" name="branding">
         <field comment="The location of the favicon in your application." minOccurs="0" name="favicon" type="java.lang.String"/>

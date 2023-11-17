@@ -3,7 +3,7 @@ aris = cssWithAris(compile: false)/result
 optionCleaner = lambda
 	option ?= null
 	@return
-	result = structure(name: option/option, body: option/body)
+	result = structure(name: option/option, body: option/body, theme: option/theme)
 
 components = series()
 # we want to bundle the components
@@ -14,9 +14,10 @@ for (component : aris/components)
 	#dimensions = derive(lambda(key, structure(name: key, options: dimensions[dimension == /key]/option)), keys(groupedDimensions))
 	dimensions = derive(lambda(key, structure(name: key, options: derive(optionCleaner, dimensions[dimension == /key]))), keys(groupedDimensions))
 	
-	variants = derive(lambda(x, structure(name: x/option, modifiers: aris/modifiers[component == /x/component && variant == /x/option]/option)), aris/variants[component == /component/name])
+	variants = derive(lambda(x, structure(name: x/option, theme: x/theme, modifiers: aris/modifiers[component == /x/component && variant == /x/option]/option)), aris/variants[component == /component/name])
 	
 	components = merge(components, structure(
+		theme: component/theme,
 		name: component/name,
 		extends: component/component,
 		dimensions: dimensions,

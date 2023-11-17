@@ -199,6 +199,15 @@
 			<from>input/content/defaultLocale</from>
 			<to>configuration/defaultLocale</to>
 		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="ffb54de48abd4820a31f29c6f08a2840"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>input/content/theme</from>
+			<to>configuration/theme</to>
+		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			comment="Store main configuration"

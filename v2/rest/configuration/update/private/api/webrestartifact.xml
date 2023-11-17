@@ -7,10 +7,13 @@
     <permissionAction>application.edit</permissionAction>
     <useServiceContextAsPermissionContext>false</useServiceContextAsPermissionContext>
     <useWebApplicationAsPermissionContext>true</useWebApplicationAsPermissionContext>
+    <useProjectAsPermissionContext>false</useProjectAsPermissionContext>
+    <useGlobalPermissionContext>false</useGlobalPermissionContext>
     <input>nabu.web.page.core.rest.configuration.updateInput</input>
     <lenient>false</lenient>
     <webApplicationId>true</webApplicationId>
     <geoPosition>false</geoPosition>
+    <useAsAuthorizationServiceContext>false</useAsAuthorizationServiceContext>
     <language>false</language>
     <allowFormBinding>false</allowFormBinding>
     <caseInsensitive>false</caseInsensitive>
@@ -23,8 +26,12 @@
     <source>false</source>
     <allowRaw>false</allowRaw>
     <domain>false</domain>
+    <origin>false</origin>
+    <scheme>false</scheme>
     <ignoreOffline>false</ignoreOffline>
     <allowRootArrays>false</allowRootArrays>
     <captureErrors>false</captureErrors>
     <captureSuccessful>false</captureSuccessful>
+    <limitedToInterface>false</limitedToInterface>
+    <allowExplicitResponseCode>false</allowExplicitResponseCode>
 </restInterface>

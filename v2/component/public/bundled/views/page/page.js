@@ -5686,6 +5686,7 @@ Vue.component("aris-editor", {
 		getAvailableDimensions: function(childComponent) {
 			var hierarchy = this.$services.page.getArisComponentHierarchy(childComponent.component);
 			var dimensions = [];
+			var self = this;
 			hierarchy.forEach(function(component) {
 				if (component.dimensions) {
 					component.dimensions.forEach(function(x) {
@@ -5718,8 +5719,15 @@ Vue.component("aris-editor", {
 						else {
 							nabu.utils.arrays.merge(current.options, x.options);
 						}
+						current.options = current.options.filter(function(x) {
+							return self.$services.page.isThemeCompliant(x);
+						});
 					})
 				}
+			});
+			// a dimension without options is worthless!
+			dimensions = dimensions.filter(function(x) {
+				return x.options.length > 0;
 			});
 			// sort the dimensions alphabetically
 			dimensions.sort(function(a, b) { return a.name.localeCompare(b.name) });
@@ -5727,9 +5735,12 @@ Vue.component("aris-editor", {
 		},
 		getAvailableVariants: function(childComponent) {
 			var variants = [];
+			var self = this;
 			this.$services.page.getArisComponentHierarchy(childComponent.component).forEach(function(component) {
 				if (component.variants != null) {
-					component.variants.forEach(function(variant) {
+					component.variants.filter(function(x) {
+						return self.$services.page.isThemeCompliant(x)
+					}).forEach(function(variant) {
 						var clone = JSON.parse(JSON.stringify(variant));
 						clone.component = component.name;
 						variants.push(clone);
@@ -5775,8 +5786,9 @@ Vue.component("aris-editor", {
 		getAvailableModifiers: function(childComponent) {
 			var current = this.container.components[childComponent.name].variant;
 			var available = {};
+			var self = this;
 			this.getAvailableVariants(childComponent).filter(function(x) {
-				return x.name == "default" || x.name == current;
+				return self.$services.page.isThemeCompliant(x) && (x.name == "default" || x.name == current);
 			}).forEach(function(x) { 
 				if (x.modifiers) {
 					x.modifiers.forEach(function(y) {
@@ -5798,7 +5810,8 @@ Vue.component("aris-editor", {
 			return available;
 		},
 		getAvailableOptions: function(childComponent, dimension) {
-			var current = this.getAvailableDimensions(childComponent).filter(function(x) { return x.name == dimension.name });
+			var self = this;
+			var current = this.getAvailableDimensions(childComponent).filter(function(x) { return self.$services.page.isThemeCompliant(x) && x.name == dimension.name });
 			return current ? current.options : [];
 		},
 		toggleOption: function(childComponent, dimension, option) {
