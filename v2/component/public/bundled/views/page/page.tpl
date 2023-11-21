@@ -317,9 +317,9 @@
 								<div class="is-column is-spacing-medium">
 									<p class="is-p is-size-small is-color-light">You can add additional data from the backend or the application to this page. For example when building a detail view of an item, you can retrieve all the necessary information based on an id that you get from the path.</p>
 									<ul class="is-menu is-variant-toolbar is-align-end">
-										<li class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall" @click="addState"><icon name="plus"/>Backend<n-info>Load initial state from the backend</n-info></button></li>
-										<li class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall" @click="addApplicationState"><icon name="plus"/></span>Application<n-info>Use state available at the application level</n-info></button></li>
-										<li class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall" @click="function() { if (page.content.stateErrors) page.content.stateErrors.push({}); else $window.Vue.set(page.content, 'stateErrors', [{}]) }"><icon name="plus"/>Error<n-info>In case of state errors when loading, where should the user be routed?</n-info></button></li>
+										<li class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall has-tooltip" @click="addState"><icon name="plus"/>Backend<span class="is-tooltip">Load initial state from the backend</span></button></li>
+										<li class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall has-tooltip" @click="addApplicationState"><icon name="plus"/></span>Application<span class="is-tooltip">Use state available at the application level</span></button></li>
+										<li class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall has-tooltip" @click="function() { if (page.content.stateErrors) page.content.stateErrors.push({}); else $window.Vue.set(page.content, 'stateErrors', [{}]) }"><icon name="plus"/>Error<span class="is-tooltip">In case of state errors when loading, where should the user be routed?</span></button></li>
 									</ul>
 								</div>
 								<div class="is-accordion is-highlight-left">
@@ -1289,7 +1289,7 @@
 						@drop="dropRow($event, row)"
 						@mouseover="mouseOver($event, row)" 
 						@keydown.f2.prevent="function() { editing = null; aliasing = row.id }"
-						@keydown.delete.prevent="$emit('removeRow', row)"
+						@keydown.46.prevent="$emit('removeRow', row)"
 						@keydown.c.ctrl.prevent="copyRow(row)"
 						@keydown.c.meta.prevent="copyRow(row)"
 						@keydown.v.ctrl.prevent="pasteCell(row)"
@@ -1350,7 +1350,7 @@
 								@keydown.esc.prevent="function() { editing = null; aliasing = null }"
 								@keydown.ctrl.up="left(row, cell)"
 								@keydown.ctrl.down="right(row, cell)"
-								@keydown.delete.prevent="removeCell(row.cells, cell)"
+								@keydown.46.prevent="removeCell(row.cells, cell)"
 								@keydown.c.ctrl.prevent="copyCell(cell)"
 								@keydown.c.meta.prevent="copyCell(cell)"
 								@keydown.v.ctrl.prevent="pasteRow(cell)"

@@ -72,7 +72,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				}
 				// array values don't pass via the usual "update", instead they manipulate the arrays directly
 				else if (this.value instanceof Array) {
-					this.notifyUpdate();
+					this.notifyUpdate(this.value, this.value);
 				}
 			}
 		},
@@ -237,7 +237,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				if (this.cell.state.rawName) {
 					this.getPageInstance().set("page." + this.cell.state.rawName, rawValue != null ? rawValue : value, label);
 				}
-				this.notifyUpdate();
+				this.notifyUpdate(value, rawValue);
 			},
 			notifyUpdate: function(value, label, rawValue) {
 				var self = this;
