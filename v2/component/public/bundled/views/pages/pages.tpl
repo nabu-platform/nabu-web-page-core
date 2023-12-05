@@ -129,7 +129,7 @@
 							</ul>
 						</h3>
 						<div class="is-accordion">
-							<n-collapsible :only-one-open="true" :title="page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')" v-for="page in getPagesFor(category)" :key="page.id" after="Page">
+							<n-collapsible :only-one-open="true" :title="page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')" v-for="page in getPagesFor(category)" :key="page.id" :after="getPageTypeBadge(page)">
 								<ul slot="buttons" class="is-menu is-variant-toolbar is-align-end ">
 									<li class="is-column"><button class="is-button is-size-small is-variant-primary has-tooltip" @click="route(page)" title="Open this page"><icon name="search"/><span class="is-tooltip is-position-top">Open page</span></button></li>
 									<li class="is-column"><button class="is-button is-size-small is-variant-primary-outline has-tooltip" @click="copy(page)"><icon name="copy"/><span class="is-tooltip is-position-top">Copy page</span></button></li>

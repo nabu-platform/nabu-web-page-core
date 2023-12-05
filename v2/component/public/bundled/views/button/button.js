@@ -124,10 +124,15 @@ Vue.view("page-button", {
 		}
 	},
 	ready: function() {
-		this.elementPromise.resolve(this.$el);	
+		// we _have_ to do this in ready because the vue.nexttick logic assures us that all components have at least been created (and hopefully mounted) which means any state manipulation we want to do of for instance a repeat filter object, will have access to the correct object
 		if (this.cell.state.activateByDefault) {
-			this.handle();
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			// we must not be in a repeat or we must be the first iteration
+			if (pageInstance.recordIndex == null || pageInstance.recordIndex == 0) {
+				this.handle();
+			}
 		}
+		this.elementPromise.resolve(this.$el);	
 		if (this.cell.state.activeInitial) {
 			if (this.$services.page.isCondition(this.cell.state.activeInitial, null, this)) {
 				this.handle();
@@ -223,8 +228,8 @@ Vue.view("page-button", {
 		handle: function($event, middleMouseButton) {
 			// if you are in edit mode, you have to explicitly click alt to enable the button
 			// it seems that vue also intercepts spaces and sends it as a click event, meaning when you type in the rich text, it can trigger
-			if (!this.edit || ($event && $event.altKey)){ 
-				// left is for normal systems like linux and windows. the metakey is for those relegated to using inferior apple devices
+			if (!this.edit || ($event && $event.shiftKey)) { 
+				// left is for normal systems like linux and windows. the metakey is for those unfortunate enough to use apple devices
 				var isNewTab = $event && ($event.button == 1 || ($event.metaKey == true && $event.button == 0));
 				// if we have a link opening in a new tab, we don't want local routing
 				if (this.tagName == "a" && isNewTab) {

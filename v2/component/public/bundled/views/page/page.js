@@ -177,6 +177,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 			default: function() {
 				return application.services.page.pageCounter++;
 			}
+		},
+		recordIndex: {
+			type: Number
 		}
 	},
 	activate: function(done) {
@@ -690,6 +693,34 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		getActions: function(target, pageInstance, $services) {
+			var actions = [];
+			if (this.page.content.states && this.page.content.states.length) {
+				actions.push({
+					title: "Refresh State",
+					name: "refresh-state",
+					input: {
+						name: {
+							type: "string"
+						}
+					},
+					output: {
+					}
+				});
+			}
+			return actions;
+		},
+		runAction: function(action, parameters) {
+			var self = this;
+			if (action == "refresh-state" && parameters && parameters.name && self.page.content.states) {
+				var state = self.page.content.states.filter(function(state) {
+					return state.name == parameters.name
+				})[0];
+				if (state) {
+					self.loadInitialState(state, true);
+				}
+			}
+		},
 		isActiveView: function(view) {
 			return this.$services.page.activeViews.indexOf(view) >= 0;
 		},
@@ -3074,6 +3105,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			return this.$services.page.getValue(this.labels, name);	
 		},
+		setLabel: function(name, label) {
+			this.$services.page.setValue(this.labels, name, label);
+		},
 		get: function(name) {
 			// probably not filled in the value yet
 			if (!name) {
@@ -3263,6 +3297,17 @@ nabu.page.views.Page = Vue.component("n-page", {
 					message: "You must select a language"
 				});
 			}
+		},
+		setRouteParameters: function(parameters) {
+			var blacklist = ["page", "cell", "childComponents", "edit", "pageInstanceId", "stopRerender"];
+			var self = this;
+			Object.keys(parameters).forEach(function(key) {
+				if (blacklist.indexOf(key) < 0) {
+					console.log("setting", key, parameters[key]);
+					self.set(key, parameters[key]);
+				}
+			});
+			return false;
 		},
 		set: function(name, value, label) {
 			var target = null;
@@ -4653,6 +4698,33 @@ Vue.component("n-page-row", {
 		getParameters: function(row, cell) {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			var result = null;
+			if (cell.contentRuntimeAlias && !this.edit) {
+				result = pageInstance.variables[cell.contentRuntimeAlias];
+				if (result == null) {
+					result = {};
+					Vue.set(pageInstance.variables, cell.contentRuntimeAlias, result);
+				}
+			}
+			if (result == null) {
+				result = {};
+			}
+			if (!result.page) {
+				result.page = this.page;
+			}
+			if (!result.cell) {
+				result.cell = cell;
+			}
+			if (result.edit == null) {
+				result.edit = this.edit;
+			}
+			if (result.pageInstanceId == null) {
+				result.pageInstanceId = this.pageInstanceId;
+			}
+			if (result.stopRerender == null) {
+				result.stopRerender = this.edit;
+			}
+			/*
 			var result = {
 				page: this.page,
 				// does not seem to serve a purpose, they end up in "parameters.parameters" from the perspective of a child page
@@ -4666,6 +4738,7 @@ Vue.component("n-page-row", {
 				pageInstanceId: this.pageInstanceId,
 				stopRerender: this.edit
 			};
+			*/
 			// if we have an aris aware component, add a childComponents parameter
 			if (this.$services.page.useAris && cell && cell.aris && cell.aris.components) {
 				result.childComponents = this.$services.page.calculateArisComponents(cell.aris, null, this);
@@ -4714,6 +4787,9 @@ Vue.component("n-page-row", {
 			}
 		},
 		clickOnRow: function(row, $event) {
+			if (!this.edit && row.state.stopClickPropagation) {
+				$event.stopPropagation();
+			}
 			if (!this.edit && this.$services.triggerable.canTrigger(row, "click")) {
 				if ($event) {
 					$event.preventDefault();
@@ -4861,12 +4937,17 @@ Vue.component("n-page-row", {
 				}
 			}
 			else {
+				if (cell && cell.state.stopHoverPropagation) {
+					event.stopPropagation();
+				}
 				if (cell) {
 					this.$services.triggerable.untrigger(cell, "hover", this);
 				}
 				// it's hard to hover a row filled with content so we just trigger it always if you have something
 				this.$services.triggerable.untrigger(row, "hover", this);
-				event.stopPropagation();
+				if (row.state.stopHoverPropagation) {
+					event.stopPropagation();
+				}
 			}
 		},
 		mouseOver: function(event, row, cell) {
@@ -4895,7 +4976,9 @@ Vue.component("n-page-row", {
 				}
 				// it's hard to hover a row filled with content so we just trigger it always if you have something
 				this.$services.triggerable.trigger(row, "hover", null, this);
-				event.stopPropagation();
+				if (row.state.stopHoverPropagation) {
+					event.stopPropagation();
+				}
 			}
 		},
 		menuHover: function($event) {
@@ -5778,6 +5861,7 @@ Vue.component("aris-editor", {
 			var index = this.container.components[childComponent.name].modifiers.indexOf(modifier);
 			if (index >= 0) {
 				this.container.components[childComponent.name].modifiers.splice(index, 1);
+				this.container.components[childComponent.name].conditions[modifier] = null;
 			}
 			else {
 				this.container.components[childComponent.name].modifiers.push(modifier);
@@ -5818,6 +5902,7 @@ Vue.component("aris-editor", {
 			var index = this.container.components[childComponent.name].options.indexOf(dimension.name + "_" + option);
 			if (index >= 0) {
 				this.container.components[childComponent.name].options.splice(index, 1);
+				this.container.components[childComponent.name].conditions[dimension.name + '_' + option] = null;
 			}
 			else {
 				this.container.components[childComponent.name].options.push(dimension.name + "_" + option);

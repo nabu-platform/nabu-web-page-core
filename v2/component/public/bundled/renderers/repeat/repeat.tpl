@@ -2,8 +2,72 @@
 	<div v-fragment>
 		<template v-if="!edit && !loading && state.records.length">
 			<template v-if="fragmentPage.content.repeatType == 'cell'">
-				<component :is="getComponent()" v-for="(record, index) in state.records" :class="getCellClasses()" :page="page" :target="target">
-					<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
+				<template v-for="(record, index) in state.records">
+					<component :is="getComponent()" :class="getCellClasses()" :page="page" :target="target">
+						<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
+							<n-page :page="fragmentPage"
+								@update="function() { update(record) }"
+								@click.native="handleClick($event, record)"
+								:fragment-parent="getPageInstance()"
+								:record-index="index" class="is-repeat-content" 
+								:draggable="target.repeat.enableDrag"
+								@dragstart.native="onDragStart($event, record)"
+								:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }, {'is-selectable': target.repeat.selectable}]"
+								:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record)"
+								:parameters="getParameters(record)"
+								@beforeMount="beforeMount"
+								@ready="mounted"/>
+						</template>
+						<template v-else-if="!edit && !loading && state.records.length">
+							<n-page-optimized :page="fragmentPage"
+								@update="function() { update(record) }"
+								@click.native="handleClick($event, record)"
+								:fragment-parent="getPageInstance()"
+								:record-index="index" class="is-repeat-content" 
+								:draggable="target.repeat.enableDrag"
+								@dragstart.native="onDragStart($event, record)"
+								:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }, {'is-selectable': target.repeat.selectable}]"
+								:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record)"
+								:parameters="getParameters(record)"
+								@beforeMount="beforeMount"
+								@ready="mounted"/>
+						</template>
+					</component>
+					<component :is="getComponent()" :cell="getCellClasses()" :page="page" :target="target" v-for="slot in getAdditionalSlots(index)">
+						<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
+							<n-page :page="fragmentPages[slot]"
+								@update="function() { update(record) }"
+								@click.native="handleClick($event, record)"
+								:fragment-parent="getPageInstance()"
+								:record-index="index" class="is-repeat-content" 
+								:draggable="target.repeat.enableDrag"
+								@dragstart.native="onDragStart($event, record)"
+								:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }, {'is-selectable': target.repeat.selectable}]"
+								:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record) + '_' + slot"
+								:parameters="getParameters(record)"
+								@beforeMount="beforeMount"
+								@ready="mounted"/>
+						</template>
+						<template v-else-if="!edit && !loading && state.records.length">
+							<n-page-optimized :page="fragmentPages[slot]"
+								@update="function() { update(record) }"
+								@click.native="handleClick($event, record)"
+								:fragment-parent="getPageInstance()"
+								:record-index="index" class="is-repeat-content" 
+								:draggable="target.repeat.enableDrag"
+								@dragstart.native="onDragStart($event, record)"
+								:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }, {'is-selectable': target.repeat.selectable}]"
+								:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record) + '_' + slot"
+								:parameters="getParameters(record)"
+								@beforeMount="beforeMount"
+								@ready="mounted"/>
+						</template>
+					</component>
+				</template>
+			</template>
+			<template v-else>
+				<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
+					<template v-for="(record, index) in state.records">
 						<n-page :page="fragmentPage"
 							@update="function() { update(record) }"
 							@click.native="handleClick($event, record)"
@@ -16,8 +80,24 @@
 							:parameters="getParameters(record)"
 							@beforeMount="beforeMount"
 							@ready="mounted"/>
+						<n-page 
+							v-for="slot in getAdditionalSlots(index)"
+							:page="fragmentPages[slot]"
+							@update="function() { update(record) }"
+							@click.native="handleClick($event, record)"
+							:fragment-parent="getPageInstance()"
+							:record-index="index" class="is-repeat-content" 
+							:draggable="target.repeat.enableDrag"
+							@dragstart.native="onDragStart($event, record)"
+							:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }, {'is-selectable': target.repeat.selectable}]"
+							:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record) + '_' + slot"
+							:parameters="getParameters(record)"
+							@beforeMount="beforeMount"
+							@ready="mounted"/>
 					</template>
-					<template v-else-if="!edit && !loading && state.records.length">
+				</template>
+				<template v-else-if="!edit && !loading && state.records.length">
+					<template v-for="(record, index) in state.records">
 						<n-page-optimized :page="fragmentPage"
 							@update="function() { update(record) }"
 							@click.native="handleClick($event, record)"
@@ -30,53 +110,42 @@
 							:parameters="getParameters(record)"
 							@beforeMount="beforeMount"
 							@ready="mounted"/>
+						<n-page-optimized
+							v-for="slot in getAdditionalSlots(index)"
+							:page="fragmentPages[slot]"
+							@update="function() { update(record) }"
+							@click.native="handleClick($event, record)"
+							:fragment-parent="getPageInstance()"
+							:record-index="index" class="is-repeat-content" 
+							:draggable="target.repeat.enableDrag"
+							@dragstart.native="onDragStart($event, record)"
+							:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }, {'is-selectable': target.repeat.selectable}]"
+							:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record) + '_' + slot"
+							:parameters="getParameters(record)"
+							@beforeMount="beforeMount"
+							@ready="mounted"/>
 					</template>
-				</component>
-			</template>
-			<template v-else>
-				<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
-					<n-page :page="fragmentPage"
-						@update="function() { update(record) }"
-						@click.native="handleClick($event, record)"
-						:fragment-parent="getPageInstance()"
-						v-for="(record, index) in state.records" :record-index="index" class="is-repeat-content" 
-						:draggable="target.repeat.enableDrag"
-						@dragstart.native="onDragStart($event, record)"
-						:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }, {'is-selectable': target.repeat.selectable}]"
-						:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record)"
-						:parameters="getParameters(record)"
-						@beforeMount="beforeMount"
-						@ready="mounted"/>
-				</template>
-				<template v-else-if="!edit && !loading && state.records.length">
-					<n-page-optimized :page="fragmentPage"
-						@update="function() { update(record) }"
-						@click.native="handleClick($event, record)"
-						:fragment-parent="getPageInstance()"
-						v-for="(record, index) in state.records" :record-index="index" class="is-repeat-content" 
-						:draggable="target.repeat.enableDrag"
-						@dragstart.native="onDragStart($event, record)"
-						:class="[getChildComponentClasses('repeat-content'), {'is-selected': state.selected.indexOf(record) >= 0 }, {'is-selectable': target.repeat.selectable}]"
-						:key="'repeat_' + instanceCounter + '_rendered_' + getKey(record)"
-						:parameters="getParameters(record)"
-						@beforeMount="beforeMount"
-						@ready="mounted"/>
 				</template>
 			</template>
-		</template>
-		<template v-else-if="!edit && !loading && !state.records.length">
-			<component :is="getMessageComponent()" v-if="target.repeat.emptyPlaceholder" :class="[getComponentClassesForMessage(), getChildComponentClasses('repeat-message'), getChildComponentClasses('repeat-empty')]"><span class="is-text" v-html="$services.page.translate(target.repeat.emptyPlaceholder)"></span></component>
-		</template>
-		<template v-else-if="!edit && loading">
-			<component :is="getMessageComponent()" v-if="target.repeat.loadingPlaceholder" :class="[getComponentClassesForMessage(), getChildComponentClasses('repeat-message'), getChildComponentClasses('repeat-loading')]"><span class="is-text" v-html="$services.page.translate(target.repeat.loadingPlaceholder)"></span></component>
 		</template>
 		<template v-else-if="edit && getComponent()">
 			<component :is="getComponent()" :page="page" :target="target" :class="getComponentClassesForEdit()">
 				<slot></slot>
 			</component>
 		</template>
-		<template v-else>
+		<template v-else-if="edit">
 			<slot></slot>
+		</template>
+		<template v-if="edit && target.repeat.customSlots">
+			<slot v-for="customSlot in target.repeat.customSlots" :name="customSlot.name"></slot>
+		</template>
+		<template v-if="edit || (created && !loading && !state.records.length)">
+			<component :is="getMessageComponent()" v-if="target.repeat.emptyPlaceholder" :class="[getComponentClassesForMessage(), getChildComponentClasses('repeat-message'), getChildComponentClasses('repeat-empty')]"><span class="is-text" v-html="$services.page.translate(target.repeat.emptyPlaceholder)"></span></component>
+			<slot name="empty"></slot>
+		</template>
+		<template v-if="edit || loading">
+			<component :is="getMessageComponent()" v-if="target.repeat.loadingPlaceholder" :class="[getComponentClassesForMessage(), getChildComponentClasses('repeat-message'), getChildComponentClasses('repeat-loading')]"><span class="is-text" v-html="$services.page.translate(target.repeat.loadingPlaceholder)"></span></component>
+			<slot name="loading"></slot>
 		</template>
 	</div>
 </template>
@@ -125,8 +194,18 @@
 			</div>
 			<button class="is-button is-variant-close is-size-small is-spacing-horizontal-right-large" @click="target.repeat.defaultOrderBy.splice(index, 1)"><icon name="times"/></button>
 		</div>
-		<div class="is-row is-align-end" v-if="getOrderByFields()">
+		<div class="is-row is-align-end" v-if="getOrderByFields().length">
 			<button @click="target.repeat.defaultOrderBy.push({name: null, direction: 'asc'})" class="is-button is-size-small"><icon name="plus"/><span class="is-title">Order by</span></button>
+		</div>
+		<p v-else class="is-p is-size-small is-variant-danger-outline">Order by not supported</p>
+			
+		<div v-for="(customSlot, index) in target.repeat.customSlots" class="is-column has-button-close">
+			<n-form-text v-model="customSlot.name" placeholder="Slot name"/>
+			<n-form-switch v-model="customSlot.singleOpen" label="Only one open at a time"/>
+			<button class="is-button is-variant-close is-size-small is-spacing-horizontal-right-large" @click="target.repeat.customSlots.splice(index, 1)"><icon name="times"/></button>
+		</div>
+		<div class="is-row is-align-end">
+			<button @click="target.repeat.customSlots.push({name: null, singleOpen: false})" class="is-button is-size-small"><icon name="plus"/><span class="is-title">Custom slot</span></button>
 		</div>
 			
 		<n-page-mapper v-if="false && target.repeat.operation && operationParameters.length > 0 && Object.keys($services.page.getPageParameters(page)).length" 
@@ -134,4 +213,7 @@
 			:from="{page:$services.page.getPageParameters(page)}" 
 			v-model="target.repeat.bindings"/>
 	</div>
-</template>
+</template> 
+
+
+

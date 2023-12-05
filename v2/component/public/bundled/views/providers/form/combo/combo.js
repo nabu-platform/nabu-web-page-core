@@ -66,11 +66,21 @@ Vue.component("page-form-combo", {
 		parentValue: {
 			type: Object,
 			required: false
+		},
+		childComponents: {
+			required: false
 		}
 	},
 	methods: {
 		configurator: function() {
 			return "page-form-combo-configure";
+		},
+		getChildComponents: function() {
+			return {
+				title: "Form Combo",
+				name: "page-form-combo",
+				component: "form-combo"
+			};
 		}
 	}
 })

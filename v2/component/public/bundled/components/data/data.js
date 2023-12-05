@@ -200,6 +200,9 @@ Vue.component("data-pipelines-configure", {
 		},
 		allowed: {
 			type: Number
+		},
+		initializer: {
+			type: Function
 		}
 	},
 	created: function() {
@@ -217,7 +220,11 @@ Vue.component("data-pipelines-configure", {
 	},
 	methods: {
 		addPipeline: function() {
-			this.target.pipelines.push({});
+			var pipeline = {};
+			if (this.initializer) {
+				this.initializer(pipeline);
+			}
+			this.target.pipelines.push(pipeline);
 		}
 	}
 });

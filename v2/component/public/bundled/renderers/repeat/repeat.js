@@ -205,6 +205,13 @@ nabu.page.provide("page-renderer", {
 		}
 		return {properties:result};
 	},
+	getSlots: function(target) {
+		var slots = ["empty", "loading"];
+		if (target.repeat && target.repeat.customSlots && target.repeat.customSlots.length) {
+			nabu.utils.arrays.merge(slots, target.repeat.customSlots.map(function(x) { return x.name }));
+		}
+		return slots;
+	},
 	getChildComponents: function(target) {
 		return [{
 			title: "Repeat Content",
@@ -285,6 +292,28 @@ nabu.page.provide("page-renderer", {
 				console.error("Could not add select action because the definition could not be found for: " + target.runtimeAlias);
 			}
 		}
+		if (target.repeat && target.repeat.customSlots && target.repeat.customSlots.length) {
+			var action = {
+				title: "Toggle Slot",
+				name: "toggle-slot",
+				input: {
+					// the name of the slot we want to toggle
+					slot: {
+						type: "string"
+					},
+					// the index we want to toggle
+					index: {
+						type: "int64"
+					},
+					// if not filled in we toggle, otherwise we explicitly show or hide
+					show: {
+						type: "boolean"
+					}
+				},
+				output: {}
+			};
+			actions.push(action);
+		}
 		return actions;
 	},
 	getSpecifications: function(target) {
@@ -355,9 +384,14 @@ Vue.component("renderer-repeat", {
 			instanceCounter: $$rendererInstanceCounter++,
 			loading: false,
 			fragmentPage: null,
+			// each slot has its own page
+			fragmentPages: {},
 			// position counter to make each record unique
 			position: 0,
 			lastParameters: null,
+			lastFilter: null,
+			// for each custom slot (key), we have an array of active indexes
+			activatedSlots: {},
 			// the state in the original page, this can be used to write stuff like "limit" etc to
 			// note that the "record" will not actually be in this
 			state: {
@@ -403,15 +437,25 @@ Vue.component("renderer-repeat", {
 		// if a filter change comes in because of initial mapping, we ignore it
 		this.mergeParameters();
 		
-		this.loadPage();
+		if (this.target.repeat && this.target.repeat.customSlots && this.target.repeat.customSlots.length) {
+			this.target.repeat.customSlots.forEach(function(slot) {
+				Vue.set(self.activatedSlots, slot.name, []);
+			});
+		}
+		
+		this.loadPages();
 		
 		this.watchArray();
 		
+		// initialize so it includes all the external bound parameters
+		this.lastFilter = JSON.stringify(this.normalizeParametersForComparison(this.state.filter));
 		// note that this is NOT an activate, we can not stop the rendering until the call is done
 		// in the future we could add a "working" icon or a placeholder logic
 		if (!this.target.repeat || !this.target.repeat.waitForPageLoad) {
 			this.loadData();
 		}
+		
+		
 	},
 	mounted: function() {
 		
@@ -440,6 +484,9 @@ Vue.component("renderer-repeat", {
 	watch: {
 		'$services.page.stable': function(stable) {
 			if (stable && !this.created && this.target.repeat && this.target.repeat.waitForPageLoad) {
+				// if you toggle the "stable" requirement, it is very likely you want to change settings like the filter
+				// because we haven't actually loaded the data yet, we can safely update the filter here to reflect what we will load
+				this.lastFilter = JSON.stringify(this.normalizeParametersForComparison(this.state.filter));
 				this.created = true;
 				this.loadData();
 			}	
@@ -459,9 +506,11 @@ Vue.component("renderer-repeat", {
 		parameters: {
 			deep: true,
 			handler: function(newValue, oldValue) {
-				var newParameters = JSON.stringify(newValue);
+				var newParameters = JSON.stringify(this.normalizeParametersForComparison(newValue));
 				if (this.lastParameters != newParameters && this.created && this.target.repeat.enableParameterWatching) {
+					console.log("changed parameters before", JSON.stringify(this.state.filter, null, 2));
 					this.mergeParameters();
+					console.log("changed parameters after", JSON.stringify(this.state.filter, null, 2));
 					this.loadData();
 				}
 				this.lastParameters = newParameters;
@@ -475,7 +524,11 @@ Vue.component("renderer-repeat", {
 			deep: true,
 			handler: function(newValue) {
 				if (this.created) {
-					this.loadData();
+					var newFilter = JSON.stringify(this.normalizeParametersForComparison(newValue));
+					if (this.lastFilter != newFilter) {
+						this.loadData();
+					}
+					this.lastFilter = newFilter;
 				}
 			}
 		},
@@ -489,12 +542,52 @@ Vue.component("renderer-repeat", {
 	},
 	beforeDestroy: function() {
 		this.destroyed = true;
-		this.unloadPage();
+		this.unloadPages();
 		if (this.repeatTimer) {
 			clearTimeout(this.repeatTimer);
 		}
 	},
 	methods: {
+		collapseAllSlots: function() {
+			var self = this;
+			Object.keys(this.activatedSlots).forEach(function(slot) {
+				self.activatedSlots[slot].splice(0);
+			});
+		},
+		getAdditionalSlots: function(index) {
+			var result = [];
+			var self = this;
+			Object.keys(this.activatedSlots).forEach(function(slot) {
+				if (self.activatedSlots[slot].indexOf(index) >= 0) {
+					result.push(slot);
+				}
+			})
+			return result;
+		},
+		normalizeParametersForComparison: function(parameters) {
+			var cloned = JSON.parse(JSON.stringify(parameters));
+			var normalize = function(object) {
+				Object.keys(object).forEach(function(key) {
+					var value = object[key];
+					if (value == null) {
+						delete object[key];
+					}
+					// empty arrays are removed
+					else if (value instanceof Array && value.length == 0) {
+						delete object[key];
+					}
+					// empty strings are removed
+					else if (value == "") {
+						delete object[key];
+					}
+					else if (typeof(value) == "object") {
+						normalize(value);
+					}
+				})
+			}
+			normalize(cloned);
+			return cloned;
+		},
 		update: function(record, value, label, field) {
 			return this.$services.triggerable.trigger(this.target, "update", record, this);
 		},
@@ -503,8 +596,18 @@ Vue.component("renderer-repeat", {
 			this.created = false;
 			var stateModified = false;
 			var blacklist = ["records", "paging"];
+			// these are objects like "filters", "orderBy" etc
 			Object.keys(this.parameters).forEach(function(key) {
-				if (blacklist.indexOf(key) < 0 && self.parameters[key] != null && self.state[key] != self.parameters[key]) {
+				// we want to _merge_ the filter, not just overwrite it!
+				if (key == "filter") {
+					var filter = self.parameters[key];
+					if (filter) {
+						Object.keys(filter).forEach(function(filterKey) {
+							Vue.set(self.state.filter, filterKey, filter[filterKey]);
+						});
+					}
+				}
+				else if (blacklist.indexOf(key) < 0 && self.parameters[key] != null && self.state[key] != self.parameters[key]) {
 					Vue.set(self.state, key, self.parameters[key]);
 					stateModified = true;
 				}
@@ -819,6 +922,32 @@ Vue.component("renderer-repeat", {
 					}
 				}
 			}
+			else if (action == "toggle-slot") {
+				var customSlot = this.target.repeat.customSlots.filter(function(x) {
+					return x.name == value.slot;
+				})[0];
+				// invalid slot name or invalid index
+				if (!customSlot || value.index == null) {
+					return this.$services.q.reject();
+				}
+				var recordIndex = parseInt(value.index);
+				var currentIndex = this.activatedSlots[customSlot.name].indexOf(recordIndex);
+				// if we have no explicit show, we just toggle
+				var show = value.show == null ? currentIndex < 0 : value.show;
+				// no specific action, we just toggle
+				if (show) {
+					if (currentIndex < 0) {
+						if (customSlot.singleOpen) {
+							this.activatedSlots[customSlot.name].splice(0);
+						}
+						this.activatedSlots[customSlot.name].push(recordIndex);
+					}
+				}
+				else if (currentIndex >= 0) {
+					this.activatedSlots[customSlot.name].splice(currentIndex, 1);
+				}
+				return this.$services.q.resolve();
+			}
 			return this.$services.q.reject();
 		},
 		unselectAll: function() {
@@ -850,8 +979,18 @@ Vue.component("renderer-repeat", {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			return pageInstance.variables;
 		},
-		unloadPage: function() {
-			this.$services.router.unregister("fragment-renderer-repeat-" + this.instanceCounter);
+		unloadPages: function() {
+			// unload default
+			this.unloadPage();	
+			var self = this;
+			if (this.target.repeat && this.target.repeat.customSlots && this.target.repeat.customSlots.length) {
+				this.target.repeat.customSlots.forEach(function(slot) {
+					self.unloadPage(slot.name);
+				})
+			}
+		},
+		unloadPage: function(slot) {
+			this.$services.router.unregister(this.alias + (slot ? "-" + slot : ""));
 		},
 		beforeMount: function(component) {
 			this.mapVariables(component);
@@ -924,6 +1063,7 @@ Vue.component("renderer-repeat", {
 		loadData: function(page, append) {
 			this.loadCounter++;
 			var self = this;
+			this.collapseAllSlots();
 			if (self.repeatTimer) {
 				clearTimeout(self.repeatTimer);
 				self.repeatTimer = null;
@@ -1052,11 +1192,21 @@ Vue.component("renderer-repeat", {
 				}
 			}
 		},
+		loadPages: function() {
+			// the "default" slot page
+			this.loadPage();
+			var self = this;
+			if (this.target.repeat && this.target.repeat.customSlots && this.target.repeat.customSlots.length) {
+				this.target.repeat.customSlots.forEach(function(slot) {
+					self.loadPage(slot.name);
+				})
+			}
+		},
 		// create a custom route for rendering
-		loadPage: function() {
+		loadPage: function(slot) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			
-			this.unloadPage();
+			this.unloadPage(slot);
 			if (this.target.runtimeAlias) {
 				var content = {
 					"rows": [],
@@ -1071,7 +1221,7 @@ Vue.component("renderer-repeat", {
 					"states": [],
 					"category": "Other Category",
 					"slow": false,
-					"name": this.alias,
+					"name": this.alias + (slot ? "-" + slot : ""),
 					"parameters": [],
 					"readOnly": true,
 					"pageType": this.getPageType().pageType,
@@ -1095,9 +1245,12 @@ Vue.component("renderer-repeat", {
 					// e.g. we could update a search parameter if you select something
 					listeners: []
 				});
+				var slotFilter = function(x) {
+					return (!slot && !x.rendererSlot) || (slot == x.rendererSlot);
+				}
 				// we have a row, just push it to the rows
 				if (this.target.rows) {
-					nabu.utils.arrays.merge(content.rows, this.target.rows);
+					nabu.utils.arrays.merge(content.rows, this.target.rows.filter(slotFilter));
 					content.repeatType = "cell";
 				}
 				// we have a cell
@@ -1121,14 +1274,19 @@ Vue.component("renderer-repeat", {
 					// inherit triggers
 					// we want to be able to do it contextually
 					row.triggers = this.target.triggers;
-					nabu.utils.arrays.merge(row.cells, this.target.cells);
+					nabu.utils.arrays.merge(row.cells, this.target.cells.filter(slotFilter));
 					content.rows.push(row);
 				}
 				var page = {
 					name: content.name,
 					content: content
 				}
-				this.fragmentPage = page;
+				if (slot) {
+					this.fragmentPages[slot] = page;
+				}
+				else {
+					this.fragmentPage = page;
+				}
 				var self = this;
 				var route = {
 					alias: page.name,
@@ -1227,6 +1385,9 @@ Vue.component("renderer-repeat-configure", {
 			else if (this.target.repeat.array) {
 				Vue.set(this.target.repeat, "type", "array");
 			}
+		}
+		if (!this.target.repeat.customSlots) {
+			Vue.set(this.target.repeat, "customSlots", []);
 		}
 	},
 	computed: {

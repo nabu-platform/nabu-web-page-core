@@ -20,6 +20,7 @@
 
 <template id="page-form-combo">
 	<n-form-combo combo-type="n-input-combo2"
+		:class="getChildComponentClasses('page-form-combo')"
 		:filter="enumerationFilter"
 		:formatter="enumerationFormatter"
 		:pretty-formatter="enumerationPrettyFormatter"

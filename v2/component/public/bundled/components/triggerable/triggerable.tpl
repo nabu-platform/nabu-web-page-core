@@ -180,6 +180,15 @@
 							:items="['excel', 'csv', 'json', 'xml']"/>
 					</div>
 					
+					<div v-else-if="action.type == 'variable'" class="is-column is-spacing-gap-medium">
+						<n-page-mapper :to="{properties:getAvailableParameters(trigger, action)}"
+							:from="getAvailableParameters(trigger, action)" 
+							:key="action.type + '-mapper'"
+							v-model="action.bindings"/>
+						<n-form-switch v-model="action.allowUntrigger" label="Reverse when trigger ends"
+							after="Triggers are limited in time, for example a hover effect might stop, a selection might be undone or the button that triggered a click might be removed alltogether. Enable this if you want the reverse action to take place at that point."/>
+					</div>
+					
 					<div v-else-if="action.type == 'function'" class="is-column is-spacing-gap-medium">
 						<n-form-combo v-model="action.function" label="Function" :filter="$services.page.listFunctions" />
 						<n-form-text v-if="action.function && $services.page.hasFunctionOutput(action.function)" v-model="action.resultName" label="Local variable name of the function output"/>

@@ -232,6 +232,9 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				}
 				return fields;
 			},
+			updateLabel: function(label) {
+				this.getPageInstance().setLabel("page." + this.cell.state.name, label);
+			},
 			update: function(value, label, rawValue) {
 				this.getPageInstance().set("page." + this.cell.state.name, value, label);
 				if (this.cell.state.rawName) {

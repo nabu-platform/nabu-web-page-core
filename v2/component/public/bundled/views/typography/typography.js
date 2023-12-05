@@ -227,6 +227,15 @@ Vue.component("typography-core", {
 			required: true
 		}
 	},
+	computed: {
+		icon: function() {
+			var icon = this.cell.state.icon;
+			if (icon) {
+				icon = this.$services.page.interpret(icon, this);
+			}
+			return icon;
+		}
+	},
 	created: function() {
 		this.elementPromise = this.$services.q.defer();
 	},

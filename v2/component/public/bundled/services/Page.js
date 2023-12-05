@@ -213,6 +213,7 @@ nabu.services.VueService(Vue.extend({
 	created: function() {
 		var self = this;
 		document.addEventListener("keydown", function(event) {
+			console.log("event key is", event.key);
 			if (event.ctrlKey && event.altKey && event.keyCode == 88) {
 				if (self.canEdit()) {
 					self.wantEdit = !self.wantEdit;
@@ -253,7 +254,6 @@ nabu.services.VueService(Vue.extend({
 	},
 	methods: {
 		isThemeCompliant: function(entry) {
-			console.log("theme compliant", entry, this.theme, this.restrictToTheme);
 			if (this.theme != null && this.restrictToTheme) {
 				return entry.theme == this.theme;
 			}
@@ -514,6 +514,9 @@ nabu.services.VueService(Vue.extend({
 			// in the next phase, you select an actual target
 			// at that point we have the exact definition of the action
 			var available = {};
+			pageInstance.getActions().forEach(function(action) {
+				available[action.name] = action;
+			});
 			this.getSingularComponents(pageInstance).forEach(function(component) {
 				self.getActions(component, null, pageInstance).forEach(function(action) {
 					available[action.name] = action;
@@ -562,6 +565,15 @@ nabu.services.VueService(Vue.extend({
 		// page arbitrary is (hopefully) deprecated and the old repeat is gone as well
 		getActionTargets: function(pageInstance, action, value) {
 			var targets = [];
+			pageInstance.getActions().forEach(function(x) {
+				if (x.name == action) {
+					targets.push({
+						name: pageInstance.page.name,
+						id: "$page",
+						runAction: pageInstance.runAction
+					});
+				}
+			})
 			var self = this;
 			this.getSingularComponents(pageInstance).forEach(function(component) {
 				var hasAction = self.getActions(component, null, pageInstance).filter(function(x) {
@@ -612,6 +624,9 @@ nabu.services.VueService(Vue.extend({
 		// can't combine cell renderers with cell content for now, there is only one id
 		// though we do keep an additional reference under instance_<id> to the actual content...
 		getActionTarget: function(pageInstance, actionTarget) {
+			if (actionTarget == "$page") {
+				return pageInstance;
+			}
 			var target = pageInstance.components[actionTarget];
 			if (!target && pageInstance.fragmentParent) {
 				target = this.getActionTarget(pageInstance.fragmentParent, actionTarget);
@@ -1187,6 +1202,18 @@ nabu.services.VueService(Vue.extend({
 			return pageInstance;
 		},
 		getPageType: function(page, target) {
+			// this surfaced as a bottleneck taking up 20% of overhead in certain repeats
+			// so instead we cache the value to prevent recalculation
+			// the cache is reset when we exit edit mode
+			if (!this.calculatedPageTypes) {
+				this.calculatedPageTypes = {};
+			}
+			if (!this.calculatedPageTypes[page.content.name]) {
+				this.calculatedPageTypes[page.content.name] = {};
+			}
+			if (this.calculatedPageTypes[page.content.name]["target-" + target.id]) {
+				return this.calculatedPageTypes[page.content.name]["target-" + target.id];
+			}
 			var self = this;
 			var pageType = null;
 			var pageInstance = this.getRootPage(this.getPageInstance(page));
@@ -1210,11 +1237,15 @@ nabu.services.VueService(Vue.extend({
 			var provider = pageType == null ? null : nabu.page.providers("page-type").filter(function(x) {
 				return x.name == pageType;
 			})[0];
-			return {
+			var result = {
 				pageType: pageType,
 				path: path,
 				provider: provider
 			};	
+			if (!this.$services.page.editing) {
+				this.calculatedPageTypes[page.content.name]["target-" + target.id] = result;
+			}
+			return this.calculatedPageTypes[page.content.name]["target-" + target.id];
 		},
 		getCellComponents: function(page, cell) {
 			var components = [];
@@ -1364,19 +1395,23 @@ nabu.services.VueService(Vue.extend({
 			var childComponents = {};
 			var self = this;
 			if (container && container.components) {
-				Object.keys(container.components).forEach(function(key) {
+				// removed repeated key-based access for tiny optimization
+				var containerComponents = container.components;
+				Object.keys(containerComponents).forEach(function(key) {
+					// removed repeated key-based access for tiny optimization
+					var containerComponent = containerComponents[key];
 					childComponents[key] = {
 						classes: []
 					};
-					if (container.components[key].variant != null) {
+					if (containerComponent.variant != null) {
 						// you can explicitly set it to default to override the other default
 						// however, we don't need to include that in the css classes
-						if (container.components[key].variant != "default") {
-							childComponents[key].classes.push("is-variant-" + container.components[key].variant);
+						if (containerComponent.variant != "default") {
+							childComponents[key].classes.push("is-variant-" + containerComponent.variant);
 						}
 					}
-					else if (container.components[key].defaultVariant != null) {
-						childComponents[key].classes.push("is-variant-" + container.components[key].defaultVariant);
+					else if (containerComponent.defaultVariant != null) {
+						childComponents[key].classes.push("is-variant-" + containerComponent.defaultVariant);
 					}
 					// we can have specific subvariants, for example for cells which have an alias
 					else if (specific) {
@@ -1386,22 +1421,22 @@ nabu.services.VueService(Vue.extend({
 					else {
 						childComponents[key].classes.push("is-variant-" + key);
 					}
-					if (container.components[key].options != null && container.components[key].options.length > 0) {
-						container.components[key].options.forEach(function(option) {
+					if (containerComponent.options != null && containerComponent.options.length > 0) {
+						containerComponent.options.forEach(function(option) {
 							var add = true;
-							if (container.components[key].conditions && container.components[key].conditions[option] != null) {
-								add = self.isCondition(container.components[key].conditions[option], {}, instance);
+							if (containerComponent.conditions && containerComponent.conditions[option] != null) {
+								add = self.isCondition(containerComponent.conditions[option], {}, instance);
 							}
 							if (add) {
 								childComponents[key].classes.push("is-" + option.replace("_", "-"));
 							}
 						});
 					}
-					if (container.components[key].modifiers != null && container.components[key].modifiers.length > 0) {
-						container.components[key].modifiers.forEach(function(modifier) {
+					if (containerComponent.modifiers != null && containerComponent.modifiers.length > 0) {
+						containerComponent.modifiers.forEach(function(modifier) {
 							var add = true;
-							if (container.components[key].conditions && container.components[key].conditions[modifier] != null) {
-								add = self.isCondition(container.components[key].conditions[modifier], {}, instance);
+							if (containerComponent.conditions && containerComponent.conditions[modifier] != null) {
+								add = self.isCondition(containerComponent.conditions[modifier], {}, instance);
 							}
 							if (add) {
 								childComponents[key].classes.push("is-" + modifier);
@@ -2883,13 +2918,17 @@ nabu.services.VueService(Vue.extend({
 			}
 			// compilation optimization
 			var leadin = condition ? "@" : "@@";
-			// replace all the enabled features with true
-			this.enabledFeatures.forEach(function(x) {
-				// avoid the regex matcher!
-				condition = condition.replace(leadin + "{" + x + "}", "true");
-			});
-			// replace all the disabled features with false
-			condition = condition.replace(/@\{[^}]+\}/gm, "false");
+			
+			// the vast majority of conditions will not have feature based logic, this optimizes away a loop and regexes
+			if (condition.indexOf(leadin) >= 0) {
+				// replace all the enabled features with true
+				this.enabledFeatures.forEach(function(x) {
+					// avoid the regex matcher!
+					condition = condition.replace(leadin + "{" + x + "}", "true");
+				});
+				// replace all the disabled features with false
+				condition = condition.replace(/@\{[^}]+\}/gm, "false");
+			}
 			
 			// for a long time, state was meant to incorporate local state from repeats etc, but the use of local state is being reduced, partly because it is not reactive (for anything that is _not_ local) and memory
 			// instead we tend to use data-card etc for actual repeats so it does not appear to be necessary anymore?
@@ -3325,7 +3364,7 @@ nabu.services.VueService(Vue.extend({
 				
 				var parameters = {};
 				if (page.content.parameters) {
-					page.content.parameters.map(function(x) {
+					page.content.parameters.filter(function(x) { return !x.private }).forEach(function(x) {
 						parameters[x.name] = self.getResolvedPageParameterType(x.type);
 						// currently we do not want to allow you to map different parts
 						if (parameters[x.name].properties) {
@@ -3654,6 +3693,8 @@ nabu.services.VueService(Vue.extend({
 				}
 			}
 			
+			this.normalizeParentScope(result);
+			
 			// and the page itself
 			// we exclude the dynamic because we add it below
 			result.page = this.getPageParameters(page, true);
@@ -3705,6 +3746,24 @@ nabu.services.VueService(Vue.extend({
 					}
 				}
 			});
+			
+			var scanRows = function(rows) {
+				rows.forEach(function(row) {
+					if (row.cells) {
+						row.cells.forEach(function(cell) {
+							if (cell.alias && cell.contentRuntimeAlias) {
+								result[cell.contentRuntimeAlias] = self.getRouteParameters(self.$services.router.get(cell.alias));
+							}
+							if (cell.rows && cell.rows.length) {
+								scanRows(cell.rows);
+							}
+						})
+					}
+				})
+			}
+			if (page.content.rows) {
+				scanRows(page.content.rows);
+			}
 			
 			this.enrichWithRuntimeAliasDefinitions(result, pageInstance);
 			
@@ -3835,6 +3894,9 @@ nabu.services.VueService(Vue.extend({
 					result["parent"] = {properties:this.getAvailableParameters(parentInstance.page, null, includeAllEvents)};
 				}
 			}
+			
+			this.normalizeParentScope(result);
+			
 			// and the page itself
 			result.page = this.getPageParameters(page);
 
@@ -3866,6 +3928,24 @@ nabu.services.VueService(Vue.extend({
 						result[state.name] = output;
 					}
 				});
+			}
+			
+			var scanRows = function(rows) {
+				rows.forEach(function(row) {
+					if (row.cells) {
+						row.cells.forEach(function(cell) {
+							if (cell.alias && cell.contentRuntimeAlias) {
+								result[cell.contentRuntimeAlias] = self.getRouteParameters(self.$services.router.get(cell.alias));
+							}
+							if (cell.rows && cell.rows.length) {
+								scanRows(cell.rows);
+							}
+						})
+					}
+				})
+			}
+			if (page.content.rows) {
+				scanRows(page.content.rows);
 			}
 			
 			this.enrichWithRuntimeAliasDefinitions(result, pageInstance);
@@ -4114,13 +4194,28 @@ nabu.services.VueService(Vue.extend({
 			}
 			return result;
 		},
+		// we squash parent scopes into a single scope, so it doesn't matter how many parents you have
+		// by specifying the exact parent, the result would be too fragile depending on a very specific layout
+		// this does mean if your parent has a variable with the same name as your grandparent, you can not access the grandparent variable
+		normalizeParentScope: function(result) {
+			// normalize parent scope
+			if (result && result.parent && result.parent.properties && result.parent.properties.parent) {
+				var parentParent = result.parent.properties.parent;
+				delete result.parent.properties.parent;
+				var newParent = {};
+				nabu.utils.objects.merge(newParent, parentParent);
+				// if you redefine the variable in this page, it will be overridden
+				nabu.utils.objects.merge(newParent, result.parent);
+				result.parent = newParent;
+			}
+		},
 		// TODO: we don't want to be able to edit stuff like events
 		// but components can add their own state to the page
 		// for that reason, we do need the page instance, to get (in turn) the aliased components with their own state
 		// we can't guarantee that the components will be there at runtime (due to conditions)
 		// but at you need to be able to bind to these things
 		// for instance the page-level form fields use this service to deduce which fields they can write to
-		getPageParameters: function(page, excludeRuntime) {
+		getPageParameters: function(page, excludeRuntime, excludePrivate) {
 			var parameters = {
 				properties: {}
 			};
@@ -4170,7 +4265,7 @@ nabu.services.VueService(Vue.extend({
 			// you can also set a default value and other stuff
 			if (page.content.parameters) {
 				var self = this;
-				page.content.parameters.map(function(x) {
+				page.content.parameters.filter(function(x) { return !excludePrivate || !x.private }).forEach(function(x) {
 					/*if (x.type == null || ['string', 'boolean', 'number', 'integer'].indexOf(x.type) >= 0) {
 						parameters.properties[x.name] = {
 							type: x.type == null ? "string" : x.type
@@ -4764,6 +4859,12 @@ nabu.services.VueService(Vue.extend({
 		}
 	},
 	watch: {
+		editing: function(newValue) {
+			// reset the calculated page types
+			if (!newValue) {
+				this.calculatedPageTypes = {};
+			}
+		},
 		rendering: function(newValue) {
 			if (newValue > 0) {
 				if (this.stableTimer) {

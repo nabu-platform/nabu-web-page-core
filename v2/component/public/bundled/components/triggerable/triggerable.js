@@ -170,6 +170,22 @@ Vue.service("triggerable", {
 								);
 							}
 						}
+						else if (action.type == "variable" && action.allowUntrigger) {
+							var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
+							Object.keys(action.bindings).map(function(key) {
+								if (action.bindings[key] != null && pageInstance.get(key + "$active") == true) {
+									// we do a triple check, we "abuse" dynamic casting like 0 == false to explicitly set a different value that actually means the same...
+									// for example for menu collapsible toggling
+									if (pageInstance.get(key) === pageInstance.get(key + "$expected")) {
+										var value = pageInstance.get(key + "$previous");
+										pageInstance.set(key, value);
+									}
+									pageInstance.set(key + "$expected", null);
+									pageInstance.set(key + "$previous", null);
+									pageInstance.set(key + "$active", false);
+								}
+							});
+						}
 					});
 				}	
 			});
@@ -468,6 +484,7 @@ Vue.service("triggerable", {
 							notification.closeable = !!action.notificationCloseable;
 							notification.icon = action.notificationIcon;
 							self.$services.notifier.push(notification);
+							return self.$services.q.resolve();
 						}
 						// we might want to run an action
 						else if (action.type == "action" && action.action) {
@@ -483,7 +500,7 @@ Vue.service("triggerable", {
 									// a renderer uses a "target" which is either a cell or a row
 									// a regular component uses a cell (normally never a row?)
 									var targetConfiguration = target.target ? target.target : (target.cell ? target.cell : target.row);
-									if (targetConfiguration.triggers) {
+									if (targetConfiguration && targetConfiguration.triggers) {
 										runBefore = targetConfiguration.triggers.filter(function(x) {
 											return x.trigger == action.action + ":before";
 										});
@@ -568,6 +585,56 @@ Vue.service("triggerable", {
 								console.error("Could not run operation: " + action.operation, exception);
 								return self.$services.q.reject({action: "operation", exception: exception});
 							}
+						}
+						else if (action.type == "variable") {
+							if (action.bindings) {
+								var customValueFunction = function(path, literal) {
+									// look up in local state so you can evaluate that
+									var result = self.$services.page.getValue(state, path);
+									// fallback to global value function!
+									if (result == null) {
+										result = instance.$value(path, literal);
+									}
+									return result;
+								}
+								var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
+								Object.keys(action.bindings).map(function(key) {
+									if (action.bindings[key] != null) {
+										var value = null;
+										
+										// need to check if you want to access local state
+										var index = action.bindings[key].indexOf(".");
+										var resolved = false;
+										if (index > 0) {
+											var variableName = action.bindings[key].substring(0, index);
+											// if we have it in state, that wins
+											if (state && state.hasOwnProperty(variableName)) {
+												value = self.$services.page.getValue(state, action.bindings[key]);
+												resolved = true;
+											}
+										}
+										if (!resolved) {
+											value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], instance, customValueFunction);
+										}
+										// if we have an untrigger ability, store the current value
+										if (action.allowUntrigger) {
+											// some events (like hover) are executed continuously, we only want to keep the previous value if it was inactive before
+											if (pageInstance.get(key + "$active") != true) {
+												pageInstance.set(key + "$active", true);
+												pageInstance.set(key + "$previous", pageInstance.get(key));
+												// we only reset to previous if the current still matches the expected
+												// otherwise other logic has kicked in
+												// we can add a "force" or whatever if necessary at some point
+												pageInstance.set(key + "$expected", value);
+											}
+										}
+										// does not take into account "." separated field names which are received
+										//parameters[key] = value;
+										pageInstance.set(key, value);
+									}
+								});
+							}
+							return self.$services.q.resolve();
 						}
 						else if (action.type == "download" && action.operation) {
 							var parameters = getBindings();
@@ -715,6 +782,12 @@ Vue.service("triggerable", {
 					};
 					
 					if (!self.edit) {
+						// @2023-11-29: there are some issues with this: if we have an action that does NOT return a promise
+						// we fall back to the "last promise" but this seems to sometimes lead to double actions
+						// for instance an example where we had a rest call, then a notification (without promise at that time) and an action to refresh a table
+						// the refresh was called twice
+						// by simply returning a success promise from the notification, the double call was solved
+						// it is not entirely clear yet as to why so leaving this as is for now
 						var runNext = function(promise) {
 							// we finished!
 							if (index == actions.length - 1) {
@@ -920,15 +993,13 @@ Vue.component("page-triggerable-configure", {
 				name: "confirmation"
 			});
 			types.push({
-				title: "Execute javascript",
-				name: "javascript"
-			});
-			/*
-			types.push({
 				title: "Set variable",
 				name: "variable"
 			});
-			*/
+			types.push({
+				title: "Execute javascript",
+				name: "javascript"
+			});
 			return types;
 		}
 	},
@@ -1072,4 +1143,4 @@ Vue.component("page-triggerable-configure", {
 			return result;
 		}	
 	}
-})
+});

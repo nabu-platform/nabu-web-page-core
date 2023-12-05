@@ -1,8 +1,8 @@
 <template id="typography-template">
-	<component :is="tag" class="is-content is-typography" :class="['is-' + tag, getChildComponentClasses('typography'), {'has-tooltip': cell.state.tooltip }]">
+	<component :is="tag" class="is-content is-typography" :class="['is-' + tag, getChildComponentClasses('typography'), {'has-tooltip': cell.state.tooltip, 'has-icon': cell.state.icon, 'has-text': cell.state.content }]">
 		<slot name="before"></slot>
-		<img :src="cell.state.icon.indexOf('http') == 0 ? cell.state.icon : '${server.root()}resources/' + cell.state.icon" v-if="cell.state.icon && cell.state.icon.match(/^.*\.[^.]+$/)" class="is-icon"/>
-		<icon :name="cell.state.icon" v-if="cell.state.icon"/>
+		<img :src="icon.indexOf('http') == 0 ? icon : '${server.root()}resources/' + icon" v-if="icon && icon.match(/^.*\.[^.]+$/)" class="is-icon"/>
+		<icon :name="icon" v-if="icon"/>
 		<span :class="getChildComponentClasses('tooltip')" class='is-tooltip' v-if='cell.state.tooltip' v-content.sanitize="$services.page.translate($services.page.interpret(cell.state.tooltip, $self))"></span>
 		<span class="is-inline-editor" v-if="false && edit && !cell.state.highlight" :contenteditable="true"
 			 @keyup="update" @blur="update" @input="update" ref="editor" v-html-once="cell.state.content ? cell.state.content : null"

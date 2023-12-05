@@ -260,6 +260,7 @@
 										</ul>
 										<div class="is-column is-spacing-medium">
 											<n-form-text v-model="parameter.name" :required="true" label="Name" :timeout="600"/>
+											<n-form-switch v-model="parameter.private" label="Private parameter"/>
 											<n-form-combo v-model="parameter.type" label="Type" :filter="getParameterTypes" :placeholder="parameter.template ? 'Calculated from template' : (parameter.default || parameter.defaultScript ? 'Calculated from default' : 'string')"/>
 											<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
 											<n-form-text v-model="parameter.default" label="Default Value" v-if="!parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
@@ -282,9 +283,9 @@
 												</div>
 											</div>
 											<n-form-switch v-if="false" v-model="parameter.global" label="Is translation global?"/>
-											<h4 class="is-h4">Update Listener</h4>
-											<p class="is-p is-size-small is-color-light">Whenever an event is emitted, you can capture a value from it by configuring an update listener.</p>
-											<div class="is-row is-align-end">
+											<h4 class="is-h4" v-if="false">Update Listener</h4>
+											<p v-if="false" class="is-p is-size-small is-color-light">Whenever an event is emitted, you can capture a value from it by configuring an update listener.</p>
+											<div class="is-row is-align-end" v-if="false">
 												<button class="is-button is-variant-primary-outline is-size-xsmall" @click="parameter.listeners.push({to:null, field: null})"><icon name="plus"/>Update Listener</button>
 											</div>
 											<div v-for="i in Object.keys(parameter.listeners)" class="is-row has-button-close is-spacing-medium is-color-body">
@@ -520,6 +521,7 @@
 										:to="getRouteParameters(cell)"
 										:from="getAvailableParameters(cell)" 
 										v-model="cell.bindings"/>
+									<n-form-text v-model="cell.contentRuntimeAlias" v-if="cell.alias && $window.Object.keys(getRouteParameters(cell).properties).length" label="Content Runtime Alias"/>
 									<n-form-switch v-if="cell.alias" label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
 									
 									<div v-if="cell.renderer && $services.page.getRendererState(cell.renderer, cell, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
@@ -533,7 +535,7 @@
 									<renderer-bindings :target="cell" :page="page" v-if="cell.renderer"/>
 								</div>
 								
-								<template v-if="getParentConfig(cell)">
+								<template v-if="getParentConfig(cell) || getSlots(cell)">
 									<h2 class="section-title">Parent</h2>
 									<div class="is-column is-spacing-medium">
 										<p class="section-description">Configuration options from the parent of this cell.</p>
@@ -637,6 +639,7 @@
 								</div>
 							</template>
 							<template v-else-if="$services.page.activeSubTab == 'triggers'">
+								<h2 class="section-title">Triggers</h2>
 								<div class="is-column is-spacing-medium">
 									<p class="section-description">You can add triggers to react to user interaction with the content.</p>
 									<n-form-switch v-model="cell.state.stopClickPropagation" label="Stop click propagation"/>
@@ -667,6 +670,7 @@
 									<div v-if="row.renderer && $services.page.getRendererState(row.renderer, row, page, $services.page.getAllAvailableParameters(page))" class="is-column is-spacing-vertical-gap-medium">
 										<n-form-text v-model="row.runtimeAlias" label="Runtime alias for renderer state" :timeout="600"/>
 										<n-form-switch v-model="row.retainState" label="Retain state once row is destroyed" v-if="row.runtimeAlias"/>
+										<n-form-switch v-model="row.mergeState" label="Merge existing state when the rendered is created" v-if="row.runtimeAlias"/>
 									</div>
 									<div v-if="row.renderer && $services.page.getRendererConfiguration(row.renderer)">
 										<component :is="$services.page.getRendererConfiguration(row.renderer)" :target="row" :page="page"/>
@@ -742,6 +746,11 @@
 							</template>
 							<template v-if="$services.page.activeSubTab == 'triggers'">
 								<h2 class="section-title">Triggers</h2>
+								<div class="is-column is-spacing-medium">
+									<p class="section-description">You can add triggers to react to user interaction with the content.</p>
+									<n-form-switch v-model="row.state.stopClickPropagation" label="Stop click propagation"/>
+									<n-form-switch v-model="row.state.stopHoverPropagation" label="Stop hover propagation"/>
+								</div>
 								<page-triggerable-configure :page="page" :target="row" :triggers="getTriggersForCell(row)" :allow-closing="row.target && row.target != 'page'"/>
 							</template>
 						</n-form>
@@ -1289,7 +1298,7 @@
 						@drop="dropRow($event, row)"
 						@mouseover="mouseOver($event, row)" 
 						@keydown.f2.prevent="function() { editing = null; aliasing = row.id }"
-						@keydown.46.prevent="$emit('removeRow', row)"
+						@keydown.delete.prevent="$emit('removeRow', row)"
 						@keydown.c.ctrl.prevent="copyRow(row)"
 						@keydown.c.meta.prevent="copyRow(row)"
 						@keydown.v.ctrl.prevent="pasteCell(row)"
@@ -1303,6 +1312,7 @@
 					<button class="is-button is-variant-ghost is-size-xsmall" @click="toggleRow(row)"><icon :name="opened.indexOf(row.id) >= 0 ? 'chevron-down' : 'chevron-right'"/></button>
 					<n-form-text v-if="aliasing == row.id" v-model="row.name" class="is-variant-inline is-size-xsmall" :placeholder="row.name ? row.name : ($services.page.getRenderer(row.renderer) ? $services.page.getRenderer(row.renderer).title : (row.class ? row.class : row.id))" :autofocus="true"
 						:commit="true"
+						@keydown.delete="function(e) { e.stopPropagation() }"
 						@commit="function() { aliasing = null }"
 						@keydown.escape="function() { aliasing = null }"/>
 					<span class="is-content is-size-xsmall is-fill-normal is-position-cross-center" @click="selectRow(row)" 
@@ -1350,7 +1360,7 @@
 								@keydown.esc.prevent="function() { editing = null; aliasing = null }"
 								@keydown.ctrl.up="left(row, cell)"
 								@keydown.ctrl.down="right(row, cell)"
-								@keydown.46.prevent="removeCell(row.cells, cell)"
+								@keydown.delete.prevent="removeCell(row.cells, cell)"
 								@keydown.c.ctrl.prevent="copyCell(cell)"
 								@keydown.c.meta.prevent="copyCell(cell)"
 								@keydown.v.ctrl.prevent="pasteRow(cell)"
@@ -1363,6 +1373,7 @@
 							<n-form-text v-if="editing == cell.id" v-model="cell.name" class="is-variant-inline is-size-xsmall" :placeholder="cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : cell.id" :autofocus="true"
 								ref="editor"
 								:commit="true"
+								@keydown.delete="function(e) { e.stopPropagation() }"
 								@commit="function() { editing = null; requestFocusCell(cell) }"
 								@keydown.escape="function() { editing = null; requestFocusCell(cell) }"/>
 							<n-form-combo v-if="aliasing == cell.id" class="is-variant-inline is-size-xsmall is-fill-normal is-spacing-horizontal-right-medium" :filter="$services.page.getNamedRoutes" v-model="cell.alias"

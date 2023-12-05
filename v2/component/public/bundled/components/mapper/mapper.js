@@ -69,7 +69,8 @@ Vue.component("n-page-mapper", {
 			fieldToAdd: null,
 			fieldToMapRecursively: null,
 			fieldMode: null,
-			mappedFields: []
+			mappedFields: [],
+			labelChoice: false
 		}
 	},
 	created: function() {
@@ -124,6 +125,13 @@ Vue.component("n-page-mapper", {
 		},
 		mapRecursively: function() {
 			
+		},
+		allFieldsFrom: function(value) {
+			var fields = this.$services.page.getSimpleKeysFor({properties:this.from}, true, true);
+			if (value) {
+				fields = fields.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });
+			}
+			return fields;
 		},
 		// get the possible field names for this label
 		fieldsFrom: function(value, label, fields) {
@@ -190,6 +198,14 @@ Vue.component("n-page-mapper", {
 			return this.$services.page.getSimpleKeysFor({properties:parameters}, true, true);
 		},
 		setValue: function(field, newValue, label) {
+			// when you are not using label-driven choice, split it
+			if (label == null && !this.labelChoice && newValue != null) {
+				var index = newValue.indexOf(".");
+				if (index >= 0) {
+					label = newValue.substring(0, index);
+					newValue = newValue.substring(index + 1);
+				}
+			}
 			if (false && label == "fixed" && newValue) {
 				this.value[field] = {
 					label: label,
@@ -248,9 +264,14 @@ Vue.component("n-page-mapper", {
 			if (this.value[field] && this.value[field].value) {
 				return this.value[field].value;
 			}
-			return this.value[field]
-				? this.value[field].substring(this.value[field].indexOf(".") + 1)
-				: null;
+			if (!this.labelChoice) {
+				return this.value[field];
+			}
+			else {
+				return this.value[field]
+					? this.value[field].substring(this.value[field].indexOf(".") + 1)
+					: null;
+			}
 		},
 		isComputedValue: function(field) {
 			if (!this.allowComputed) {

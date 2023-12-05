@@ -238,7 +238,39 @@ nabu.page.views.Pages = Vue.extend({
 		getPagesFor: function(category) {
 			return this.$services.page.pages.filter(function(x) {
 				return (!category && !x.content.category) || x.content.category == category;
+			}).sort(function(a, b) {
+				var sA = !!a.content.defaultAnchor;
+				var sB = !!b.content.defaultAnchor;
+				var cA = !a.content.path;
+				var cB = !b.content.path;
+				// first skeletons, then pages, then components
+				if (sA && !sB) {
+					return -1;
+				}
+				else if (!sA && sB) {
+					return 1;
+				}
+				else if (cA && !cB) {
+					return 1;
+				}
+				else if (!cA && cB) {
+					return -1;
+				}
+				return 0;
 			});
+		},
+		getPageTypeBadge: function(page) {
+			// a skeleton
+			if (page.content.defaultAnchor) {
+				return "<span class='is-badge is-variant-neutral-outline is-border-full'>Skeleton</span>";
+			}
+			// a component
+			else if (!page.content.path) {
+				return "<span class='is-badge is-variant-secondary-outline is-border-full'>Component</span>";
+			}	
+			else {
+				return "<span class='is-badge is-variant-primary-outline is-border-full'>Page</span>";
+			}
 		},
 		insertColor: function(style, color) {
 			this.$refs['editors_' + style.name][0].insert(color);
@@ -278,10 +310,10 @@ nabu.page.views.Pages = Vue.extend({
 					return x.content.name == page.content.pageParent;
 				})[0];
 				if (parentPage) {
-					parentParameters = this.$services.page.getPageParameters(parentPage);
+					parentParameters = this.$services.page.getPageParameters(parentPage, true, true);
 				}
 			}
-			var parameters = this.$services.page.getPageParameters(page);
+			var parameters = this.$services.page.getPageParameters(page, true, true);
 			if (Object.keys(parameters.properties).length || (parentParameters && Object.keys(parentParameters.properties).length)) {
 				var result = {};
 				if (parentParameters) {

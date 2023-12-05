@@ -65,6 +65,26 @@
 				<n-form-text v-model='field.selectAllValue' label='Select all value' info='The text to show to select all values or deselect all'/>
 			</div>
 		</template>
+		<div class="is-column is-spacing-medium" v-if="field.provider == 'fixed'">	
+			<n-form-switch v-model='field.complex' label='Complex Values' v-if='!field.allowCustom'/>
+			<n-form-switch v-if='!field.complex' v-model='field.allowCustom' label='Allow Custom Values'/>
+			<div class='is-row is-align-end'>
+				<button class='is-button is-size-xsmall is-variant-primary-outline' @click='addEnumeration'><icon name='plus'/><span class='text'>Enumeration</span></button>
+			</div>
+			<div v-if='!field.complex' class='is-column is-spacing-gap-small'>
+				<n-form-section class='has-button-close' v-for='i in Object.keys(field.enumerations)' :key="field.name + 'enumeration_' + i">
+					<n-form-text v-model='field.enumerations[i]'/>
+					<button class='is-button is-variant-close is-size-small' @click='field.enumerations.splice(i, 1)'><icon name='times'/></button>
+				</n-form-section>
+			</div>
+			<div v-else class='is-column is-spacing-gap-small'>
+				<n-form-section class='is-column is-spacing-medium is-spacing-vertical-top-large is-color-body has-button-close' v-for='i in Object.keys(field.enumerations)' :key="field.name + 'enumeration_' + i">
+					<n-form-text v-model='field.enumerations[i].key' placeholder='Value' :timeout='600'/>
+					<n-form-text v-model='field.enumerations[i].value' placeholder='Label' :timeout='600'/>
+					<button class='is-button is-variant-close is-size-small' @click='field.enumerations.splice(i, 1)'><icon name='times'/></button>
+				</n-form-section>
+			</div>
+		</div>
 	</div>
 </template>
 

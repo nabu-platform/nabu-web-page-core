@@ -27,6 +27,7 @@ Vue.component("page-form-input-switch", {
 			+ "		:edit='!readOnly'"
 			+ "		:required='required'"
 			+ "		:schema='schema'"
+			+ "		:class=\"getChildComponentClasses('page-form-switch')\""
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""
 			+ "		:label='label'"
 			+ "		:value='value'"
@@ -73,9 +74,19 @@ Vue.component("page-form-input-switch", {
 		readOnly: {
 			type: Boolean,
 			required: false
+		},
+		childComponents: {
+			required: false
 		}
 	},
 	methods: {
+		getChildComponents: function() {
+			return {
+				title: "Form Switch",
+				name: "page-form-switch",
+				component: "form-switch"
+			};
+		},
 		validate: function(soft) {
 			return this.$refs.form.validate(soft);
 		}

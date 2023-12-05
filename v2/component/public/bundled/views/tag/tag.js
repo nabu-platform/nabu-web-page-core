@@ -60,7 +60,7 @@ Vue.view("page-tag", {
 		},
 		reset: function() {
 			if (!this.running) {
-				var originalValue = this.getValue();
+				var originalValue = this.getRawValue();
 				if (this.cell.state.field) {
 					// for arrays we simply empty them out rather than deleting them
 					if (originalValue instanceof Array) {
@@ -84,6 +84,18 @@ Vue.view("page-tag", {
 		},
 		getEvents: function() {
 			return this.$services.triggerable.getEvents(this.page, this.cell.state);
+		},
+		getRawValue: function() {
+			var value = null;
+			if (this.cell.state.useComputed) {
+				value = this.computedValue;
+			}
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			value = pageInstance.get(this.cell.state.field);
+			if (value == null) {
+				value = pageInstance.get("page." + this.cell.state.field);
+			}
+			return value;
 		},
 		getValue: function() {
 			var value = null;

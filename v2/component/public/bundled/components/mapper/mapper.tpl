@@ -46,7 +46,7 @@
 			</div>
 			
 			<n-form-combo 
-				v-else
+				v-else-if="labelChoice"
 				:key="'combo_mapper_' + field"
 				:label="'Map to ' + field" 
 				:labels="sources" 
@@ -54,6 +54,15 @@
 				class="vertical"
 				:value="getValueFor(field)"
 				:initial-label="getLabelFor(field)"
+				@input="function(newValue, formatted, rawValue, selectedLabel) { setValue(field, newValue, selectedLabel) }"/>
+				
+			<n-form-combo 
+				v-else
+				:key="'combo_mapper_' + field"
+				:label="field" 
+				:filter="allFieldsFrom" 
+				class="vertical"
+				:value="getValueFor(field)"
 				@input="function(newValue, formatted, rawValue, selectedLabel) { setValue(field, newValue, selectedLabel) }"/>
 			
 			<button class="is-button is-size-small is-variant-close" @click="removeField(field)"><icon name="times"/></button>

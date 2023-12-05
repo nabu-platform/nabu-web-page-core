@@ -174,7 +174,7 @@ Vue.component("enumeration-provider", {
 					return [];
 				}
 			}
-			else if (this.field.providers == "fixed") {
+			else if (this.field.provider == "fixed") {
 				var self = this;
 				var result = this.field.enumerations.map(function(x) {
 					if(typeof(x) == "string"){
@@ -316,6 +316,14 @@ Vue.component("enumeration-provider-configure", {
 		}
 	},
 	methods: {
+		addEnumeration: function() {
+			if (this.field.complex) {
+				this.field.enumerations.push({value:null,key:null});
+			}
+			else {
+				this.field.enumerations.push('');
+			}
+		},
 		getEnumerationServices: function(name) {
 			var self = this;
 			return this.$services.page.getOperations(function(operation) {

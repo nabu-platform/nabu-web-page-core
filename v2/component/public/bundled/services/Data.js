@@ -266,7 +266,7 @@ Vue.service("data", {
 			var array = input.array ? input.array : (target ? target.array : null);
 			var bindings = input.bindings ? input.bindings : (target ? target.bindings : null);
 			// if you have a filter object on your instance itself (e.g. for data components), we use that
-			var filter = input.filter ? input.filter : (instance.filter ? instance.filter : (instance && instance.state ? instance.state.filter : null));
+			var filter = input.filter ? input.filter : (instance && instance.filter ? instance.filter : (instance && instance.state ? instance.state.filter : null));
 			var orderBy = input.orderBy ? input.orderBy : (instance && instance.state && instance.state.order ? instance.state.order.by : (target ? target.defaultOrderBy : null));
 			if (orderBy != null) {
 				if (!(orderBy instanceof Array)) {
@@ -436,7 +436,7 @@ Vue.service("data", {
 		// the default combiner will just return the "last" one
 		normalizeSeries(series, extracter, labels, combiner) {
 			if (!combiner) {
-				combiner = function() { return arguments[arguments.length - 1]; };
+				combiner = function(matching) { return matching[matching.length - 1]; };
 			}
 			var result = [];
 			var hashed = {};

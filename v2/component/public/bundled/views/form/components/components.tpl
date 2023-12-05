@@ -5,6 +5,7 @@
 		:field="cell.state"
 		:class="getChildComponentClasses('form-component')"
 		@blur="blur"
+		@label="updateLabel"
 		:component-group="cell.state.componentGroup ? cell.state.componentGroup : 'form'"
 		:value="cell.state.useComputed ? computedValue : value"
 		:parent-value="parentValue"
