@@ -34,7 +34,7 @@
 						</template>
 					</component>
 					<component :is="getComponent()" :cell="getCellClasses()" :page="page" :target="target" v-for="slot in getAdditionalSlots(index)">
-						<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
+						<template v-if="!edit && !loading && state.records.length && fragmentPages[slot].content.rows.length >= 2">
 							<n-page :page="fragmentPages[slot]"
 								@update="function() { update(record) }"
 								@click.native="handleClick($event, record)"

@@ -2,6 +2,7 @@
 	<table class="is-table" :class="getChildComponentClasses('table')">
 		<thead><slot name="header"></slot></thead>
 		<tbody><slot></slot></tbody>
+		<slot name="body"></slot>
 		<tfoot><slot name="footer"></slot></tfoot>
 	</table>
 </template>

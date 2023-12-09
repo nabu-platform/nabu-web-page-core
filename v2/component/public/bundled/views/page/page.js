@@ -87,12 +87,40 @@ Vue.mixin({
 		}
 	},
 	methods: {
+		// your component may be in a state, that state may (or may not) be inherited
+		// for instance if you collapse a menu, we add a state "collapsed" to all the components within so they can adjust their styling
+		// those states are targeted by adding adding styling wth the original name of the component and ":state" after it, for example "page-button:collapsed"
+		getPotentialStates: function() {
+			return this.$parent ? this.$parent.getPotentialStates() : [];
+		},
+		// the actually applied states
+		// how they are applied is component specific
+		getCurrentStates: function() {
+			return this.$parent ? this.$parent.getCurrentStates() : [];
+		},
 		// expects a prop with name "childComponents"
 		getChildComponentClasses: function(name) {
+			var classes = [];
 			if (this.childComponents && this.childComponents[name] && this.childComponents[name].classes) {
-				return this.childComponents[name].classes;
+				nabu.utils.arrays.merge(classes, this.childComponents[name].classes);
 			}
-			return [];
+			var self = this;
+			this.getCurrentStates().forEach(function(state) {
+				// not used yet but if we want to add "dynamic" styling in the frontend for different states, it could look like this
+				var stateName = name + "--" + state;
+				if (self.childComponents && self.childComponents[stateName] && self.childComponents[stateName].classes) {
+					nabu.utils.arrays.merge(classes, self.childComponents[stateName].classes);
+				}
+				
+				// inject the state as a modifier
+				// it currently collides with modifiers but this is (currently) intentional
+				// this allows you to write a state as both an implicitly applied state or a modifier that can also be toggled
+				// if this proves to be annoying we can update aris generation and page builder at the same time without breaking anything
+				// if it does work we could prevent accidental naming collisions between modifiers and states by always targeting the variant of the modifier much like with states:
+				// .is-table:where(.is-full-width)
+				classes.push("is-" + state);
+			});
+			return classes;
 		},
 		// recalculate events on the page instance (if applicable)
 		$updateEvents: function() {
@@ -102,6 +130,10 @@ Vue.mixin({
 					pageInstance.resetEvents();
 				}
 			}
+		},
+		// check if the component is in a certain state
+		$is: function(state) {
+			return this.getCurrentStates().indexOf(state) >= 0;	
 		},
 		$value: function(path, literal) {
 			if (!literal) {
@@ -382,7 +414,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 					}
 				});
-				console.log("state", state.name, promisesToWaitFor);
 				self.$services.q.all(promisesToWaitFor).then(function() {
 					var parameters = {};
 					Object.keys(state.bindings).map(function(key) {
@@ -397,7 +428,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 					try {
 						// can throw hard errors
 						self.$services.swagger.execute(state.operation, parameters).then(function(result) {
-							console.log("loaded", state.name, state.operation, result);
 							if (result != null) {
 								self.initialStateLoaded.push(state.name);
 							}
@@ -4774,7 +4804,7 @@ Vue.component("n-page-row", {
 			return result;
 		},
 		clickOnCell: function(row, cell, $event) {
-			if (!this.edit && cell.state.stopClickPropagation) {
+			if (!this.edit && cell && cell.state && cell.state.stopClickPropagation) {
 				$event.stopPropagation();
 			}
 			if (!this.edit && this.$services.triggerable.canTrigger(cell, "click")) {
@@ -4787,7 +4817,7 @@ Vue.component("n-page-row", {
 			}
 		},
 		clickOnRow: function(row, $event) {
-			if (!this.edit && row.state.stopClickPropagation) {
+			if (!this.edit && row && row.state && row.state.stopClickPropagation) {
 				$event.stopPropagation();
 			}
 			if (!this.edit && this.$services.triggerable.canTrigger(row, "click")) {
@@ -4937,7 +4967,7 @@ Vue.component("n-page-row", {
 				}
 			}
 			else {
-				if (cell && cell.state.stopHoverPropagation) {
+				if (cell && cell.state && cell.state.stopHoverPropagation) {
 					event.stopPropagation();
 				}
 				if (cell) {
@@ -4945,7 +4975,7 @@ Vue.component("n-page-row", {
 				}
 				// it's hard to hover a row filled with content so we just trigger it always if you have something
 				this.$services.triggerable.untrigger(row, "hover", this);
-				if (row.state.stopHoverPropagation) {
+				if (row && row.state && row.state.stopHoverPropagation) {
 					event.stopPropagation();
 				}
 			}
@@ -4968,7 +4998,7 @@ Vue.component("n-page-row", {
 			}
 			// in non-edit mode, we want to trigger the hover
 			else {
-				if (cell && cell.state.stopHoverPropagation) {
+				if (cell && cell.state && cell.state.stopHoverPropagation) {
 					event.stopPropagation();
 				}
 				if (cell) {
@@ -4976,7 +5006,7 @@ Vue.component("n-page-row", {
 				}
 				// it's hard to hover a row filled with content so we just trigger it always if you have something
 				this.$services.triggerable.trigger(row, "hover", null, this);
-				if (row.state.stopHoverPropagation) {
+				if (row && row.state && row.state.stopHoverPropagation) {
 					event.stopPropagation();
 				}
 			}

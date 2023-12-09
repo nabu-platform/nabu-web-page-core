@@ -213,7 +213,6 @@ nabu.services.VueService(Vue.extend({
 	created: function() {
 		var self = this;
 		document.addEventListener("keydown", function(event) {
-			console.log("event key is", event.key);
 			if (event.ctrlKey && event.altKey && event.keyCode == 88) {
 				if (self.canEdit()) {
 					self.wantEdit = !self.wantEdit;
@@ -1211,7 +1210,7 @@ nabu.services.VueService(Vue.extend({
 			if (!this.calculatedPageTypes[page.content.name]) {
 				this.calculatedPageTypes[page.content.name] = {};
 			}
-			if (this.calculatedPageTypes[page.content.name]["target-" + target.id]) {
+			if (this.calculatedPageTypes[page.content.name]["target-" + target.id] && !this.editing) {
 				return this.calculatedPageTypes[page.content.name]["target-" + target.id];
 			}
 			var self = this;
@@ -1242,10 +1241,13 @@ nabu.services.VueService(Vue.extend({
 				path: path,
 				provider: provider
 			};	
-			if (!this.$services.page.editing) {
+			if (!this.editing) {
 				this.calculatedPageTypes[page.content.name]["target-" + target.id] = result;
+				return this.calculatedPageTypes[page.content.name]["target-" + target.id];
 			}
-			return this.calculatedPageTypes[page.content.name]["target-" + target.id];
+			else {
+				return result;
+			}
 		},
 		getCellComponents: function(page, cell) {
 			var components = [];
@@ -1299,6 +1301,22 @@ nabu.services.VueService(Vue.extend({
 						}
 					}
 				}
+				/*
+				We temporarily had the idea to allow full custom styling for separate states but it is disabled for now
+				if (component.getPotentialStates) {
+					var additional = [];
+					component.getPotentialStates().forEach(function(state) {
+						components.forEach(function(component) {
+							additional.push({
+								title: component.title + " (" + state + ")",
+								name: component.name + "--" + state,
+								component: component.component
+							});
+						})
+					});
+					nabu.utils.arrays.merge(components, additional);
+				}
+				*/
 			}
 			return components;
 		},
@@ -1765,7 +1783,7 @@ nabu.services.VueService(Vue.extend({
 			var div = document.createElement("div");
 			div.setAttribute("id", "page-edit-icon");
 			div.setAttribute("class", "is-column has-tooltip");
-			div.setAttribute("style", "position: fixed; bottom: 1rem; left: 1rem;");
+			div.setAttribute("style", "position: fixed; bottom: 1rem; left: 1rem; z-index: 100;");
 			var button = document.createElement("button");
 			div.appendChild(button);
 			//button.setAttribute("class", "is-button is-border-radius-xxlarge is-variant-warning");

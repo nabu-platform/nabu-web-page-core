@@ -188,6 +188,13 @@ Vue.view("page-button", {
 					component: "badge"
 				});
 			}
+			if (this.cell.state.tooltip) {
+				childComponents.push({
+					title: "Tooltip",
+					name: "page-button-tooltip",
+					component: "tooltip"
+				});
+			}
 			return childComponents;
 		},
 		getEvents: function() {

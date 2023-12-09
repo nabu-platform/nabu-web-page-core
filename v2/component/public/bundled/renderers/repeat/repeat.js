@@ -484,11 +484,14 @@ Vue.component("renderer-repeat", {
 	watch: {
 		'$services.page.stable': function(stable) {
 			if (stable && !this.created && this.target.repeat && this.target.repeat.waitForPageLoad) {
-				// if you toggle the "stable" requirement, it is very likely you want to change settings like the filter
-				// because we haven't actually loaded the data yet, we can safely update the filter here to reflect what we will load
-				this.lastFilter = JSON.stringify(this.normalizeParametersForComparison(this.state.filter));
-				this.created = true;
-				this.loadData();
+				var self = this;
+				Vue.nextTick(function() {
+					// if you toggle the "stable" requirement, it is very likely you want to change settings like the filter
+					// because we haven't actually loaded the data yet, we can safely update the filter here to reflect what we will load
+					self.lastFilter = JSON.stringify(self.normalizeParametersForComparison(self.state.filter));
+					self.created = true;
+					self.loadData();
+				});
 			}	
 		},
 		'$services.page.editing': function(editing) {
@@ -971,7 +974,7 @@ Vue.component("renderer-repeat", {
 			//nabu.utils.objects.merge(result, this.getVariables());
 			// we don't want to pass the entire state as parameters because this causes the repeats to be rerendered if anything changes
 			if (this.target.runtimeAlias) {
-				result[this.target.runtimeAlias] = {record:record, recordIndex: this.state.records.indexOf(record)};
+				result[this.target.runtimeAlias] = {record:record, recordIndex: this.state.records.indexOf(record), records: this.state.records};
 			}
 			return result;
 		},
@@ -1269,7 +1272,9 @@ Vue.component("renderer-repeat", {
 						align: null,
 						on: null,
 						collapsed: false,
-						name: null
+						name: null,
+						// the renderer slot needs to be repeated, it is likely for a parent renderer
+						rendererSlot: this.target.rendererSlot
 					};
 					// inherit triggers
 					// we want to be able to do it contextually

@@ -1,7 +1,7 @@
 nabu.page.provide("page-renderer", {
 	title: "Menu",
 	name: "menu",
-	type: "row",
+	type: ["row", "cell"],
 	component: "renderer-menu",
 	configuration: "renderer-menu-configure",
 	// can emit events
@@ -70,7 +70,7 @@ nabu.page.provide("page-renderer", {
 		}
 		return actions;
 	},
-	getSlots: function() {
+	getSlots: function(target) {
 		return ["collapsed", "expanded"];
 	}
 });
@@ -112,18 +112,31 @@ Vue.component("renderer-menu", {
 		this.created = true;
 	},
 	methods: {
+		getPotentialStates: function() {
+			return ["collapsed"];
+		},
+		getCurrentStates: function() {
+			var states = [];
+			if (this.state.collapsed && !this.edit) {
+				states.push("collapsed");
+			}
+			if (this.$parent) {
+				nabu.utils.arrays.merge(states, this.$parent.getCurrentStates())
+			}
+			return states;
+		},
 		autoclose: function() {
 			if (this.target && this.target.state && this.target.state.collapsible) {
 				this.resetToInitialCollapse();
 			}
 		},
 		expand: function() {
-			if (this.target && this.target.state && this.target.state.collapsible && this.target.state.expandOnHover) {
+			if (this.target && this.target.state && this.target.state.collapsible && this.target.state.expandOnHover && !this.edit) {
 				this.state.collapsed = false;
 			}	
 		},
 		collapse: function() {
-			if (this.target && this.target.state && this.target.state.collapsible && this.target.state.expandOnHover) {
+			if (this.target && this.target.state && this.target.state.collapsible && this.target.state.expandOnHover && !this.edit) {
 				this.resetToInitialCollapse();
 			}	
 		},

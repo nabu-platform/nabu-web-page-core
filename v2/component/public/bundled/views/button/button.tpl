@@ -12,7 +12,7 @@
 			:contenteditable="true"
 			placeholder="Button label"></span>
 		<span class="is-badge" v-if="cell.state.badge" v-html="badge" :class="getChildComponentClasses('page-button-badge')"></span>
-		<span v-if="tooltip" class="is-tooltip" v-html="tooltip"></span>
+		<span v-if="tooltip" class="is-tooltip" v-html="tooltip" :class="getChildComponentClasses('page-button-tooltip')"></span>
 	</component>
 </template>
 

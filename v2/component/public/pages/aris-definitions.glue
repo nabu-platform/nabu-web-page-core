@@ -12,15 +12,18 @@ for (component : aris/components)
 	groupedDimensions = group(lambda(x, x/dimension), dimensions)
 
 	#dimensions = derive(lambda(key, structure(name: key, options: dimensions[dimension == /key]/option)), keys(groupedDimensions))
-	dimensions = derive(lambda(key, structure(name: key, options: derive(optionCleaner, dimensions[dimension == /key]))), keys(groupedDimensions))
+	dimensions = derive(lambda(key, structure(name: key, states: unique(dimensions[dimension == /key]/states/state), options: derive(optionCleaner, dimensions[dimension == /key]))), keys(groupedDimensions))
 	
 	variants = derive(lambda(x, structure(name: x/option, theme: x/theme, modifiers: aris/modifiers[component == /x/component && variant == /x/option]/option)), aris/variants[component == /component/name])
+	
+	states = aris/states[target = /component/name]
 	
 	components = merge(components, structure(
 		theme: component/theme,
 		name: component/name,
 		extends: component/component,
 		dimensions: dimensions,
+		states: unique(states/state),
 		variants: variants))
 
 response.content(json.stringify(components, pretty: true), "application/json")	

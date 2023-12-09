@@ -6,6 +6,9 @@
 nabu.page.provide("page-type", {
 	name: "table-page",
 	rowTag: function(row, depth, editing, reversePath, page) {
+		if (row.rendererSlot == "body") {
+			return "tbody";
+		}
 		// it must be inside the table, this goes for header, footer & body, for example for body depth:
 		// <column> <repeat> <table>
 		var isRow = reversePath.length >= 2 && reversePath[1].renderer == "table";
@@ -111,7 +114,7 @@ nabu.page.provide("page-renderer", {
 		return "table-page";
 	},
 	getSlots: function(target) {
-		return ["header", "footer"];
+		return ["header", "body", "footer"];
 	},
 	// cells can have colspans!
 	getChildConfig: function(target, child, path) {
