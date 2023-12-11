@@ -676,10 +676,19 @@
 										<component :is="$services.page.getRendererConfiguration(row.renderer)" :target="row" :page="page"/>
 									</div>
 									
-									<n-form-combo label="Target slot in renderer" v-if="getSlots(row)" v-model="row.rendererSlot" :items="getSlots(row)"/>
-									
 									<renderer-bindings :target="row" :page="page" v-if="row.renderer"/>	
 								</div>
+								<template v-if="getParentConfig(row) || getSlots(row)">
+									<h2 class="section-title">Parent</h2>
+									<div class="is-column is-spacing-medium">
+										<p class="section-description">Configuration options from the parent of this row.</p>
+										<n-form-combo label="Target slot in renderer" v-if="getSlots(row)" v-model="row.rendererSlot" :items="getSlots(row)"/>
+										
+										<component v-if="getParentConfig(row)" :is="getParentConfig(row)"
+											:row="row"
+											:page="page"/>
+									</div>
+								</template>
 								<h2 class="section-title">Conditions</h2>
 								<div class="is-column is-spacing-medium">
 									<p class="is-p is-size-small" v-if="!$services.page.isCloseable(row) && !row.condition">By default the row will be visible.</p>

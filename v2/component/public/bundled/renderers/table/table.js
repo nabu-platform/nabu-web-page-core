@@ -9,6 +9,11 @@ nabu.page.provide("page-type", {
 		if (row.rendererSlot == "body") {
 			return "tbody";
 		}
+		// if we have a row that is set to "body", the cells inside it become the table rows
+		// at that point the rows inside that cell become the "td"
+		else if (reversePath.length >= 3 && reversePath[2].rendererSlot == "body") {
+			return "renderer-table-body-cell";
+		}
 		// it must be inside the table, this goes for header, footer & body, for example for body depth:
 		// <column> <repeat> <table>
 		var isRow = reversePath.length >= 2 && reversePath[1].renderer == "table";
@@ -32,6 +37,10 @@ nabu.page.provide("page-type", {
 		// we are repeating in the header (or footer) a cell, the row is already tagged as a cell, we don't need this here
 		if (page.content.repeatType == "cell") {
 			return null;
+		}
+		// if we are inside a body repeat, we need a tr
+		else if (reversePath.length >= 2 && reversePath[1].rendererSlot == "body") {
+			return "tr";
 		}
 		// it must be inside the table, this goes for header, footer & body, for example for body depth:
 		// <column> <repeat> <table>
@@ -59,6 +68,10 @@ nabu.page.provide("page-type", {
 		if (page.content.repeatType == "cell") {
 			return null;
 		}
+		// if we are inside a body repeat, we need a tr
+		else if (reversePath.length >= 2 && reversePath[1].rendererSlot == "body") {
+			return "table-row";
+		}
 		var isColumn = reversePath.length >= 3 && reversePath[2].renderer == "table";
 		isColumn |= reversePath.length == 2;
 		return isColumn ? "table-column" : null;
@@ -67,6 +80,9 @@ nabu.page.provide("page-type", {
 		var isRow = reversePath.length >= 2 && reversePath[1].renderer == "table";
 		isRow |= reversePath.length == 1;
 		if (isRow && page.content.repeatType == "cell") {
+			return "table-column";
+		}
+		else if (reversePath.length >= 3 && reversePath[2].rendererSlot == "body") {
 			return "table-column";
 		}
 		return isRow ? "table-row" : null;
@@ -117,8 +133,11 @@ nabu.page.provide("page-renderer", {
 		return ["header", "body", "footer"];
 	},
 	// cells can have colspans!
-	getChildConfig: function(target, child, path) {
+	getChildConfig: function(target, child, reversePath) {
 		if (child.rows) {
+			return "renderer-table-cell-configure";
+		}
+		else if (child.cells && reversePath.length >= 3 && reversePath[2].rendererSlot == "body") {
 			return "renderer-table-cell-configure";
 		}
 	}
@@ -146,6 +165,14 @@ Vue.component("renderer-table", {
 			type: Object,
 			required: false
 		}
+	},
+	methods: {
+		hasDefaultElements: function() {
+			var children = this.target.rows ? this.target.rows : this.target.cells;
+			return children && children.filter(function(x) {
+				return !x.rendererSlot;
+			}).length > 0;
+		}
 	}
 });
 
@@ -167,9 +194,20 @@ Vue.component("renderer-table-cell-configure", {
 			type: Object
 		}
 	},
+	data: function() {
+		return {
+			target: null
+		}
+	},
 	created: function() {
-		if (this.cell && !this.cell.table) {
-			Vue.set(this.cell, "table", {});
+		if (this.cell) {
+			this.target = this.cell;
+		}
+		else if (this.row) {
+			this.target = this.row;
+		}
+		if (this.target && !this.target.table) {
+			Vue.set(this.target, "table", {});
 		}
 	}
 });
@@ -233,6 +271,10 @@ Vue.component("renderer-table-body-cell", {
 				// the grandparent should be the table
 				if (path.length >= 2) {
 					var table = path[path.length - 3];
+					// TODO: not yet for repeating tbody setups
+					if (!table.rows) {
+						return null;
+					}
 					var headerRow = table.rows.filter(function(x) {
 						return x.rendererSlot == "header";
 					})[0];

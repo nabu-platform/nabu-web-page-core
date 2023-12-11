@@ -2850,9 +2850,11 @@ nabu.services.VueService(Vue.extend({
 			else {
 				schema.type = "object";
 				schema.properties = {};
-				Object.keys(object).forEach(function(key) {
-					schema.properties[key] = self.getSchemaFromObject(object[key]);
-				});
+				if (object != null) {
+					Object.keys(object).forEach(function(key) {
+						schema.properties[key] = self.getSchemaFromObject(object[key]);
+					});
+				}
 			}
 			return schema;
 		},

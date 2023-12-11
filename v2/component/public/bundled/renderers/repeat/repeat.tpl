@@ -5,7 +5,8 @@
 				<template v-for="(record, index) in state.records">
 					<component :is="getComponent()" :class="getCellClasses()" :page="page" :target="target">
 						<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
-							<n-page :page="fragmentPage"
+							<n-page v-fragment
+								:page="fragmentPage"
 								@update="function() { update(record) }"
 								@click.native="handleClick($event, record)"
 								:fragment-parent="getPageInstance()"
@@ -169,7 +170,7 @@
 			
 		<component v-if="getRepeatConfigurator()" :is="getRepeatConfigurator()" :target="target.repeat" :page="page"/>
 			
-		<n-form-ace v-model="target.repeat.arrayFilter" label="Filter the array" v-if="target.repeat.array"/>
+		<n-form-ace v-model="target.repeat.arrayFilter" label="Filter the array" />
 		<n-form-text v-model="target.repeat.emptyPlaceholder" label="Empty Place Holder"/>
 		<n-form-text v-model="target.repeat.loadingPlaceholder" label="Loading Place Holder" v-if="target.repeat.operation"/>
 		<n-form-text v-model="target.repeat.refreshInterval" label="Refresh interval" :timeout="600" v-if="target.repeat.operation"/>

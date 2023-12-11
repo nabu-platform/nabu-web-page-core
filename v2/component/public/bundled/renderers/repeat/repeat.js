@@ -202,6 +202,10 @@ nabu.page.provide("page-renderer", {
 					}
 				}
 			}
+			// the records array contains the filtered values, we want to add an option to get all the records as well
+			if (result.records && container.repeat.arrayFilter) {
+				result.allRecords = result.records;
+			}
 		}
 		return {properties:result};
 	},
@@ -402,6 +406,7 @@ Vue.component("renderer-repeat", {
 				},
 				filter: {},
 				records: [],
+				allRecords: [],
 				// if we don't define the fields AND we don't use Vue.set to update them, they are not reactive!
 				paging: {
 					current: 0,
@@ -511,9 +516,7 @@ Vue.component("renderer-repeat", {
 			handler: function(newValue, oldValue) {
 				var newParameters = JSON.stringify(this.normalizeParametersForComparison(newValue));
 				if (this.lastParameters != newParameters && this.created && this.target.repeat.enableParameterWatching) {
-					console.log("changed parameters before", JSON.stringify(this.state.filter, null, 2));
 					this.mergeParameters();
-					console.log("changed parameters after", JSON.stringify(this.state.filter, null, 2));
 					this.loadData();
 				}
 				this.lastParameters = newParameters;
@@ -974,7 +977,7 @@ Vue.component("renderer-repeat", {
 			//nabu.utils.objects.merge(result, this.getVariables());
 			// we don't want to pass the entire state as parameters because this causes the repeats to be rerendered if anything changes
 			if (this.target.runtimeAlias) {
-				result[this.target.runtimeAlias] = {record:record, recordIndex: this.state.records.indexOf(record), records: this.state.records};
+				result[this.target.runtimeAlias] = {record:record, recordIndex: this.state.records.indexOf(record), records: this.state.records, allRecords: this.state.allRecords};
 			}
 			return result;
 		},
@@ -1109,10 +1112,12 @@ Vue.component("renderer-repeat", {
 				this.loading = true;
 				if (!append) {
 					self.state.records.splice(0);
+					self.state.allRecords.splice(0);
 				}
 				return this.$services.swagger.execute(this.target.repeat.operation, parameters).then(function(list) {
 					if (!append) {
 						self.state.records.splice(0);
+						self.state.allRecords.splice(0);
 					}
 					if (list) {
 						var arrayFound = false;
@@ -1124,7 +1129,28 @@ Vue.component("renderer-repeat", {
 											x.$position = self.position++;
 										}
 									});
-									nabu.utils.arrays.merge(self.state.records, root[field]);
+									nabu.utils.arrays.merge(self.state.allRecords, root[field]);
+									if (self.target.repeat.arrayFilter) {
+										nabu.utils.arrays.merge(self.state.records, 
+											root[field].filter(function(x) {
+												var $value = function(value, literal) {
+													if (value == "records") {
+														return root[field]
+													}
+													else if (value == "record") {
+														return x;
+													}
+													else {
+														return self.$value(value, literal);
+													}
+												}
+												return self.$services.page.isCondition(self.target.repeat.arrayFilter, x, self, $value);
+											})
+										);
+									}
+									else {
+										nabu.utils.arrays.merge(self.state.records, root[field]);
+									}
 									arrayFound = true;
 								}
 								if (!arrayFound && typeof(root[field]) === "object" && root[field] != null) {
@@ -1170,14 +1196,27 @@ Vue.component("renderer-repeat", {
 			}
 			else if (this.target.repeat && (this.target.repeat.type == "array" || this.target.repeat.type == null) && this.target.repeat.array) {
 				if (!append) {
-					this.state.records.splice(0, this.state.records.length);
+					this.state.records.splice(0);
+					this.state.allRecords.splice(0);
 				}
 				var result = this.$services.page.getPageInstance(this.page, this).get(this.target.repeat.array);
 
 				if (result) {
+					nabu.utils.arrays.merge(this.state.allRecords, result);
 					if (this.target.repeat.arrayFilter) {
 						result = result.filter(function(x) {
-							return self.$services.page.isCondition(self.target.repeat.arrayFilter, x, self)	;
+							var $value = function(value, literal) {
+								if (value == "records") {
+									return result;
+								}
+								else if (value == "record") {
+									return x;
+								}
+								else {
+									return self.$value(value, literal);
+								}
+							}
+							return self.$services.page.isCondition(self.target.repeat.arrayFilter, x, self, $value);
 						});
 					}
 					nabu.utils.arrays.merge(this.state.records, result);

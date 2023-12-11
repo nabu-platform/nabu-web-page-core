@@ -1,7 +1,7 @@
 <template id="renderer-table">
 	<table class="is-table" :class="getChildComponentClasses('table')">
 		<thead><slot name="header"></slot></thead>
-		<tbody><slot></slot></tbody>
+		<tbody v-if="hasDefaultElements()"><slot></slot></tbody>
 		<slot name="body"></slot>
 		<tfoot><slot name="footer"></slot></tfoot>
 	</table>
@@ -23,8 +23,8 @@
 
 <template id="renderer-table-cell-configure">
 	<div class="is-column is-spacing-vertical-gap-medium">
-		<n-form-text label="Colspan" v-model="cell.table.colspan"/>
-		<n-form-text label="Embedded label" v-model="cell.table.embeddedLabel" />
+		<n-form-text label="Colspan" v-model="target.table.colspan"/>
+		<n-form-text label="Embedded label" v-model="target.table.embeddedLabel" />
 	</div>
 </template>
 
