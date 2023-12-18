@@ -806,7 +806,6 @@ window.addEventListener("load", function() {
 					// row at the root of the page
 					var row = rowGenerator();
 					var root = null;
-					console.log("applying table template", template);
 					if (template.type == "row") {
 						root = row;
 						application.services.page.normalizeAris(pageInstance.page, row, "row");

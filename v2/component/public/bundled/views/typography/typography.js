@@ -287,7 +287,7 @@ Vue.component("typography-core", {
 				title: "Typography",
 				name: "typography",
 				defaultVariant: "typography-" + this.tag,
-				component: "content"
+				component: "typography"
 			}];
 			if (this.cell.state.tooltip) {
 				components.push({

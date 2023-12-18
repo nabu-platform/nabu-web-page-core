@@ -112,8 +112,8 @@ Vue.component("enumeration-provider", {
 						if (this.field.addEmptyState == true && this.field.emptyState != null) {
 							// create empty object
 							var empty = {}
-							if (this.field.enumerationArrayValue) {
-								empty[this.field.enumerationArrayValue] = null;
+							if (this.field.enumerationFieldValue) {
+								empty[this.field.enumerationFieldValue] = null;
 								empty['emptyState'] = true;
 							}
 							
@@ -136,8 +136,8 @@ Vue.component("enumeration-provider", {
 										return true;
 									}
 								}
-								if (self.field.enumerationArrayValue != null) {
-									var label = x[self.field.enumerationArrayValue];
+								if (self.field.enumerationFieldValue != null) {
+									var label = x[self.field.enumerationFieldValue];
 									if (label && label.toLowerCase && label.toLowerCase().indexOf(value.toLowerCase()) >= 0) {
 										return true;
 									}
@@ -309,6 +309,9 @@ Vue.component("enumeration-provider-configure", {
 		if (!this.field.enumerationOperationBinding) {
 			Vue.set(this.field, "enumerationOperationBinding", {});
 		}
+		if (this.field.enumerations == null) {
+			Vue.set(this.field, "enumerations", []);
+		}
 	},
 	computed: {
 		availableParameters: function() {
@@ -323,6 +326,12 @@ Vue.component("enumeration-provider-configure", {
 			else {
 				this.field.enumerations.push('');
 			}
+		},
+		getEnumerationArrays: function(name) {
+			var self = this;
+			return this.$services.page.getAllArrays(this.page, this.cell.id).filter(function(x) {
+				return !name || x.toLowerCase().indexOf(name.toLowerCase()) >= 0;
+			});
 		},
 		getEnumerationServices: function(name) {
 			var self = this;
@@ -357,13 +366,47 @@ Vue.component("enumeration-provider-configure", {
 		},
 		getEnumerationFields: function(operationId) {
 			var fields = [];
-			if (this.$services.swagger.operations[operationId]) {
-				var resolved = this.$services.swagger.resolve(this.$services.swagger.operations[operationId].responses["200"]);
-				Object.keys(resolved.schema.properties).map(function(property) {
-					if (resolved.schema.properties[property].type == "array") {
-						nabu.utils.arrays.merge(fields, Object.keys(resolved.schema.properties[property].items.properties));
+			if (this.field.provider == "operation") {
+				if (this.$services.swagger.operations[operationId]) {
+					var resolved = this.$services.swagger.resolve(this.$services.swagger.operations[operationId].responses["200"]);
+					Object.keys(resolved.schema.properties).map(function(property) {
+						if (resolved.schema.properties[property].type == "array") {
+							nabu.utils.arrays.merge(fields, Object.keys(resolved.schema.properties[property].items.properties));
+						}
+					});
+				}
+			}
+			else if (this.field.provider == "array") {
+				var properties = {};
+				var available = null;
+				var variable = null;
+				var rest = null;
+				if (this.field.enumerationArray.indexOf("parent.") == 0) {
+					var self = this;
+					variable = this.field.enumerationArray.substring("parent.".length);
+					var parentPage = this.$services.page.pages.filter(function(x) {
+						return x.content.name == self.page.content.pageParent;
+					})[0];
+					if (parentPage != null) {
+						//result.parent = this.getPageParameters(parentPage);
+						available = this.$services.page.getAllAvailableParameters(parentPage);
 					}
-				});
+					rest = variable.substring(variable.indexOf(".") + 1);
+					variable = variable.substring(0, variable.indexOf("."));
+				}
+				else {
+					available = this.$services.page.getAllAvailableParameters(this.page, this.cell);
+					variable = this.field.enumerationArray.substring(0, this.field.enumerationArray.indexOf("."));
+					rest = this.field.enumerationArray.substring(this.field.enumerationArray.indexOf(".") + 1);
+				}
+				if (available[variable]) {
+					var childDefinition = this.$services.page.getChildDefinition(available[variable], rest);
+					console.log("variable", available, variable, childDefinition);
+					if (childDefinition) {
+						nabu.utils.objects.merge(properties, childDefinition.items.properties);
+					}
+				}
+				nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor({properties:properties}));
 			}
 			return fields;
 		},

@@ -65,6 +65,25 @@
 				<n-form-text v-model='field.selectAllValue' label='Select all value' info='The text to show to select all values or deselect all'/>
 			</div>
 		</template>
+		<template v-if="field.provider == 'array'">
+			<n-form-combo v-model='field.enumerationArray'
+				label='Enumeration Array'
+				:filter='getEnumerationArrays'/>
+			<n-form-ace v-if='field.enumerationArray' label='Filter' v-model='field.filter'/>
+			<n-form-switch v-model='field.enumerationFieldLabelComplex' label='Complex Enumeration Label'/>
+			<n-form-combo v-if='field.enumerationArray && !field.enumerationFieldLabelComplex' v-model='field.enumerationFieldLabel' label='Enumeration Label'
+				:filter='function() { return getEnumerationFields(field.enumerationArray) }'/>
+			<n-form-switch v-model='field.enumerationFieldPrettyLabelComplex' label='Complex Pretty Enumeration Label'/>
+			<n-form-combo v-if='field.enumerationArray && !field.enumerationFieldPrettyLabelComplex' v-model='field.enumerationFieldPrettyLabel' label='Pretty enumeration Label'
+				:filter='function() { return getEnumerationFields(field.enumerationArray) }'/>
+			<n-form-text v-model='field.complexPrettyLabel' label='The complex pretty label' v-if='field.enumerationFieldPrettyLabelComplex'/>
+			<n-form-combo v-if='field.enumerationArray' v-model='field.enumerationFieldValue' label='Enumeration Value'
+				:filter='function() { return getEnumerationFields(field.enumerationArray) }' info='If nothing is selected, the entire document becomes the value'/>
+			<n-form-text v-model='field.complexLabel' label='The complex text label' v-if='field.enumerationFieldLabelComplex'/>
+			<typography-variable-replacer v-if='field.enumerationFieldLabelComplex && field.complexLabel' :content='field.complexLabel' :page='page' :container='field' :keys='getEnumerationFields(field.enumerationArray)' />
+			<typography-variable-replacer v-if='field.enumerationFieldPrettyLabelComplex && field.complexPrettyLabel' :content='field.complexPrettyLabel' :page='page' :container='field' :keys='getEnumerationFields(field.enumerationArray)' />
+			<n-form-combo v-if='field.enumerationArray' :filter='function() { return getEnumerationFields(field.enumerationArray) }' v-model='field.enumerationCachingKey' label='Enumeration Caching Key'/>
+		</template>
 		<div class="is-column is-spacing-medium" v-if="field.provider == 'fixed'">	
 			<n-form-switch v-model='field.complex' label='Complex Values' v-if='!field.allowCustom'/>
 			<n-form-switch v-if='!field.complex' v-model='field.allowCustom' label='Allow Custom Values'/>
