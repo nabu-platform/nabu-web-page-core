@@ -554,6 +554,14 @@ Vue.component("renderer-repeat", {
 		}
 	},
 	methods: {
+		repeatSetter: function(instance, name, value, label) {
+			if (!instance.fragmentParent || (this.target.runtimeAlias && (name.indexOf(this.target.runtimeAlias + ".") == 0 || name.indexOf("page." + this.target.runtimeAlias + ".") == 0))) {
+				instance.internalSet(name, value, label);
+			}
+			else {
+				instance.fragmentParent.set(name, value, label);
+			}
+		},
 		collapseAllSlots: function() {
 			var self = this;
 			Object.keys(this.activatedSlots).forEach(function(slot) {
@@ -602,13 +610,48 @@ Vue.component("renderer-repeat", {
 			this.created = false;
 			var stateModified = false;
 			var blacklist = ["records", "paging"];
+			
+			// in the past we based our merging off of the parameters that were passed in
+			// but these are always objects, so if you bind "filter.limit", you pass in a full filter object with one param: limit
+			// null values were ignored which means you could never "unset" a value from the outside
+			
+			// currently, IF you have input watching enabled, you should make sure the internal state and the outside state are "in sync"
+			// otherwise suppose you map 2 fields
+			// 1 field is updated internally, then the other is updated externally
+			// due to the external update, we map back both values
+			// the only way to prevent a reset on that first internal value is to diff the bound values with the previous value
+			// we _could_ do that but currently we want to see if it is not better to keep that state in sync
+			// for instance when using tags to delete a filter value, don't delete the filter value itself, but the outside source that is bound
+			// if you have a filter search field, bind it to the outside source, not directly the filter itself
+			// alternatively you could disable input watching and work on your own state
+			// if a usecase arises where this is not possible, we can add diffing against the previous bound value and only update if the outside source was actually changed
+			
+			//var pageInstance = this.$services.page.getPageInstance(this.page, this);
+			Object.keys(this.target.rendererBindings).forEach(function(key) {
+				// if we have a binding for it, check it!
+				if (self.target.rendererBindings[key]) {
+					//self.$services.page.setValue(self.state, key, self.$services.page.getBindingValue(pageInstance, self.target.rendererBindings[key], self));
+					// we do assume the values to be available in the bound parameters, preventing the need of an additional lookup
+					var currValue = self.$services.page.getValue(self.state, key);
+					var newValue = self.$services.page.getValue(self.parameters, key);
+					if (currValue != newValue) {
+						self.$services.page.setValue(self.state, key, newValue);
+						stateModified = true;
+					}
+				}
+			});
+			return stateModified;
+			// the old stuff!
+			/*
 			// these are objects like "filters", "orderBy" etc
 			Object.keys(this.parameters).forEach(function(key) {
 				// we want to _merge_ the filter, not just overwrite it!
 				if (key == "filter") {
 					var filter = self.parameters[key];
+					var filterKeys = [];
 					if (filter) {
-						Object.keys(filter).forEach(function(filterKey) {
+						filterKeys = Object.keys(filter)
+						filterKeys.forEach(function(filterKey) {
 							Vue.set(self.state.filter, filterKey, filter[filterKey]);
 						});
 					}
@@ -619,6 +662,7 @@ Vue.component("renderer-repeat", {
 				}
 			});
 			return stateModified;
+			*/
 		},
 		getOrderByFields: function() {
 			var result = [];

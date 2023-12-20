@@ -212,6 +212,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 		},
 		recordIndex: {
 			type: Number
+		},
+		// a custom setter used to set values
+		$setValue: {
+			type: Function,
+			required: false
 		}
 	},
 	activate: function(done) {
@@ -426,6 +431,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 						parameters["$serviceContext"] = self.getServiceContext();
 					}
 					try {
+						// @2023-12-19: not sure why this is a separate codebase for initializing the states rather than using the central one
+						// but the code differs a lot so currently i'm not updating this bit, I did add the trigger for the initial which was not getting run correctly
 						// can throw hard errors
 						self.$services.swagger.execute(state.operation, parameters).then(function(result) {
 							if (result != null) {
@@ -434,6 +441,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 							Vue.set(self.variables, state.name, result ? result : null);
 							self.updatedVariable(state.name);
 							promise.resolve(result);
+							// the triggerInitial is a boolean we might add if we want to trigger on initial load as well
+							self.$services.triggerable.trigger(state, "initial", null, self).then(promise, promise);
 						}, promise);
 					}
 					catch (exception) {
@@ -3340,6 +3349,18 @@ nabu.page.views.Page = Vue.component("n-page", {
 			return false;
 		},
 		set: function(name, value, label) {
+			// we added support for custom setting specifically for fragment pages like repeat
+			// we create fragment pages usually because we want to scope some state
+			// however, when we want to update said state we might not know conclusively where it lives
+			// the repeat (and others) can provide a custom set that knows enough of the fragments to decide where the data should go
+			if (this.$setValue instanceof Function) {
+				this.$setValue(this, name, value, label);
+			}
+			else {
+				this.internalSet(name, value, label);
+			}
+		},
+		internalSet: function(name, value, label) {
 			var target = null;
 			var parts = null;
 			var updateUrl = false;
@@ -4804,26 +4825,24 @@ Vue.component("n-page-row", {
 			return result;
 		},
 		clickOnCell: function(row, cell, $event) {
-			if (!this.edit && cell && cell.state && cell.state.stopClickPropagation) {
+			if (!this.edit && cell && cell.state && cell.state.stopClickPropagation && $event) {
 				$event.stopPropagation();
 			}
 			if (!this.edit && this.$services.triggerable.canTrigger(cell, "click")) {
 				if ($event) {
 					$event.preventDefault();
-					$event.stopPropagation();
 				}
 				var promise = this.$services.triggerable.trigger(cell, "click", this.getClickParameters($event), this);
 				return promise;
 			}
 		},
 		clickOnRow: function(row, $event) {
-			if (!this.edit && row && row.state && row.state.stopClickPropagation) {
+			if (!this.edit && row && row.state && row.state.stopClickPropagation && $event) {
 				$event.stopPropagation();
 			}
 			if (!this.edit && this.$services.triggerable.canTrigger(row, "click")) {
 				if ($event) {
 					$event.preventDefault();
-					$event.stopPropagation();
 				}
 				var promise = this.$services.triggerable.trigger(row, "click", this.getClickParameters($event), this);
 				return promise;
@@ -5613,6 +5632,7 @@ Vue.component("page-sidemenu", {
 					parent.rows.splice(index, 0, content);
 				}
 			}
+			this.$services.page.clearAllDrag();
 		},
 		dropCell: function(event, row, cell) {
 			var cellId = this.$services.page.getDragData(event, "page-cell");
@@ -5677,6 +5697,7 @@ Vue.component("page-sidemenu", {
 				}
 				cell.rows.push(content);
 			}
+			this.$services.page.clearAllDrag();
 		}
 	},
 	watch: {

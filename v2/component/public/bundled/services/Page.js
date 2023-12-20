@@ -2976,10 +2976,10 @@ nabu.services.VueService(Vue.extend({
 			}
 			else {
 				try {
-					var resultFunction = Function('"use strict";return (function(state, $services, $value, application, value) { return ' + condition + ' })')();
+					var resultFunction = Function('"use strict";return (function(state, $services, $value, $is, application, value) { return ' + condition + ' })')();
 					// by default it is bound to "undefined"
 					resultFunction = resultFunction.bind(this);
-					var result = resultFunction(state, this.$services, customValueFunction ? customValueFunction : (instance ? instance.$value : function() { throw "No value function" }), application, state && state.value ? state.value : state);
+					var result = resultFunction(state, this.$services, customValueFunction ? customValueFunction : (instance ? instance.$value : function() { throw "No value function" }), instance ? instance.$is : function() { "No is function" }, application, state && state.value ? state.value : state);
 				}
 				catch (exception) {
 					console.error("Could not evaluate", condition, exception);

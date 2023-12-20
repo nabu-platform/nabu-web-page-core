@@ -57,8 +57,9 @@ Vue.view("page-button", {
 	},
 	computed: {
 		tagName: function() {
-			if (this.cell.state.triggers && this.cell.state.triggers.length == 1 && this.cell.state.triggers[0].actions.length == 1 && 
-					this.cell.state.triggers[0].actions[0].type == "route") {
+			var triggers = this.triggers;
+			if (triggers && triggers.length == 1 && triggers[0].actions.length == 1 && 
+					triggers[0].actions[0].type == "route") {
 				return "a";
 			}
 			return "button";
@@ -121,6 +122,19 @@ Vue.view("page-button", {
 				}
 			}
 			return activationType;
+		},
+		triggers: function() {
+			var triggers = [];
+			var cell = this.cell;
+			// old school
+			if (cell.state.triggers) {
+				nabu.utils.arrays.merge(triggers, cell.state.triggers);
+			}
+			// new school
+			if (cell.triggers) {
+				nabu.utils.arrays.merge(triggers, cell.triggers);
+			}
+			return triggers;
 		}
 	},
 	ready: function() {
@@ -153,13 +167,13 @@ Vue.view("page-button", {
 		},
 		getHref: function() {
 			if (this.tagName == "a") {
-				return this.$services.triggerable.calculateUrl(this.cell.state.triggers[0].actions[0], this, {});
+				return this.$services.triggerable.calculateUrl(this.triggers[0].actions[0], this, {});
 			}
 		},
 		guessButtonType: function() {
 			var isSubmit = false;
-			if (this.cell.state.triggers) {
-				this.cell.state.triggers.forEach(function(trigger) {
+			if (this.triggers) {
+				this.triggers.forEach(function(trigger) {
 					if (trigger.actions) {
 						trigger.actions.forEach(function(action) {
 							if (action.type == "action" && action.action == 'submit') {

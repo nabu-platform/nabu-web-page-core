@@ -1477,21 +1477,24 @@ window.addEventListener("load", function() {
 									headers.forEach(function(x) {
 										var cell = cellGenerator(x);
 										cell.name = "Local actions header";
+										// render _something_
+										cell.alias = "typography-fragment";
 									});
 									
 									// by default we generate no header content
 									// and we set the borders to be disabled on the local actions, that gives it a floaty feeling
 									application.services.page.normalizeAris(pageInstance.page, buttons, "cell", [{name:"table-column"}]);
-									buttons.aris.components["table-column"].options.push("border_none");
-									buttons.aris.components["table-column"].modifiers.push("small");
+									//buttons.aris.components["table-column"].options.push("border_none");
+									//buttons.aris.components["table-column"].modifiers.push("small");
+									buttons.aris.components["table-column"].variant = "local-actions";
 								}
 								var buttonRow = null;
 								// if we don't have a row yet, add it
 								if (buttons.rows.length == 0) {
 									buttonRow = rowGenerator(buttons);
 									application.services.page.normalizeAris(pageInstance.page, buttonRow, "row");
-									buttonRow.aris.components["page-row"].options.push("gap_small");
-									buttonRow.aris.components["page-row"].options.push("wrap_none");
+									//buttonRow.aris.components["page-row"].options.push("gap_small");
+									//buttonRow.aris.components["page-row"].options.push("wrap_none");
 								}
 								else {
 									buttonRow = buttons.rows[0];
@@ -1503,9 +1506,13 @@ window.addEventListener("load", function() {
 								buttonCell.name = "Update" + (name ? " " + name : "");
 								application.services.page.normalizeAris(pageInstance.page, buttonCell, "cell");
 								application.services.page.normalizeAris(pageInstance.page, buttonCell, "cell", [{name:"page-button"}]);
-								buttonCell.aris.components["page-button"].options.push("size_small");
+//								buttonCell.aris.components["page-button"].options.push("size_small");
 								buttonCell.aris.components["page-button"].variant = "ghost";
 								root.form.synchronize = true;
+								
+								if (table.aris.components["table"].modifiers.indexOf("has-local-actions") < 0) {
+									table.aris.components["table"].modifiers.push("has-local-actions");
+								}
 								
 								// make sure we synchronize changes so we don't need to refresh
 								// allow for some time to stabilize events etc so we have correct definitions

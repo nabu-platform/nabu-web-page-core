@@ -6,6 +6,7 @@
 					<component :is="getComponent()" :class="getCellClasses()" :page="page" :target="target">
 						<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
 							<n-page v-fragment
+								:$set-value="repeatSetter"
 								:page="fragmentPage"
 								@update="function() { update(record) }"
 								@click.native="handleClick($event, record)"
@@ -21,6 +22,7 @@
 						</template>
 						<template v-else-if="!edit && !loading && state.records.length">
 							<n-page-optimized :page="fragmentPage"
+								:$set-value="repeatSetter"
 								@update="function() { update(record) }"
 								@click.native="handleClick($event, record)"
 								:fragment-parent="getPageInstance()"
@@ -37,6 +39,7 @@
 					<component :is="getComponent()" :cell="getCellClasses()" :page="page" :target="target" v-for="slot in getAdditionalSlots(index)">
 						<template v-if="!edit && !loading && state.records.length && fragmentPages[slot].content.rows.length >= 2">
 							<n-page :page="fragmentPages[slot]"
+								:$set-value="repeatSetter"
 								@update="function() { update(record) }"
 								@click.native="handleClick($event, record)"
 								:fragment-parent="getPageInstance()"
@@ -51,6 +54,7 @@
 						</template>
 						<template v-else-if="!edit && !loading && state.records.length">
 							<n-page-optimized :page="fragmentPages[slot]"
+								:$set-value="repeatSetter"
 								@update="function() { update(record) }"
 								@click.native="handleClick($event, record)"
 								:fragment-parent="getPageInstance()"
@@ -70,6 +74,7 @@
 				<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
 					<template v-for="(record, index) in state.records">
 						<n-page :page="fragmentPage"
+							:$set-value="repeatSetter"
 							@update="function() { update(record) }"
 							@click.native="handleClick($event, record)"
 							:fragment-parent="getPageInstance()"
@@ -82,6 +87,7 @@
 							@beforeMount="beforeMount"
 							@ready="mounted"/>
 						<n-page 
+							:$set-value="repeatSetter"
 							v-for="slot in getAdditionalSlots(index)"
 							:page="fragmentPages[slot]"
 							@update="function() { update(record) }"
@@ -100,6 +106,7 @@
 				<template v-else-if="!edit && !loading && state.records.length">
 					<template v-for="(record, index) in state.records">
 						<n-page-optimized :page="fragmentPage"
+							:$set-value="repeatSetter"
 							@update="function() { update(record) }"
 							@click.native="handleClick($event, record)"
 							:fragment-parent="getPageInstance()"
@@ -112,6 +119,7 @@
 							@beforeMount="beforeMount"
 							@ready="mounted"/>
 						<n-page-optimized
+							:$set-value="repeatSetter"
 							v-for="slot in getAdditionalSlots(index)"
 							:page="fragmentPages[slot]"
 							@update="function() { update(record) }"
