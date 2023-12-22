@@ -3450,11 +3450,9 @@ nabu.services.VueService(Vue.extend({
 							// break out
 							setTimeout(function() {
 								self.$services.analysis.push({
-									source: "router",
-									category: "action",
-									type: "browse",
-									group: page.content.category,
-									event: page.content.name,
+									event: "browse",
+									category: "page",
+									component: page.content.name,
 									path: page.content.path,
 									data: parameters
 								});

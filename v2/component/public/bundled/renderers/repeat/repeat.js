@@ -559,6 +559,10 @@ Vue.component("renderer-repeat", {
 				instance.internalSet(name, value, label);
 			}
 			else {
+				// we _also_ need it locally, in the first iteration we just pushed it to the parent
+				// but then a lot of stuff based on nested repeats where the nested one builds on state of the parent one, started failing
+				// it is not yet clear why, but previously it was _always_ set locally, so only the upstreaming is new
+				instance.internalSet(name, value, label);
 				instance.fragmentParent.set(name, value, label);
 			}
 		},

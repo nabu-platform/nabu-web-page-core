@@ -635,9 +635,9 @@ window.addEventListener("load", function() {
 				return type == "operation" && $services.swagger.operations[content] && $services.swagger.operations[content].method && $services.swagger.operations[content].method.toLowerCase() == "delete";
 			},
 			initialize: function(type, content, pageInstance, rowGenerator, cellGenerator) {
-				console.log("generate", content);
 				var operation = $services.swagger.operations[content];
 				var name = $services.page.guessNameFromOperation(content);
+				var rawName = name;
 				if (name != null) {
 					name = name.substring(0, 1).toUpperCase() + name.substring(1);
 				}
@@ -719,9 +719,13 @@ window.addEventListener("load", function() {
 						buttonCell.name = "Delete" + (name ? " " + name : "");
 						application.services.page.normalizeAris(pageInstance.page, buttonCell, "cell");
 						application.services.page.normalizeAris(pageInstance.page, buttonCell, "cell", [{name:"page-button"}]);
-						buttonCell.aris.components["page-button"].options.push("size_small");
-						buttonCell.aris.components["page-button"].options.push("border_none");
-						buttonCell.aris.components["page-button"].variant = "danger-outline";
+						//buttonCell.aris.components["page-button"].options.push("size_small");
+						//buttonCell.aris.components["page-button"].options.push("border_none");
+						buttonCell.aris.components["page-button"].variant = "ghost";
+						buttonCell.aris.components["page-button"].modifiers.push("danger");
+						if (rawName) {
+							buttonCell.analysisId = "delete-" + rawName;
+						}
 						
 						buttonCell.alias = "page-button";
 						var idField = operation.parameters ? operation.parameters.filter(function(x) {
@@ -1256,6 +1260,7 @@ window.addEventListener("load", function() {
 				
 				var operation = $services.swagger.operations[content];
 				var name = $services.page.guessNameFromOperation(content);
+				var rawName = name;
 				if (name != null) {
 					name = name.substring(0, 1).toUpperCase() + name.substring(1);
 				}
@@ -1306,6 +1311,9 @@ window.addEventListener("load", function() {
 					if (buttonSubmit) {
 						buttonSubmit.state.content = "%" + "{Create}";
 					}
+					if (rawName) {
+						root.analysisId = "create-" + rawName;
+					}
 				}
 				else if (operation.method.toLowerCase() == "delete") {
 					root.runtimeAlias = "formDelete" + title;
@@ -1313,12 +1321,18 @@ window.addEventListener("load", function() {
 					if (buttonSubmit) {
 						buttonSubmit.state.content = "%" + "{Remove}";
 					}
+					if (rawName) {
+						root.analysisId = "delete-" + rawName;
+					}
 				}
 				else {
 					root.runtimeAlias = "formUpdate" + title;
 					title = "Update " + title;
 					if (buttonSubmit) {
 						buttonSubmit.state.content = "%" + "{Update}";
+					}
+					if (rawName) {
+						root.analysisId = "update-" + rawName;
 					}
 				}
 				// set the root name if there isn't one yet

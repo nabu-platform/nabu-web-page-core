@@ -240,8 +240,34 @@ Vue.component("renderer-form", {
 				self.doingIt = false;
 				stop(self.error);
 			};
+			
+			var context = null;
+			if (this.target.form.formType == "operation") {
+				context = this.target.form.operation;
+			}
+			else if (this.target.form.formType == "array") {
+				context = this.target.form.array;
+			}
+			else if (this.target.form.formType == "function") {
+				context = this.target.form.function;
+			}
+			else {
+				context = this.page.content.name;
+			}
+			self.$services.analysis.push({
+				event: "submit",
+				category: "form",
+				component: self.target.analysisId ? self.target.analysisId : "form-" + self.target.id,
+				context: context,
+				page: self.$services.page.getRootPage(self.$services.page.getPageInstance(self.page, self)).page.content.name,
+				data: {
+					formType: this.target.form.formType
+				}
+			});
+			
 			// do an operation call
 			if (this.target.form.operation && this.target.form.formType == "operation") {
+				// anything that is not a get should be autologged for analysis
 				try {
 					var cloned = nabu.utils.objects.clone(this.state);
 					if (!cloned["$serviceContext"]) {

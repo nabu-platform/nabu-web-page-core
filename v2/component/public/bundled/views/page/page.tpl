@@ -146,6 +146,7 @@
 							<button @click="$services.page.activeSubTab = 'variables'" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == 'variables'}">Variables</button>
 							<button @click="$services.page.activeSubTab = 'styling'" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == 'styling'}">Styling</button>
 							<button @click="$services.page.activeSubTab = 'triggers'" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == 'triggers'}">Triggers</button>
+							<button @click="$services.page.activeSubTab = 'analysis'" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == 'analysis'}">Analysis</button>
 						</div>
 						<n-form class="is-variant-floating-labels">
 							<template v-if="$services.page.activeSubTab == 'component'">
@@ -435,7 +436,7 @@
 							</template>
 							<template v-if="$services.page.activeSubTab == 'triggers'">
 								<h2 class="section-title">Triggers</h2>
-								<page-triggerable-configure :page="page" :target="page.content" :triggers="getEvents()"/>
+								<page-triggerable-configure :page="page" :target="page.content" :triggers="getEvents()" />
 								<h2 class="section-title">Analysis</h2>
 								<div class="is-row is-align-end is-spacing-medium">
 									<button class="is-button is-variant-primary-outline is-size-xsmall" @click="addAnalysis"><icon name="plus"/>Analysis</button>
@@ -496,6 +497,7 @@
 							<button @click="$services.page.activeSubTab = 'container'" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == 'container'}">Cell</button>
 							<button @click="$services.page.activeSubTab = 'styling'" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == 'styling'}">Styling</button>
 							<button @click="$services.page.activeSubTab = 'triggers'" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == 'triggers'}">Triggers</button>
+							<button @click="$services.page.activeSubTab = 'analysis'" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == 'analysis'}">Analysis</button>
 						</div>
 						<n-form class="is-variant-floating-labels" key="cell-form">
 							<template v-if="$services.page.activeSubTab == 'container'">
@@ -646,6 +648,10 @@
 									<n-form-switch v-model="cell.state.stopHoverPropagation" label="Stop hover propagation"/>
 								</div>
 								<page-triggerable-configure :page="page" :target="cell" :triggers="getTriggersForCell(cell)" :allow-closing="cell.target && cell.target != 'page'"/>
+							</template>
+							<template v-else-if="$services.page.activeSubTab == 'analysis'">
+								<h2 class="section-title">Analysis</h2>
+								<n-form-text v-model="cell.analysisId" label="Analysis id"/>
 							</template>
 						</n-form>
 					</div>

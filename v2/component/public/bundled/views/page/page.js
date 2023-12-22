@@ -1250,7 +1250,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					nabu.utils.arrays.merge(this.$services.page.availableSubTabs, component.getAvailableSubTabs());
 				}
 			}
-			var availableTabs = ["container", "styling", "triggers"];
+			var availableTabs = ["container", "styling", "triggers", "analysis"];
 			
 			if (this.$services.page.availableSubTabs.length) {
 				nabu.utils.arrays.merge(availableTabs, this.$services.page.availableSubTabs);

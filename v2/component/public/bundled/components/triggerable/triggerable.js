@@ -570,6 +570,17 @@ Vue.service("triggerable", {
 									var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
 									parameters["$serviceContext"] = pageInstance.getServiceContext();
 								}
+								var target = instance.cell ? instance.cell : instance.row;
+								// anything that is not a get should be autologged for analysis
+								if (target && operation.method && operation.method.toLowerCase() != "get") {
+									self.$services.analysis.push({
+										event: "operation",
+										category: "trigger",
+										component: target.analysisId ? target.analysisId : (target.alias ? target.alias + "-" : "") + target.id,
+										context: action.operation,
+										page: self.$services.page.getRootPage(self.$services.page.getPageInstance(instance.page, instance)).page.content.name
+									});
+								}
 								self.$services.swagger.execute(action.operation, parameters).then(function(answer) {
 									if (action.resultName) {
 										state[action.resultName] = answer;
@@ -638,6 +649,16 @@ Vue.service("triggerable", {
 						}
 						else if (action.type == "download" && action.operation) {
 							var parameters = getBindings();
+							
+							self.$services.analysis.push({
+								event: "download",
+								category: "trigger",
+								component: (instance.alias ? instance.alias + "-" : "") + instance.analysisId ? instance.analysisId : instance.id,
+								context: instance.page.content.name,
+								path: page.content.path,
+								data: parameters
+							});
+							
 							var startDownload = function(url) {
 								var operation = self.$services.swagger.operations[action.operation];
 								

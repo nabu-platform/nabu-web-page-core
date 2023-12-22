@@ -45,8 +45,7 @@ Vue.view("page-paging-next", {
 	},
 	computed: {
 		pageNumber: function() {
-			console.log("this paging is", this.paging);
-			return this.paging && this.paging.current ? this.paging.current + 1 : 1;
+			return this.paging && this.paging.current ? this.paging.current : 0;
 		}
 	},
 	// hook into component
@@ -85,6 +84,7 @@ Vue.view("page-paging-next", {
 				var self = this;
 				this.loading = true;
 				var done = function(x) {
+					console.log("loading done", x, self.paging);
 					self.loading = false;
 				};
 				console.log("jumping to page", page);

@@ -23,20 +23,18 @@ Vue.service("analysis", {
 		return {
 			provider: null,
 			id: 1,
-			environment: "${nabu.utils.Server.getServerGroup()/group}",
-			mobile: navigator.userAgent.toLowerCase().indexOf("mobi") >= 0,
-			platform: "${when(environment('mobile') == true, 'hybrid', 'website')}",
-			application: "${environment('webApplicationId')}",
-			language: "${language()}",
-			timezone: null
+			mobile: application && application.configuration && application && application.configuration.mobile != null ? application && application.configuration.mobile : navigator.userAgent.toLowerCase().indexOf("mobi") >= 0,
+			language: application && application.configuration ? application.configuration.language : null,
+			timezone: null,
+			locale: null
 		}
 	},
 	activate: function(done) {
 		this.start();
-		// let's try to get the timezone!
-		this.timezone = Intl && Intl.DateTimeFormat	&& Intl.DateTimeFormat().resolvedOptions
-			? Intl.DateTimeFormat().resolvedOptions().timeZone 
-			: null;
+		if (Intl && Intl.DateTimeFormat	&& Intl.DateTimeFormat().resolvedOptions) {
+			this.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+			this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
+		}
 		done();
 	},
 	methods: {
@@ -63,17 +61,24 @@ Vue.service("analysis", {
 			var self = this;
 			// enrich with environmental information
 			data.meta = {
-				environment: this.environment,
 				mobile: this.mobile,
-				platform: this.platform,
-				application: this.application,
-				language: this.language,
+				browserLanguage: navigator.language,
 				created: new Date().toISOString(),
 				url: window.location.href,
-				referrer: document.referrer ? document.referrer : null,
-				userAgent: navigator.userAgent,
-				timezone: this.timezone
+				userAgent: navigator.userAgent
 			};
+			if (document.referrer) {
+				data.meta.referrer = document.referrer;
+			}
+			if (this.language) {
+				data.meta.userLanguage = this.language;
+			}
+			if (this.timezone) {
+				data.meta.timezone = this.timezone;
+			}
+			if (this.locale) {
+				data.meta.locale = this.locale;
+			}
 			data.eventId = this.id++;
 			// we add the location if we have it
 			if (this.$services.page.location) {
