@@ -3773,7 +3773,9 @@ Vue.component("n-page-row", {
 	},
 	data: function() {
 		return {
-			configuring: null
+			configuring: null,
+			// keeps a reactive boolean linked to the permission resolving
+			permissionRendering: {}
 		}
 	},
 	created: function() {
