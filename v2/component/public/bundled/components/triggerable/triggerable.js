@@ -599,15 +599,6 @@ Vue.service("triggerable", {
 						}
 						else if (action.type == "variable") {
 							if (action.bindings) {
-								var customValueFunction = function(path, literal) {
-									// look up in local state so you can evaluate that
-									var result = self.$services.page.getValue(state, path);
-									// fallback to global value function!
-									if (result == null) {
-										result = instance.$value(path, literal);
-									}
-									return result;
-								}
 								var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
 								Object.keys(action.bindings).map(function(key) {
 									if (action.bindings[key] != null) {
@@ -734,6 +725,7 @@ Vue.service("triggerable", {
 							}
 							//var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
 							//var result = self.$services.page.eval(script, pageInstance.variables, instance);
+							console.log("executing", script, customValueFunction)
 							var result = self.$services.page.eval(script, state, instance, customValueFunction);
 							if (result && result.then) {
 								return result;

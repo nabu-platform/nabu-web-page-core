@@ -2980,15 +2980,15 @@ nabu.services.VueService(Vue.extend({
 					// by default it is bound to "undefined"
 					resultFunction = resultFunction.bind(this);
 					var result = resultFunction(state, this.$services, customValueFunction ? customValueFunction : (instance ? instance.$value : function() { throw "No value function" }), instance ? instance.$is : function() { "No is function" }, application, state && state.value ? state.value : state);
+					if (result instanceof Function) {
+						// by default it is bound to "undefined"
+						result = result.bind(this);
+						result = result(state);
+					}
 				}
 				catch (exception) {
 					console.error("Could not evaluate", condition, exception);
 					return null;
-				}
-				if (result instanceof Function) {
-					// by default it is bound to "undefined"
-					result = result.bind(this);
-					result = result(state);
 				}
 				return result;
 			}

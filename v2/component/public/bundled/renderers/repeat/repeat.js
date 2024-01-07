@@ -554,13 +554,19 @@ Vue.component("renderer-repeat", {
 		}
 	},
 	methods: {
-		repeatSetter: function(instance, name, value, label) {
-			if (!instance.fragmentParent || (this.target.runtimeAlias && (name.indexOf(this.target.runtimeAlias + ".") == 0 || name.indexOf("page." + this.target.runtimeAlias + ".") == 0))) {
+		// inside the repeat (e.g. when creating more complex cards) we may want to alter state on the page that has nothing to do with the repeat
+		// however we don't want to only alter the state of our own fragmented page because that will not feed back into the rest of the page and unrelated components
+		// a repeat only has a localized (non-similar) state its own repeat stuff
+		// for everything else, it should have an up to date copy of the state (ASSUMPTION!)
+		// an initial set is just to get the fragment page up and running and does not need to be propagated
+		// for nested repeats: they only push to their own parent which in turn should know whether or not it can push the change further on
+		repeatSetter: function(instance, name, value, label, initial) {
+			// initial sets are never propagated
+			if (initial || !instance.fragmentParent || (this.target.runtimeAlias && (name == this.target.runtimeAlias || "page." + name == this.target.runtimeAlias || name.indexOf(this.target.runtimeAlias + ".") == 0 || name.indexOf("page." + this.target.runtimeAlias + ".") == 0))) {
 				instance.internalSet(name, value, label);
 			}
 			else {
-				// we _also_ need it locally, in the first iteration we just pushed it to the parent
-				// but then a lot of stuff based on nested repeats where the nested one builds on state of the parent one, started failing
+				// we _also_ need it locally
 				// it is not yet clear why, but previously it was _always_ set locally, so only the upstreaming is new
 				instance.internalSet(name, value, label);
 				instance.fragmentParent.set(name, value, label);
@@ -1025,7 +1031,12 @@ Vue.component("renderer-repeat", {
 			//nabu.utils.objects.merge(result, this.getVariables());
 			// we don't want to pass the entire state as parameters because this causes the repeats to be rerendered if anything changes
 			if (this.target.runtimeAlias) {
-				result[this.target.runtimeAlias] = {record:record, recordIndex: this.state.records.indexOf(record), records: this.state.records, allRecords: this.state.allRecords};
+				result[this.target.runtimeAlias] = {
+					record:record, 
+					recordIndex: this.state.records.indexOf(record), 
+					records: this.state.records, 
+					allRecords: this.state.allRecords
+				};
 			}
 			return result;
 		},
@@ -1388,6 +1399,7 @@ Vue.component("renderer-repeat", {
 								// not interested in changes to itself
 								if (key != self.target.runtimeAlias) {
 									if (target.set) {
+										console.log("setting internal!");
 										if (target.variables[key] != pageInstance.variables[key]) {
 											target.set(key, pageInstance.variables[key]);
 										}

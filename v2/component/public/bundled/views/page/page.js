@@ -4391,6 +4391,30 @@ Vue.component("n-page-row", {
 					return false;
 				}
 			}
+			var self = this;
+			if (row.permission || row.permissionContext || row.permissionServiceContext) {
+				var permission = row.permission && row.permission.indexOf("=") == 0 ? this.$services.page.interpret(row.permission, this) : row.permission;
+				var permissionContext = row.permissionContext && row.permissionContext.indexOf("=") == 0 ? this.$services.page.interpret(row.permissionContext, this) : row.permissionContext;
+				var permissionServiceContext = row.permissionServiceContext && row.permissionServiceContext.indexOf("=") == 0 ? this.$services.page.interpret(row.permissionServiceContext, this) : row.permissionServiceContext;
+				var key = permissionServiceContext + "::" + permissionContext + "::" + permission;
+				// if we haven't resolved it yet, do so
+				if (!this.permissionRendering.hasOwnProperty(key)) {
+					Vue.set(this.permissionRendering, key, false);
+					// if successfully resolved, we will render it!
+					this.$services.user.can({
+						context: permissionContext,
+						name: permission,
+						serviceContext: permissionServiceContext
+					}).then(function() {
+						console.log("updating rendering to true!!");
+						Vue.set(self.permissionRendering, key, true);
+					})
+				}
+				if (this.permissionRendering[key] === false) {
+					return this.permissionRendering[key];
+				}
+			}
+			/*
 			if (!!row.permission) {
 				if (!this.$services.user.hasPermission(row.permission, row.permissionContext, row.permissionServiceContext)) {
 					return false;
@@ -4406,7 +4430,7 @@ Vue.component("n-page-row", {
 					return false;
 				}
 			}
-			var self = this;
+			*/
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			if (row.on) {
 				// if we explicitly closed it, leave it closed until it is reset
@@ -4615,6 +4639,32 @@ Vue.component("n-page-row", {
 					return false;
 				}
 			}
+			
+			var self = this;
+			// Check it!
+			if (cell.permission || cell.permissionContext || cell.permissionServiceContext) {
+				var permission = cell.permission && cell.permission.indexOf("=") == 0 ? this.$services.page.interpret(cell.permission, this) : cell.permission;
+				var permissionContext = cell.permissionContext && cell.permissionContext.indexOf("=") == 0 ? this.$services.page.interpret(cell.permissionContext, this) : cell.permissionContext;
+				var permissionServiceContext = cell.permissionServiceContext && cell.permissionServiceContext.indexOf("=") == 0 ? this.$services.page.interpret(cell.permissionServiceContext, this) : cell.permissionServiceContext;
+				var key = permissionServiceContext + "::" + permissionContext + "::" + permission;
+				// if we haven't resolved it yet, do so
+				if (!this.permissionRendering.hasOwnProperty(key)) {
+					Vue.set(this.permissionRendering, key, false);
+					// if successfully resolved, we will render it!
+					this.$services.user.can({
+						context: permissionContext,
+						name: permission,
+						serviceContext: permissionServiceContext
+					}).then(function() {
+						console.log("updating rendering to true!!");
+						Vue.set(self.permissionRendering, key, true);
+					})
+				}
+				if (this.permissionRendering[key] === false) {
+					return this.permissionRendering[key];
+				}
+			}
+			/*
 			if (!!cell.permission) {
 				if (!this.$services.user.hasPermission(cell.permission, cell.permissionContext)) {
 					return false;
@@ -4630,7 +4680,7 @@ Vue.component("n-page-row", {
 					return false;
 				}
 			}
-			var self = this;
+			*/
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			// if we depend on an event and it hasn't happened yet, don't render
 			// not sure if it will rerender if we close it?
