@@ -4669,13 +4669,22 @@ nabu.services.VueService(Vue.extend({
 			});
 		},
 		dashify: function(content) {
+			if (content == null) {
+				return null;
+			}
 			return this.underscorify(content).replace(/_/g, "-");
 		},
 		underscorify: function(content) {
+			if (content == null) {
+				return null;
+			}
 			return content.replace(/[^\w]+/g, "_").replace(/([A-Z]+)/g, "_$1").replace(/^_/, "").replace(/_$/, "")
 				.replace(/[_]+/g, "_").toLowerCase();
 		},
 		prettify: function(text) {
+			if (text == null) {
+				return null;
+			}
 			text = this.underscorify(text);
 			var result = null;
 			text.split(/_/).forEach(function(x) {
@@ -4692,6 +4701,9 @@ nabu.services.VueService(Vue.extend({
 			return result;
 		},
 		camelify: function(content) {
+			if (content == null) {
+				return null;
+			}
 			// first we do underscores, it is easiest
 			// if we start or end with an underscore, remove it
 			content = this.underscorify(content);
