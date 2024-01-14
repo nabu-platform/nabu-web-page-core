@@ -104,7 +104,7 @@ Vue.view("page-button", {
 			}
 		},
 		disabled: function() {
-			return this.cell.state.disabled ? this.$services.page.isCondition(this.cell.state.disabled, null, this) : false;
+			return this.cell.state.disabled ? this.$services.page.isCondition(this.cell.state.disabled, null, this, null, true) : false;
 		},
 		activationType: function() {
 			var activationType = this.cell.state.activationType;

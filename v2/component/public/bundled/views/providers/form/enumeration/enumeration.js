@@ -24,6 +24,13 @@ Vue.component("enumeration-provider", {
 		}
 	},
 	methods: {
+		getProvider: function() {
+			if (this.field.enumerationProvider) {
+				var self = this;
+				return nabu.page.providers("page-enumerate").filter(function(x) { return x.name == self.field.enumerationProvider })[0];
+			}
+			return null;
+		},
 		// enumerationOperation: null,
 		// enumerationFormatter
 		// enumerationFieldLabel: null,
@@ -316,6 +323,28 @@ Vue.component("enumeration-provider-configure", {
 	computed: {
 		availableParameters: function() {
 			return this.$services.page.getAvailableParameters(this.page, this.cell, true);
+		},
+		providerValueOptions: function() {
+			if (this.field.enumerationProvider != null) {
+				var self = this;
+				var providers = nabu.page.providers("page-enumerate").map(function(x) { return x.name });
+				var provider = nabu.page.providers("page-enumerate").filter(function(x) { return x.name == self.field.enumerationProvider })[0];
+				if (provider && provider.values) {
+					return provider.values;
+				}
+			}
+			return null;
+		},
+		providerLabelOptions: function() {
+			if (this.field.enumerationProvider != null) {
+				var self = this;
+				var providers = nabu.page.providers("page-enumerate").map(function(x) { return x.name });
+				var provider = nabu.page.providers("page-enumerate").filter(function(x) { return x.name == self.field.enumerationProvider })[0];
+				if (provider && provider.labels) {
+					return provider.labels;
+				}
+			}
+			return null;
 		}
 	},
 	methods: {
@@ -441,7 +470,7 @@ Vue.component("enumeration-provider-configure", {
 				return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
 			});
 		},
-		enumerationFilter: function(value) {
+		getEnumerationProviders: function(value) {
 			var providers = nabu.page.providers("page-enumerate").map(function(x) { return x.name });
 			if (value) {
 				providers = providers.filter(function(x) { return x.toLowerCase().indexOf(value.toLowerCase()) >= 0 });

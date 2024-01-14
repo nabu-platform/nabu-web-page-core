@@ -2,7 +2,7 @@
 	<div class="enumeration-provider-configure is-column">
 		<h2 class="section-title">Data Source</h2>
 		<div class="is-column is-spacing-medium">
-			<n-form-combo v-model="field.provider" :items="['operation', 'array', 'provided', 'fixed']" label="Data source" />
+			<n-form-combo v-model="field.provider" :items="['operation', 'array', 'provider', 'fixed']" label="Data source" />
 		</div>
 		<template v-if="field.provider == 'operation'">
 			<h2 class="section-title">Operation</h2>
@@ -103,6 +103,11 @@
 					<button class='is-button is-variant-close is-size-small' @click='field.enumerations.splice(i, 1)'><icon name='times'/></button>
 				</n-form-section>
 			</div>
+		</div>
+		<div class="is-column is-spacing-medium" v-if="field.provider == 'provider'">
+			<n-form-combo v-model='field.enumerationProvider' :filter='getEnumerationProviders' label='Enumeration Provider'/>
+			<n-form-combo v-if='providerValueOptions' :items='providerValueOptions' v-model='field.enumerationFieldValue' label='Value Field'/>
+			<n-form-combo v-if='providerLabelOptions' :items='providerLabelOptions' v-model='field.enumerationFieldLabel' label='Label Field'/>
 		</div>
 	</div>
 </template>

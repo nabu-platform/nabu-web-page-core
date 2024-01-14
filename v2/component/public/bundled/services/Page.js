@@ -31,6 +31,7 @@ nabu.services.VueService(Vue.extend({
 			// by default we assume a single configuration tab, but more complex components might have more
 			availableSubTabs: [],
 			showBreadcrumbs: true,
+			showRawTranslations: false,
 			
 			// you can globally activate views
 			activeViews: [],
@@ -122,7 +123,9 @@ nabu.services.VueService(Vue.extend({
 			aris: null,
 			// you can copy styling for later pasting
 			copiedStyling: null,
-			notificationStyle: "success-outline"
+			notificationStyle: "success-outline",
+			// promise results from conditionals
+			conditionalResults: {}
 		}
 	},
 	activate: function(done) {
@@ -221,35 +224,39 @@ nabu.services.VueService(Vue.extend({
 					self.$services.router.route("login", null, null, true);
 				}
 			}
-			else if (event.key && event.key.toLowerCase() == "f1") {
-				if (self.activeViews.indexOf("conditions") < 0) {
-					self.activeViews.push("conditions");
+			else if (self.canEdit()) {
+				if (event.key && event.key.toLowerCase() == "f1") {
+					if (self.activeViews.indexOf("conditions") < 0) {
+						self.activeViews.push("conditions");
+					}
+					event.stopPropagation();
+					event.preventDefault();
 				}
-				event.stopPropagation();
-				event.preventDefault();
-			}
-			else if (event.key && event.key.toLowerCase() == "f2") {
-				if (self.activeViews.indexOf("styling") < 0) {
-					self.activeViews.push("styling");
+				else if (event.key && event.key.toLowerCase() == "f2") {
+					if (self.activeViews.indexOf("styling") < 0) {
+						self.activeViews.push("styling");
+					}
+					event.stopPropagation();
+					event.preventDefault();
 				}
-				event.stopPropagation();
-				event.preventDefault();
 			}
 		});
 		document.addEventListener("keyup", function(event) {
-			if (event.key && event.key.toLowerCase() == "f1") {
-				var index = self.activeViews.indexOf("conditions");
-				if (index >= 0) {
-					self.activeViews.splice(index, 1);
+			if (self.canEdit()) {
+				if (event.key && event.key.toLowerCase() == "f1") {
+					var index = self.activeViews.indexOf("conditions");
+					if (index >= 0) {
+						self.activeViews.splice(index, 1);
+					}
+				}
+				else if (event.key && event.key.toLowerCase() == "f2") {
+					var index = self.activeViews.indexOf("styling");
+					if (index >= 0) {
+						self.activeViews.splice(index, 1);
+					}
 				}
 			}
-			else if (event.key && event.key.toLowerCase() == "f2") {
-				var index = self.activeViews.indexOf("styling");
-				if (index >= 0) {
-					self.activeViews.splice(index, 1);
-				}
-			}
-		})
+		});
 	},
 	methods: {
 		isThemeCompliant: function(entry) {
@@ -2478,6 +2485,9 @@ nabu.services.VueService(Vue.extend({
 			}
 		},
 		translate: function(value, component) {
+			if (this.showRawTranslations) {
+				return value;
+			}
 			// if you have a standardized translator service available
 			if (this.$services.translator && this.$services.translator.translate) {
 				return this.$services.translator.translate(value);
@@ -2805,12 +2815,26 @@ nabu.services.VueService(Vue.extend({
 			}
 			return result;
 		},
-		isCondition: function(condition, state, instance, customValueFunction) {
+		isCondition: function(condition, state, instance, customValueFunction, defaultValue) {
 			if (!condition) {
 				return true;
 			}
 			try {
 				var result = this.eval(condition, state, instance, customValueFunction);
+				// if we get a promise, return false initially, update to true if possible
+				if (result && result.then) {
+					var key = crypto.randomUUID();
+					Vue.set(this.conditionalResults, key, defaultValue == null ? false : defaultValue);
+					var self = this;
+					result.then(function(result) {
+						// if you have no result, we assume (because resolve instead of reject) that it was successful
+						// you can also pass in an explicit value that is cast to boolean to determine whether or not it was successful
+						if (result == null || !!result) {
+							Vue.set(self.conditionalResults, key, true);
+						}
+					});
+					return this.conditionalResults[key];
+				}
 				return !!result;
 			}
 			catch (exception) {

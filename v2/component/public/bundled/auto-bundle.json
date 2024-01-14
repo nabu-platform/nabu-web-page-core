@@ -576,6 +576,14 @@
 								"url": "defaults/login/login.js"
 							}
 						},
+						"challenge": {
+							"challenge.tpl": {
+								"url": "defaults/challenge/challenge.tpl"
+							},
+							"challenge.js": {
+								"url": "defaults/challenge/challenge.js"
+							}
+						},
 						"error": {
 							"error.tpl": {
 								"url": "defaults/error/error.tpl"

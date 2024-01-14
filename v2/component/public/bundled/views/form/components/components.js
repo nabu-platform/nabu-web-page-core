@@ -61,7 +61,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 					 return true;
 				}
 				var state = this.$services.page.getPageState(pageInstance);
-				return !!this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, state, this);
+				return !!this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, state, this, null, true);
 			}
 		},
 		watch: {

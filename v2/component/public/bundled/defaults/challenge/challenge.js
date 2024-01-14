@@ -1,7 +1,7 @@
-Vue.view("default-login", {
+Vue.view("default-challenge", {
 	priority: -50,
-	alias: "login",
-	url: "/login",
+	alias: "login-challenge",
+	url: "/login/challenge",
 	props: {
 		route: {
 			type: String,
@@ -11,16 +11,24 @@ Vue.view("default-login", {
 		url: {
 			type: String,
 			required: false
+		},
+		challengeType: {
+			type: String,
+			required: false
+		},
+		token: {
+			type: String,
+			required: true
+		},
+		remember: {
+			type: Boolean,
+			required: false,
+			default: true
 		}
 	},
 	data: function() {
 		return {
-			username: null,
-			password: null,
-			// remember will (in the future) be a security-driven choice in the backend
-			// the user has little knowledge of what this exactly means with regards to user experience
-			// instead he needs to explicitly log out if he wants to be forgotten
-			remember: true,
+			challenge: null,
 			working: false,
 			valid: false,
 			messages: []
@@ -32,8 +40,9 @@ Vue.view("default-login", {
 				this.messages.splice(0, this.messages.length);
 				this.working = true;
 				var self = this;
-				return this.$services.user.login(this.username, this.password, this.remember).then(
+				return this.$services.user.login(this.token, this.challenge, this.remember, this.challengeType).then(
 					function(result) {
+						// we might chain challenges (?)
 						if (result && result.challengeType) {
 							// the result should contain a token and a challenge type at this point
 							self.$services.router.route("login-challenge", result);

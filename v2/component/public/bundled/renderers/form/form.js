@@ -274,7 +274,7 @@ Vue.component("renderer-form", {
 						var pageInstance = this.$services.page.getPageInstance(this.page, this);
 						cloned["$serviceContext"] = pageInstance.getServiceContext();
 					}
-					return this.$services.swagger.execute(this.target.form.operation, cloned).then(function() {
+					return this.$services.swagger.execute(this.target.form.operation, cloned).then(function(result) {
 						// synchronize the changes back to the binding if relevant
 						if (self.target.form.synchronize) {
 							self.$services.page.applyRendererParameters(self.$services.page.getPageInstance(self.page, self), self.target, self.state);
