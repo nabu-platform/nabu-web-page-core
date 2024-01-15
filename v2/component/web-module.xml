@@ -10,4 +10,5 @@
     <webFragments>nabu.web.page.core.v2.rest.feature.get</webFragments>
     <webFragments>nabu.web.page.core.v2.rest.templates.list</webFragments>
     <webFragments>nabu.web.page.core.v2.rest.aris.variant.update</webFragments>
+    <webFragments>nabu.web.page.core.v2.identifier</webFragments>
 </webModule>

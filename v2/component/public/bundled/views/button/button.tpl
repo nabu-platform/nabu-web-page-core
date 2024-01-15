@@ -1,7 +1,8 @@
 <template id="page-button">
 	<component :href="getHref()" :is='tagName' class="is-button" @click="handle($event)" @click.middle="handle($event, true)" @keydown.space="hitSpace" :disabled="running || disabled" :class="[getChildComponentClasses('page-button'), {'is-active': active || activated, 'has-tooltip': !!tooltip, 'has-icon': cell.state.icon, 'has-text': cell.state.content}]" 
 			:component-group="cell.state.componentGroup"
-			:type="cell.state.buttonType ? cell.state.buttonType : guessButtonType()">
+			:type="cell.state.buttonType ? cell.state.buttonType : guessButtonType()"
+			:id="cell.customId ? cell.customId : null">
 		<img :src="cell.state.icon.indexOf('http') == 0 ? cell.state.icon : $window.application.configuration.root + 'resources/' + cell.state.icon" v-if="cell.state.icon && cell.state.icon.match(/^.*\.[^.]+$/)" class="is-icon"/>
 		<icon :name="cell.state.icon" v-if="cell.state.icon"/>
 		<span class="is-text" v-if="cell.state.content && !edit" v-html="$services.page.translate(getContentWithVariables($services.page.interpret(cell.state.content, $self)))"></span>

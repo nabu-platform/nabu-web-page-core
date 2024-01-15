@@ -4410,7 +4410,6 @@ Vue.component("n-page-row", {
 						name: permission,
 						serviceContext: permissionServiceContext
 					}).then(function() {
-						console.log("updating rendering to true!!");
 						Vue.set(self.permissionRendering, key, true);
 					})
 				}

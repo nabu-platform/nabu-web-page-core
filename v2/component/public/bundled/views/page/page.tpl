@@ -848,7 +848,7 @@
 						v-if="cell.target != 'absolute' || !cell.targetInEdit"
 						@update="updateEvent"
 						v-show="!edit || !row.collapsed"
-						:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
+						:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 						:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 						:key="cellId(cell) + '_edit' + '_' + cell.alias"
 						:cell-id="cell.id"
@@ -878,14 +878,13 @@
 						:placeholder="cell.name ? cell.name : (cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : null)"
 						:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 						:parameters="getRendererParameters(cell)"
-						v-route-render="{ alias: !cell.customId && !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"
-						:anchor="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : null"
+						v-route-render="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"
+						:anchor="cell.customId ? cell.customId : null"
 						:slot="cell.rendererSlot"
 						class="page-column"
 						>
 					
-					<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.customId || cell.rows.length)" :key="'page_' + pageInstanceId + '_edit_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
-					<div class="is-column-content" v-if="cell.customId && (cell.renderer || cell.alias || cell.rows.length)" :id="cell.customId" :anchor="cell.customId"></div>
+					<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" :key="'page_' + pageInstanceId + '_edit_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
 					
 					<n-page-row v-for="row in cell.rows"
 						:active-views="activeViews"
@@ -930,7 +929,7 @@
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
 							@update="updateEvent"
 							v-show="!edit || !row.collapsed"
-							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
+							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
 							:cell-id="cell.id"
@@ -960,13 +959,12 @@
 							:page="page"
 							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 							:parameters="getRendererParameters(cell)"
-							:anchor="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : null"
-							v-route-render="{ alias: !cell.customId && !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.customId && !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							:anchor="cell.customId ? cell.customId : null"
+							v-route-render="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
 							:slot="cell.rendererSlot"
 							>
 						
-						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.customId || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
-						<div class="is-column-content" v-if="cell.customId && (cell.renderer || cell.alias || cell.rows.length)" :id="cell.customId" :anchor="cell.customId"></div>
+						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						<n-page-row v-for="childRow in cell.rows"
 							:row="childRow"
 							:page="page" 
@@ -1011,7 +1009,7 @@
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
 							@update="updateEvent"
 							v-show="!edit || !row.collapsed"
-							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
+							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
 							:cell-id="cell.id"
@@ -1033,13 +1031,12 @@
 							:page="page"
 							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 							:parameters="getRendererParameters(cell)"
-							:anchor="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : null"
-							v-route-render="{ alias: !cell.customId && !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.customId && !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							:anchor="cell.customId ? cell.customId : null"
+							v-route-render="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
 							:slot="cell.rendererSlot"
 							>
 
-						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.customId || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
-						<div class="is-column-content" v-if="cell.customId && (cell.renderer || cell.alias || cell.rows.length)" :id="cell.customId" :anchor="cell.customId"></div>
+						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						
 						<n-page-row v-for="childRow in cell.rows"
 							:row="childRow"
@@ -1063,7 +1060,7 @@
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
 							@update="updateEvent"
 							v-show="!edit || !row.collapsed"
-							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
+							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
 							:cell-id="cell.id"
@@ -1085,13 +1082,12 @@
 							:page="page"
 							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 							:parameters="getRendererParameters(cell)"
-							:anchor="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : null"
-							v-route-render="{ alias: !cell.customId && !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.customId && !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							:anchor="cell.customId ? cell.customId : null"
+							v-route-render="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
 							:slot="cell.rendererSlot"
 							>
 						
-						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.customId || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
-						<div class="is-column-content" v-if="cell.customId && (cell.renderer || cell.alias || cell.rows.length)" :id="cell.customId" :anchor="cell.customId"></div>
+						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						<n-page-row v-for="childRow in cell.rows"
 							:row="childRow"
 							:page="page" 
@@ -1114,7 +1110,7 @@
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
 							@update="updateEvent"
 							v-show="!edit || !row.collapsed"
-							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
+							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
 							:cell-id="cell.id"
@@ -1136,13 +1132,12 @@
 							:page="page"
 							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 							:parameters="getRendererParameters(cell)"
-							:anchor="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : null"
-							v-route-render="{ alias: !cell.customId && !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.customId && !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							:anchor="cell.customId ? cell.customId : null"
+							v-route-render="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
 							:slot="cell.rendererSlot"
 							>
 						
-						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.customId || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
-						<div class="is-column-content" v-if="cell.customId && (cell.renderer || cell.alias || cell.rows.length)" :id="cell.customId" :anchor="cell.customId"></div>
+						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						<n-page-row v-for="childRow in cell.rows"
 							:row="childRow"
 							:page="page" 
@@ -1165,7 +1160,7 @@
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
 							@update="updateEvent"
 							v-show="!isContentHidden(cell)"
-							:id="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
+							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
 							:key="cellId(cell)"
 							:cell-id="cell.id"
@@ -1188,13 +1183,12 @@
 							:page="page"
 							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 							:parameters="getRendererParameters(cell)"
-							:anchor="cell.customId && !cell.alias && !cell.rows.length && !cell.renderer ? cell.customId : null"
-							v-route-render="{ alias: !cell.customId && !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.customId && !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							:anchor="cell.customId ? cell.customId : null"
+							v-route-render="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
 							:slot="cell.rendererSlot"
 							>
 						
-						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.customId || cell.rows.length)" @click="clickOnContentCell(row, cell)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
-						<div class="is-column-content" v-if="cell.customId && (cell.renderer || cell.alias || cell.rows.length)" :id="cell.customId" :anchor="cell.customId"></div>
+						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @click="clickOnContentCell(row, cell)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						<n-page-row v-for="childRow in cell.rows"
 							:row="childRow"
 							:page="page" 

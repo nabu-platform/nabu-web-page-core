@@ -725,7 +725,7 @@ Vue.service("triggerable", {
 							}
 							//var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
 							//var result = self.$services.page.eval(script, pageInstance.variables, instance);
-							console.log("executing", script, customValueFunction)
+							// console.log("executing", script, customValueFunction)
 							var result = self.$services.page.eval(script, state, instance, customValueFunction);
 							if (result && result.then) {
 								return result;
