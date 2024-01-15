@@ -2823,14 +2823,22 @@ nabu.services.VueService(Vue.extend({
 				var result = this.eval(condition, state, instance, customValueFunction);
 				// if we get a promise, return false initially, update to true if possible
 				if (result && result.then) {
-					var key = crypto.randomUUID();
-					Vue.set(this.conditionalResults, key, defaultValue == null ? false : defaultValue);
+					var instanceId = instance.conditionId;
+					if (!instanceId) {
+						instance.conditionId = crypto.randomUUID();
+					}
+					var key = instanceId + "::" + condition;
+					if (!this.conditionalResults.hasOwnProperty(key)) {
+						Vue.set(this.conditionalResults, key, defaultValue == null ? false : defaultValue);
+					}
 					var self = this;
 					result.then(function(result) {
 						// if you have no result, we assume (because resolve instead of reject) that it was successful
 						// you can also pass in an explicit value that is cast to boolean to determine whether or not it was successful
-						if (result == null || !!result) {
-							Vue.set(self.conditionalResults, key, true);
+						// we don't update it if it stays the same to prevent update loops (boolean changes, triggers rerender, boolean is updated again even though the same, rerender etc)
+						var booleanValue = result == null || !!result;
+						if (booleanValue !== self.conditionalResults[key]) {
+							Vue.set(self.conditionalResults, key, booleanValue);
 						}
 					});
 					return this.conditionalResults[key];

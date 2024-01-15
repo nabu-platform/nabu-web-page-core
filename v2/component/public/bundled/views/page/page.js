@@ -4392,10 +4392,14 @@ Vue.component("n-page-row", {
 				}
 			}
 			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			if (row.permission || row.permissionContext || row.permissionServiceContext) {
 				var permission = row.permission && row.permission.indexOf("=") == 0 ? this.$services.page.interpret(row.permission, this) : row.permission;
 				var permissionContext = row.permissionContext && row.permissionContext.indexOf("=") == 0 ? this.$services.page.interpret(row.permissionContext, this) : row.permissionContext;
 				var permissionServiceContext = row.permissionServiceContext && row.permissionServiceContext.indexOf("=") == 0 ? this.$services.page.interpret(row.permissionServiceContext, this) : row.permissionServiceContext;
+				if (!permissionServiceContext) {
+					permissionServiceContext = pageInstance.getServiceContext();
+				}
 				var key = permissionServiceContext + "::" + permissionContext + "::" + permission;
 				// if we haven't resolved it yet, do so
 				if (!this.permissionRendering.hasOwnProperty(key)) {
@@ -4431,7 +4435,6 @@ Vue.component("n-page-row", {
 				}
 			}
 			*/
-			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			if (row.on) {
 				// if we explicitly closed it, leave it closed until it is reset
 				if (pageInstance.closed[row.id]) {
@@ -4641,11 +4644,15 @@ Vue.component("n-page-row", {
 			}
 			
 			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			// Check it!
 			if (cell.permission || cell.permissionContext || cell.permissionServiceContext) {
 				var permission = cell.permission && cell.permission.indexOf("=") == 0 ? this.$services.page.interpret(cell.permission, this) : cell.permission;
 				var permissionContext = cell.permissionContext && cell.permissionContext.indexOf("=") == 0 ? this.$services.page.interpret(cell.permissionContext, this) : cell.permissionContext;
 				var permissionServiceContext = cell.permissionServiceContext && cell.permissionServiceContext.indexOf("=") == 0 ? this.$services.page.interpret(cell.permissionServiceContext, this) : cell.permissionServiceContext;
+				if (!permissionServiceContext) {
+					permissionServiceContext = pageInstance.getServiceContext();
+				}
 				var key = permissionServiceContext + "::" + permissionContext + "::" + permission;
 				// if we haven't resolved it yet, do so
 				if (!this.permissionRendering.hasOwnProperty(key)) {
@@ -4681,7 +4688,6 @@ Vue.component("n-page-row", {
 				}
 			}
 			*/
-			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			// if we depend on an event and it hasn't happened yet, don't render
 			// not sure if it will rerender if we close it?
 			if (cell.on) {

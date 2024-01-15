@@ -1,0 +1,15 @@
+#element-inspector {
+	position: absolute;
+	font-size: 0.8rem;
+	background-color: #666;
+	color: white;
+	padding: 0.3rem 0.7rem;
+	border: solid 1px #333;
+	.element-inspection {
+		display: flex;
+		column-gap: 1rem;
+		.element-tag {
+			font-weight: bold;
+		}
+	}
+}
