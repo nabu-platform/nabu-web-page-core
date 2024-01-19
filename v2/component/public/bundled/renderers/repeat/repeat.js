@@ -554,6 +554,11 @@ Vue.component("renderer-repeat", {
 		}
 	},
 	methods: {
+		// TODO: suppose you have a form inside the repeat, its state is _always_ localized to the repeat and should not be pushed to the parent page
+		// recognizing this localized state requires inspection in the page of all cells/rows and should be limited to runtime aliases
+		// currently the state _is_ upstreamed but should be kept in sync, you can not however have two separate repeat instances pushing the same state
+		// if this becomes necessary, do a recursive check and cache the results to blacklist upstreaming those values
+		
 		// inside the repeat (e.g. when creating more complex cards) we may want to alter state on the page that has nothing to do with the repeat
 		// however we don't want to only alter the state of our own fragmented page because that will not feed back into the rest of the page and unrelated components
 		// a repeat only has a localized (non-similar) state its own repeat stuff
@@ -1399,7 +1404,6 @@ Vue.component("renderer-repeat", {
 								// not interested in changes to itself
 								if (key != self.target.runtimeAlias) {
 									if (target.set) {
-										console.log("setting internal!");
 										if (target.variables[key] != pageInstance.variables[key]) {
 											target.set(key, pageInstance.variables[key]);
 										}

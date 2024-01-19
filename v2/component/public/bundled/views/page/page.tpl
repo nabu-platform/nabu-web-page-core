@@ -18,7 +18,7 @@
 </template>
 
 <template id="page-shortkey">
-	<span class="shortkey is-badge"><span v-if="ctrl && $window.navigator.platform.toLowerCase().indexOf('mac') >= 0">CMD + </span><span v-else-if="ctrl">CTRL + </span><slot></slot></span>
+	<span class="shortkey is-badge"><span v-if="ctrl && $window.navigator.platform.toLowerCase().indexOf('mac') >= 0">CMD + </span><span v-else-if="ctrl">CTRL + </span><span v-if="alt">ALT + </span><slot></slot></span>
 </template>
 
 <template id="nabu-optimized-page">
@@ -107,7 +107,7 @@
 					</div>
 					<div class="is-column is-spacing-vertical-medium is-spacing-gap-small">
 						<button class="is-button is-size-small has-tooltip" @click="activeTab = 'layout'" :class="{'is-active': activeTab == 'layout'}"><icon name="align-left"/><span class="is-tooltip">Layout<shortkey :ctrl="true">D</shortkey></span></button>
-						<button class="is-button is-size-small has-tooltip" @click="activeTab = 'settings'" :class="{'is-active': activeTab == 'settings'}"><icon name="file"/><span class="is-tooltip">Page Settings</span></button>
+						<button class="is-button is-size-small has-tooltip" @click="activeTab = 'settings'" :class="{'is-active': activeTab == 'settings'}"><icon name="file"/><span class="is-tooltip">Page Settings<shortkey :ctrl="true">B</shortkey></span></button>
 						<button class="is-button is-size-small has-tooltip" @click="activeTab = 'components'" :class="{'is-active': activeTab == 'components'}"><icon name="cubes"/><span class="is-tooltip">Components and operations</span></button>
 						<button :disabled="cell == null && row == null" class="is-button is-size-small has-tooltip" @click="activeTab = 'selected'" :class="{'is-active': activeTab == 'selected'}"><icon name="cube"/><span v-if="cell != null || row != null" class="is-tooltip">{{$services.page.formatPageItem($self, selectedType == 'cell' ? cell : row)}}<shortkey :ctrl="true">G</shortkey></span><span v-else class="is-tooltip">Select an component on the page</span></button>
 					</div>
@@ -492,12 +492,12 @@
 					
 					<div v-else-if="activeTab == 'selected' && cell && selectedType == 'cell'" :key="'page_' + pageInstanceId + '_cell_' + cell.id + '_configuration'">
 						<div class="tabbed-menu is-row is-spacing-xsmall is-spacing-vertical-bottom-none">
-							<button @click="$services.page.activeSubTab = 'component'" v-if="cell && $services.page.availableSubTabs.length == 0 && canConfigureInline(cell)" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == 'component'}">{{cell.alias && false ? $services.page.prettifyRouteAlias(cell.alias) : "Main"}}</button>
-							<button @click="$services.page.activeSubTab = customSubTab" v-for="customSubTab in $services.page.availableSubTabs" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == customSubTab}">{{customSubTab == 'component' ? (cell.alias && false ? $services.page.prettifyRouteAlias(cell.alias) : "Main") : $services.page.prettify(customSubTab)}}</button>
-							<button @click="$services.page.activeSubTab = 'container'" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == 'container'}">Cell</button>
-							<button @click="$services.page.activeSubTab = 'styling'" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == 'styling'}">Styling</button>
-							<button @click="$services.page.activeSubTab = 'triggers'" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == 'triggers'}">Triggers</button>
-							<button @click="$services.page.activeSubTab = 'analysis'" class="is-button is-size-xsmall" :class="{'is-active': $services.page.activeSubTab == 'analysis'}">Analysis</button>
+							<button @click="$services.page.activeSubTab = 'container'" class="is-button is-size-xsmall has-tooltip" :class="{'is-active': $services.page.activeSubTab == 'container'}">Cell<span class="is-tooltip is-position-bottom">Show cell details <shortkey alt="true">1</shortkey></span></button>
+							<button @click="$services.page.activeSubTab = 'styling'" class="is-button is-size-xsmall has-tooltip" :class="{'is-active': $services.page.activeSubTab == 'styling'}">Styling<span class="is-tooltip is-position-bottom">Configure styling <shortkey alt="true">2</shortkey></span></button>
+							<button @click="$services.page.activeSubTab = 'triggers'" class="is-button is-size-xsmall has-tooltip" :class="{'is-active': $services.page.activeSubTab == 'triggers'}">Triggers<span class="is-tooltip is-position-bottom">React to triggers <shortkey alt="true">3</shortkey></span></button>
+							<button @click="$services.page.activeSubTab = 'component'" v-if="cell && $services.page.availableSubTabs.length == 0 && canConfigureInline(cell)" class="is-button is-size-xsmall has-tooltip" :class="{'is-active': $services.page.activeSubTab == 'component'}">{{cell.alias && false ? $services.page.prettifyRouteAlias(cell.alias) : "Main"}}<span class="is-tooltip is-position-bottom">General configuration <shortkey alt="true">4</shortkey></span></button>
+							<button @click="$services.page.activeSubTab = customSubTab" v-for="(customSubTab, index) in $services.page.availableSubTabs" class="is-button is-size-xsmall has-tooltip" :class="{'is-active': $services.page.activeSubTab == customSubTab}">{{customSubTab == 'component' ? (cell.alias && false ? $services.page.prettifyRouteAlias(cell.alias) : "Main") : $services.page.prettify(customSubTab)}}<span class="is-tooltip is-position-bottom">Configure <shortkey alt="true">{{index + 4}}</shortkey></span></button>
+							<button @click="$services.page.activeSubTab = 'analysis'" class="is-button is-size-xsmall has-tooltip" :class="{'is-active': $services.page.activeSubTab == 'analysis'}">Analysis<span class="is-tooltip is-position-bottom">Show cell details <shortkey alt="true">{{4 + $services.page.availableSubTabs.length}}</shortkey></span></button>
 						</div>
 						<n-form class="is-variant-floating-labels" key="cell-form">
 							<template v-if="$services.page.activeSubTab == 'container'">

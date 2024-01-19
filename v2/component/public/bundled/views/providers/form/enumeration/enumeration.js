@@ -292,7 +292,7 @@ Vue.component("enumeration-provider", {
 			}
 		},
 		validate: function(soft) {
-			return this.$refs.form.validate(soft);
+			return this.$refs.form ? this.$refs.form.validate(soft) : true;
 		}
 	}
 })

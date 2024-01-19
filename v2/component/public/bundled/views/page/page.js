@@ -9,6 +9,10 @@ Vue.component("shortkey", {
 		ctrl: {
 			type: Boolean,
 			default: false
+		},
+		alt: {
+			type: Boolean,
+			default: false
 		}
 	}
 });
@@ -1698,7 +1702,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 					Vue.delete(this.components, "alias_" + component.getRuntimeAlias(), null);
 					// unset the state again so it can be reused
 					// or at the very least it is clear that it is gone
-					Vue.set(this.variables, component.getRuntimeAlias(), null);
+					// it should use the custom setter if available
+					this.set(component.getRuntimeAlias(), null);
+					//Vue.set(this.variables, component.getRuntimeAlias(), null);
 
 					// THIS DOES NOT WORK
 					// the problem is that often we set the rendering condition on some far away parent of the component that actually has the state
@@ -1759,7 +1765,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 						toMerge = this.variables[target.runtimeAlias];
 					}
 				}
-				Vue.set(this.variables, target.runtimeAlias, component.getRuntimeState());
+				//Vue.set(this.variables, target.runtimeAlias, component.getRuntimeState());
+				// use potentially localized set
+				this.set(target.runtimeAlias, component.getRuntimeState());
 				if (!target.retainState) {
 				}
 				if (toMerge != null) {
@@ -1776,9 +1784,11 @@ nabu.page.views.Page = Vue.component("n-page", {
 					// you may have already been replaced! at that point, we assume by an instance of the same thing
 					// this usually happens when switching between editing and not editing
 					// at that point, the new component should be registered already and we don't want to wipe that out
-					if (self.components[target.id] == self) {
+					if (self.components[target.id] == component) {
 						if (target.renderer && target.runtimeAlias && component.getRuntimeState && !target.retainState) {
-							Vue.set(self.variables, target.runtimeAlias, null);
+							//Vue.set(self.variables, target.runtimeAlias, null);
+							// use potentially localized set
+							self.set(target.runtimeAlias, null);
 						}
 						if (target.renderer) {
 							// only unset if it _is_ you, at some point we were unsetting other instances
@@ -5332,11 +5342,15 @@ Vue.component("page-sidemenu", {
 			}
 		},
 		cellDown: function(row, cell) {
+			console.log("moving cell down!");
 			var index = this.rows.indexOf(row);
 			if (index < this.rows.length - 1) {
 				var target = this.rows[index + 1];
 				row.cells.splice(row.cells.indexOf(cell));
 				target.cells.push(cell);
+				Vue.nextTick(function() {
+					document.getElementById("layout-entry-" + cell.id).querySelector("[tabindex]").focus();
+				});
 			}
 		},
 		cellUp: function(row, cell) {
@@ -5345,6 +5359,10 @@ Vue.component("page-sidemenu", {
 				var target = this.rows[index - 1];
 				row.cells.splice(row.cells.indexOf(cell));
 				target.cells.push(cell);
+				// focus so you can do more commands
+				Vue.nextTick(function() {
+					document.getElementById("layout-entry-" + cell.id).querySelector("[tabindex]").focus();
+				});
 			}
 		},
 		left: function(row, cell) {
@@ -5353,6 +5371,9 @@ Vue.component("page-sidemenu", {
 				var replacement = row.cells[index - 1];
 				row.cells.splice(index - 1, 1, cell);
 				row.cells.splice(index, 1, replacement);
+				Vue.nextTick(function() {
+					document.getElementById("layout-entry-" + cell.id).querySelector("[tabindex]").focus();
+				})
 			}
 		},
 		right: function(row, cell) {
@@ -5361,6 +5382,9 @@ Vue.component("page-sidemenu", {
 				var replacement = row.cells[index + 1];
 				row.cells.splice(index + 1, 1, cell);
 				row.cells.splice(index, 1, replacement);
+				Vue.nextTick(function() {
+					document.getElementById("layout-entry-" + cell.id).querySelector("[tabindex]").focus();
+				})
 			}
 		},
 		mouseOut: function(event, row, cell) {
@@ -5779,6 +5803,11 @@ Vue.component("page-sidemenu", {
 				});
 			}
 		},
+		// @2024-01-19
+		// this piece of code keeps stealing focus when you are for example typing in a rich text area
+		// it is currently unclear why this was added so disabling for now
+		// if weird behavior starts popping up, we might be able to deduce why it was added
+		/*
 		rows: {
 			deep: true,
 			handler: function() {
@@ -5790,6 +5819,7 @@ Vue.component("page-sidemenu", {
 				}
 			}
 		}
+		*/
 	}
 });
 
@@ -6288,6 +6318,7 @@ Vue.component("template-manager", {
 })
 
 document.addEventListener("keydown", function(event) {
+	console.log("event is", event);
 	if (event.key == "s" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
 		application.services.page.editing.save(event);
 	}
@@ -6302,6 +6333,33 @@ document.addEventListener("keydown", function(event) {
 			event.preventDefault();
 		}
 		event.stopPropagation();
+	}
+	else if (event.key == "b" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
+		application.services.page.editing.activeTab = 'settings';
+		event.preventDefault();
+		event.stopPropagation();
+	}
+	else if (event.code == "Digit1" && event.altKey && application.services.page.editing) {
+		application.services.page.activeSubTab = "container";
+		event.preventDefault();
+	}
+	else if (event.code == "Digit2" && event.altKey && application.services.page.editing) {
+		application.services.page.activeSubTab = "styling";
+		event.preventDefault();
+	}
+	else if (event.code == "Digit3" && event.altKey && application.services.page.editing) {
+		application.services.page.activeSubTab = "triggers";
+		event.preventDefault();
+	}
+	else if ((event.code == "Digit4" || event.code == "Digit5" || event.code == "Digit6" || event.code == "Digit7" || event.code == "Digit8" || event.code == "Digit9") && event.altKey && application.services.page.editing) {
+		var offset = parseInt(event.code.substring(5)) - 4;
+		if (offset < application.services.page.availableSubTabs.length) {
+			application.services.page.activeSubTab = application.services.page.availableSubTabs[offset];
+		}
+		else {
+			application.services.page.activeSubTab = "analysis";
+		}
+		event.preventDefault();
 	}
 	else if (event.key == "s" && event.altKey && application.services.page.editing) {
 		application.services.page.editing.activeTab = "selected";
