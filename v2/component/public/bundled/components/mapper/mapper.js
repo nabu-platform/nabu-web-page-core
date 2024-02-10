@@ -265,7 +265,12 @@ Vue.component("n-page-mapper", {
 				return this.value[field].value;
 			}
 			if (!this.labelChoice) {
-				return this.value[field];
+				if (this.value[field] && this.value[field].indexOf("fixed.") == 0) {
+					return this.value[field].substring("fixed.".length);
+				}
+				else {
+					return this.value[field];
+				}
 			}
 			else {
 				return this.value[field]

@@ -2270,37 +2270,39 @@ nabu.page.views.Page = Vue.component("n-page", {
 				
 				Object.keys(this.components).map(function(cellId) {
 					var component = self.components[cellId];
-					var handle = function(component) {
-						// pages will _not_ send their events by default to other pages (only through global events)
-						// so this we skip the page components in this listing
-						if (component && component.getEvents && !self.$services.page.isPage(component)) {
-							var cellEvents = component.getEvents();
-							if (cellEvents) {
-								// if you have no particular content, you can just send the name of the event
-								if (typeof(cellEvents) == "string") {
-									events[cellEvents] = {};
-								}
-								else if (cellEvents instanceof Array) {
-									// TODO: support arrays of strings and/or objects?
-								}
-								else {
-									Object.keys(cellEvents).map(function(key) {
-										events[key] = cellEvents[key];
-									});
+					if (component) {
+						var handle = function(component) {
+							// pages will _not_ send their events by default to other pages (only through global events)
+							// so this we skip the page components in this listing
+							if (component && component.getEvents && !self.$services.page.isPage(component)) {
+								var cellEvents = component.getEvents();
+								if (cellEvents) {
+									// if you have no particular content, you can just send the name of the event
+									if (typeof(cellEvents) == "string") {
+										events[cellEvents] = {};
+									}
+									else if (cellEvents instanceof Array) {
+										// TODO: support arrays of strings and/or objects?
+									}
+									else {
+										Object.keys(cellEvents).map(function(key) {
+											events[key] = cellEvents[key];
+										});
+									}
 								}
 							}
 						}
-					}
-					if (component instanceof Array) {
-						component.forEach(handle);
-					}
-					else {
-						handle(component);
-					}
-					// get potential trigger target
-					var triggerTarget = component.target ? component.target : (component.cell ? component.cell : component.row);
-					if (triggerTarget && triggerTarget.triggers) {
-						nabu.utils.objects.merge(events, self.$services.triggerable.getEvents(self.page, triggerTarget));
+						if (component instanceof Array) {
+							component.forEach(handle);
+						}
+						else {
+							handle(component);
+						}
+						// get potential trigger target
+						var triggerTarget = component.target ? component.target : (component.cell ? component.cell : component.row);
+						if (triggerTarget && triggerTarget.triggers) {
+							nabu.utils.objects.merge(events, self.$services.triggerable.getEvents(self.page, triggerTarget));
+						}
 					}
 				});
 				Object.keys(events).map(function(name) {
@@ -6318,7 +6320,6 @@ Vue.component("template-manager", {
 })
 
 document.addEventListener("keydown", function(event) {
-	console.log("event is", event);
 	if (event.key == "s" && (event.ctrlKey || event.metaKey) && application.services.page.editing) {
 		application.services.page.editing.save(event);
 	}
@@ -6357,7 +6358,13 @@ document.addEventListener("keydown", function(event) {
 			application.services.page.activeSubTab = application.services.page.availableSubTabs[offset];
 		}
 		else {
-			application.services.page.activeSubTab = "analysis";
+			// no available subtabs, 4 means container
+			if (application.services.page.availableSubTabs.length == 0 && event.code == "Digit4") {
+				application.services.page.activeSubTab = "component";
+			}
+			else {
+				application.services.page.activeSubTab = "analysis";
+			}
 		}
 		event.preventDefault();
 	}

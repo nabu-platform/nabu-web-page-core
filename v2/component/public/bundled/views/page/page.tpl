@@ -647,7 +647,7 @@
 									<n-form-switch v-model="cell.state.stopClickPropagation" label="Stop click propagation"/>
 									<n-form-switch v-model="cell.state.stopHoverPropagation" label="Stop hover propagation"/>
 								</div>
-								<page-triggerable-configure :page="page" :target="cell" :triggers="getTriggersForCell(cell)" :allow-closing="cell.target && cell.target != 'page'"/>
+								<page-triggerable-configure :page="page" :target="cell" :triggers="getTriggersForCell(cell)" :allow-closing="true"/>
 							</template>
 							<template v-else-if="$services.page.activeSubTab == 'analysis'">
 								<h2 class="section-title">Analysis</h2>

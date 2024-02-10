@@ -94,7 +94,12 @@ Vue.view("page-button", {
 					});
 					return activeRoutes.length > 0;
 				}
-				return this.$services.triggerable.getActiveRoutes(this.cell.state).indexOf(this.$services.vue.route) >= 0;
+				var routes = [];
+				// old triggers
+				nabu.utils.arrays.merge(routes, this.$services.triggerable.getActiveRoutes(this.cell.state));
+				// new triggers
+				nabu.utils.arrays.merge(routes, this.$services.triggerable.getActiveRoutes(this.cell));
+				return routes.indexOf(this.$services.vue.route) >= 0;
 			}
 			else if (this.activationType == "condition" && this.cell.state.active) {
 				return this.$services.page.isCondition(this.cell.state.active, null, this);

@@ -1350,14 +1350,18 @@ window.addEventListener("load", function() {
 				
 				// update the submit button so it triggers the submit
 				if (buttonSubmit) {
-					if (buttonSubmit.state.triggers.length == 0) {
-						buttonSubmit.state.triggers.push({
+					// use root triggers
+					if (!buttonSubmit.triggers) {
+						buttonSubmit.triggers = [];
+					}
+					if (buttonSubmit.triggers.length == 0) {
+						buttonSubmit.triggers.push({
 							trigger: "activate",
 							closeEvent: true,
 							actions: []
 						})
 					}
-					var trigger = buttonSubmit.state.triggers[0];
+					var trigger = buttonSubmit.triggers[0];
 					var submit = trigger.actions.filter(function(x) { return x.action == "submit" })[0];
 					// if we don't have a submit action yet, add it
 					if (!submit) {
@@ -1542,7 +1546,7 @@ window.addEventListener("load", function() {
 							// when creating (or deleting), we want to do a refresh
 							// because of potential (and likely) paging, we can't simply add the result (even if we got it back)
 							if (buttonSubmit && operation.method.toLowerCase() == "post") {
-								buttonSubmit.state.triggers[0].actions.push({
+								buttonSubmit.triggers[0].actions.push({
 									type: "action",
 									action: "refresh",
 									actionTarget: repeat.id,
@@ -1578,7 +1582,7 @@ window.addEventListener("load", function() {
 								}
 								// we do need to add the current record
 								if (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "patch") {
-									var action = buttonCell.state.triggers[0].actions[0];
+									var action = buttonCell.triggers[0].actions[0];
 									action.event.eventFields.push({
 										name: "record",
 										stateValue: repeat.runtimeAlias + ".record"
