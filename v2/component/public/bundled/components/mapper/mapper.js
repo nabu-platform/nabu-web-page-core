@@ -243,6 +243,10 @@ Vue.component("n-page-mapper", {
 				});
 				this.resetField();
 			}
+			// can set the full label in non label choice mode
+			else if (label == null && !this.labelChoice) {
+				Vue.set(this.value, field, newValue);
+			}
 			else {
 				Vue.set(this.value, field, label && (newValue || label == "fixed") ? label + '.' + (newValue ? newValue : "") : null);
 			}

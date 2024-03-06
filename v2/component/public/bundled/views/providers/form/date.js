@@ -57,7 +57,7 @@ Vue.component("page-form-input-date", {
 			+ "		:timeout='timeout'"
 			+ "		v-bubble:blur"
 			+ "		:allow='getAllow()'"
-			+ "		:info='field.info ? $services.page.translate(field.info) : null'"
+			+ "		:info='field.info ? $services.page.interpret($services.page.translate(field.info), $self) : null'"
 			+ "		:before='field.before ? $services.page.translate(field.before) : null'"
 			+ "		:after='field.after ? $services.page.translate(field.after) : null'"
 			+ "		:suffix='field.suffixIcon ? $services.page.getIconHtml(field.suffixIcon) : field.suffix'"

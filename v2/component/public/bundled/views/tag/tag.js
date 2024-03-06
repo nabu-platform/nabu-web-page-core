@@ -61,7 +61,6 @@ Vue.view("page-tag", {
 		reset: function() {
 			if (!this.running) {
 				var originalValue = this.getRawValue();
-				console.log("resetting", this.cell.state.field, originalValue);
 				if (this.cell.state.field) {
 					// for arrays we simply empty them out rather than deleting them
 					if (originalValue instanceof Array) {

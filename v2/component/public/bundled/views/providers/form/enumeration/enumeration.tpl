@@ -31,26 +31,26 @@
 					v-if='field.enumerationOperation && !field.enumerationFieldLabelComplex' 
 					label='Enumeration Label'
 					v-model='field.enumerationFieldLabel' 
-					:filter='function() { return getEnumerationFields(field.enumerationOperation) }'/>
+					:filter='function(value) { return getEnumerationFields(field.enumerationOperation, value) }'/>
 				
 				<n-form-combo 
 					v-if='field.enumerationOperation' 
 					label='Enumeration Value'
 					v-model='field.enumerationFieldValue' 
-					:filter='function() { return getEnumerationFields(field.enumerationOperation) }' 
+					:filter='function(value) { return getEnumerationFields(field.enumerationOperation, value) }' 
 					info='If nothing is selected, the entire document becomes the value'/>
 					
 				<n-form-combo 
 					v-if='field.enumerationOperation' 
 					label='Enumeration Query'
 					v-model='field.enumerationOperationQuery' 
-					:filter='function() { return getEnumerationParameters(field.enumerationOperation) }'/>
+					:filter='function(value) { return getEnumerationParameters(field.enumerationOperation, value) }'/>
 					
 				<n-form-combo 
 					v-if='field.enumerationOperation && field.enumerationFieldValue' 
 					label='Resolve Field'
 					v-model='field.enumerationOperationResolve' 
-					:filter='function() { return getEnumerationParameters(field.enumerationOperation) }' />
+					:filter='function(value) { return getEnumerationParameters(field.enumerationOperation, value) }' />
 					
 				<n-form-text v-model='field.complexLabel' label='The complex text label' v-if='field.enumerationOperation && field.enumerationFieldLabelComplex'/>
 				<typography-variable-replacer v-if='field.enumerationOperation && field.enumerationFieldLabelComplex && field.complexLabel' :content='field.complexLabel' :page='page' :container='field' :keys='getEnumerationFields(field.enumerationOperation)' />
@@ -72,13 +72,13 @@
 			<n-form-ace v-if='field.enumerationArray' label='Filter' v-model='field.filter'/>
 			<n-form-switch v-model='field.enumerationFieldLabelComplex' label='Complex Enumeration Label'/>
 			<n-form-combo v-if='field.enumerationArray && !field.enumerationFieldLabelComplex' v-model='field.enumerationFieldLabel' label='Enumeration Label'
-				:filter='function() { return getEnumerationFields(field.enumerationArray) }'/>
+				:filter='function(value) { return getEnumerationFields(field.enumerationArray, value) }'/>
 			<n-form-switch v-model='field.enumerationFieldPrettyLabelComplex' label='Complex Pretty Enumeration Label'/>
 			<n-form-combo v-if='field.enumerationArray && !field.enumerationFieldPrettyLabelComplex' v-model='field.enumerationFieldPrettyLabel' label='Pretty enumeration Label'
-				:filter='function() { return getEnumerationFields(field.enumerationArray) }'/>
+				:filter='function(value) { return getEnumerationFields(field.enumerationArray, value) }'/>
 			<n-form-text v-model='field.complexPrettyLabel' label='The complex pretty label' v-if='field.enumerationFieldPrettyLabelComplex'/>
 			<n-form-combo v-if='field.enumerationArray' v-model='field.enumerationFieldValue' label='Enumeration Value'
-				:filter='function() { return getEnumerationFields(field.enumerationArray) }' info='If nothing is selected, the entire document becomes the value'/>
+				:filter='function(value) { return getEnumerationFields(field.enumerationArray, value) }' info='If nothing is selected, the entire document becomes the value'/>
 			<n-form-text v-model='field.complexLabel' label='The complex text label' v-if='field.enumerationFieldLabelComplex'/>
 			<typography-variable-replacer v-if='field.enumerationFieldLabelComplex && field.complexLabel' :content='field.complexLabel' :page='page' :container='field' :keys='getEnumerationFields(field.enumerationArray)' />
 			<typography-variable-replacer v-if='field.enumerationFieldPrettyLabelComplex && field.complexPrettyLabel' :content='field.complexPrettyLabel' :page='page' :container='field' :keys='getEnumerationFields(field.enumerationArray)' />

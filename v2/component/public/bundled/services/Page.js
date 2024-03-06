@@ -827,7 +827,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		// check if a component is in fact a page
 		isPage: function(component) {
-			return component && component.$options && component.$options.template && component.$options.template == "#nabu-page";
+			return component && component.$options && component.$options.template && (component.$options.template == "#nabu-page" || component.$options.template == "#nabu-page-optimized");
 		},
 		pasteItem: function(item) {
 			var content = null;
@@ -1125,10 +1125,10 @@ nabu.services.VueService(Vue.extend({
 			else if (value === "false") {
 				return false;
 			}
-			else if (value.match && value.match(/^[0-9]+$/)) {
+			else if (value.match instanceof Function && value.match(/^[0-9]+$/)) {
 				return parseInt(value);
 			}
-			else if (value.match && value.match(/^[0-9.]+$/)) {
+			else if (value.match instanceof Function && value.match(/^[0-9.]+$/)) {
 				return parseFloat(value);
 			}
 			return value;
@@ -2405,7 +2405,12 @@ nabu.services.VueService(Vue.extend({
 			}
 			var enumerators = this.enumerators;
 			// allow for fixed values
-			var value = bindingValue.indexOf("fixed") == 0 ? this.translate(bindingValue.substring("fixed.".length)) : (pageInstance ? pageInstance.get(bindingValue) : null);
+			// for the longest time we did not use the value function here
+			// the default value function itself also actually uses the getBindingValue so we need to be careful here
+			// however the default value does not pass in a value function, so the iteration stops there
+			// the primary usecase is that some contexts have more information (like the repeat, triggers,...) regarding certain state
+			// when we want to bind that state, it might not work otherwise
+			var value = bindingValue.indexOf("fixed") == 0 ? this.translate(bindingValue.substring("fixed.".length)) : (customValueFunction ? customValueFunction(bindingValue) : (pageInstance ? pageInstance.get(bindingValue) : null));
 			// if we have a fixed value that starts with a "=", interpret it
 			if (bindingValue.indexOf("fixed.=") == 0) {
 				value = this.interpret(value, pageInstance, null, customValueFunction);

@@ -123,6 +123,9 @@ nabu.page.provide("page-renderer", {
 					}
 					result.record = {properties:properties};
 					result.records = {type: "array", items: {type:"object",properties:result.record.properties}};	
+					if (container.repeat.raw) {
+						result.raw = definition;
+					}
 					
 					var filters = {};
 					// we also want to expose the parameters as input
@@ -154,6 +157,7 @@ nabu.page.provide("page-renderer", {
 				}
 				result.record = {properties:record};
 				result.records = {type: "array", items: {properties:record}};
+
 				// sometimes an array is actually at the page level (e.g. external) so we can't just strip out page
 				/*
 				var record = {};
@@ -399,6 +403,7 @@ Vue.component("renderer-repeat", {
 			// the state in the original page, this can be used to write stuff like "limit" etc to
 			// note that the "record" will not actually be in this
 			state: {
+				raw: {},
 				// the selected
 				selected: [],
 				order: {
@@ -606,7 +611,7 @@ Vue.component("renderer-repeat", {
 						delete object[key];
 					}
 					// empty strings are removed
-					else if (value == "") {
+					else if (value === "") {
 						delete object[key];
 					}
 					else if (typeof(value) == "object") {
@@ -1179,11 +1184,17 @@ Vue.component("renderer-repeat", {
 					self.state.allRecords.splice(0);
 				}
 				return this.$services.swagger.execute(this.target.repeat.operation, parameters).then(function(list) {
+					Object.keys(self.state.raw).forEach(function(x) {
+						Vue.set(self.state.raw, x, null);
+					});
 					if (!append) {
 						self.state.records.splice(0);
 						self.state.allRecords.splice(0);
 					}
 					if (list) {
+						Object.keys(list).forEach(function(x) {
+							Vue.set(self.state.raw, x, list[x]);
+						});
 						var arrayFound = false;
 						var findArray = function(root) {
 							Object.keys(root).forEach(function(field) {

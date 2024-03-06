@@ -37,7 +37,13 @@ nabu.services.VueService(Vue.extend({
 				return this.number(value, properties.amountOfDecimals, properties.retainTrailing);
 			}
 			else if (properties.format == "masterdata") {
-				return this.masterdata(value);
+				var serviceContext = null;
+				if (component && component.page) {
+					var pageInstance = this.$services.page.getPageInstance(component.page, component);
+					serviceContext = pageInstance == null ? null : pageInstance.getServiceContext();
+				}
+				// we take the default field (title) which should be translated!
+				return this.masterdata(value, serviceContext);
 			}
 			else if (properties.format == "javascript") {
 				return this.javascript(value, properties.javascript, properties.state, properties.$value);
@@ -125,7 +131,7 @@ nabu.services.VueService(Vue.extend({
 				return format;
 			}
 		},
-		masterdata: function(id) {
+		masterdata: function(id, serviceContext) {
 			if (!id) {
 				return "";
 			}
@@ -137,7 +143,7 @@ nabu.services.VueService(Vue.extend({
 			if (category) {
 				return category.title ? category.title : category.name;
 			}
-			return this.$services.masterdata.resolve(id);
+			return this.$services.masterdata.resolve(id, null, serviceContext);
 		},
 		number: function(input, amountOfDecimals, retainTrailing) {
 			amountOfDecimals = amountOfDecimals == null ? 2 : parseInt(amountOfDecimals);

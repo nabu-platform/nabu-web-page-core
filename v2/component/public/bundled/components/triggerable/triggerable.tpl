@@ -152,7 +152,7 @@
 							:extracter="function(x) { return x.id }"
 							v-model="action.operation" label="Operation" :filter="$services.page.getTriggerOperations" />
 							
-						<n-page-mapper v-if="action.operation" :to="$services.page.getSimpleKeysFor($services.page.getSwaggerOperationInputDefinition(action.operation), true)"
+						<n-page-mapper v-if="action.operation" :to="$services.page.getSimpleKeysFor($services.page.getSwaggerOperationInputDefinition(action.operation), true, true)"
 							:key="action.operation + '-mapper'"
 							:from="getAvailableParameters(trigger, action)" 
 							v-model="action.bindings"/>

@@ -40,7 +40,7 @@ Vue.component("page-form-input-checkbox", {
 			+ "		:edit='!readOnly'"
 			+ "		:schema='schema'"
 			+ "		:info-icon='field.infoIcon'"
-			+ "		:info='$services.page.translate(field.info)'"
+			+ "		:info='field.info ? $services.page.interpret($services.page.translate(field.info), $self) : null'"
 			+ "		:required='required'"
 			+ "		:must-check='field.mustCheck'"
 			+ "		@input=\"function(newValue) { $emit('input', newValue) }\""

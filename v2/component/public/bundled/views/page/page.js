@@ -597,6 +597,24 @@ nabu.page.views.Page = Vue.component("n-page", {
 			if (!x.startVisible) {
 				Vue.set(self.closed, x.id, x.on ? x.on : "$any");
 			}
+			// if there is an auto timeout, register a watcher
+			if (x.showTimeout) {
+				self.$watch("closed." + x.id, function(newValue) {
+					if (!self.showTimeouts) {
+						self.showTimeouts = {};
+					}
+					if (self.showTimeouts[x.id]) {
+						clearTimeout(self.showTimeouts[x.id]);
+						delete self.showTimeouts[x.id];
+					}
+					// if we are showing, register a closer
+					if (newValue == null) {
+						self.showTimeouts[x.id] = setTimeout(function() {
+							Vue.set(self.closed, x.id, x.on ? x.on : "$any");
+						}, parseInt(x.showTimeout));
+					}
+				});
+			}
 		});
 	},
 	beforeMount: function() {
@@ -913,6 +931,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 		// this works, but currently we can't get the events correctly
 		getTriggersForCell: function(cell) {
 			var component = this.components[cell.id];
+			// could be because of repeats etc
+			if (component instanceof Array) {
+				component = component[0];
+			}
 			// always have a click trigger
 			var result = this.getDefaultTriggers();
 			var actions = [];
@@ -4674,7 +4696,6 @@ Vue.component("n-page-row", {
 						name: permission,
 						serviceContext: permissionServiceContext
 					}).then(function() {
-						console.log("updating rendering to true!!");
 						Vue.set(self.permissionRendering, key, true);
 					})
 				}

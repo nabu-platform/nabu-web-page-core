@@ -87,12 +87,14 @@ Vue.component("enumeration-provider", {
 				return this.$services.swagger.execute(this.field.enumerationOperation, parameters, function(response) {
 					var result = null;
 					if (response) {
+						var arrayFound = false;
 						Object.keys(response).map(function(key) {
-							if (response[key] instanceof Array) {
+							if (response[key] instanceof Array && arrayFound == false) {
 								result = response[key];
 								if (self.field.selectFirstIfEmpty && self.value == null && result && result.length > 0) {
 									self.$emit("input", self.enumerationExtracter(result[0]));
 								}
+								arrayFound = true;
 							}
 						});
 					}
@@ -393,7 +395,7 @@ Vue.component("enumeration-provider-configure", {
 				 return x.id;
 			});	
 		},
-		getEnumerationFields: function(operationId) {
+		getEnumerationFields: function(operationId, value) {
 			var fields = [];
 			if (this.field.provider == "operation") {
 				if (this.$services.swagger.operations[operationId]) {
@@ -437,11 +439,22 @@ Vue.component("enumeration-provider-configure", {
 				}
 				nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor({properties:properties}));
 			}
+			if (value) {
+				fields = fields.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				});
+			}
 			return fields;
 		},
-		getEnumerationParameters: function(operationId) {
+		getEnumerationParameters: function(operationId, value) {
 			var parameters = this.$services.swagger.operations[operationId].parameters;
-			return parameters ? parameters.map(function(x) { return x.name }) : [];
+			var result = parameters ? parameters.map(function(x) { return x.name }) : [];
+			if (value != null) {
+				result = result.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				});
+			}
+			return result;
 		},
 		getMappableEnumerationParameters: function(field) {
 			var result = {

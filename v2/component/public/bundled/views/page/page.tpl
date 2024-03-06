@@ -562,6 +562,8 @@
 										@input="function(value) { setHideMode(cell, value) }"/>
 										
 									<n-form-combo label="The event that has to occur" v-model="cell.on" :filter="getAvailableEvents" v-if="cell.state.hideMode == 'event'" />
+
+									<n-form-text type="number" v-model="cell.showTimeout" v-if="cell.state.hideMode == 'event'" label="Hide automatically after this amount of ms"/>
 										
 									<n-form-switch label="Start visible" v-model="cell.startVisible" v-if="cell.state.hideMode == 'toggle'" />
 									

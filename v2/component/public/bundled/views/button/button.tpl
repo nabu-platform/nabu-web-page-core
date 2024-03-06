@@ -1,5 +1,5 @@
 <template id="page-button">
-	<component :href="getHref()" :is='tagName' class="is-button" @click="handle($event)" @click.middle="handle($event, true)" @keydown.space="hitSpace" :disabled="running || disabled" :class="[getChildComponentClasses('page-button'), {'is-active': active || activated, 'has-tooltip': !!tooltip, 'has-icon': cell.state.icon, 'has-text': cell.state.content}]" 
+	<component :href="getHref()" :is='tagName' class="is-button" @click="handle($event)" @click.middle="handle($event, true)" @keydown.space="hitSpace" :disabled="running || disabled" :class="[getChildComponentClasses('page-button'), {'is-running': running, 'is-active': active || activated, 'has-tooltip': !!tooltip, 'has-icon': cell.state.icon, 'has-text': cell.state.content}]" 
 			:component-group="cell.state.componentGroup"
 			:type="cell.state.buttonType ? cell.state.buttonType : guessButtonType()"
 			:id="cell.customId ? cell.customId : null">
