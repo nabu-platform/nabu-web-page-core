@@ -10,6 +10,7 @@
 				<n-form-switch v-model='field.showAmount' label='Show selected amount' info="Show a counter of how many items are selected"/>
 				<n-form-switch :invert='true' v-model='field.allowTyping' label='Disable typing' info='Can the user type to search?'/>
 				<n-form-switch v-model='field.selectFirstIfEmpty' label='Select the first value if none has been selected yet'/>
+				<n-form-switch v-if="false" v-model='field.loadOnFocus' label='Reload on focus'/>
 			</div>
 		</template>
 		<template v-else-if="$services.page.activeSubTab == 'data'">
@@ -20,8 +21,11 @@
 
 <template id="page-form-combo">
 	<n-form-combo combo-type="n-input-combo2"
+		ref="combo"
+		:load-on-focus="field.loadOnFocus"
 		:class="getChildComponentClasses('page-form-combo')"
 		:filter="enumerationFilter"
+		:resolver="enumerationResolver"
 		:formatter="enumerationFormatter"
 		:pretty-formatter="enumerationPrettyFormatter"
 		:extracter="enumerationExtracter"

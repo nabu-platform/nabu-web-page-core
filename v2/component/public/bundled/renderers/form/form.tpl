@@ -1,6 +1,6 @@
 <template id="renderer-form">
-	<n-form :class="getChildComponentClasses('form')" :content-class="getChildComponentClasses('form-container')" :mode="mode" @submit="submit">
-		<slot></slot>
+	<n-form :class="getChildComponentClasses('form')" :content-class="getChildComponentClasses('form-container')" :mode="mode" @submit="submit" @update="update">
+		<slot @update="update"></slot>
 		<n-messages :messages="messages" slot="footer" v-if="messages.length"/>
 	</n-form>
 </template>
@@ -24,7 +24,7 @@
 				:extracter="function(x) { return x.id }"/>
 		</div>
 		
-		<div v-else-if="target.form.formType == 'page'" class="is-column is-spacing-medium">
+		<div class="is-column is-spacing-medium">
 			<div class="is-row is-align-end">
 				<button class="is-button is-variant-primary-outline is-size-xsmall" @click="target.form.fields.push({})"><icon name="plus"/><span class="is-text">Add state field</span></button>
 			</div>
@@ -55,6 +55,7 @@
 		
 		<n-form-switch v-model="target.form.synchronize" label="Synchronize changes back to binding" v-if="target.form.formType != 'page'"/>
 		<n-form-switch v-model="target.form.bindingByReference" label="Perform input parameter binding by reference"/>
+		<n-form-switch v-model="target.form.submitOnChange" label="Submit on change"/>
 		
 		<div v-if="target.form.formType">
 			<n-form-switch v-model="target.form.noInlineErrors" label="Disable inline error message" after="By default, validation errors will be shown inline."/>

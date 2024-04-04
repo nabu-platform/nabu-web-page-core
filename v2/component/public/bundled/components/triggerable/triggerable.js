@@ -234,7 +234,7 @@ Vue.service("triggerable", {
 			};
 			if (action.type == "route" && (action.route || action.routeFormula)) {
 				var route = action.routeAsFormula ? self.$services.page.eval(action.routeFormula, state, instance) : action.route;
-				var parameters = this.getBindings(action, instance, state);
+				var parameters = action.routeFormulateParameters ? self.$services.page.eval(action.routeFormulateParameters, state, instance) : this.getBindings(action, instance, state);
 				addServiceContext(route, parameters);
 				if (immediatelyRoute) {
 					self.$services.page.chosenRoute = route;
@@ -298,7 +298,7 @@ Vue.service("triggerable", {
 			// we don't always call this handler (immediately), so we separate the logic
 			var self = this;
 			
-			var customValueFunction = function(path, literal) {
+			var customValueFunctionParent = function(path, literal) {
 				// look up in local state so you can evaluate that
 				var result = value == null ? null : self.$services.page.getValue(value, path);
 				// fallback to global value function!
@@ -311,7 +311,7 @@ Vue.service("triggerable", {
 			// TODO: the name "triggers" is actually configurable
 			var triggers = target.triggers ? target.triggers.filter(function(x) {
 				return x.trigger == trigger
-					&& (!x.condition || self.$services.page.isCondition(x.condition, value, instance, customValueFunction))
+					&& (!x.condition || self.$services.page.isCondition(x.condition, value, instance, customValueFunctionParent))
 					&& (!x.triggerError || (value && value.errorType == x.triggerError));
 			}) : [];
 			
@@ -327,6 +327,9 @@ Vue.service("triggerable", {
 				var customValueFunction = function(path, literal) {
 					// look up in local state so you can evaluate that
 					var result = self.$services.page.getValue(state, path);
+					if (result == null) {
+						result = customValueFunctionParent(path, literal);
+					}
 					// fallback to global value function!
 					if (result == null) {
 						result = instance.$value(path, literal);
@@ -353,9 +356,6 @@ Vue.service("triggerable", {
 				// actions can be immediately run or chained
 				var runAction = function(index, lastPromise) {
 					var action = actions[index];
-					if (action.condition && !self.$services.page.isCondition(action.condition, value, instance, customValueFunction)) {
-						return self.$services.q.resolve();
-					}
 					var getBindings = function() {
 						return self.getBindings(action, instance, state);
 /*						var parameters = {};
@@ -421,6 +421,9 @@ Vue.service("triggerable", {
 					};
 					
 					var handler = function() {
+						if (action.condition && !self.$services.page.isCondition(action.condition, value, instance, customValueFunction)) {
+							return;
+						}
 						// event-based
 						if (action.type == "event" && nabu.page.event.getName(action, "event")) {
 							var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
@@ -646,7 +649,7 @@ Vue.service("triggerable", {
 								category: "trigger",
 								component: (instance.alias ? instance.alias + "-" : "") + instance.analysisId ? instance.analysisId : instance.id,
 								context: instance.page.content.name,
-								path: page.content.path,
+								path: instance.page.content.path,
 								data: parameters
 							});
 							

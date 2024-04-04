@@ -55,6 +55,7 @@
 				<n-form-ace v-if="cell.state.required == 'condition'" v-model="cell.state.requiredCondition" label="Required" after="You can force this field to be mandatory"/>
 				<n-form-text v-model="cell.state.componentGroup" label="Component Group"/>
 				<n-form-switch v-model="cell.state.readOnly" label="Render as read only"/>
+				<n-form-switch v-if="cell.triggers && cell.triggers.length" v-model="cell.state.lockDuringTrigger" label="Lock during trigger"/>
 			</div>
 			
 		</template>

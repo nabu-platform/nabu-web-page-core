@@ -4336,7 +4336,12 @@ nabu.services.VueService(Vue.extend({
 					else {
 						currentValue = pageInstance ? pageInstance.get(x.name) : null;
 					}
-					parameters.properties[x.name] = self.getResolvedPageParameterType(x.type, currentValue);
+					if (x.useDefinition && x.definition) {
+						parameters.properties[x.name] = JSON.parse(x.definition);	
+					}
+					else {
+						parameters.properties[x.name] = self.getResolvedPageParameterType(x.type, currentValue);
+					}
 				});
 			}
 			

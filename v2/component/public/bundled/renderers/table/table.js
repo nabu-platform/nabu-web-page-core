@@ -24,7 +24,8 @@ nabu.page.provide("page-type", {
 		if (isRow) {
 			// if the repeat type is CELL, we assume that you have a repeat inside the header!
 			// this means you have a singular header row (no repeat) and within that a cell that has a repeat
-			if (page.content.repeatType == "cell") {
+			// the repeat has to be ON this cell though, not some faraway parent cell
+			if (page.content.repeatType == "cell" && row.repeat) {
 				return "th";
 			}
 			return "tr";
@@ -35,7 +36,8 @@ nabu.page.provide("page-type", {
 	},
 	cellTag: function(row, cell, depth, editing, reversePath, page) {
 		// we are repeating in the header (or footer) a cell, the row is already tagged as a cell, we don't need this here
-		if (page.content.repeatType == "cell") {
+		// note that the repeat has to be ON this cell though
+		if (page.content.repeatType == "cell" && cell.repeat) {
 			return null;
 		}
 		// if we are inside a body repeat, we need a tr
@@ -65,7 +67,7 @@ nabu.page.provide("page-type", {
 	},
 	cellComponent: function(cell, reversePath, page) {
 		// see above
-		if (page.content.repeatType == "cell") {
+		if (page.content.repeatType == "cell" && cell.repeat) {
 			return null;
 		}
 		// if we are inside a body repeat, we need a tr

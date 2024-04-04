@@ -3400,9 +3400,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 			var updateUrl = false;
 			// update something in the page parameters
 			if (name.indexOf && name.indexOf("page.") == 0) {
-				if (!this.masked) {
-					updateUrl = true;
-				}
 				var pageParameter = this.page.content.parameters ? this.page.content.parameters.filter(function(parameter) {
 					return parameter.name == name.substring("page.".length).split(".")[0];
 				})[0] : null;
@@ -3414,6 +3411,10 @@ nabu.page.views.Page = Vue.component("n-page", {
 					// check if it is explicitly a query or path parameter, if not, we still put it in the variables!!
 					// otherwise we might accidently update the parameters object which is passed along to all children
 					target = this.parameters;
+					// @2024-03-08: only update the url if we have a public parameter, previously it was updating on _every_ set
+					if (!this.masked) {
+						updateUrl = true;
+					}
 				}
 				else {
 					target = this.variables;
@@ -3441,13 +3442,21 @@ nabu.page.views.Page = Vue.component("n-page", {
 				// unclear if all components support this!
 				this.$services.page.setValue(this.labels, name, label == null || label == value ? null : label);
 				if (updateUrl) {
+					// @2024-03-08: the original update did not take into account paths in the parents
+					// it is still not entirely clean though because the template internally does a templateUrl as does the updateUrl
+					// router needs to get cleaned up
 					var route = this.$services.router.get(this.$services.page.alias(this.page));
 					if (route.url != null) {
+						var alias = this.$services.page.alias(this.page);
+						var newUrl = this.$services.router.router.template(alias, this.parameters);
+						this.$services.router.router.updateUrl(alias, newUrl, this.parameters);
+						/*
 						this.$services.router.router.updateUrl(
 							route.alias,
 							route.url,
 							this.parameters,
 							route.query)
+						*/
 					}
 				}
 				var self = this;
@@ -3830,7 +3839,10 @@ Vue.component("n-page-row", {
 			this.activeViews.push(view);
 		},
 		updateEvent: function(value, label, name) {
-			this.$emit("update", value, label, name);
+			if (this.$parent) {
+				this.$parent.$emit("update", value, label, name);
+			}
+			//this.$emit("update", value, label, name);
 		},
 		isContentHidden: function(target) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);

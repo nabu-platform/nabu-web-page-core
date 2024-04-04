@@ -23,6 +23,35 @@ Vue.component("enumeration-provider", {
 			this.provider = this.getProvider();
 		}
 	},
+	computed: {
+		operationBinding: function() {
+			var parameters = {};
+			var self = this;
+			if (this.field.enumerationOperationBinding) {
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				Object.keys(this.field.enumerationOperationBinding).map(function(key) {
+					// if the binding is not set, we don't want to overwrite any parameters that are already there (e.g. the resolve field)
+					if (self.field.enumerationOperationBinding[key] != null) {
+						var target = parameters;
+						var parts = key.split(".");
+						for (var i = 0; i < parts.length - 1; i++) {
+							if (!target[parts[i]]) {
+								target[parts[i]] = {};
+							}
+							target = target[parts[i]];
+						}
+						if (self.field.enumerationOperationBinding[key].indexOf("record.") == 0) {
+							target[parts[parts.length - 1]] = self.$services.page.getValue(self.parentValue, self.field.enumerationOperationBinding[key].substring("record.".length));
+						}
+						else {
+							target[parts[parts.length - 1]] = self.$services.page.getBindingValue(pageInstance, self.field.enumerationOperationBinding[key], self);
+						}
+					}
+				});
+			}
+			return parameters;
+		}	
+	},
 	methods: {
 		getProvider: function() {
 			if (this.field.enumerationProvider) {
@@ -51,6 +80,7 @@ Vue.component("enumeration-provider", {
 				var parameters = {
 					limit: 20
 				};
+				nabu.utils.objects.merge(parameters, this.operationBinding);
 				if (!asResolve && this.field.enumerationOperationQuery) {
 					parameters[this.field.enumerationOperationQuery] = value;
 				}
@@ -60,7 +90,7 @@ Vue.component("enumeration-provider", {
 				var self = this;
 				// map any additional bindings
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
-				if (this.field.enumerationOperationBinding) {
+				if (this.field.enumerationOperationBinding && false) {
 					Object.keys(this.field.enumerationOperationBinding).map(function(key) {
 						// if the binding is not set, we don't want to overwrite any parameters that are already there (e.g. the resolve field)
 						if (self.field.enumerationOperationBinding[key] != null) {
@@ -492,4 +522,4 @@ Vue.component("enumeration-provider-configure", {
 			return providers;
 		}
 	}
-})
+}) 

@@ -218,6 +218,19 @@
 		<div class="is-row is-align-end">
 			<button @click="target.repeat.customSlots.push({name: null, singleOpen: false})" class="is-button is-size-small"><icon name="plus"/><span class="is-title">Custom slot</span></button>
 		</div>
+		
+		<template v-if="target.repeat.localVariables">
+			<div v-for="(localVariable, index) in target.repeat.localVariables" class="has-button-close">
+				<div class="is-row">
+					<n-form-text v-model="localVariable.name" />
+					<n-form-text v-model="localVariable.definition" placeholder="string"/>
+				</div>
+				<button class="is-button is-variant-close is-size-small is-spacing-horizontal-right-large" @click="target.repeat.localVariables.splice(index, 1)"><icon name="times"/></button>
+			</div>
+			<div class="is-row is-align-end" v-if="getOrderByFields().length">
+				<button @click="target.repeat.localVariables.push({name: null, definition: null})" class="is-button is-size-small"><icon name="plus"/><span class="is-title">Local variable</span></button>
+			</div>
+		</template>
 			
 		<n-page-mapper v-if="false && target.repeat.operation && operationParameters.length > 0 && Object.keys($services.page.getPageParameters(page)).length" 
 			:to="operationParameters"

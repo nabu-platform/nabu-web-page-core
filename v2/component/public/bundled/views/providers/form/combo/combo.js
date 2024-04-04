@@ -71,6 +71,16 @@ Vue.component("page-form-combo", {
 			required: false
 		}
 	},
+	// if we have an operation binding, let's retrigger the data lookup (for combo 2)
+	watch: {
+		operationBinding: {deep: true, handler: function(newValue) {
+			// set to dirty
+			// the first combo is the form-combo which in turn has its own ref
+			if (this.$refs.combo && this.$refs.combo.$refs.combo) {
+				this.$refs.combo.$refs.combo.markDirty();
+			}
+		}}
+	},
 	methods: {
 		configurator: function() {
 			return "page-form-combo-configure";

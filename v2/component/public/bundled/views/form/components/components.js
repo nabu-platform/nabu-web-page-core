@@ -236,11 +236,25 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				this.getPageInstance().setLabel("page." + this.cell.state.name, label);
 			},
 			update: function(value, label, rawValue) {
-				this.getPageInstance().set("page." + this.cell.state.name, value, label);
-				if (this.cell.state.rawName) {
-					this.getPageInstance().set("page." + this.cell.state.rawName, rawValue != null ? rawValue : value, label);
+				if (this.cell.state.name) {
+					var pageInstance = this.getPageInstance();
+					var changed = value !== pageInstance.get("page." + this.cell.state.name);
+					pageInstance.set("page." + this.cell.state.name, value, label);
+					if (this.cell.state.rawName) {
+						pageInstance.set("page." + this.cell.state.rawName, rawValue != null ? rawValue : value, label);
+					}
+					// we only want to trigger updates if it actually changed
+					// we've had cases where combo elements embedded in a repeat triggered the update of the repeat because the combo does an initial emit for labels etc
+					// this may be too restrictive on the other hand because the raw value is not known at that point
+					// but the raw value was wrongly mapped at the time of writing, making me assume we haven't really used it much
+					if (changed) {
+						this.notifyUpdate(value, label, rawValue);
+					}
 				}
-				this.notifyUpdate(value, rawValue);
+				// computed fields do not have a name but are interested in the updates!
+				else {
+					this.notifyUpdate(value, label, rawValue);
+				}
 			},
 			notifyUpdate: function(value, label, rawValue) {
 				var self = this;
@@ -256,7 +270,9 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				// because going this route actually disables the component while it is performing the update, it will remove focus
 				// if used in combination with say a text field, you probably want to set a timeout on the text field
 				if (triggers.length > 0) {
-					this.running = true;
+					if (self.cell.state.lockDuringTrigger) {
+						this.running = true;
+					}
 					var done = function() {
 						self.running = false;
 					};

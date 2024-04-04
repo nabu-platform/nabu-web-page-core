@@ -210,6 +210,26 @@ nabu.page.provide("page-renderer", {
 			if (result.records && container.repeat.arrayFilter) {
 				result.allRecords = result.records;
 			}
+			
+			// TODO: not yet finished!
+			if (container.repeat.localVariables && container.repeat.localVariables.length) {
+				var local = {};
+				container.repeat.localVariables.forEach(function(single) {
+					if (single.name) {
+						if (single.definition) {
+							local[single.name] = $services.swagger.resolve(single.definition);
+						}
+						else {
+							local[single.name] = {
+								type: "string"
+							}
+						}
+					}
+				})
+				result.local = {
+					properties: local
+				}
+			}
 		}
 		return {properties:result};
 	},
@@ -465,7 +485,12 @@ Vue.component("renderer-repeat", {
 			this.loadData();
 		}
 		
-		
+		if (this.target.repeat && this.target.repeat.localVariables) {
+			this.target.repeat.localVariables.forEach(function(variable) {
+				// initialize as null
+				Vue.set(self.state.local, variable.name, null);
+			})
+		}
 	},
 	mounted: function() {
 		
@@ -1507,6 +1532,9 @@ Vue.component("renderer-repeat-configure", {
 		}
 		if (!this.target.repeat.customSlots) {
 			Vue.set(this.target.repeat, "customSlots", []);
+		}
+		if (!this.target.repeat.localVariables) {
+			Vue.set(this.target.repeat, "localVariables", []);
 		}
 	},
 	computed: {

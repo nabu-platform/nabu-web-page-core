@@ -738,24 +738,24 @@ window.addEventListener("load", function() {
 						buttonCell.state = {
 							// no label
 							content: null,
-							icon: "times",
-							triggers: [{
-								trigger: "activate",
-								actions: [{
-									type: "confirmation",
-									confirmation: "%" + "{Are you sure you want to delete this entry?}"
-								}, {
-									type: "operation",
-									operation: content,
-									bindings: bindings
-								}, {
-									type: "action",
-									action: "refresh",
-									actionTarget: repeat.id,
-									bindings: {}
-								}]
-							}]
+							icon: "times"
 						}
+						buttonCell.triggers = [{
+							trigger: "activate",
+							actions: [{
+								type: "confirmation",
+								confirmation: "%" + "{Are you sure you want to delete this entry?}"
+							}, {
+								type: "operation",
+								operation: content,
+								bindings: bindings
+							}, {
+								type: "action",
+								action: "refresh",
+								actionTarget: repeat.id,
+								bindings: {}
+							}]
+						}]
 					});
 				}
 			}
@@ -1569,17 +1569,17 @@ window.addEventListener("load", function() {
 								buttonCell.state = {
 									content: operation.method.toLowerCase() == "post" ? "%" + "{Create}" : null,
 									icon: operation.method.toLowerCase() == "post" ? "plus" : "pencil-alt",
-									triggers: [{
-										trigger: "activate",
-										actions: [{
-											type: "event",
-											event: {
-												name: eventName,
-												eventFields: []
-											}
-										}]
-									}]
 								}
+								buttonCell.triggers = [{
+									trigger: "activate",
+									actions: [{
+										type: "event",
+										event: {
+											name: eventName,
+											eventFields: []
+										}
+									}]
+								}];
 								// we do need to add the current record
 								if (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "patch") {
 									var action = buttonCell.triggers[0].actions[0];

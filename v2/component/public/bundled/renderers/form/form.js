@@ -4,42 +4,55 @@ nabu.page.provide("page-renderer", {
 	type: ["row", "cell"],
 	component: "renderer-form",
 	configuration: "renderer-form-configure",
+	getTriggers: function(target, pageInstance, $services) {
+		var triggers = {};
+		triggers.update = {
+			type: "object"
+		}
+		return triggers;
+	},
 	// can inject state into the page so we can manipulate it
 	getState: function(container, page, pageParameters, $services) {
 		if (container.form) {
+			var result;
 			if (container.form.array && container.form.formType == "array") {
 				var array = container.form.array;
 				if (array.indexOf("page.") == 0) {
 					array = array.substring("page.".length);
 				}
 				var childDefinition = $services.page.getChildDefinition({properties:pageParameters}, array);
-				return childDefinition && childDefinition.items && childDefinition.items ? childDefinition.items : {};
+				result = childDefinition && childDefinition.items && childDefinition.items ? childDefinition.items : {};
 			}
 			else if (container.form.operation && container.form.formType == "operation") {
 				var operationId = container.form.operation;
-				return application.services.page.getSwaggerOperationInputDefinition(operationId);
+				result = application.services.page.getSwaggerOperationInputDefinition(operationId);
 			}
 			else if (container.form.formType == "function" && container.form.function) {
-				return $services.page.getFunctionInput(container.form.function);
+				result = $services.page.getFunctionInput(container.form.function);
 			}
-			else if (container.form.fields) {
-				var result = {};
+			else {
+				result = {};
+			}
+			if (!result.properties) {
+				result.properties = {};
+			}
+			if (container.form.fields) {
 				container.form.fields.forEach(function(x) {
 					var definition = x.type ? $services.swagger.resolve(x.type) : null;
 					if (definition) {
-						result[x.name] = {
+						result.properties[x.name] = {
 							type: "object",
 							properties:definition.properties
 						}
 					}
 					else {
-						result[x.name] = {
+						result.properties[x.name] = {
 							type: x.type ? x.type : "string"
 						}
 					}
 				});
-				return {properties:result};
 			}
+			return result;
 		}
 		else {
 			return {};
@@ -189,6 +202,11 @@ Vue.component("renderer-form", {
 	methods: {
 		getRuntimeState: function() {
 			return this.state;		
+		},
+		update: function() {
+			if (this.target.form.submitOnChange) {
+				this.submit();
+			}
 		},
 		submit: function() {
 			var self = this;

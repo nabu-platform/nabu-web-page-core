@@ -44,6 +44,7 @@
 							key="button-route"/>
 							
 						<n-form-ace v-model="action.routeFormula" label="Route formula" v-if="!action.url && !action.route && action.routeAsFormula"/>
+						<n-form-ace v-model="action.routeFormulateParameters" label="Route formula" v-if="!action.url && !action.route && action.routeAsFormula"/>
 						<n-form-switch v-model="action.routeAsFormula" label="Use formula for route" v-if="!action.url && !action.route"/>
 							
 						<n-page-mapper v-if="action.route && $services.router.get(action.route)" :to="$services.page.getRouteParameters($services.router.get(action.route))"
@@ -174,7 +175,7 @@
 							:from="getAvailableParameters(trigger, action)" 
 							v-model="action.bindings"/>
 							
-						<n-form-combo v-if="action.operation && $services.swagger.operations[action.operation]['x-downloadable'] == 'true'"
+						<n-form-combo v-if="action.operation && $services.swagger.operations[action.operation] && $services.swagger.operations[action.operation]['x-downloadable'] == 'true'"
 							label="Download as"
 							v-model="action.downloadAs"
 							:items="['excel', 'csv', 'json', 'xml']"/>
