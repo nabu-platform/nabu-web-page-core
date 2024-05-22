@@ -104,15 +104,17 @@ Vue.view("page-tag", {
 			}
 			if (this.cell.state.field) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
-				value = pageInstance.getLabel(this.cell.state.field);
-				if (value == null) {
-					value = pageInstance.getLabel("page." + this.cell.state.field);
-					if (value != null) {
-						this.requiresPagePrefix = true;
+				if (pageInstance) {
+					value = pageInstance.getLabel(this.cell.state.field);
+					if (value == null) {
+						value = pageInstance.getLabel("page." + this.cell.state.field);
+						if (value != null) {
+							this.requiresPagePrefix = true;
+						}
 					}
-				}
-				if (value == null) {
-					value = pageInstance.get(this.cell.state.field);
+					if (value == null) {
+						value = pageInstance.get(this.cell.state.field);
+					}
 				}
 			}
 			// an empty array is the same as null!

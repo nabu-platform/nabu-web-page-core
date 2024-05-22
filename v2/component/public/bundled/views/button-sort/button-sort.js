@@ -106,14 +106,14 @@ Vue.view("page-button-sort", {
 			}
 		},
 		matchOrderBy: function() {
-			if (this.component) {
+			if (this.component && this.component.state && this.component.state.order) {
 				// get the current order by and adjust our state to match
 				var current = this.component.state.order.by;
 				
 				// we need a correct match for all our fields
 				// in other words, if complex sorting ends in an overlap...we don't show any particular state
 				
-				if (this.cell.state.sortFields) {
+				if (current && this.cell.state.sortFields) {
 					var ascMatch = true;
 					var descMatch = true;
 					var self = this;
