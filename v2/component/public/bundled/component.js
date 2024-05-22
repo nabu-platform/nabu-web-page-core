@@ -713,9 +713,9 @@ window.addEventListener("load", function() {
 							buttonRow = buttons.rows[0];
 						}
 						
-						buttonCell = cellGenerator(buttonRow);
+						var buttonCell = cellGenerator(buttonRow);
 						
-						eventName = "update" + (name ? name : "");
+						var eventName = "update" + (name ? name : "");
 						buttonCell.name = "Delete" + (name ? " " + name : "");
 						application.services.page.normalizeAris(pageInstance.page, buttonCell, "cell");
 						application.services.page.normalizeAris(pageInstance.page, buttonCell, "cell", [{name:"page-button"}]);
