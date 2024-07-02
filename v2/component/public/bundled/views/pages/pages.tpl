@@ -163,6 +163,8 @@
 											after="The content anchor is where child pages will automatically be routed as needed"/>
 										<n-form-switch after="Set this page as a default common root to all other pages that don't have any parent specified"
 											v-if="false && page.content.defaultAnchor" label="Is default parent page" v-model="page.content.initial" @input="save(page)"/>
+										<n-form-text v-model="page.content.title" label="Title" after="You can fill in a custom application title that will appear when this page is routed" :timeout="600" @input="save(page)"
+											/>
 										<!-- support for pages with input values -->
 									</n-form>
 									<div class="is-column is-spacing-vertical-gap-medium is-fill-normal">

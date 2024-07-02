@@ -1067,6 +1067,9 @@ Vue.component("renderer-repeat", {
 			// we don't want to pass the entire state as parameters because this causes the repeats to be rerendered if anything changes
 			if (this.target.runtimeAlias) {
 				result[this.target.runtimeAlias] = {
+					// in the fragmented page we want to allow you to update the filter
+					// this should work because it is all linked by reference?
+					filter: this.state.filter,
 					record:record, 
 					recordIndex: this.state.records.indexOf(record), 
 					records: this.state.records, 
@@ -1220,8 +1223,48 @@ Vue.component("renderer-repeat", {
 						Object.keys(list).forEach(function(x) {
 							Vue.set(self.state.raw, x, list[x]);
 						});
+						
+						var arrayField = Object.keys(self.$services.data.getArrayOutputField(self.target.repeat.operation))[0];
 						var arrayFound = false;
 						var findArray = function(root) {
+							var array = root[arrayField];
+							if (array == null) {
+								array = [];
+							}
+							arrayFound = true;
+							
+							// enrich with position
+							array.forEach(function(x, i) {
+								if (x) {
+									x.$position = self.position++;
+								}
+							});
+							
+							nabu.utils.arrays.merge(self.state.allRecords, array);
+							if (self.target.repeat.arrayFilter) {
+								nabu.utils.arrays.merge(self.state.records, 
+									array.filter(function(x) {
+										var $value = function(value, literal) {
+											if (value == "records") {
+												return array;
+											}
+											else if (value == "record") {
+												return x;
+											}
+											else {
+												return self.$value(value, literal);
+											}
+										}
+										return self.$services.page.isCondition(self.target.repeat.arrayFilter, x, self, $value);
+									})
+								);
+							}
+							else {
+								nabu.utils.arrays.merge(self.state.records, array);
+							}
+							
+							/*
+							// old resolving based on dynamically finding the first array!
 							Object.keys(root).forEach(function(field) {
 								if (root[field] instanceof Array && !arrayFound) {
 									root[field].forEach(function(x, i) {
@@ -1257,6 +1300,7 @@ Vue.component("renderer-repeat", {
 									findArray(root[field]);
 								}
 							});
+							*/
 						}
 						findArray(list);
 						

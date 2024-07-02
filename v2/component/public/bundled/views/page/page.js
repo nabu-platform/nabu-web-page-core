@@ -235,10 +235,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 		
 		var self = this;
 		var finalize = function() {
-			if (self.page.content.title) {
-				self.oldTitle = document.title;
-				document.title = self.$services.page.translate(self.$services.page.interpret(self.page.content.title, self));
-			}
+			self.oldTitle = document.title;
+			document.title = self.$services.page.templateTitle(self.page);
 			// we now do this on the ready hook, assuming any async data is available
 			/*
 			if (self.page.content.branding) {

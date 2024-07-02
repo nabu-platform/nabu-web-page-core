@@ -1,1 +1,14 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?><node artifactManager="be.nabu.eai.module.types.structure.StructureManager" created="2018-04-27T09:26:54.894+02:00" lastModified="2020-04-21T15:08:51.952+02:00" leaf="true" version="27"><environmentId>apollo</environmentId><hidden>false</hidden><properties/><references>nabu.web.page.core.types.rest.configurationInput</references><references>nabu.web.page.core.types.rest.page</references><references>java.lang.Boolean</references><references>nabu.web.page.core.rest.configuration.content</references><references>nabu.web.page.core.types.translation</references><references>java.lang.String</references><references>nabu.utils.types.Property</references></node>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<node artifactManager="be.nabu.eai.module.types.structure.StructureManager" created="2018-04-27T09:26:54.894+02:00" lastModified="2024-06-07T13:47:43.123+02:00" leaf="true" version="28">
+    <environmentId>apollo</environmentId>
+    <hidden>false</hidden>
+    <locked>false</locked>
+    <properties/>
+    <references>nabu.web.page.core.types.rest.configurationInput</references>
+    <references>nabu.web.page.core.types.rest.page</references>
+    <references>java.lang.Boolean</references>
+    <references>nabu.web.page.core.rest.configuration.content</references>
+    <references>nabu.web.page.core.types.translation</references>
+    <references>java.lang.String</references>
+    <references>nabu.utils.types.Property</references>
+</node>

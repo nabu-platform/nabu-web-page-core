@@ -48,6 +48,7 @@ nabu.services.VueService(Vue.extend({
 			loading: true,
 			// application properties
 			properties: [],
+			environment: null,
 			environmentProperties: [],
 			// the devices for this application
 			devices: [],
@@ -1561,6 +1562,7 @@ nabu.services.VueService(Vue.extend({
 				self.toggledFeatures.splice(0);
 				self.users.splice(0);
 				self.defaultLocale = configuration.defaultLocale;
+				self.environment = configuration.environment;
 				if (configuration.branding) {
 					Vue.set(self, "branding", configuration.branding);
 				}
@@ -3945,8 +3947,14 @@ nabu.services.VueService(Vue.extend({
 			else {
 				var parentInstance = self.$services.page.getParentPageInstance(page, self);
 				if (parentInstance && parentInstance.page) {
-					//result["parent"] = this.getPageParameters(parentInstance.page);
-					result["parent"] = {properties:this.getAvailableParameters(parentInstance.page, null, includeAllEvents)};
+					// it is a fragment parent, the data belongs in the same scope
+					if (parentInstance == pageInstance.$props.fragmentParent) {
+						nabu.utils.objects.merge(result, this.getAvailableParameters(parentInstance.page, null, includeAllEvents));
+					}
+					else {
+						//result["parent"] = this.getPageParameters(parentInstance.page);
+						result["parent"] = {properties:this.getAvailableParameters(parentInstance.page, null, includeAllEvents)};
+					}
 				}
 			}
 			
@@ -4083,7 +4091,8 @@ nabu.services.VueService(Vue.extend({
 			Object.keys(parameters).map(function(key) {
 				nabu.utils.arrays.merge(arrays, self.getArrays(parameters[key]).map(function(x) { return x == null ? key : key + "." + x }));
 			});
-			if (targetId != null) {
+			// @2024-06-11: only in v1?
+			if (targetId != null && false) {
 				// get all arrays available in parent rows/cells
 				var path = this.getTargetPath(page.content, targetId);
 				if (path.length) {
@@ -4686,7 +4695,7 @@ nabu.services.VueService(Vue.extend({
 						document.head.appendChild(element);
 					}
 					if (field == "title" && self.currentBranding[field] != null) {
-						document.title = self.currentBranding[field];
+						document.title = self.templateTitle();
 					}
 				}
 				else if (field == "imageAlt") {
@@ -4709,6 +4718,37 @@ nabu.services.VueService(Vue.extend({
 				}
 				// TODO: the others are not reactive yet, they are generally not updated per page...
 			});
+		},
+		templateTitle: function(page) {
+			var environment = this.getEnvironment();
+			var template = this.title;
+			if (page && page.content.title) {
+				template = page.content.title;
+			}
+			else if (this.currentBranding && this.currentBranding.title) {
+				template = this.currentBranding.title;
+			}
+			else if (this.branding && this.branding.title) {
+				template = this.branding.title;
+			}
+			var defaultTitle = template.match(/.*\{title\|([^}]+)\}.*/) ? template.replace(/.*\{title\|([^}]+)\}.*/, "$1") : "Unnamed";
+			template = template.replace("{environment}", environment);
+			if (page) {
+				template = template.replace(/\{title[^}]*}/, page.content.label);
+				template = template.replace("{category}", page.content.category);
+			}
+			else {
+				template = template.replace(/\{title[^}]*}/, defaultTitle);
+			}
+			return this.$services.page.translate(this.$services.page.interpret(template, this));
+		},
+		getEnvironment: function() {
+			var environment = this.environment;
+			// we assume stuff like "bebat-dev" etc, we are generally interested in the last bit
+			var parts = environment.split("-");
+			// the last part
+			environment = parts[parts.length - 1].toUpperCase();
+			return environment;
 		},
 		dashify: function(content) {
 			if (content == null) {
@@ -4931,6 +4971,23 @@ nabu.services.VueService(Vue.extend({
 		}
 	},
 	watch: {
+		environment: function(newValue, oldValue) {
+			if (oldValue && document.body) {
+				document.body.classList.remove("environment-" + oldValue);
+			}
+			if (newValue) {
+				// TODO: update class
+				var updateEnvironmentClass = function() {
+					if (document.body) {
+						document.body.classList.add("environment-" + newValue);
+					}
+					else {
+						setTimeout(updateEnvironmentClass, 100);
+					}
+				}
+				updateEnvironmentClass();
+			}
+		},
 		editing: function(newValue) {
 			// reset the calculated page types
 			if (!newValue) {

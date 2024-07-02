@@ -307,6 +307,22 @@ Vue.service("data", {
 				pageNumber: input.pageNumber
 			}
 		},
+		// get the array output field for a given operation
+		getArrayOutputField: function(operationId) {
+			var operation = this.$services.swagger.operations[operationId];
+			if (operation && operation.responses && operation.responses["200"] && operation.responses["200"].schema) {
+				var properties = {};
+				var definition = this.$services.swagger.resolve(operation.responses["200"].schema);
+				var arrays = this.$services.page.getArrays(definition);
+				if (arrays.length > 0) {
+					var childDefinition = this.$services.page.getChildDefinition(definition, arrays[0]);
+					if (childDefinition && childDefinition.items && childDefinition.items.properties) {
+						properties[arrays[0]] = childDefinition.items.properties;
+					}
+				}
+				return properties;
+			}
+		},
 		getDataDefinition: function(input) {
 			input = this.normalizeInput(input);
 			if (input.operation) {
@@ -578,17 +594,13 @@ Vue.service("data", {
 						var arrayFound = false;
 						var array = null;
 						var paging = null;
-						
+						var arrayField = Object.keys(self.getArrayOutputField(input.operation))[0];
 						var findArray = function(root) {
-							Object.keys(root).forEach(function(field) {
-								if (root[field] instanceof Array && !arrayFound) {
-									array = root[field];
-									arrayFound = true;
-								}
-								if (!arrayFound && typeof(root[field]) === "object" && root[field] != null) {
-									findArray(root[field]);
-								}
-							});
+							array = root[arrayField];
+							if (array == null) {
+								array = [];
+							}
+							arrayFound = true;
 						}
 						findArray(list);
 						

@@ -1082,10 +1082,67 @@
 		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			comment="Set environment"
+			disabled="false"
+			id="1b3dd1eaff8e441ba76cd490bf0bc6a2"
+			lineNumber="24">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="6e36646a033748e8b9b40821d2c6d417"
+				serviceId="nabu.utils.Server.property"
+				resultName="result5ed2d0e290e04a1090d79d68a60f4458"
+				temporaryMapping="true"
+				x="187"
+				y="115"
+				invocationOrder="1"
+				asynchronous="false"
+				recache="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="2f75e66eee724c24ade088cb85036ecf"
+					mask="false"
+					optional="false"
+					fixedValue="true">
+				<from>environment</from>
+				<to>key</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="1fdb3c4e753449cd8952eeb770948a5c"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>resulta472b49bbf3648d794c5c7809f9bbe40/group</from>
+				<to>defaultValue</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="e84ec505a96e4d788bb89f0dcd405d9b"
+				serviceId="nabu.utils.Server.getServerGroup"
+				resultName="resulta472b49bbf3648d794c5c7809f9bbe40"
+				temporaryMapping="true"
+				x="44"
+				y="213"
+				invocationOrder="0"
+				asynchronous="false"
+				recache="false">
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="5b7be50002c4492bbc8cdb957edc44b0"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>result5ed2d0e290e04a1090d79d68a60f4458/value</from>
+			<to>output/content/environment</to>
+		</steps>
+	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 			disabled="false"
 			id="d8c53831-becf-4673-9f05-2d1a6a899106"
 			label="output/cache/lastModified == null || (featuresLastModified != null &amp;&amp; featuresLastModified &gt; output/cache/lastModified)"
-			lineNumber="24">
+			lineNumber="25">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 				disabled="false"
 				id="407227d5-cc63-49ad-821e-b18f394f30a3"

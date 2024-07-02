@@ -280,7 +280,11 @@ Vue.service("triggerable", {
 						if (!resolved) {
 							value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], instance, customValueFunction);
 						}
-						if (value != null) {
+						// @2024-05-22
+						// if you have a fixed value set to null, we map it
+						// it is not entirely clear why other null values are being ignored? might just need to allow null values here?
+						var isFixed = action.bindings[key].indexOf("fixed.") == 0;
+						if (value != null || isFixed) {
 							// does not take into account "." separated field names which are received
 							//parameters[key] = value;
 							self.$services.page.setValue(parameters, key, value);
