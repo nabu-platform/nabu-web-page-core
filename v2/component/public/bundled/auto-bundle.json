@@ -611,7 +611,7 @@
 				},
 				"polyfill": {
 					"mobile-drag-drop.js": {
-						"url": "https://raw.githubusercontent.com/Bernardo-Castilho/dragdroptouch/master/DragDropTouch.js"
+						"url": "https://raw.githubusercontent.com/nablex/js-utils/aris/polyfill/mobile-drag-drop.js"
 					}
 				}
 			}

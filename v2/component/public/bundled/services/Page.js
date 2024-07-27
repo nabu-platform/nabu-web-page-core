@@ -4731,16 +4731,18 @@ nabu.services.VueService(Vue.extend({
 			else if (this.branding && this.branding.title) {
 				template = this.branding.title;
 			}
-			var defaultTitle = template.match(/.*\{title\|([^}]+)\}.*/) ? template.replace(/.*\{title\|([^}]+)\}.*/, "$1") : "Unnamed";
-			template = template.replace("{environment}", environment);
-			if (page) {
-				template = template.replace(/\{title[^}]*}/, page.content.label);
-				template = template.replace("{category}", page.content.category);
+			if (template) {
+				var defaultTitle = template.match(/.*\{title\|([^}]+)\}.*/) ? template.replace(/.*\{title\|([^}]+)\}.*/, "$1") : "Unnamed";
+				template = template.replace("{environment}", environment);
+				if (page) {
+					template = template.replace(/\{title[^}]*}/, page.content.label);
+					template = template.replace("{category}", page.content.category);
+				}
+				else {
+					template = template.replace(/\{title[^}]*}/, defaultTitle);
+				}
+				return this.$services.page.translate(this.$services.page.interpret(template, this));
 			}
-			else {
-				template = template.replace(/\{title[^}]*}/, defaultTitle);
-			}
-			return this.$services.page.translate(this.$services.page.interpret(template, this));
 		},
 		getEnvironment: function() {
 			var environment = this.environment;
