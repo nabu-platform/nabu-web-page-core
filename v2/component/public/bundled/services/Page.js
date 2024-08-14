@@ -1792,7 +1792,7 @@ nabu.services.VueService(Vue.extend({
 			var div = document.createElement("div");
 			div.setAttribute("id", "page-edit-icon");
 			div.setAttribute("class", "is-column has-tooltip");
-			div.setAttribute("style", "position: fixed; bottom: 1rem; left: 1rem; z-index: 100;");
+			div.setAttribute("style", "position: fixed; bottom: 1rem; left: 1rem; z-index: 10000;");
 			var button = document.createElement("button");
 			div.appendChild(button);
 			//button.setAttribute("class", "is-button is-border-radius-xxlarge is-variant-warning");

@@ -27,6 +27,7 @@
 delete from user_groups where user_id='" + input/userId + "';
 delete from user_devices where user_id='" + input/userId + "';
 delete from node_logs where node_id='" + input/userId + "';
+delete from node_external_ids where node_id='" + input/userId + "';
 delete from accounts where id='" + input/userId + "';
 delete from users where id='" + input/userId + "';
 delete from nodes where id='" + input/userId + "';
