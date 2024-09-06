@@ -83,7 +83,7 @@
 						<page-event-value :page="page" :container="action" title="Event to emit" name="event" :inline="true" :allow-fields="!action.eventContent"
 							@resetEvents="$updateEvents"/>
 							
-						<n-form-combo v-model="action.eventContent" :items="$window.Object.keys($services.triggerable.getInternalState(page, trigger, action))" label="Event content" after="Choose the event content from the available state"
+						<n-form-combo v-model="action.eventContent" :items="$window.Object.keys($services.triggerable.getInternalState(page, trigger, action, triggers))" label="Event content" after="Choose the event content from the available state"
 							v-if="!action.event || !action.event.eventFields || !action.event.eventFields.length"
 							@input="$updateEvents"/>
 							

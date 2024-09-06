@@ -62,6 +62,14 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				}
 				var state = this.$services.page.getPageState(pageInstance);
 				return !!this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, state, this, null, true);
+			},
+			readOnly: function() {
+				var stateName = "readOnly";
+				// the default should be good enough in almost all cases, but we could add a way to set a different one for more complex usecases
+				if (this.cell.state.customReadOnlyState) {
+					stateName = this.cell.state.customReadOnlyState;
+				}
+				return this.getCurrentStates().indexOf(stateName) >= 0;
 			}
 		},
 		watch: {
@@ -74,6 +82,9 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				else if (this.value instanceof Array) {
 					this.notifyUpdate(this.value, this.value);
 				}
+			},
+			readOnly: function(newValue) {
+				this.editable = !newValue;
 			}
 		},
 		created: function() {
@@ -82,6 +93,9 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			// it can only be validly set by the component after it receives the actual value (if any)
 			if (this.cell.state.rawName) {
 				this.getPageInstance().set("page." + this.cell.state.rawName, null);
+			}
+			if (this.readOnly) {
+				this.editable = false;
 			}
 			if (this.cell.state.readOnly) {
 				this.editable = false;

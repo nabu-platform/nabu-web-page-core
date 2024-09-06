@@ -3816,7 +3816,8 @@ Vue.component("n-page-row", {
 		return {
 			configuring: null,
 			// keeps a reactive boolean linked to the permission resolving
-			permissionRendering: {}
+			permissionRendering: {},
+			states: []
 		}
 	},
 	created: function() {
@@ -3826,6 +3827,14 @@ Vue.component("n-page-row", {
 		});
 	},
 	methods: {
+		getCurrentStates: function() {
+			var states = [];
+			nabu.utils.arrays.merge(states, this.states);
+			if (this.$parent) {
+				nabu.utils.arrays.merge(states, this.$parent.getCurrentStates())
+			}
+			return states;
+		},
 		isNoActiveView: function() {
 			return this.$services.page.activeViews.length == 0;
 		},

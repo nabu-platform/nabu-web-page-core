@@ -71,6 +71,7 @@ Vue.component("page-form-input-date", {
 			+ "		:required='required'"
 			+ "		:formatter='getFormatter()'"
 			+ "		:parser='getParser()'"
+			+ "		:translator='$services.page.translate'"
 			+ "		:disabled='disabled'/>",
 	props: {
 		cell: {

@@ -1,9 +1,9 @@
 Vue.component("n-form-ace", {
 	template: "<div class='is-form-ace'>"
-		+ "	<div class='is-label-wrapper is-row is-spacing-gap-small' v-if='label'><label class='is-label' v-html='label'></label><button @click='magnify' class='is-button is-size-xsmall is-variant-ghost'><icon name='search'/></button></div>"
+		+ "	<div class='is-label-wrapper is-row is-spacing-gap-small' v-if='label'><label class='is-label'><span class='is-label-content' v-html='label'></span><n-info v-if='$slots[\"default\"]'><slot></slot></n-info></label><button @click='magnify' class='is-button is-size-xsmall is-variant-ghost'><icon name='search'/></button></div>"
 		+ "	<div class='is-content-before' v-if='before' v-html='before'></div>"
 		+ "	<div class='is-content-wrapper'>"
-		+ "		<n-ace :mode='mode' :timeout='timeout' :value='value' v-bubble:input ref='ace'/>"
+		+ "		<n-ace :mode='mode' :timeout='timeout' :value='value' v-bubble:input ref='ace' :placeholder='placeholder'/>"
 		+ "	</div>"
 		+ "	<n-messages :messages='messages' v-if='messages && messages.length'/>"
 		+ "	<div class='is-content-after' v-if='after' v-html='after'></div>"
@@ -32,6 +32,14 @@ Vue.component("n-form-ace", {
 		},
 		after: {
 			type: String,
+			required: false
+		},
+		placeholder: {
+			type: String,
+			required: false
+		},
+		template: {
+			type: Boolean,
 			required: false
 		}
 	},
@@ -74,6 +82,10 @@ Vue.component("n-ace", {
 			type: Number,
 			required: false,
 			default: 300
+		},
+		placeholder: {
+			type: String,
+			required: false
 		}
 	},
 	data: function() {
@@ -95,7 +107,8 @@ Vue.component("n-ace", {
 			enableEmmet: false,
 			// default scroll speed is _very_ fast for some reason
 			scrollSpeed: 0.5,
-			tabSize: 4
+			tabSize: 4,
+			placeholder: this.placeholder
 		});
 		//this.editor.setTheme("ace/theme/monokai");
 		var self = this;

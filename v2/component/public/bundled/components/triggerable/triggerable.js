@@ -758,7 +758,7 @@ Vue.service("triggerable", {
 						}
 						else if (action.type == "confirmation" && action.confirmation) {
 							var promise = self.$services.q.defer();
-							self.$confirm({message:self.$services.page.translate(self.$services.page.interpret(action.confirmation, instance))}).then(promise, function(error) {
+							self.$confirm({translator: self.$services.page.translate, message:self.$services.page.translate(self.$services.page.interpret(action.confirmation, instance))}).then(promise, function(error) {
 								confirmationError = true;
 								promise.reject(error);
 							});

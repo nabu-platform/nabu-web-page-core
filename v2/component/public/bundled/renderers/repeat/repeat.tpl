@@ -178,7 +178,14 @@
 			
 		<component v-if="getRepeatConfigurator()" :is="getRepeatConfigurator()" :target="target.repeat" :page="page"/>
 			
-		<n-form-ace v-model="target.repeat.arrayFilter" label="Filter the array" />
+		<n-form-ace v-model="target.repeat.arrayFilter" label="Filter the array">
+			<code>
+			function(record) {<br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;return !record.myField;<br/>
+			}
+			</code>
+		</n-form-ace>
+		
 		<n-form-text v-model="target.repeat.emptyPlaceholder" label="Empty Place Holder"/>
 		<n-form-text v-model="target.repeat.loadingPlaceholder" label="Loading Place Holder" v-if="target.repeat.operation"/>
 		<n-form-text v-model="target.repeat.refreshInterval" label="Refresh interval" :timeout="600" v-if="target.repeat.operation"/>
