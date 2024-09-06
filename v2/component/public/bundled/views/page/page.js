@@ -1845,6 +1845,9 @@ nabu.page.views.Page = Vue.component("n-page", {
 				if (cell.bindings && cell.bindings[name]) {
 					self.set(cell.bindings[name], value, label);
 				}
+				if (cell.contentRuntimeAlias) {
+					self.set(cell.contentRuntimeAlias + "." + name, value, label);
+				}
 				self.$emit("update", value, label, name);
 			})
 			
@@ -2321,7 +2324,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 						// get potential trigger target
 						var triggerTarget = component.target ? component.target : (component.cell ? component.cell : component.row);
 						if (triggerTarget && triggerTarget.triggers) {
-							nabu.utils.objects.merge(events, self.$services.triggerable.getEvents(self.page, triggerTarget));
+							nabu.utils.objects.merge(events, self.$services.triggerable.getEvents(self.page, triggerTarget, component));
 						}
 					}
 				});

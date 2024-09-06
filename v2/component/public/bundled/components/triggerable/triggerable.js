@@ -29,10 +29,17 @@ Vue.service("triggerable", {
 			}
 			return routes;
 		},
-		getInternalState: function(page, trigger, action, triggers) {
+		getInternalState: function(page, trigger, action, triggers, component) {
 			var result = {};
 			if (trigger.trigger && triggers && triggers[trigger.trigger]) {
 				result[trigger.trigger] = triggers[trigger.trigger]; 
+			}
+			// we want to merge the internal triggers that the component exposes as internal state as well
+			if (component && component.getTriggers) {
+				var componentTriggers = component.getTriggers();
+				if (componentTriggers) {
+					nabu.utils.objects.merge(result, componentTriggers);
+				}
 			}
 			// depending on where you are in the action chain, you may have additional state
 			var pageInstance = this.$services.page.getPageInstance(page);
@@ -82,13 +89,13 @@ Vue.service("triggerable", {
 			return result;
 		},
 		// get all the events that can occur from these triggers
-		getEvents: function(page, target) {
+		getEvents: function(page, target, component) {
 			var result = {};
 			var self = this;
 			var pageInstance = this.$services.page.getPageInstance(page);
 			if (target.triggers) {
 				target.triggers.forEach(function(trigger) {
-					var internalState = self.getInternalState(page, trigger);
+					var internalState = self.getInternalState(page, trigger, null, null, component);
 					trigger.actions.forEach(function(action) {
 						if (nabu.page.event.getName(action, "event") && nabu.page.event.getName(action, "event") != "$close") {
 							if (action.eventContent) {
