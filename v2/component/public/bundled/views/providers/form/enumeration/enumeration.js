@@ -243,6 +243,9 @@ Vue.component("enumeration-provider", {
 			if (this.field.provider == "operation" && this.field.enumerationOperationResolve && this.field.enumerationFieldValue) {
 				return this.enumerationFilterAny(value, true);
 			}
+			else if (this.field.provider == "array") {
+				return this.enumerationFilterAny(value);
+			}
 			return value;
 		},
 		enumerationFormatter: function(value) {

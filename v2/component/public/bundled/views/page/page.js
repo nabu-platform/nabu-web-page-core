@@ -4324,6 +4324,13 @@ Vue.component("n-page-row", {
 			if (false && (this.edit || this.$services.page.wantEdit) && cell.name) {
 				styles.push({"border": "solid 2px " + this.getNameColor(cell.name), "border-style": "none solid solid solid"})
 			}
+			if (cell.styleVariables) {
+				this.$services.page.getDynamicVariables(cell.styleVariables, this.variables, this).forEach(function(variable) {
+					var single = {};
+					single["--" + variable.name] = variable.value;
+					styles.push(single);
+				});
+			}
 			return styles;
 		},
 		hasPageRoute: function(cell) {

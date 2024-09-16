@@ -2786,6 +2786,20 @@ nabu.services.VueService(Vue.extend({
 			}
 			return classes;
 		},
+		getDynamicVariables: function(styleVariables, state, instance) {
+			if (!styleVariables) {
+				return [];
+			}
+			var self = this;
+			return styleVariables.filter(function(style) {
+				return !style.condition || self.isCondition(style.condition, state, instance);
+			}).map(function(style) {
+				return {
+					name: style.name,
+					value: self.$services.page.interpret(style.rule, instance, state)
+				};
+			});
+		},
 		getDynamicClasses: function(styles, state, instance) {
 			if (!styles) {
 				return [];

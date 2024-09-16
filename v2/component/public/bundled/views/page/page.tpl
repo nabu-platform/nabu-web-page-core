@@ -644,6 +644,21 @@
 										</n-form-section>
 									</div>
 								</div>
+								
+								<div class="is-column is-spacing-medium">
+									<div class="is-row is-align-end">
+										<button class="is-button is-variant-primary-outline is-size-xsmall" @click="cell.styleVariables == null ? $window.Vue.set(cell, 'styleVariables', [{name:null,rule:null,condition:null}]) : cell.styleVariables.push({name:null,rule:null,condition:null})"><icon name="plus"/>Style Variable</button>
+									</div>
+									<div class="is-column is-spacing-vertical-gap-medium" v-if="cell.styleVariables">
+										<n-form-section class="is-column is-color-body is-spacing-medium has-button-close" v-for="style in cell.styleVariables">
+											<n-form-text v-model="style.name" label="Variable"/>
+											<n-form-text v-model="style.rule" label="Value" class="vertical"/>
+											<n-form-text v-model="style.condition" label="Condition" class="vertical"/>
+											<button class="is-button is-variant-close" @click="cell.styles.splice(cell.styleVariables.indexOf(style), 1)"><icon name="times"/></button>
+										</n-form-section>
+									</div>
+								</div>
+								
 							</template>
 							<template v-else-if="$services.page.activeSubTab == 'triggers'">
 								<h2 class="section-title">Triggers</h2>
