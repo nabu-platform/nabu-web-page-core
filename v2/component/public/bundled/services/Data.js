@@ -52,12 +52,20 @@ Vue.component("data-mixin", {
 			selected: [],
 			paging: {},
 			state: {},
-			filter: {}
+			filter: {},
+			loadTimer: null
 		}
 	},
 	methods: {
 		clear: function() {
 			this.records.splice(0);
+		},
+		loadDataAsync: function() {
+			if (this.loadTimer) {
+				clearTimeout(this.loadTimer);
+				this.loadTimer = null;
+			}
+			this.loadTimer = setTimeout(this.loadData, 100);
 		},
 		loadData: function() {
 			var self = this;
@@ -97,7 +105,7 @@ Vue.component("data-mixin", {
 				target: this.cell.state,
 				handler: function() {
 					Vue.set(self, "data", null);
-					self.loadData();
+					self.loadDataAsync();
 					self.watchAll();
 				}
 			}));

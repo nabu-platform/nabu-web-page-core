@@ -33,6 +33,7 @@
 	<div class="typography-template-configure is-column is-spacing-medium">
 		<n-form-text v-model="cell.state.icon" label="Icon" v-if="icon"/>
 		<n-form-text v-model="cell.state.tooltip" label="Tooltip"/>
+		<n-form-ace v-model="cell.state.content" label="Raw content" mode="html"/>
 		<n-form-switch v-model="cell.state.highlight" label="Highlight" v-if="highlightable && canHighlight" after="This will perform syntax highlighting, based on the format. If no format is configured, a best effort guess is made"/>
 		<n-form-combo v-model="cell.state.highlightFormat" label="Highlight Format" v-if="cell.state.highlight" :items="['html', 'bash', 'sql', 'yaml', 'css', 'scss', 'javascript', 'java', 'c++', 'xml', 'json', 'markdown', 'latex', 'http']" />
 		<typography-variable-replacer :content="cell.state.content" :container="cell.state" :page="page"/>

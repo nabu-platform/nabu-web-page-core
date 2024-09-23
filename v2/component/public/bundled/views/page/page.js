@@ -6118,6 +6118,14 @@ Vue.component("aris-editor", {
 			this.container.components[childComponent.name].options.splice(0);
 			this.container.components[childComponent.name].modifiers.splice(0);
 		},
+		clearDimension: function(childComponent, dimension) {
+			// we want to retain all options not linked to this dimension
+			var retain = this.container.components[childComponent.name].options.filter(function(x) {
+				return x.indexOf(dimension + "_") < 0;
+			});
+			this.container.components[childComponent.name].options.splice(0);
+			nabu.utils.arrays.merge(this.container.components[childComponent.name].options, retain);
+		},
 		saveAsDefaultAris: function(childComponent) {
 			var settings = this.container.components[childComponent.name];
 			if (settings) {

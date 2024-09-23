@@ -1261,7 +1261,7 @@
 			<n-form-text v-model="search" :timeout="600" placeholder="Search styling options"/>
 			<n-form-switch v-if="$services.page.theme" label="Restrict to theme" v-model="$services.page.restrictToTheme"/>
 		</div>
-		<n-collapsible v-for="childComponent in childComponents" :only-one-open="true" class="is-highlight-left is-color-primary-light" :title="childComponent.title" :after="childComponent.component + getFormattedAmountOfAppliedOptions(childComponent)" ref="collapsibles">
+		<n-collapsible v-for="childComponent in childComponents" :only-one-open="true" class="is-highlight-left is-color-primary-lighter" :title="childComponent.title" :after="childComponent.component + getFormattedAmountOfAppliedOptions(childComponent)" ref="collapsibles">
 			<ul class="is-menu is-variant-toolbar is-align-end is-spacing-horizontal-right-small" slot="buttons">
 				<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall has-tooltip" @click="saveAsDefaultAris(childComponent)"><icon name="save"/><span class="is-tooltip is-position-left">Save as default</span></button></li>
 				<li class="is-column"><button class="is-button is-variant-primary-outline is-size-xsmall has-tooltip" @click="clearOptions(childComponent)"><icon name="undo"/><span class="is-tooltip is-position-left">Clear settings</span></button></li>
@@ -1293,11 +1293,14 @@
 					</div>
 				</div>
 			</n-collapsible>
-			<n-collapsible v-for="dimension in getAvailableDimensions(childComponent)" :only-one-open="true" :title="dimension.name" class="is-highlight-left is-color-secondary-light" 
+			<n-collapsible v-for="dimension in getAvailableDimensions(childComponent)" :only-one-open="true" :title="dimension.name" class="is-highlight-left is-color-secondary-lighter" 
 					v-if="hasAnySearchHits(dimension)"
 					content-class="is-spacing-medium is-spacing-vertical-gap-none is-color-background"
 					:after="listActiveOptions(childComponent, dimension)"
 					@show="conditioning = null">
+				<ul class="is-menu is-variant-toolbar is-align-end is-spacing-horizontal-right-small" slot="buttons" v-show="listActiveOptions(childComponent, dimension)">
+					<li class="is-column"><button class="is-button is-variant-secondary-outline is-size-xsmall has-tooltip" @click="clearDimension(childComponent, dimension.name)"><icon name="undo"/><span class="is-tooltip is-position-left">Clear dimension</span></button></li>
+				</ul>
 				<div class="is-row" v-for="option in dimension.options" v-if="hasAnySearchHits(dimension, option)">
 					<n-form-checkbox v-if="conditioning != dimension.name + '_' + option.name" :value="isActiveOption(childComponent, dimension, option.name)" @input="function() { toggleOption(childComponent, dimension, option.name) }"
 						:label="prettifyOption(option.name)" :info="formatBody(option.body)"/>

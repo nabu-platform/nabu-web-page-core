@@ -77,9 +77,9 @@ Vue.component("enumeration-provider", {
 				if (!this.field.enumerationOperation) {
 					return [];
 				}
-				var parameters = {
-					limit: 20
-				};
+				var parameters = {};
+				// don't set a default, use the binding if it's needed
+				//parameters.limit = 20;
 				nabu.utils.objects.merge(parameters, this.operationBinding);
 				if (!asResolve && this.field.enumerationOperationQuery) {
 					parameters[this.field.enumerationOperationQuery] = value;
@@ -471,6 +471,9 @@ Vue.component("enumeration-provider-configure", {
 					}
 				}
 				nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor({properties:properties}));
+			}
+			else if (this.field.provider == "provider") {
+				nabu.utils.arrays.merge(fields, this.providerLabelOptions);
 			}
 			if (value) {
 				fields = fields.filter(function(x) {
