@@ -79,7 +79,7 @@
 			<n-form-text v-model='field.complexPrettyLabel' label='The complex pretty label' v-if='field.enumerationFieldPrettyLabelComplex'/>
 			<n-form-combo v-if='field.enumerationArray' v-model='field.enumerationFieldValue' label='Enumeration Value'
 				:filter='function(value) { return getEnumerationFields(field.enumerationArray, value) }' info='If nothing is selected, the entire document becomes the value'/>
-			<<n-form-ace mode="html" v-model='field.complexLabel' label='The complex text label' v-if='field.enumerationFieldLabelComplex'/>
+			<n-form-ace mode="html" v-model='field.complexLabel' label='The complex text label' v-if='field.enumerationFieldLabelComplex'/>
 			<typography-variable-replacer v-if='field.enumerationFieldLabelComplex && field.complexLabel' :content='field.complexLabel' :page='page' :container='field' :keys='getEnumerationFields(field.enumerationArray)' />
 			<typography-variable-replacer v-if='field.enumerationFieldPrettyLabelComplex && field.complexPrettyLabel' :content='field.complexPrettyLabel' :page='page' :container='field' :keys='getEnumerationFields(field.enumerationArray)' />
 			<n-form-combo v-if='field.enumerationArray' :filter='function() { return getEnumerationFields(field.enumerationArray) }' v-model='field.enumerationCachingKey' label='Enumeration Caching Key'/>
@@ -109,6 +109,7 @@
 			<n-form-combo v-if='providerValueOptions' :items='providerValueOptions' v-model='field.enumerationFieldValue' label='Value Field'/>
 			<n-form-combo v-if='providerLabelOptions && !field.enumerationFieldLabelComplex' :items='providerLabelOptions' v-model='field.enumerationFieldLabel' label='Label Field'/>
 			<n-form-switch v-model='field.enumerationFieldLabelComplex' label='Complex Enumeration Label'/>
+			<n-form-ace v-if='field.enumerationArray' label='Filter' v-model='field.filter'/>
 			<n-form-ace mode="html" v-model='field.complexLabel' label='The complex text label' v-if='field.enumerationProvider && field.enumerationFieldLabelComplex'/>
 			<typography-variable-replacer v-if='field.enumerationProvider && field.enumerationFieldLabelComplex && field.complexLabel' :content='field.complexLabel' :page='page' :container='field' :keys='getEnumerationFields(field.enumerationProvider)' />
 		</div>

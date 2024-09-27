@@ -11,6 +11,7 @@
 				<n-form-switch :invert='true' v-model='field.allowTyping' label='Disable typing' info='Can the user type to search?'/>
 				<n-form-switch v-model='field.selectFirstIfEmpty' label='Select the first value if none has been selected yet'/>
 				<n-form-switch v-if="false" v-model='field.loadOnFocus' label='Reload on focus'/>
+				<n-form-switch v-model="field.searchInDropdown" label="Show search in dropdown" info="This will also use the rich formatter (if possible) for displaying the current item"/>
 			</div>
 		</template>
 		<template v-else-if="$services.page.activeSubTab == 'data'">
@@ -29,6 +30,7 @@
 		:formatter="enumerationFormatter"
 		:pretty-formatter="enumerationPrettyFormatter"
 		:extracter="enumerationExtracter"
+		:search-in-dropdown="field.searchInDropdown"
 		:edit='!readOnly'
 		:placeholder='placeholder'
 		:placeholder-selected='field.placeholderSelected'
@@ -38,7 +40,8 @@
 		v-bubble:blur
 		:label='label'
 		:value='value'
-		:required='required'
+		:nillable="!required"
+		:required="required"
 		:allow-typing='field.allowTyping'
 		:empty-value='field.emptyValue ? $services.page.translate($services.page.interpret(field.emptyValue)) : null'
 		:calculating-value='field.calculatingValue ? $services.page.translate($services.page.interpret(field.calculatingValue)) : null'

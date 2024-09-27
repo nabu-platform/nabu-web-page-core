@@ -278,66 +278,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 					}	
 				});
 			}
-			
-			// once all the state is done, calculate the computed
-			if (self.page.content.computed) {
-				self.page.content.computed.forEach(function(x) {
-					if (x.name && x.script) {
-						var result = self.calculateVariable(x.script);
-						if (result != null) {
-							self.$services.page.setValue(self.variables, x.name, result);
-						}
-					}	
-				});
-			}
-			
-			// set up watchers for reset events
-			if (self.page.content.parameters) {
-				self.page.content.parameters.map(function(parameter) {
-					if (parameter.resetListeners) {
-						parameter.resetListeners.forEach(function(listener) {
-							if (listener && listener.to) {
-								var to = listener.to;
-								if (to.indexOf("page.") == 0) {
-									to = to.substring("page.".length);
-								}
-								if (to.indexOf(".") >= 0) {
-									console.error("Field level resets not supported yet");
-								}
-								else {
-									self.subscribe(to, function() {
-										self.initializeDefaultParameters(true, [parameter.name], true);
-										if (nabu.page.event.getName(parameter, "updatedEvent")) {
-											self.emit(
-												nabu.page.event.getName(parameter, "updatedEvent"),
-												nabu.page.event.getInstance(parameter, "updatedEvent", self.page, self)
-											);
-										}
-									});
-								}
-								/*
-								// this bit is unstable, the watcher is triggered 3 times on a singular update it seems
-								self.$watch("variables." + to, function(value) {
-									console.log("watcher triggered for variables.", to, value);
-									if (listener.field) {
-										console.error("Field level resets not supported yet");
-									}
-									else {
-										self.initializeDefaultParameters(true, [parameter.name]);
-										if (nabu.page.event.getName(parameter, "updatedEvent")) {
-											self.emit(
-												nabu.page.event.getName(parameter, "updatedEvent"),
-												nabu.page.event.getInstance(parameter, "updatedEvent", self.page, self)
-											);
-										}
-									}
-								});
-								*/
-							}
-						})
-					}
-				});
-			}
+		
 			self.registerStateListeners();
 			done();
 		};
@@ -441,7 +382,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 								self.initialStateLoaded.push(state.name);
 							}
 							Vue.set(self.variables, state.name, result ? result : null);
-							self.updatedVariable(state.name);
 							promise.resolve(result);
 							// the triggerInitial is a boolean we might add if we want to trigger on initial load as well
 							self.$services.triggerable.trigger(state, "initial", null, self).then(promise, promise);
@@ -754,10 +694,21 @@ nabu.page.views.Page = Vue.component("n-page", {
 	methods: {
 		getActions: function(target, pageInstance, $services) {
 			var actions = [];
-			if (this.page.content.states && this.page.content.states.length) {
+			// external variables can always be refreshed
+			var hasRefreshableState = this.page.content.states && this.page.content.states.length;
+			// internal variables only when they contain a calculation
+			if (!hasRefreshableState) {
+				if (this.page.content.parameters) {
+					hasRefreshableState = this.page.content.parameters.filter(function(x) {
+						return x.default || x.defaultScript;
+					}).length > 0;
+				}
+			}
+			if (hasRefreshableState) {
 				actions.push({
 					title: "Refresh State",
 					name: "refresh-state",
+					description: "Configure the name of the variable that needs to be refreshed",
 					input: {
 						name: {
 							type: "string"
@@ -771,12 +722,25 @@ nabu.page.views.Page = Vue.component("n-page", {
 		},
 		runAction: function(action, parameters) {
 			var self = this;
-			if (action == "refresh-state" && parameters && parameters.name && self.page.content.states) {
-				var state = self.page.content.states.filter(function(state) {
-					return state.name == parameters.name
-				})[0];
-				if (state) {
-					self.loadInitialState(state, true);
+			if (action == "refresh-state" && parameters && parameters.name) {
+				if (self.page.content.states) {
+					var state = self.page.content.states.filter(function(state) {
+						return state.name == parameters.name
+					})[0];
+					if (state) {
+						self.loadInitialState(state, true);
+					}
+				}
+				if (self.page.content.parameters) {
+					// currently you can only refresh the default value of a private parameter
+					// private parameters are not passed in as a parameter so they should be recalculatable if they have a default script
+					// public parameters can be passed in which is currently not compatible with recalculation of default values
+					var parameter = self.page.content.parameters.filter(function(parameter) {
+						return parameter.name == parameters.name && (parameter.default || parameter.defaultScript) && parameter.private;
+					})[0];
+					if (parameter) {
+						this.loadParameterState(parameter.name, true);
+					}
 				}
 			}
 		},
@@ -816,7 +780,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 							}
 							if (state.triggers && state.triggers.length) {
 								watchers[state.name].push(function() {
-									console.log("triggering change", state.name, state.triggers);
 									self.$services.triggerable.trigger(state, "change", {}, self);
 								});
 							}
@@ -1848,7 +1811,23 @@ nabu.page.views.Page = Vue.component("n-page", {
 				if (cell.contentRuntimeAlias) {
 					self.set(cell.contentRuntimeAlias + "." + name, value, label);
 				}
-				self.$emit("update", value, label, name);
+				// @2024-09-27
+				// for a while there was only the "emit" line which basically pushes all update statements to the PARENT page (not the parent component of the cell reporting the update)
+				// however, combined with the steps above where we _always_ map the data if the conditions apply, this created weird things
+				// for instance, we had a nested page which had a contentruntimealias where we automapped the data to another component, but within that nested page we had a form component that triggered an update
+				// this update was pushed to the parent page and (because of the content runtime alias) set in the shared object (see getParameters) for that content runtime alias
+				// this in turn meant it was part of the parameters which again in turn triggered refreshes which had the potential to unset state
+				// the assumption is that "in general" you don't want pages to simply push updates to the parent page at all
+				// there is however at least one valid usecase (which is probably the origin of this line): repeats that use fragment pages for partial states
+				// there the fragment page does need to report the update to its parent page in order to be able to trigger the "update" in triggers (to have a single update operation trigger instead of having to configure it on every element)
+				// so currently I have opted to reduce the emit to only happen if you have a fragment parent (which is only currently used by repeats)
+				// if you do want to nest a page and have its content updated, you should use the "emit to parent" to explicitly enable this
+				// if there does turn out to be a valid usecase for pushing all updates to the parent page, we should at least limit the setting of the state in the above lines of code to only apply if the cell reporting the update BELONGS to your page
+				// otherwise we can have naming conflicts etc appear cross page
+				// currently there is no way to cleanly report the source of the original event however, so this would need some additional logic
+				if (self.fragmentParent) {				
+					self.$emit("update", value, label, name);
+				}
 			})
 			
 			component.$on("close", function() {
@@ -2362,17 +2341,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 						}
 					});
 				}
-				if (this.page.content.parameters) {
-					this.page.content.parameters.forEach(function(parameter) {
-						var name = nabu.page.event.getName(parameter, "updatedEvent");
-						if (name) {
-							events[name] = nabu.page.event.getType(parameter, "updatedEvent");
-						}
-						if (parameter.triggers) {
-							nabu.utils.objects.merge(events, self.$services.triggerable.getEvents(self.page, parameter));
-						}
-					});
-				}
 			}
 			return this.cachedEvents;
 		},
@@ -2442,61 +2410,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 				return null;
 			}
 		},
-		// not sure anymore why this is necessary?
-		// the clue seems to be that if a single field is update in a computed property, the entire property is emitted again as an event
-		// the same can probably be done with chained events so it is not entirely clear if this is relevant?
-		// perhaps it is for page forms or something? enable again if relevant
-		// also check out 850: we seem to emit once a single binding is updated, but multiple bindings might be impacted? only one emit is necessary
-		updatedVariable: function(name) {
-			if (this.page.content.computed) {
-				var self = this;
-				this.page.content.computed.forEach(function(x) {
-					if (x.refreshOn && x.refreshOn.indexOf(name) >= 0 && x.script) {
-						self.$emit(name, calculateVariable(x.script));
-					}
-/*						var recalculate = false;
-						// in theory there could be multiple, in really we currently only allow the one you defined explicitly
-						var keys = Object.keys(x.bindings);
-						// this ia short hack to do that, in the future we might want to do other stuff, the recalculate will need some work then
-						keys = [x.name];
-						for (var i = 0; i < keys.length; i++) {
-							var binding = x.bindings[keys[i]];
-							// if we have a dependency to it, reload it!!
-							if (binding && typeof(binding) == "string") {
-								if (binding == name || binding.indexOf(name + ".") == 0) {
-									recalculate = true;
-								}
-							}
-							else if (binding && binding.bindings) {
-								var subKeys = Object.keys(binding.bindings);
-								for (var j = 0; j < subKeys.length; j++) {
-									var subBinding = binding.bindings[subKeys[j]];
-									if (subBinding && (subBinding == name || subBinding.indexOf(name + ".") == 0)) {
-										recalculate = true;
-									}
-								}
-							}
-							if (recalculate) {
-								var value = self.$services.page.getBindingValue(self, binding, self);
-								self.emit(x.name, value);
-								break;
-							}
-						}*/
-				});
-			}
-		},
-		addComputed: function() {
-			if (!this.page.content.computed) {
-				Vue.set(this.page.content, "computed", []);
-			}	
-			this.page.content.computed.push({
-				name: null,
-				refreshOn: [],
-				// bindings are deprecated?
-				bindings: {},
-				script: null
-			});
-		},
 		isBinaryDownload: function(operationId) {
 			var operation = this.$services.swagger.operations[operationId];
 			return operation && operation.method == "get" && operation.produces && operation.produces.length && operation.produces[0] == "application/octet-stream";
@@ -2507,34 +2420,6 @@ nabu.page.views.Page = Vue.component("n-page", {
 
 			// used to be a regular assign and that seemed to work as well?
 			Vue.set(this.variables, name, value);
-			this.updatedVariable(name);
-			
-			// check parameters that may listen to the given value
-			// we don't want to trigger listeners if we are resetting an event, you must _explicitly_ choose to set a value to null if necessary
-			if (this.page.content.parameters && !reset) {
-				this.page.content.parameters.map(function(parameter) {
-					// we want to ignore "partial" listeners (like if you added one and forgot to fill it in)
-					parameter.listeners.filter(function(listener) { return listener.to != null || listener.split != null }).map(function(listener) {
-						// backwards compatibility
-						var parts = listener.to ? listener.to.split(".") : listener.split(".");
-						// we are setting the variable we are interested in
-						if (parts[0] == name) {
-							var interested = value == null ? null : self.$services.page.getValue(value, listener.to ? listener.to.substring(parts[0].length + 1) : listener.substring(parts[0].length + 1));     
-							if (listener.field) {
-								self.$services.page.setValue(self.variables, parameter.name + "." + listener.field, interested);
-							}
-							else {
-								if (interested == null) {
-									Vue.delete(self.variables, parameter.name);
-								}
-								else {
-									Vue.set(self.variables, parameter.name, interested);
-								}
-							}
-						}
-					})
-				});
-			}
 			
 			var promises = [];
 			
@@ -3058,6 +2943,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 			})[0];
 			if (parameter) {
 				self.initializeDefaultParameters(true, [parameter.name], true);
+				/*
 				if (reload) {
 					if (nabu.page.event.getName(parameter, "updatedEvent")) {
 						self.emit(
@@ -3066,6 +2952,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 						);
 					}
 				}
+				*/
 			}
 		},
 		loadInitialState: function(state, reload) {
@@ -3935,6 +3822,7 @@ Vue.component("n-page-row", {
 				}
 				if (event) {
 					event.stopPropagation();
+					event.preventDefault();
 				}
 			}
 		},
@@ -4869,6 +4757,7 @@ Vue.component("n-page-row", {
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			var result = null;
+			// to allow other components to map data that is rendered, we have a persistant object that is (by reference) reused to trigger redraws
 			if (cell.contentRuntimeAlias && !this.edit) {
 				result = pageInstance.variables[cell.contentRuntimeAlias];
 				if (result == null) {

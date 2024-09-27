@@ -632,7 +632,11 @@ nabu.services.VueService(Vue.extend({
 		// though we do keep an additional reference under instance_<id> to the actual content...
 		getActionTarget: function(pageInstance, actionTarget) {
 			if (actionTarget == "$page") {
-				return pageInstance;
+				var interestingPageInstance = pageInstance;
+				while (interestingPageInstance.fragmentParent) {
+					interestingPageInstance = interestingPageInstance.fragmentParent;
+				}
+				return interestingPageInstance;
 			}
 			var target = pageInstance.components[actionTarget];
 			if (!target && pageInstance.fragmentParent) {

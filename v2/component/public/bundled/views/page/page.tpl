@@ -267,6 +267,8 @@
 											<n-form-text v-model="parameter.default" label="Default Value" v-if="!parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
 											<n-form-switch v-model="parameter.complexDefault" label="Use script for default value"/>
 											<n-form-ace mode="javascript" v-model="parameter.defaultScript" label="Default Value" v-if="parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)" @input="initializeDefaultParameters(true, [parameter.name], true)"/>
+											<p class="is-p is-size-small is-color-light" v-if="(parameter.default || parameter.defaultScript) && !parameter.private">Note that public variables can not be recalculated through the refresh state action</p>
+											<p class="is-p is-size-small is-color-light" v-if="(parameter.default || parameter.defaultScript) && parameter.private">Private default values can be recalculated using the refresh state action</p>
 											<n-form-combo v-if="!parameter.useDefinition" v-model="parameter.type" label="Type" :filter="getParameterTypes" :placeholder="parameter.template ? 'Calculated from template' : (parameter.default || parameter.defaultScript ? 'Calculated from default' : 'string')"/>
 											<n-form-text v-if="!parameter.useDefinition && (!parameter.defaults || !parameter.defaults.length)" v-model="parameter.template" label="Template Value" after="You can use a template to determine the data type"/>
 											<n-form-switch v-if="!parameter.type && !parameter.template" v-model="parameter.useDefinition" label="Use type definition" after="You can add a custom JSON schema definition for this variable"/>
@@ -287,31 +289,6 @@
 												</div>
 											</div>
 											<n-form-switch v-if="false" v-model="parameter.global" label="Is translation global?"/>
-											<h4 class="is-h4" v-if="false">Update Listener</h4>
-											<p v-if="false" class="is-p is-size-small is-color-light">Whenever an event is emitted, you can capture a value from it by configuring an update listener.</p>
-											<div class="is-row is-align-end" v-if="false">
-												<button class="is-button is-variant-primary-outline is-size-xsmall" @click="parameter.listeners.push({to:null, field: null})"><icon name="plus"/>Update Listener</button>
-											</div>
-											<div v-for="i in Object.keys(parameter.listeners)" class="is-row has-button-close is-spacing-medium is-color-body">
-												<n-form-combo v-model="parameter.listeners[i].to" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
-												<n-form-combo v-model="parameter.listeners[i].field" v-if="parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($self, parameter.type)" />
-												<button class="is-button is-variant-close is-size-small" @click="parameter.listeners.splice(i, 1)"><icon name="times"/></button>
-											</div>
-											<div v-if="(!parameter.complexDefault && parameter.default) || (parameter.complexDefault && parameter.defaultScript)" class="is-column is-spacing-vertical-gap-medium">
-												<h4 class="is-h4">Reset Listener</h4>
-												<p class="subscript">Whenever an event is emitted, you can recalculate the default value and set it.</p>
-												<div class="is-row is-align-end">
-													<button class="is-button is-variant-primary-outline is-size-xsmall" @click="parameter.resetListeners ? parameter.resetListeners.push({to:null, field: null}) : $window.Vue.set(parameter, 'resetListeners', [{to:null,field:null}])"><icon name="plus"/>Reset Listener</button>
-												</div>
-												<div v-if="parameter.resetListeners">
-													<div v-for="i in Object.keys(parameter.resetListeners)" class="is-column has-button-close is-spacing-medium is-color-body">
-														<n-form-combo v-model="parameter.resetListeners[i].to" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
-														<n-form-combo v-model="parameter.resetListeners[i].field" v-if="false && parameter.type && parameter.type.indexOf('.') >= 0" :filter="listFields.bind($self, parameter.type)" description="Not yet"  />
-														<button class="is-button is-variant-close is-size-small" @click="parameter.resetListeners.splice(i, 1)"><icon name="times"/></button>
-													</div>
-												</div>
-												<page-event-value :page="page" :container="parameter" title="State reset event" name="updatedEvent" @resetEvents="resetEvents" :inline="true"/>
-											</div>
 											<n-form-switch v-model="parameter.store" label="Store in browser"/>
 											<n-form-switch v-model="parameter.emitUpdate" label="Emit to parent"/>
 										</div>
@@ -841,7 +818,7 @@
 			@click.alt="$emit('select', row, null, 'row')"
 			@click="clickOnRow(row, $event)"
 			@click.native="clickOnRow(row, $event)"
-			@contextmenu.prevent.ctrl="goto($event, row, null, 'layout')"
+			@contextmenu.ctrl="goto($event, row, null, 'layout')"
 			@contextmenu.prevent.ctrl.native="goto($event, row, null, 'layout')"
 			@click.alt.prevent.native="pasteArisStyling($event, row)"
 			@contextmenu.prevent.alt.native="copyArisStyling($event, row)"
@@ -882,7 +859,7 @@
 						@click.meta.native="goto($event, row, cell)"
 						@click.alt.prevent.native="pasteArisStyling($event, cell)"
 						@contextmenu.prevent.alt.native="copyArisStyling($event, cell)"
-						@contextmenu.prevent.ctrl="goto($event, row, cell, 'layout')"
+						@contextmenu.ctrl="goto($event, row, cell, 'layout')"
 						@contextmenu.prevent.ctrl.native="goto($event, row, cell, 'layout')"
 						@mouseout="mouseOut($event, row, cell)"
 						@mouseout.native="mouseOut($event, row, cell)"
@@ -1272,7 +1249,7 @@
 					empty-value="No variants available"
 					@input="container.components[childComponent.name].modifiers.splice(0)"/>
 			</div>
-			<n-collapsible v-if="getAvailableModifierNames(childComponent).length > 0" title="modifier" class="is-highlight-left is-color-secondary-light" 
+			<n-collapsible v-if="getAvailableModifierNames(childComponent).length > 0" title="modifier" class="is-highlight-left is-color-secondary-lighter" 
 					content-class="is-spacing-medium is-spacing-vertical-gap-xsmall is-color-background"
 					:after="listActiveModifiers(childComponent)"
 					@show="conditioning = null">

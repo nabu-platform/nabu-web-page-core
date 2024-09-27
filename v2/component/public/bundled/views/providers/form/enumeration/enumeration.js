@@ -169,6 +169,9 @@ Vue.component("enumeration-provider", {
 						}
 						else {
 							return array.filter(function(x) {
+								if (x == value) {
+									return true;
+								}
 								if (self.field.enumerationArrayLabel != null) {
 									var label = x[self.field.enumerationArrayLabel];
 									if (label && label.toLowerCase && label.toLowerCase().indexOf(value.toLowerCase()) >= 0) {
@@ -190,8 +193,13 @@ Vue.component("enumeration-provider", {
 			else if (this.field.provider == "provider") {
 				var provider = this.provider;
 				if (provider) {
-					var values = provider.enumerate();
 					var self = this;
+					var values = provider.enumerate();
+					if (this.field.filter && values) {
+						values = values.filter(function(x) {
+							return self.$services.page.isCondition(self.field.filter, x, self);
+						})
+					}
 					if (value) {
 						values = values.filter(function(x) {
 							var formatted = self.enumerationFormatter(x);
@@ -244,7 +252,10 @@ Vue.component("enumeration-provider", {
 				return this.enumerationFilterAny(value, true);
 			}
 			else if (this.field.provider == "array") {
-				return this.enumerationFilterAny(value);
+				return this.enumerationFilterAny();
+			}
+			else if (this.field.provider == "provider") {
+				return this.enumerationFilterAny();
 			}
 			return value;
 		},
