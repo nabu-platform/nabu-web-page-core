@@ -159,6 +159,9 @@ Vue.view("page-button", {
 		}
 	},
 	methods: {
+		getPrettyName: function(target) {
+			return this.$services.page.getPrettyNameForTypography(target);
+		},
 		getTriggers: function() {
 			var triggers = {"activate": {}};
 			if (this.cell.triggers) {

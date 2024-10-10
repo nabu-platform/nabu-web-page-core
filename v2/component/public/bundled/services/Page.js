@@ -260,6 +260,23 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		getPrettyNameForTypography: function(target) {
+			if (target.state && target.state.content) {
+				var content = target.state.content.trim();
+				// if the content is a pure variable (e.g. for basic table layouts), we don't want the curlies
+				if (content.substring(0, 1) == "{") {
+					content = content.substring(1);
+				}
+				if (content.substring(content.length - 1) == "}") {
+					content = content.substring(0, content.length - 1);
+				}
+				// if we don't have spaces, we camel case it (e.g. in the variable example)
+				//if (content.indexOf(" ") < 0) {
+					content = this.prettify(content);
+				//}
+				return content;
+			}
+		},
 		isThemeCompliant: function(entry) {
 			if (this.theme != null && this.restrictToTheme) {
 				return entry.theme == this.theme;

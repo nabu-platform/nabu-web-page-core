@@ -121,6 +121,24 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			}
 		},
 		methods: {
+			getPrettyName: function(target) {
+				if (target.state) {
+					var potential = target.state.label ? target.state.label : target.state.placeholder;
+					if (potential != null) {
+						var content = potential.trim();
+						// if the content is a pure variable (e.g. for basic table layouts), we don't want the curlies
+						if (content.substring(0, 1) == "{") {
+							content = content.substring(1);
+						}
+						if (content.substring(content.length - 1) == "}") {
+							content = content.substring(0, content.length - 1);
+						}
+						// if we don't have spaces, we camel case it (e.g. in the variable example)
+						content = this.$services.page.prettify(content);
+						return content;
+					}
+				}
+			},
 			initializeArray: function() {
 				// if we don't have a value yet and it is an array, initialize as empty array
 				if (this.value == null) {

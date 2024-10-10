@@ -55,6 +55,9 @@ Vue.view("page-tag", {
 		}
 	},
 	methods: {
+		getPrettyName: function(target) {
+			return this.$services.page.getPrettyNameForTypography(target);
+		},
 		isCellHidden: function() {
 			return this.getValue() == null;	
 		},

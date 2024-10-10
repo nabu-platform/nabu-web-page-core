@@ -1244,8 +1244,9 @@ window.addEventListener("load", function() {
 							}
 						}
 						cell.state.name = runtimeAlias + "." + key;
-						cell.name = application.services.page.prettify(key.replace(/^.*\.([^.]+)$/, "$1"));
-						cell.state.label = "%" + "{" + cell.name + "}";
+						var cellName = application.services.page.prettify(key.replace(/^.*\.([^.]+)$/, "$1"));
+						//cell.name = cellName;
+						cell.state.label = "%" + "{" + cellName + "}";
 						if (timeout) {
 							cell.state.timeout = timeout;
 						}

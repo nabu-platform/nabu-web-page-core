@@ -95,6 +95,9 @@ Vue.view("page-button-sort", {
 		}
 	},
 	methods: {
+		getPrettyName: function(target) {
+			return this.$services.page.getPrettyNameForTypography(target);
+		},
 		getComponent: function() {
 			if (this.cell.state.target) {
 				var self = this;
