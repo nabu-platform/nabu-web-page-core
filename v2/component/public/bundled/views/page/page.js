@@ -3264,8 +3264,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 			var self = this;
 			Object.keys(parameters).forEach(function(key) {
 				if (blacklist.indexOf(key) < 0) {
-					console.log("setting", key, parameters[key]);
-					self.set(key, parameters[key]);
+					// @2024-10-10: if it does not have the prefix "page", it is sometimes assumed to be in variables which means it will not be correctly picked up as an actual parameter change
+					// in theory, route parameters are always page level parameters so it should be fine to prefix them like this, this needs further testing though....
+					var finalKey = key;
+					if (key.indexOf("page.") != 0) {
+						finalKey = "page." + key;
+					}
+					console.log("setting", key, finalKey, parameters[key]);
+					self.set(finalKey, parameters[key]);
 				}
 			});
 			return false;

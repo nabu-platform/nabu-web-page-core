@@ -1794,7 +1794,7 @@ window.addEventListener("load", function() {
 		// formatters
 		nabu.page.provide("page-format", {
 			format: function(id, fragment, page, cell, record, updater) {
-				var properties = null;
+				var properties = {};
 				var self = this;
 				var pageInstance = $services.page.getPageInstance(page, this);
 				if (fragment && fragment.resolveOperationBinding) {
@@ -1811,9 +1811,9 @@ window.addEventListener("load", function() {
 							}
 						}
 					});
-					if (!properties["$serviceContext"]) {
-						properties["$serviceContext"] = pageInstance.getServiceContext();
-					}
+				}
+				if (!properties["$serviceContext"]) {
+					properties["$serviceContext"] = pageInstance.getServiceContext();
 				}
 				var result = $services.pageResolver.resolve(fragment.resolveOperation, fragment.resolveOperationIds, fragment.resolveOperationId, id, properties);
 				if (result && fragment.resolveOperationLabelComplex) {
