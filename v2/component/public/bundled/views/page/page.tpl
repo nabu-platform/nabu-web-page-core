@@ -875,13 +875,13 @@
 						:placeholder="cell.name ? cell.name : (cell.alias ? $services.page.prettifyRouteAlias(cell.alias) : null)"
 						:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 						:parameters="getRendererParameters(cell)"
-						v-route-render="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"
+						v-route-render.embedded="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"
 						:anchor="cell.customId ? cell.customId : null"
 						:slot="cell.rendererSlot"
 						class="page-column"
 						>
 					
-					<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" :key="'page_' + pageInstanceId + '_edit_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
+					<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" :key="'page_' + pageInstanceId + '_edit_' + cell.id" v-route-render.embedded="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
 					
 					<n-page-row v-for="row in cell.rows"
 						:active-views="activeViews"
@@ -957,11 +957,11 @@
 							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 							:parameters="getRendererParameters(cell)"
 							:anchor="cell.customId ? cell.customId : null"
-							v-route-render="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							v-route-render.embedded="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
 							:slot="cell.rendererSlot"
 							>
 						
-						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
+						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render.embedded="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						<n-page-row v-for="childRow in cell.rows"
 							:row="childRow"
 							:page="page" 
@@ -1029,11 +1029,11 @@
 							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 							:parameters="getRendererParameters(cell)"
 							:anchor="cell.customId ? cell.customId : null"
-							v-route-render="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							v-route-render.embedded="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
 							:slot="cell.rendererSlot"
 							>
 
-						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
+						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render.embedded="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						
 						<n-page-row v-for="childRow in cell.rows"
 							:row="childRow"
@@ -1080,11 +1080,11 @@
 							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 							:parameters="getRendererParameters(cell)"
 							:anchor="cell.customId ? cell.customId : null"
-							v-route-render="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							v-route-render.embedded="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
 							:slot="cell.rendererSlot"
 							>
 						
-						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
+						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render.embedded="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						<n-page-row v-for="childRow in cell.rows"
 							:row="childRow"
 							:page="page" 
@@ -1130,11 +1130,11 @@
 							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 							:parameters="getRendererParameters(cell)"
 							:anchor="cell.customId ? cell.customId : null"
-							v-route-render="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							v-route-render.embedded="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
 							:slot="cell.rendererSlot"
 							>
 						
-						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
+						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render.embedded="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						<n-page-row v-for="childRow in cell.rows"
 							:row="childRow"
 							:page="page" 
@@ -1181,11 +1181,11 @@
 							:child-components="$services.page.calculateArisComponents(cell.aris, cell.renderer, $self)"
 							:parameters="getRendererParameters(cell)"
 							:anchor="cell.customId ? cell.customId : null"
-							v-route-render="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
+							v-route-render.embedded="{ alias: !cell.rows.length && !cell.renderer ? cell.alias : null, parameters: !cell.rows.length ? getParameters(row, cell) : {}, mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"
 							:slot="cell.rendererSlot"
 							>
 						
-						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @click="clickOnContentCell(row, cell)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
+						<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" @click="clickOnContentCell(row, cell)" @keyup.esc="close(cell)" :key="'page_' + pageInstanceId + '_rendered_' + cell.id" v-route-render.embedded="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { return !stopRerender && !cell.stopRerender }, created: getCreatedComponent(row, cell) }"></div>
 						<n-page-row v-for="childRow in cell.rows"
 							:row="childRow"
 							:page="page" 

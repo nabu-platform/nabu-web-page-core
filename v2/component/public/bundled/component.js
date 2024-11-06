@@ -1557,7 +1557,10 @@ window.addEventListener("load", function() {
 							
 							if (eventName) {
 								root.on = eventName;
-								root.hideMode = "event";
+								if (!root.state) {
+									root.state = {};
+								}
+								root.state.hideMode = "event";
 								// we want the form in a prompt
 								root.target = "prompt";
 								

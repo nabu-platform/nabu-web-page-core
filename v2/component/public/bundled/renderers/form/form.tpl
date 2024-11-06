@@ -8,6 +8,8 @@
 <template id="renderer-form-configure">
 	<div class="renderer-form-configure is-column is-spacing-gap-medium">
 		
+		<n-form-switch v-model="target.form.readOnly" label="Read only"/>
+		
 		<n-form-combo 
 			name="form-type"
 			v-model="target.form.formType"
@@ -35,7 +37,7 @@
 			</div>
 		</div>
 		
-		<div v-else-if="target.form.formType == 'array'" class="is-column is-spacing-medium">
+		<div v-if="target.form.formType == 'array'" class="is-column is-spacing-medium">
 			<n-form-combo 
 				label="Array" 
 				v-model="target.form.array"

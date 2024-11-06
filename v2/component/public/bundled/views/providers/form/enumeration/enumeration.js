@@ -225,19 +225,19 @@ Vue.component("enumeration-provider", {
 				var self = this;
 				var result = this.field.enumerations.map(function(x) {
 					if(typeof(x) == "string"){
-						return "" + (x && x.indexOf("=") == 0 ? self.$services.page.interpret(x, self) : x);
+						return "" + self.$services.page.translate((x && x.indexOf("=") == 0 ? self.$services.page.interpret(x, self) : x));
 					}
 					else {
 						x = nabu.utils.objects.clone(x);
-						x.value = "" + (x && x.value && x.value.indexOf("=") == 0 ? self.$services.page.interpret(x.value, self) : x.value);
+						x.value = "" + self.$services.page.translate((x && x.value && x.value.indexOf("=") == 0 ? self.$services.page.interpret(x.value, self) : x.value));
 						return x;
 					}
 				}).filter(function(x) {
-					if(typeof(x) == "string"){
+					if(typeof(x) == "string") {
 						return !value || x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
 					}
 					else {
-						return !value || x.value.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+						return !value || x.value.toLowerCase().indexOf(("" + value).toLowerCase()) >= 0;
 					}
 				});
 				if (this.field.allowCustom && result.indexOf(value) < 0) {
@@ -246,6 +246,21 @@ Vue.component("enumeration-provider", {
 				return result;
 			}
 			return [];
+		},
+		getFixedMatch: function(value) {
+			var self = this;
+			var result = this.field.enumerations.filter(function(x) {
+				if (x.key != null) {
+					return self.$services.page.interpret(x.key) == value;
+				}
+				else if (x.value != null) {
+					return self.$services.page.interpret(x.value) == value;
+				}
+				else {
+					return self.$services.page.interpret(x) == value;
+				}
+			});
+			return result;
 		},
 		enumerationResolver: function(value) {
 			if (this.field.provider == "operation" && this.field.enumerationOperationResolve && this.field.enumerationFieldValue) {
@@ -256,6 +271,9 @@ Vue.component("enumeration-provider", {
 			}
 			else if (this.field.provider == "provider") {
 				return this.enumerationFilterAny();
+			}
+			else if (this.field.provider == "fixed") {
+				return this.getFixedMatch(value);
 			}
 			return value;
 		},

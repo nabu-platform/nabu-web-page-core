@@ -163,14 +163,20 @@
 					</div>
 					
 					<div v-else-if="action.type == 'download'" class="is-column is-spacing-gap-medium">
-						<n-form-combo :key="'operation' + page.content.actions.indexOf(action)" 
+						<n-form-switch v-model="action.allowArbitraryDownload" label="Allow any service"/>
+						
+						<n-form-combo v-if="!action.allowArbitraryDownload" :key="'operation' + page.content.actions.indexOf(action)" 
 							:formatter="function(x) { return x.id }"
 							:extracter="function(x) { return x.id }"
 							v-model="action.operation" label="Operation" :filter="$services.page.getDownloadOperations" />
+						<n-form-combo v-else :key="'any-operation' + page.content.actions.indexOf(action)" 
+							:formatter="function(x) { return x.id }"
+							:extracter="function(x) { return x.id }"
+							v-model="action.operation" label="Operation" :filter="$services.page.getOperations" />
 						
 						<n-form-text label="File name" v-model="action.fileName"/>
 						
-						<n-page-mapper v-if="action.operation" :to="$services.page.getSimpleKeysFor($services.page.getSwaggerOperationInputDefinition(action.operation), true)"
+						<n-page-mapper v-if="action.operation" :to="$services.page.getSimpleKeysFor($services.page.getSwaggerOperationInputDefinition(action.operation), true, true)"
 							:key="action.operation + '-mapper'"
 							:from="getAvailableParameters(trigger, action)" 
 							v-model="action.bindings"/>

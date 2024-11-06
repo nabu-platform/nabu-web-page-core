@@ -91,6 +91,11 @@ Vue.component("page-form-combo", {
 				name: "page-form-combo",
 				component: "form-combo"
 			};
+		},
+		validate: function(soft) {
+			if (this.$refs.combo) {
+				return this.$refs.combo.validate(soft);
+			}
 		}
 	}
 })

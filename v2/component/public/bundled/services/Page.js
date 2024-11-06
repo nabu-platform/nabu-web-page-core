@@ -991,7 +991,29 @@ nabu.services.VueService(Vue.extend({
 			this.consoleTab = "inspect";
 			this.showConsole = true;
 		},
+		downloadService: function(operation, parameters, fileName) {
+			var self = this;
+			var promise = this.$services.q.defer();
+			parameters["$$rawMapper"] = function(response, raw) {
+				if (raw.responseType == "blob") {
+					response = raw.response;
+				}
+				else if (raw.responseType == "arraybuffer") {
+					response = new Blob(raw.response);
+				}
+				else if (raw.responseText != null) {
+					//response = nabu.utils.binary.blob(raw.responseText, raw.getResponseHeader("Content-Type"));
+					response = new Blob([raw.responseText], { type: raw.getResponseHeader("Content-Type")});
+				}
+				return response;
+			};
+			this.$services.swagger.execute(operation, parameters).then(function(result) {
+				self.downloadBlob(result, fileName).then(promise, promise);
+			}, promise);
+			return promise;
+		},
 		downloadBlob: function(blob, fileName) {
+			var promise = this.$services.q.defer();
 			var reader = new FileReader();
 			reader.readAsDataURL(blob);
 			reader.onload = function() {
@@ -1002,7 +1024,9 @@ nabu.services.VueService(Vue.extend({
 				tag.setAttribute("href", url);
 				tag.click();
 				document.body.removeChild(tag);
+				promise.resolve();
 			};
+			return promise;
 		},
 		download: function(url, errorHandler) {
 			// use iframes to better handle problems when they occur (e.g. a 500)
@@ -2710,7 +2734,10 @@ nabu.services.VueService(Vue.extend({
 			var result = [];
 			var operations = this.$services.swagger.operations;
 			Object.keys(operations).map(function(operationId) {
-				if (accept == null || accept(operations[operationId])) {
+				var shouldAccept = accept == null
+					|| (accept instanceof Function && accept(operations[operationId]))
+					|| (accept.toLowerCase && operationId.toLowerCase().indexOf(accept.toLowerCase()) >= 0);
+				if (shouldAccept) {
 					result.push(operations[operationId]);
 				}
 			});

@@ -664,6 +664,14 @@ Vue.service("triggerable", {
 								data: parameters
 							});
 							
+							if (action.allowArbitraryDownload) {
+								if (!parameters["$serviceContext"]) {
+									var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
+									parameters["$serviceContext"] = pageInstance.getServiceContext();
+								}
+								return self.$services.page.downloadService(action.operation, parameters, action.fileName);
+							}
+							
 							var startDownload = function(url) {
 								var operation = self.$services.swagger.operations[action.operation];
 								

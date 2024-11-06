@@ -100,6 +100,18 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			if (this.cell.state.readOnly) {
 				this.editable = false;
 			}
+			// check if we have a form renderer parent which has a start read only setting
+			var path = this.$services.page.getTargetPath(this.page.content, this.cell.id, true);
+			if (path) {
+				var self = this;
+				path.forEach(function(element) {
+					if (element.renderer == "form" && element.form) {
+						if (element.form.readOnly) {
+							self.editable = false;
+						}
+					}
+				});
+			}
 		},
 		// for some reason enumeration (and all derivatives of enumeration) did not get destroyed correctly
 		// if you remove the alias for example for form-text, the destroy is called correctly at all levels
