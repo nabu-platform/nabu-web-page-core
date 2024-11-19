@@ -60,9 +60,10 @@ nabu.page.provide("page-renderer", {
 		// we do know however that there is a select, and we want you to be able to configure it immediately
 		// so if we can't resolve the state yet (no runtime alias), we already expose the trigger without any data
 		var triggers = {};
+		var parameters = null;
 		if (pageInstance && target && target.runtimeAlias && target.repeat && target.repeat.selectable) {
 			// we need the definition for this
-			var parameters = $services.page.getAllAvailableParameters(pageInstance.page);
+			parameters = $services.page.getAllAvailableParameters(pageInstance.page);
 			// sometimes the record does not exist because the definition can not be found (e.g. you have removed the operation)
 			if (parameters[target.runtimeAlias] && parameters[target.runtimeAlias].properties.record) {
 				triggers.select = {
@@ -83,7 +84,7 @@ nabu.page.provide("page-renderer", {
 			}
 		}
 		if (pageInstance && target && target.runtimeAlias && target.repeat) {
-			var parameters = $services.page.getAllAvailableParameters(pageInstance.page);
+			parameters = $services.page.getAllAvailableParameters(pageInstance.page);
 			// sometimes the record does not exist because the definition can not be found (e.g. you have removed the operation)
 			if (parameters[target.runtimeAlias] && parameters[target.runtimeAlias].properties.record) {
 				// this can be triggered by embedded form components that will emit the update
@@ -92,6 +93,14 @@ nabu.page.provide("page-renderer", {
 					properties: parameters[target.runtimeAlias].properties.record.properties
 				};
 			}
+		}
+		if (parameters) {
+			triggers.load = {
+				type: "array",
+				items: {
+					properties: parameters[target.runtimeAlias].properties.record.properties
+				}
+			};
 		}
 		return triggers;
 	},
@@ -1175,6 +1184,7 @@ Vue.component("renderer-repeat", {
 			if (this.state.selected.length > 0) {
 				this.unselectAll();
 			}
+			var loadPromise = null;
 			// we want to call an operation
 			if (this.target.repeat && (this.target.repeat.type == "operation" || this.target.repeat.type == null) && this.target.repeat.operation) {
 				var parameters = {}
@@ -1211,7 +1221,7 @@ Vue.component("renderer-repeat", {
 					self.state.records.splice(0);
 					self.state.allRecords.splice(0);
 				}
-				return this.$services.swagger.execute(this.target.repeat.operation, parameters).then(function(list) {
+				loadPromise = this.$services.swagger.execute(this.target.repeat.operation, parameters).then(function(list) {
 					Object.keys(self.state.raw).forEach(function(x) {
 						Vue.set(self.state.raw, x, null);
 					});
@@ -1367,16 +1377,22 @@ Vue.component("renderer-repeat", {
 				}
 				self.uniquify();
 				self.created = true;
-				return this.$services.q.resolve(result);
+				loadPromise = this.$services.q.resolve(result);
 			}
 			else {
 				var provider = nabu.page.providers("page-repeat").filter(function(provider) {
 					return provider.name == self.target.repeat.type;
 				})[0];
 				if (provider && provider.loadData) {
-					return provider.loadData(self.target, self.state, page, append);
+					loadPromise = provider.loadData(self.target, self.state, page, append);
 				}
 			}
+			if (loadPromise && loadPromise.then) {
+				loadPromise.then(function() {
+					return self.$services.triggerable.trigger(self.target, "load", self.state.records, self);
+				})
+			}
+			return loadPromise;
 		},
 		loadPages: function() {
 			// the "default" slot page
