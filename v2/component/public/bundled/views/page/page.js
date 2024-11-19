@@ -5537,14 +5537,17 @@ Vue.component("page-sidemenu", {
 		},
 		pasteCell: function(row) {
 			row.cells.push(this.$services.page.renumber(this.page, this.$services.page.copiedCell));
-			this.$services.page.copiedCell = null;
+			//this.$services.page.copiedCell = null;
+			// when you paste again, we want a new copy that is not by reference the previous copy!
+			this.$services.page.copiedCell = nabu.utils.objects.deepClone(this.$services.page.copiedCell);
 		},
 		pasteRow: function(cell) {
 			if (!cell.rows) {
 				Vue.set(cell, "rows", []);
 			}
 			cell.rows.push(this.$services.page.renumber(this.page, this.$services.page.copiedRow));
-			this.$services.page.copiedRow = null;
+			//this.$services.page.copiedRow = null;
+			this.$services.page.copiedRow = nabu.utils.objects.deepClone(this.$services.page.copiedRow);
 		},
 		dragCell: function(event, row, cell) {
 			this.$services.page.setDragData(event, "page-cell", cell.id);

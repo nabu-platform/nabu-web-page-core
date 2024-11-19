@@ -103,7 +103,7 @@
 				<div class="is-column is-width-fixed-3 is-column is-align-cross-center is-align-main-start is-page-editing-small-menu is-spacing-gap-small">
 					<div class="is-column is-spacing-vertical-medium is-spacing-gap-small">
 						<button class="is-button is-size-small has-tooltip" @click="stopEdit"><icon name="times"/><span class="is-tooltip is-position-bottom">Stop editing <shortkey :ctrl="true">E</shortkey></span></button>
-						<button class="is-button is-size-small has-tooltip" @click="save"><icon name="save"/><span class="is-tooltip">Last saved: {{saved ? $services.formatter.date(saved, 'HH:mm:ss') : 'never' }}<shortkey :ctrl="true">S</shortkey></span></button>
+						<button class="is-button is-size-small has-tooltip" @click="save"><icon name="save"/><span class="is-tooltip is-position-bottom">Last saved: {{saved ? $services.formatter.date(saved, 'HH:mm:ss') : 'never' }}<shortkey :ctrl="true">S</shortkey></span></button>
 					</div>
 					<div class="is-column is-spacing-vertical-medium is-spacing-gap-small">
 						<button class="is-button is-size-small has-tooltip" @click="activeTab = 'layout'" :class="{'is-active': activeTab == 'layout'}"><icon name="align-left"/><span class="is-tooltip">Layout<shortkey :ctrl="true">D</shortkey></span></button>
@@ -1306,7 +1306,7 @@
 						@dragend="$services.page.clearDrag($event)"
 						@drop="dropRow($event, row)"
 						@mouseover="mouseOver($event, row)" 
-						@keydown.f2.prevent="function() { editing = null; aliasing = row.id }"
+						@keydown.f2.prevent="function() { editing = null; aliasing = row.id; requestFocus() }"
 						@keydown.delete.prevent="$emit('removeRow', row)"
 						@keydown.c.ctrl.prevent="copyRow(row)"
 						@keydown.c.meta.prevent="copyRow(row)"
@@ -1337,11 +1337,12 @@
 						<button class="is-button is-variant-ghost is-size-small" @click="down(row)" :auto-close="true"><icon name="chevron-circle-down"/><span class="is-text">Down</span><shortkey :ctrl="true">DOWN</shortkey></button>
 						<button class="is-button is-variant-ghost is-size-small" @click="row.collapsed = !row.collapsed" :auto-close="true"><icon name="paste"/><span class="is-text">{{ row.collapsed ? "Show" : "Hide" }}</span></button>
 						<button class="is-button is-variant-ghost is-size-small" @click="$emit('removeRow', row)" :auto-close="true"><icon name="times"/><span class="is-text">Delete</span><shortkey>DEL</shortkey></button>
+						<button class="is-button is-variant-ghost is-size-small" @click="function() { editing = null; aliasing = row.id; requestFocus() }" :auto-close="true"><icon name="pencil-alt"/><span class="is-text">Rename</span><shortkey>F2</shortkey></button>
 					</div>
 				</div>
 				<ul class="is-menu is-variant-toolbar is-position-right is-spacing-horizontal-right-small">
-					<li class="is-column" v-if="$services.page.useAris"><button class="is-button is-variant-warning-outline is-size-xsmall has-tooltip" @click="rotate(row)"><icon name="undo"/><span class="is-tooltip is-position-bottom">Rotate row</span></button></li>
-					<li class="is-column"><button class="is-button is-size-xsmall is-color-primary-outline has-tooltip" @click="addCell(row)"><icon name="plus"/><span class="is-tooltip is-position-bottom">Add cell</span></button></li>
+					<li class="is-column" v-if="$services.page.useAris"><button class="is-button is-variant-warning-outline is-size-xsmall has-tooltip" @click="rotate(row)"><icon name="undo"/><span class="is-tooltip is-position-bottom-reverse">Rotate row</span></button></li>
+					<li class="is-column"><button class="is-button is-size-xsmall is-color-primary-outline has-tooltip" @click="addCell(row)"><icon name="plus"/><span class="is-tooltip is-position-bottom-reverse">Add cell</span></button></li>
 					<li class="is-column" v-if="false"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="up(row)"><icon name="chevron-circle-up"/></button></li>
 					<li class="is-column" v-if="false"><button class="is-button is-variant-secondary-outline is-size-xsmall" @click="down(row)"><icon name="chevron-circle-down"/></button></li>
 					<li class="is-column" v-if="false"><button class="is-button is-size-xsmall is-color-primary-outline has-tooltip" @click="row.collapsed = !row.collapsed"><icon :name="row.collapsed ? 'eye-slash': 'eye'"/><span class="is-tooltip is-position-bottom">{{ row.collapsed ? "Show" : "Hide" }}</span></button></li>
@@ -1397,8 +1398,8 @@
 							<button class="is-button is-size-xxsmall is-variant-ghost is-position-cross-center" @click="function() { aliasing = null; editing = cell.id }" v-if="false && aliasing != cell.id && editing != cell.id"><icon name="pencil-alt"/></button>
 						</div>
 						<ul class="is-menu is-variant-toolbar is-position-right is-spacing-horizontal-right-small">
-							<li class="is-column"><button class="is-button is-variant-warning-outline is-size-xsmall has-tooltip" @click="wrapCell(row, cell)"><icon name="chevron-circle-right"/><span class="is-tooltip is-position-bottom">Wrap cell</span></button></li>
-							<li class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall has-tooltip" @click="addRow(cell)" :disabled="cell.alias"><icon name="plus"/><span class="is-tooltip">Add Row</span></button></li>
+							<li class="is-column"><button class="is-button is-variant-warning-outline is-size-xsmall has-tooltip" @click="wrapCell(row, cell)"><icon name="chevron-circle-right"/><span class="is-tooltip is-position-bottom-reverse">Wrap cell</span></button></li>
+							<li class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall has-tooltip" @click="addRow(cell)" :disabled="cell.alias"><icon name="plus"/><span class="is-tooltip is-position-bottom-reverse">Add Row</span></button></li>
 							<li v-if="false" class="is-column"><button class="is-button is-color-secondary-outline is-size-xsmall has-tooltip" @click="left(row, cell)" v-if="row.cells.length >= 2"><icon name="chevron-circle-up"/></button></li>
 							<li v-if="false" class="is-column"><button class="is-button is-color-secondary-outline is-size-xsmall has-tooltip" @click="right(row, cell)" v-if="row.cells.length >= 2"><icon name="chevron-circle-down"/></button></li>
 							<li v-if="false" class="is-column"><button class="is-button is-color-primary-outline is-size-xsmall has-tooltip" @click="copyCell(cell)"><icon name="copy"/><span class="is-tooltip">Copy Cell</span></button></li>
@@ -1411,6 +1412,9 @@
 							<button class="is-button is-variant-ghost is-size-small" @click="left(row, cell)" :auto-close="true"><icon name="chevron-circle-up"/><span class="is-text">Up</span><shortkey :ctrl="true">UP</shortkey></button>
 							<button class="is-button is-variant-ghost is-size-small" @click="right(row, cell)" :auto-close="true"><icon name="chevron-circle-down"/><span class="is-text">Down</span><shortkey :ctrl="true">DOWN</shortkey></button>
 							<button class="is-button is-variant-ghost is-size-small" @click="removeCell(row.cells, cell)" :auto-close="true"><icon name="times"/><span class="is-text">Delete</span><shortkey>DEL</shortkey></button>
+							<button class="is-button is-variant-ghost is-size-small" @click="function() { aliasing = null; editing = cell.id; requestFocus() }" :auto-close="true"><icon name="pencil-alt"/><span class="is-text">Rename</span><shortkey>F2</shortkey></button>
+							<button class="is-button is-variant-ghost is-size-small" @click="function() { editing = null; aliasing = cell.id; requestFocus() }" :auto-close="true"><icon name="cubes"/><span class="is-text">Component</span><shortkey>F3</shortkey></button>
+						
 						</div>
 					</div>
 					<page-sidemenu v-show="cell.rows && cell.rows.length" :rows="cell.rows" :page="page" v-bubble:select :selected="selected"
