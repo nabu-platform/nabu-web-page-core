@@ -2495,7 +2495,7 @@ nabu.services.VueService(Vue.extend({
 		translateErrorCode: function(value, defaultValue) {
 			// if you have a standardized translator service available
 			if (this.$services.translator && this.$services.translator.translate) {
-				return this.$services.translator.translate(value, this.$services.translator.translate("%{An error has occurred while trying to complete your action}"));
+				return this.$services.translator.translate("%" + "{" + value + "}", defaultValue ? defaultValue : this.$services.translator.translate("%" + "{An error has occurred while trying to complete your action}"));
 			}
 			else {
 				var translations = !value ? [] : this.translations.filter(function(x) {

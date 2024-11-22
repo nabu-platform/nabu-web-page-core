@@ -219,6 +219,10 @@ Vue.component("renderer-form", {
 				}
 				// we get a (hopefully) standardized event back
 				if (error) {
+					// we nog longer use code but have switched to type
+					if (!error.code) {
+						error.code = error.type;
+					}
 					if (!error.code) {
 						error.code = "HTTP-" + (error.status != null ? error.status : 500);
 					}

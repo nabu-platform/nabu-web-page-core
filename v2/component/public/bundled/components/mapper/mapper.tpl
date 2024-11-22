@@ -115,7 +115,7 @@
 			<div v-else>
 				<div class="is-row is-align-space-between">
 					<button class="is-button is-size-small is-variant-link" @click="resetField">Cancel</button>
-					<div>
+					<div class="is-row is-wrap-none">
 						<button class="is-button is-size-small is-variant-secondary" @click="function() { fieldMode = 'fixed'; addField() }"><icon name="plus"/><span class="is-text">Fixed</span></button>
 						<button class="is-button is-size-small is-variant-primary" @click="function() { fieldMode = 'map'; addField() }"><icon name="plus"/><span class="is-text">Mapping</span></button>
 						<button v-if="allowRecursiveMapping" class="is-button is-size-small is-variant-primary" @click="function() { fieldMode = 'mapRecursive' }"><icon name="plus"/><span class="is-text">Recursive</span></button>
