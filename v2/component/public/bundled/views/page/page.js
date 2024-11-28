@@ -441,7 +441,7 @@ nabu.page.views.Page = Vue.component("n-page", {
 						// masked route so we can reload
 						self.$services.router.route(route, {
 							code: "page-load-failed",
-							message: "%{error:The page you requested could not be loaded, please&nbsp;<a class='is-color-link' href='javascript:void(0)' @click='$window.location.reload()'>try again</a>}"
+							message: "%{error::The page you requested could not be loaded, please&nbsp;<a class='is-color-link' href='javascript:void(0)' @click='$window.location.reload()'>try again</a>}"
 						}, inSelf && self.$el ? nabu.utils.router.self(self.$el) : null, true);
 					}
 					else {
