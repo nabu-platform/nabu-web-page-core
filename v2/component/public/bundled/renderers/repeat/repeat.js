@@ -413,6 +413,7 @@ Vue.component("renderer-repeat", {
 	},
 	data: function() {
 		return {
+			loadPromise: null,
 			destroyed: false,
 			repeatTimer: null,
 			created: false,
@@ -1184,7 +1185,11 @@ Vue.component("renderer-repeat", {
 			if (this.state.selected.length > 0) {
 				this.unselectAll();
 			}
-			var loadPromise = null;
+			// abort the previous promise if it still ongoing
+			if (this.loadPromise && this.loadPromise.abort) {
+				this.loadPromise.abort();
+			}
+			this.loadPromise = null;
 			// we want to call an operation
 			if (this.target.repeat && (this.target.repeat.type == "operation" || this.target.repeat.type == null) && this.target.repeat.operation) {
 				var parameters = {}
@@ -1221,7 +1226,7 @@ Vue.component("renderer-repeat", {
 					self.state.records.splice(0);
 					self.state.allRecords.splice(0);
 				}
-				loadPromise = this.$services.swagger.execute(this.target.repeat.operation, parameters).then(function(list) {
+				this.loadPromise = this.$services.swagger.execute(this.target.repeat.operation, parameters).then(function(list) {
 					Object.keys(self.state.raw).forEach(function(x) {
 						Vue.set(self.state.raw, x, null);
 					});
@@ -1377,22 +1382,22 @@ Vue.component("renderer-repeat", {
 				}
 				self.uniquify();
 				self.created = true;
-				loadPromise = this.$services.q.resolve(result);
+				this.loadPromise = this.$services.q.resolve(result);
 			}
 			else {
 				var provider = nabu.page.providers("page-repeat").filter(function(provider) {
 					return provider.name == self.target.repeat.type;
 				})[0];
 				if (provider && provider.loadData) {
-					loadPromise = provider.loadData(self.target, self.state, page, append);
+					this.loadPromise = provider.loadData(self.target, self.state, page, append);
 				}
 			}
-			if (loadPromise && loadPromise.then) {
-				loadPromise.then(function() {
+			if (this.loadPromise && this.loadPromise.then) {
+				this.loadPromise.then(function() {
 					return self.$services.triggerable.trigger(self.target, "load", self.state.records, self);
 				})
 			}
-			return loadPromise;
+			return this.loadPromise;
 		},
 		loadPages: function() {
 			// the "default" slot page

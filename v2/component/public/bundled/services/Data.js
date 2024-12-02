@@ -47,6 +47,7 @@ Vue.component("data-mixin", {
 	},
 	data: function() {
 		return {
+			loadPromise: null,
 			subscriptions: [],
 			records: [],
 			selected: [],
@@ -70,7 +71,11 @@ Vue.component("data-mixin", {
 		loadData: function() {
 			var self = this;
 			self.clear();
-			this.$services.data.load({
+			// abort the previous promise if it still ongoing
+			if (this.loadPromise && this.loadPromise.abort) {
+				this.loadPromise.abort();
+			}
+			this.loadPromise = this.$services.data.load({
 				instance: this,
 				limit: 0,
 				handler: function(results, page) {

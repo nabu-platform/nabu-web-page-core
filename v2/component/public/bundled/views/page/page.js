@@ -4957,7 +4957,6 @@ Vue.component("n-page-row", {
 			return row;
 		},
 		
-		
 		rowStyles: function(row) {
 			var styles = [];
 			if (row.direction == "horizontal") {
@@ -4974,6 +4973,13 @@ Vue.component("n-page-row", {
 			}
 			if (false && (this.edit || this.$services.page.wantEdit) && row.name) {
 				styles.push({"border": "solid 2px " + this.getNameColor(row.name), "border-style": "none solid solid solid"})
+			}
+			if (row.styleVariables) {
+				this.$services.page.getDynamicVariables(row.styleVariables, this.variables, this).forEach(function(variable) {
+					var single = {};
+					single["--" + variable.name] = variable.value;
+					styles.push(single);
+				});
 			}
 			return styles;
 		},

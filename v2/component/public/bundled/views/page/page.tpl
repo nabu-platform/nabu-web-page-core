@@ -608,7 +608,7 @@
 										:specific="cell.alias"/>
 										
 								<h2 class="section-title">Other</h2>
-								<div class="is-column is-spacing-medium">
+								<div class="is-column is-spacing-medium" v-if="cell.class || (cell.styles && cell.styles.length)">
 									<n-form-text label="Cell Class" v-model="cell.class" :timeout="600"/>
 									<div class="is-row is-align-end">
 										<button class="is-button is-variant-primary-outline is-size-xsmall" @click="cell.styles == null ? $window.Vue.set(cell, 'styles', [{class:null,condition:null}]) : cell.styles.push({class:null,condition:null})"><icon name="plus"/>Cell Style</button>
@@ -631,7 +631,7 @@
 											<n-form-text v-model="style.name" label="Variable"/>
 											<n-form-text v-model="style.rule" label="Value" class="vertical"/>
 											<n-form-text v-model="style.condition" label="Condition" class="vertical"/>
-											<button class="is-button is-variant-close" @click="cell.styles.splice(cell.styleVariables.indexOf(style), 1)"><icon name="times"/></button>
+											<button class="is-button is-variant-close" @click="cell.styleVariables.splice(cell.styleVariables.indexOf(style), 1)"><icon name="times"/></button>
 										</n-form-section>
 									</div>
 								</div>
@@ -742,7 +742,7 @@
 							<template v-if="$services.page.activeSubTab == 'styling'">
 								<h2 class="section-title">Row styling</h2>
 								<aris-editor v-if="$services.page.useAris && $services.page.normalizeAris(page, row, 'row')" :child-components="$services.page.getRowComponents(page, row)" :container="row.aris"/>
-								<div class="is-column is-spacing-medium">
+								<div class="is-column is-spacing-medium" v-if="row.class && (row.styles || row.styles.length)">
 									<n-form-text label="Class" v-model="row.class" :timeout="600"/>
 									<div class="is-row is-align-end">
 										<button class="is-button is-variant-primary-outline is-size-xsmall" @click="row.styles == null ? $window.Vue.set(row, 'styles', [{class:null,condition:null}]) : row.styles.push({class:null,condition:null})"><icon name="plus"/>Row Style</button>
@@ -752,6 +752,19 @@
 											<n-form-text v-model="style.class" label="Class"/>
 											<n-form-text v-model="style.condition" label="Condition" class="vertical"/>
 											<button class="is-button is-variant-close" @click="row.styles.splice(row.styles.indexOf(style), 1)"><icon name="times"/></button>
+										</n-form-section>
+									</div>
+								</div>
+								<div class="is-column is-spacing-medium">
+									<div class="is-row is-align-end">
+										<button class="is-button is-variant-primary-outline is-size-xsmall" @click="row.styleVariables == null ? $window.Vue.set(row, 'styleVariables', [{name:null,rule:null,condition:null}]) : row.styleVariables.push({name:null,rule:null,condition:null})"><icon name="plus"/>Style Variable</button>
+									</div>
+									<div class="is-column is-spacing-vertical-gap-medium" v-if="row.styleVariables">
+										<n-form-section class="is-column is-color-body is-spacing-medium has-button-close" v-for="style in row.styleVariables">
+											<n-form-text v-model="style.name" label="Variable"/>
+											<n-form-text v-model="style.rule" label="Value" class="vertical"/>
+											<n-form-text v-model="style.condition" label="Condition" class="vertical"/>
+											<button class="is-button is-variant-close" @click="row.styleVariables.splice(row.styleVariables.indexOf(style), 1)"><icon name="times"/></button>
 										</n-form-section>
 									</div>
 								</div>
