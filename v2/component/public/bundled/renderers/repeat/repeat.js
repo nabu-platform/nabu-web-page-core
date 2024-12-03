@@ -1478,7 +1478,8 @@ Vue.component("renderer-repeat", {
 						collapsed: false,
 						name: null,
 						// the renderer slot needs to be repeated, it is likely for a parent renderer
-						rendererSlot: this.target.rendererSlot
+						rendererSlot: this.target.rendererSlot,
+						styleVariables: this.target.styleVariables
 					};
 					// inherit triggers
 					// we want to be able to do it contextually
