@@ -91,6 +91,7 @@ nabu.page.views.Pages = Vue.extend({
 							}});
 						}).then(function(result) {
 							parsed.name = result.name;
+							parsed.label = self.$services.page.prettify(result.name);
 							parsed.category = result.category;
 							var page = {
 								content: parsed,
