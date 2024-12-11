@@ -4374,7 +4374,7 @@ nabu.services.VueService(Vue.extend({
 						operation = self.$services.swagger.operation(operation);
 						if (operation && operation.responses && operation.responses["200"]) {
 							var schema = operation.responses["200"].schema;
-							if (schema.$ref) {
+							if (schema && schema.$ref) {
 								var definition = self.getResolvedPageParameterType(schema.$ref);
 								if (definition) {
 									parameters.properties[x.name] = definition;
