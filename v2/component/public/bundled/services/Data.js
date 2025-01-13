@@ -58,9 +58,6 @@ Vue.component("data-mixin", {
 		}
 	},
 	methods: {
-		clear: function() {
-			this.records.splice(0);
-		},
 		loadDataAsync: function() {
 			if (this.loadTimer) {
 				clearTimeout(this.loadTimer);
@@ -70,7 +67,6 @@ Vue.component("data-mixin", {
 		},
 		loadData: function() {
 			var self = this;
-			self.clear();
 			// abort the previous promise if it still ongoing
 			if (this.loadPromise && this.loadPromise.abort) {
 				this.loadPromise.abort();
@@ -79,12 +75,11 @@ Vue.component("data-mixin", {
 				instance: this,
 				limit: 0,
 				handler: function(results, page) {
-					self.clear();
 					// HOOK
 					if (self.postProcess) {
 						results = self.postProcess(results);
 					}
-					nabu.utils.arrays.merge(self.records, results);
+					Vue.set(self, "records", results);
 				}
 			});
 		},
