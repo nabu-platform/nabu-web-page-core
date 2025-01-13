@@ -54,7 +54,8 @@ Vue.component("data-mixin", {
 			paging: {},
 			state: {},
 			filter: {},
-			loadTimer: null
+			loadTimer: null,
+			isLoading: false,
 		}
 	},
 	methods: {
@@ -67,6 +68,7 @@ Vue.component("data-mixin", {
 		},
 		loadData: function() {
 			var self = this;
+			Vue.set(self, "isLoading", true);
 			// abort the previous promise if it still ongoing
 			if (this.loadPromise && this.loadPromise.abort) {
 				this.loadPromise.abort();
@@ -75,6 +77,7 @@ Vue.component("data-mixin", {
 				instance: this,
 				limit: 0,
 				handler: function(results, page) {
+					Vue.set(self, "isLoading", false);
 					// HOOK
 					if (self.postProcess) {
 						results = self.postProcess(results);
