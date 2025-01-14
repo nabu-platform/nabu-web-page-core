@@ -1028,7 +1028,7 @@ nabu.services.VueService(Vue.extend({
 			};
 			return promise;
 		},
-		download: function(url, errorHandler) {
+		download: function(url, errorHandler, successHandler) {
 			// use iframes to better handle problems when they occur (e.g. a 500)
 			var iframe = iframe = document.createElement('iframe');
 			iframe.setAttribute("class", "hiddenDownloader");
@@ -1045,6 +1045,10 @@ nabu.services.VueService(Vue.extend({
 				// no body or an empty body means it loaded ok!
 				if (iframeDocument && (!iframeDocument.body || iframeDocument.body.innerHTML == "")) {
 					console.log("File downloaded correctly", url);
+					// probably not working as intended!
+					if (successHandler) {
+						successHandler(url);
+					}
 				}
 				else {
 					console.log("file download failed", url);
