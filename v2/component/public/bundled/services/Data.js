@@ -82,7 +82,11 @@ Vue.component("data-mixin", {
 					if (self.postProcess) {
 						results = self.postProcess(results);
 					}
-					Vue.set(self, "records", results);
+
+					// keep reference to self.records while updating result set
+					results.unshift(results.length);
+					results.unshift(0);
+					self.records.splice.apply(self.records, results);
 				}
 			});
 		},
