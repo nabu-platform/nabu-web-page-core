@@ -54,13 +54,11 @@ Vue.component("data-mixin", {
 			paging: {},
 			state: {},
 			filter: {},
-			loadTimer: null
+			loadTimer: null,
+			isLoading: false,
 		}
 	},
 	methods: {
-		clear: function() {
-			this.records.splice(0);
-		},
 		loadDataAsync: function() {
 			if (this.loadTimer) {
 				clearTimeout(this.loadTimer);
@@ -70,7 +68,7 @@ Vue.component("data-mixin", {
 		},
 		loadData: function() {
 			var self = this;
-			self.clear();
+			Vue.set(self, "isLoading", true);
 			// abort the previous promise if it still ongoing
 			if (this.loadPromise && this.loadPromise.abort) {
 				this.loadPromise.abort();
@@ -79,12 +77,16 @@ Vue.component("data-mixin", {
 				instance: this,
 				limit: 0,
 				handler: function(results, page) {
-					self.clear();
+					Vue.set(self, "isLoading", false);
 					// HOOK
 					if (self.postProcess) {
 						results = self.postProcess(results);
 					}
-					nabu.utils.arrays.merge(self.records, results);
+
+					// keep reference to self.records while updating result set
+					results.unshift(results.length);
+					results.unshift(0);
+					self.records.splice.apply(self.records, results);
 				}
 			});
 		},
