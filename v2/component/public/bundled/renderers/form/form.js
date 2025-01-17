@@ -36,6 +36,9 @@ nabu.page.provide("page-renderer", {
 			if (!result.properties) {
 				result.properties = {};
 			}
+			result.properties.readOnly = {
+				type: "boolean"
+			};
 			if (container.form.fields) {
 				container.form.fields.forEach(function(x) {
 					var definition = x.type ? $services.swagger.resolve(x.type) : null;
@@ -176,6 +179,8 @@ Vue.component("renderer-form", {
 		if (this.target.form && this.target.form.formType == "operation" && this.state.body == null) {
 			Vue.set(this.state, "body", {});
 		}
+		// initialize the read only
+		Vue.set(this.state, "readOnly", this.target.form && this.target.form.readOnly);
 	},
 	mounted: function() {
 		// trigger a submit
@@ -498,6 +503,7 @@ Vue.component("renderer-form", {
 						}
 					}
 				});
+				this.readOnly = !this.readOnly;
 			}
 		}
 	}
