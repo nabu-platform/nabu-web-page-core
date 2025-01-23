@@ -448,7 +448,7 @@
 							}, 
 							"text.js": {
 								"url": "views/providers/fragment/text.js"
-							}, 
+							},
 							"data.js": {
 								"url": "views/providers/fragment/data.js"
 							}, 

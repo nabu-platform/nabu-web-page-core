@@ -1744,6 +1744,17 @@ window.addEventListener("load", function() {
 		
 		nabu.page.provide("page-format", {
 			html: true,
+			name: "icon",
+			namespace: "nabu",
+			skipCompile: false,
+			skipSanitize: false,
+			format: function(value, fragment, page, cell, record, updater) {
+				return value ? "<icon name='" + value + "'/>" : null;
+			}
+		});
+		
+		nabu.page.provide("page-format", {
+			html: true,
 			name: "code",
 			namespace: "nabu",
 			skipCompile: false,
