@@ -27,6 +27,11 @@
 			<div class="is-column is-spacing-medium">
 				<n-form-switch v-model='field.enumerationFieldLabelComplex' label='Complex Enumeration Label'/>
 				
+				<n-form-switch v-model='field.enumerationFieldPrettyLabelComplex' label='Complex Pretty Enumeration Label'/>
+				<n-form-combo v-if='field.enumerationArray && !field.enumerationFieldPrettyLabelComplex' v-model='field.enumerationFieldPrettyLabel' label='Pretty enumeration Label'
+					:filter='function(value) { return getEnumerationFields(field.enumerationArray, value) }'/>
+				<n-form-ace v-model='field.complexPrettyLabel' label='The complex pretty label' v-if='field.enumerationFieldPrettyLabelComplex'/>				
+				
 				<n-form-combo 
 					v-if='field.enumerationOperation && !field.enumerationFieldLabelComplex' 
 					label='Enumeration Label'
@@ -76,7 +81,7 @@
 			<n-form-switch v-model='field.enumerationFieldPrettyLabelComplex' label='Complex Pretty Enumeration Label'/>
 			<n-form-combo v-if='field.enumerationArray && !field.enumerationFieldPrettyLabelComplex' v-model='field.enumerationFieldPrettyLabel' label='Pretty enumeration Label'
 				:filter='function(value) { return getEnumerationFields(field.enumerationArray, value) }'/>
-			<n-form-text v-model='field.complexPrettyLabel' label='The complex pretty label' v-if='field.enumerationFieldPrettyLabelComplex'/>
+			<n-form-ace v-model='field.complexPrettyLabel' label='The complex pretty label' v-if='field.enumerationFieldPrettyLabelComplex'/>
 			<n-form-combo v-if='field.enumerationArray' v-model='field.enumerationFieldValue' label='Enumeration Value'
 				:filter='function(value) { return getEnumerationFields(field.enumerationArray, value) }' info='If nothing is selected, the entire document becomes the value'/>
 			<n-form-ace mode="html" v-model='field.complexLabel' label='The complex text label' v-if='field.enumerationFieldLabelComplex'/>

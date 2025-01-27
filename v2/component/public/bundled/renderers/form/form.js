@@ -503,7 +503,7 @@ Vue.component("renderer-form", {
 						}
 					}
 				});
-				this.readOnly = !this.readOnly;
+				this.state.readOnly = !this.state.readOnly;
 			}
 		}
 	}
