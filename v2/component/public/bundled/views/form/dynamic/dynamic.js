@@ -19,7 +19,8 @@ Vue.view("nabu-form-dynamic-component", {
 			// additionally if you change definitions a couple of times, you might need the same parameters from time to time
 			removed: {},
 			// the array we are working on
-			array: null
+			array: null,
+			updatingSelf: false
 		}
 	},
 	computed: {
@@ -153,12 +154,13 @@ Vue.view("nabu-form-dynamic-component", {
 			return target ? target[this.targetValueField] : null;
 		},
 		update: function(record, value, label) {
+			this.updatingSelf = true;
 			var target = this.getTargetFor(record);
 			Vue.set(target, this.targetValueField, value);
 			//target[this.targetValueField] = value;
 		},
-		getArray: function() {
-			if (!this.array) {
+		getArray: function(force) {
+			if (!this.array || force) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				//return pageInstance && this.cell.state.name ? pageInstance.get('page.' + this.cell.state.name) : null;
 				var parentValue = pageInstance && this.cell.state.name ? pageInstance.get('page.' + this.cell.state.name) : null; 
@@ -202,6 +204,15 @@ Vue.view("nabu-form-dynamic-component", {
 		}
 	},
 	watch: {
+		"parentValue": function() {
+			if (this.updatingSelf) {
+				this.updatingSelf = false;
+			}
+			else {
+				// reload the array
+				this.getArray(true);
+			}
+		},
 		"array": {
 			deep: true,
 			handler: function() {

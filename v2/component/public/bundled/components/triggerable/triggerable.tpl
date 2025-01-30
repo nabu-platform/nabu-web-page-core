@@ -44,7 +44,7 @@
 							key="button-route"/>
 							
 						<n-form-ace v-model="action.routeFormula" label="Route formula" v-if="!action.url && !action.route && action.routeAsFormula"/>
-						<n-form-ace v-model="action.routeFormulateParameters" label="Route formula" v-if="!action.url && !action.route && action.routeAsFormula"/>
+						<n-form-ace v-model="action.routeFormulateParameters" label="Route formula parameters" v-if="!action.url && !action.route && action.routeAsFormula"/>
 						<n-form-switch v-model="action.routeAsFormula" label="Use formula for route" v-if="!action.url && !action.route"/>
 							
 						<n-page-mapper v-if="action.route && $services.router.get(action.route)" :to="$services.page.getRouteParameters($services.router.get(action.route))"
