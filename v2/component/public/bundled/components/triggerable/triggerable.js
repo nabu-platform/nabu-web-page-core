@@ -669,7 +669,16 @@ Vue.service("triggerable", {
 									var pageInstance = self.$services.page.getPageInstance(instance.page, instance);
 									parameters["$serviceContext"] = pageInstance.getServiceContext();
 								}
-								return self.$services.page.downloadService(action.operation, parameters, action.fileName);
+								var types = [{name: 'excel', contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},{name: 'json', contentType: 'application/json'},{name: 'xml', contentType:'application/xml'},{name:'csv',contentType:'text/csv'}];
+								var acceptContentType = null;
+								if (action.downloadAs) {
+									acceptContentType = types.filter(function(x) { return x.name == action.downloadAs })[0];
+									if (acceptContentType) {
+										acceptContentType = acceptContentType.contentType;
+									}
+								}
+								parameters["$responseType"] = "blob";
+								return self.$services.page.downloadService(action.operation, parameters, action.fileName, acceptContentType);
 							}
 							
 							var startDownload = function(url) {

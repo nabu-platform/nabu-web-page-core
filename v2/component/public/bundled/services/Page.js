@@ -991,7 +991,7 @@ nabu.services.VueService(Vue.extend({
 			this.consoleTab = "inspect";
 			this.showConsole = true;
 		},
-		downloadService: function(operation, parameters, fileName) {
+		downloadService: function(operation, parameters, fileName, acceptContentType) {
 			var self = this;
 			var promise = this.$services.q.defer();
 			parameters["$$rawMapper"] = function(response, raw) {
@@ -1007,6 +1007,9 @@ nabu.services.VueService(Vue.extend({
 				}
 				return response;
 			};
+			if (acceptContentType) {
+				parameters["$accept"] = acceptContentType;
+			}
 			this.$services.swagger.execute(operation, parameters).then(function(result) {
 				self.downloadBlob(result, fileName).then(promise, promise);
 			}, promise);

@@ -181,7 +181,7 @@
 							:from="getAvailableParameters(trigger, action)" 
 							v-model="action.bindings"/>
 							
-						<n-form-combo v-if="action.operation && $services.swagger.operations[action.operation] && $services.swagger.operations[action.operation]['x-downloadable'] == 'true'"
+						<n-form-combo v-if="action.operation && $services.swagger.operations[action.operation] && ($services.swagger.operations[action.operation]['x-downloadable'] == 'true' || action.allowArbitraryDownload)"
 							label="Download as"
 							v-model="action.downloadAs"
 							:items="['excel', 'csv', 'json', 'xml']"/>
