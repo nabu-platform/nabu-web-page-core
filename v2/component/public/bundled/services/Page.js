@@ -260,6 +260,30 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		nullify: function(data) {
+			var self = this;
+			if (data instanceof Array) {
+				data.forEach(this.nullify);
+			}
+			else {
+				Object.keys(data).forEach(function(key) {
+					if (data[key] != null && self.$services.page.isObject(data[key])) {
+						data[key] = self.nullify(data[key]);
+					}
+					// TODO: if we have an array of complex objects, we need to nullify every one of them, if the result is null for a one, we need to remove it from the array
+					if (data[key] instanceof Array && data[key].length == 0) {
+						delete data[key];
+					}
+					if (data[key] == null) {
+						delete data[key];
+					}
+				});
+				if (Object.keys(data).length == 0) {
+					return null;
+				}
+			}
+			return data;
+		},
 		getPrettyNameForTypography: function(target) {
 			if (target.state && target.state.content) {
 				var content = target.state.content.trim();

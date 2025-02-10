@@ -213,30 +213,6 @@ Vue.component("renderer-form", {
 				this.submit();
 			}
 		},
-		nullify: function(data) {
-			var self = this;
-			if (data instanceof Array) {
-				data.forEach(this.nullify);
-			}
-			else {
-				Object.keys(data).forEach(function(key) {
-					if (data[key] != null && self.$services.page.isObject(data[key])) {
-						data[key] = self.nullify(data[key]);
-					}
-					// TODO: if we have an array of complex objects, we need to nullify every one of them, if the result is null for a one, we need to remove it from the array
-					if (data[key] instanceof Array && data[key].length == 0) {
-						delete data[key];
-					}
-					if (data[key] == null) {
-						delete data[key];
-					}
-				});
-				if (Object.keys(data).length == 0) {
-					return null;
-				}
-			}
-			return data;
-		},
 		submit: function() {
 			var self = this;
 			this.messages.splice(0);
@@ -326,7 +302,7 @@ Vue.component("renderer-form", {
 						cloned["$serviceContext"] = pageInstance.getServiceContext();
 					}
 					// TODO: test first
-					//cloned = this.nullify(cloned);
+					//cloned = this.$services.page.nullify(cloned);
 					return this.$services.swagger.execute(this.target.form.operation, cloned).then(function(result) {
 						// synchronize the changes back to the binding if relevant
 						if (self.target.form.synchronize) {
