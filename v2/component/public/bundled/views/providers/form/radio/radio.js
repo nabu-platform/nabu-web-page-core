@@ -1,5 +1,5 @@
-Vue.component("page-form-checkbox-list-configure", {
-	template: "#page-form-checkbox-list-configure",
+Vue.component("page-form-radio-configure", {
+	template: "#page-form-radio-configure",
 	props: {
 		cell: {
 			type: Object,
@@ -17,9 +17,9 @@ Vue.component("page-form-checkbox-list-configure", {
 });
 
 
-Vue.component("page-form-checkbox-list", {
+Vue.component("page-form-radio", {
 	mixins: [Vue.component("enumeration-provider")],
-	template: "#page-form-checkbox-list",
+	template: "#page-form-radio",
 	props: {
 		cell: {
 			type: Object,
@@ -71,30 +71,30 @@ Vue.component("page-form-checkbox-list", {
 			required: false
 		}
 	},
-	// if we have an operation binding, let's retrigger the data lookup (for checkbox-list 2)
+	// if we have an operation binding, let's retrigger the data lookup (for radio 2)
 	watch: {
 		operationBinding: {deep: true, handler: function(newValue) {
 			// set to dirty
-			// the first checkbox-list is the form-checkbox-list which in turn has its own ref
-			if (this.$refs.checkbox-list && this.$refs.checkbox-list.$refs.checkbox-list) {
-				this.$refs.checkbox-list.$refs.checkbox-list.markDirty();
+			// the first radio is the form-radio which in turn has its own ref
+			if (this.$refs.radio && this.$refs.radio.$refs.radio) {
+				this.$refs.radio.$refs.radio.markDirty();
 			}
 		}}
 	},
 	methods: {
 		configurator: function() {
-			return "page-form-checkbox-list-configure";
+			return "page-form-radio-configure";
 		},
 		getChildComponents: function() {
 			return {
-				title: "Form checkbox-list",
-				name: "page-form-checkbox-list",
-				component: "form-checkbox-list"
+				title: "Form radio",
+				name: "page-form-radio",
+				component: "form-radio"
 			};
 		},
 		validate: function(soft) {
-			if (this.$refs.checkbox-list) {
-				return this.$refs.checkbox-list.validate(soft);
+			if (this.$refs.radio) {
+				return this.$refs.radio.validate(soft);
 			}
 		}
 	}
@@ -104,20 +104,20 @@ Vue.component("page-form-checkbox-list", {
 window.addEventListener("load", function() {
 	application.bootstrap(function($services) {
 		$services.router.register({
-			alias: "page-form-checkbox-list",
+			alias: "page-form-radio",
 			enter: function(parameters) {
 				// do not modify parameters directly, this may lead to rerendering issues
 				var cloneParameters = {};
 				nabu.utils.objects.merge(cloneParameters, parameters);
-				cloneParameters.formComponent = "page-form-checkbox-list";
-				cloneParameters.configurationComponent = "page-form-checkbox-list-configure";
+				cloneParameters.formComponent = "page-form-radio";
+				cloneParameters.configurationComponent = "page-form-radio-configure";
 				cloneParameters.subTabs = ["data"];
 				return new nabu.page.views.FormComponent({propsData: cloneParameters});
 			},
-			form: "checkbox-list",
+			form: "radio",
 			category: "Form",
-			name: "checkbox-list",
-			description: "A checkbox-list that allows the user to choose one or more values",
+			name: "Radio box",
+			description: "A radio box that allows the user to choose one or more values",
 			icon: "page/core/images/enumeration.png"
 		});
 	})

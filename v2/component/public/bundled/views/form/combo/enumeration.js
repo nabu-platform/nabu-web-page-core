@@ -1,3 +1,5 @@
+// DEPRECATED?
+
 Vue.component("page-form-input-enumeration-configure", {
 	template: "#page-form-input-enumeration-configure",
 	props: {

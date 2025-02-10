@@ -1,3 +1,5 @@
+<!-- DEPRECATED? -->
+
 <template id="enumeration-configure">
 	<n-form-section>
 		<n-form-switch v-model='field.showRadioView' label='Show radio visualisation'/>

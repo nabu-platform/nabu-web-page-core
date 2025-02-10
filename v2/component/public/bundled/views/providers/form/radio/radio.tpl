@@ -1,9 +1,8 @@
-<template id="page-form-checkbox-list-configure">
-	<div class="page-form-checkbox-list-configure">
+<template id="page-form-radio-configure">
+	<div class="page-form-radio-configure">
 		<template v-if="$services.page.activeSubTab == 'component'">
-			<h2 class="section-title">Checkbox list</h2>
+			<h2 class="section-title">Radio box</h2>
 			<div class="is-column is-spacing-medium">
-				
 			</div>
 		</template>
 		<template v-else-if="$services.page.activeSubTab == 'data'">
@@ -12,11 +11,11 @@
 	</div>
 </template>
 
-<template id="page-form-checkbox-list">
-	<n-form-checkbox-list
-		ref="checkbox-list"
+<template id="page-form-radio">
+	<n-form-radio
+		ref="radio"
 		:load-on-focus="field.loadOnFocus"
-		:class="getChildComponentClasses('page-form-checkbox-list')"
+		:class="getChildComponentClasses('page-form-radio')"
 		:filter='enumerationFilter'
 		:formatter="enumerationFormatter"
 		:extracter="enumerationExtracter"
@@ -32,6 +31,7 @@
 		:info='field.info ? $services.page.translate(field.info) : null'
 		:before='field.before ? $services.page.translate(field.before) : null'
 		:after='field.after ? $services.page.translate(field.after) : null'
+		:suffix='field.suffixIcon ? $services.page.getIconHtml(field.suffixIcon) : field.suffix'
 		:schema='schema'
 		:disabled='disabled'
 		/>
