@@ -224,6 +224,7 @@ nabu.services.VueService(Vue.extend({
 				else {
 					self.$services.router.route("login", null, null, true);
 				}
+				event.preventDefault();
 			}
 			else if (self.canEdit()) {
 				if (event.key && event.key.toLowerCase() == "f1") {
