@@ -489,6 +489,22 @@
 									"url": "views/providers/form/combo/combo.tpl"
 								}
 							},
+							"checkList": {
+								"checkList.js": {
+									"url": "views/providers/form/checkList/checkList.js"
+								},
+								"checkList.tpl": {
+									"url": "views/providers/form/checkList/checkList.tpl"
+								}
+							},
+							"radio": {
+								"radio.js": {
+									"url": "views/providers/form/radio/radio.js"
+								},
+								"radio.tpl": {
+									"url": "views/providers/form/radio/radio.tpl"
+								}
+							},
 							"list": {
 								"predefined": {
 									"predefined.js": {
