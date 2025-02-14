@@ -692,6 +692,17 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		// check if it is an array field or a singular field
+		// useful for example for dynamic form elements that can handle both
+		isArrayField: function(field) {
+			var arrays = this.$services.page.getAllArrays(this.page);
+			if (arrays.indexOf(field) >= 0 || arrays.indexOf("page." + field) >= 0) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		},
 		getActions: function(target, pageInstance, $services) {
 			var actions = [];
 			// external variables can always be refreshed

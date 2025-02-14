@@ -3,6 +3,7 @@
 		<template v-if="$services.page.activeSubTab == 'component'">
 			<h2 class="section-title">Radio box</h2>
 			<div class="is-column is-spacing-medium">
+				<n-form-ace v-model="field.disableEntryCondition" label="Disable entry condition"/>
 			</div>
 		</template>
 		<template v-else-if="$services.page.activeSubTab == 'data'">
@@ -19,6 +20,7 @@
 		:filter='enumerationFilter'
 		:formatter="enumerationFormatter"
 		:extracter="enumerationExtracter"
+		:disabler="disabler"
 		:edit='!readOnly'
 		@input="function(newValue, label, rawValue, selectedLabel) { $emit('input', newValue, label, rawValue, selectedLabel) }"
 		v-bubble:label

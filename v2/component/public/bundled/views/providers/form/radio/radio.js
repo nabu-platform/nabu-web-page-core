@@ -82,6 +82,12 @@ Vue.component("page-form-radio", {
 		}}
 	},
 	methods: {
+		disabler: function(item) {
+			if (this.field.disableEntryCondition) {
+				return this.$services.page.isCondition(this.field.disableEntryCondition, item, this, null, false);
+			}
+			return false;
+		},
 		configurator: function() {
 			return "page-form-radio-configure";
 		},
@@ -89,7 +95,7 @@ Vue.component("page-form-radio", {
 			return {
 				title: "Form radio",
 				name: "page-form-radio",
-				component: "form-radio"
+				component: "form-radio-list"
 			};
 		},
 		validate: function(soft) {

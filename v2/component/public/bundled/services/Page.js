@@ -2810,6 +2810,12 @@ nabu.services.VueService(Vue.extend({
 				return (binaryDownload || regularDownload) && (!value || operation.id.toLowerCase().indexOf(value.toLowerCase()) >= 0);
 			});
 		},
+		getUploadOperations: function(value) {
+			return this.getOperations(function(operation) {
+				var binaryUpload = operation && operation.method != "get" && operation.consumes && operation.consumes.length && operation.consumes[0] == "application/octet-stream";
+				return binaryUpload && (!value || operation.id.toLowerCase().indexOf(value.toLowerCase()) >= 0);
+			});
+		},
 		// operations where you can retrieve state (e.g. for initial state) from the backend
 		getStateOperations: function(value) {
 			var self = this;
