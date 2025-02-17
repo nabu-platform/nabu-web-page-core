@@ -169,7 +169,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			},
 			isArrayField: function() {
 				var arrays = this.$services.page.getAllArrays(this.page, this);
-				if (this.cell.state.name && arrays.indexOf(this.cell.state.name) >= 0 || arrays.indexOf("page." + this.cell.state.name) >= 0) {
+				if (this.cell.state.name && (arrays.indexOf(this.cell.state.name) >= 0 || arrays.indexOf("page." + this.cell.state.name) >= 0)) {   
 					return true;
 				}
 				return false;

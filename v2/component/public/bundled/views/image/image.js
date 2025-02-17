@@ -105,6 +105,10 @@ Vue.view("page-image", {
 			else if (this.cell.state.imageType == "bytes") {
 				this.calculateByteUrl();
 			}
+			else if (this.cell.state.imageType == "variable") {
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				return this.cell.state.imageUrlVariable ? pageInstance.get(this.cell.state.imageUrlVariable) : null;
+			}
 			return this.href;
 		}
 	},

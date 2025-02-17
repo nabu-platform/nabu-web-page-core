@@ -3,7 +3,7 @@
 		:codes="cell.state.codes"
 		ref="input"
 		:field="cell.state"
-		:class="getChildComponentClasses('form-component')"
+		:class="[getChildComponentClasses('form-component'), {'is-read-only': !editable }]"
 		@blur="blur"
 		@label="updateLabel"
 		:component-group="cell.state.componentGroup ? cell.state.componentGroup : 'form'"
@@ -11,11 +11,10 @@
 		:parent-value="parentValue"
 		:label="$services.page.translate($services.page.interpret(cell.state.label, $self))"
 		:timeout="cell.state.timeout"
-		:disabled="disabled"
+		:disabled="disabled || !editable"
 		:schema="getSchema()"
-		:readOnly="!editable"
 		:required="isRequired()"
-		:placeholder="$services.page.interpret($services.page.translate(cell.state.placeholder), $self)"
+		:placeholder="editable ? $services.page.interpret($services.page.translate(cell.state.placeholder), $self) : $services.page.interpret($services.page.translate(cell.state.defaultValue), $self)"
 		:child-components="childComponents"
 		@input="update"/>
 </template>
@@ -37,6 +36,7 @@
 			<div class="is-column is-spacing-medium">
 				<n-form-text v-model="cell.state.label" label="Label"/>
 				<n-form-text v-model="cell.state.placeholder" label="Placeholder"/>
+				<n-form-text v-model="cell.state.defaultValue" label="Default value"/>
 				<n-form-text v-model='cell.state.info' label='Info Content'/>
 				<n-form-text v-model='cell.state.before' label='Before Content'/>
 				<n-form-text v-model='cell.state.beforeIcon' label='Before Icon' v-if='cell.state.before'/>

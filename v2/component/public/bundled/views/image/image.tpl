@@ -3,7 +3,7 @@
 		<div v-if="!cell.state.imageType">
 			<n-form-radio label="Type of image"
 				v-model="cell.state.imageType"
-				:items="[{name: 'static', title: 'Static image'}, {name: 'operation', title: 'Image loaded from a REST call'}, {name: 'bytes', title: 'Image loaded from a byte array'}]"
+				:items="[{name: 'variable', title: 'Based on variable'}, {name: 'static', title: 'Static image'}, {name: 'operation', title: 'Image loaded from a REST call'}, {name: 'bytes', title: 'Image loaded from a byte array'}]"
 				:formatter="function(x) { return x.title }"
 				:extracter="function(x) { return x.name }"/>
 		</div>
@@ -38,6 +38,10 @@
 				v-model="cell.state"/>
 			<n-form-combo v-model="cell.state.byteValue" :filter="getAllKeys" label="Byte field" v-if="false"/>
 			<n-form-combo v-model="cell.state.contentTypeValue" :filter="getAllKeys" label="Content type field" placeholder="image/jpeg" v-if="false"/>
+		</div>
+		<div v-else-if="cell.state.imageType == 'variable'" class="is-column is-spacing-gap-medium">
+			<n-form-combo v-model="cell.state.imageUrlVariable" :filter="function(value) { return $services.page.getPageVariables(page, value) }"
+				label="URL Variable"/>
 		</div>
 		
 		<div v-if="cell.state.imageType" class="is-column is-spacing-gap-medium">

@@ -114,9 +114,9 @@ Vue.component("n-form-attachment-uploader", {
 	computed: {
 		isArray: function() {
 			if (this.field.name) {
-				var pageInstance = this.$services.page.getPageInstance(this.page, this);
-				if (pageInstance != null) {
-					return pageInstance.isArray(this.field.name);
+				var arrays = this.$services.page.getAllArrays(this.page, this);
+				if (arrays.indexOf(this.field.name) >= 0 || arrays.indexOf("page." + this.field.name) >= 0) {
+					return true;
 				}
 			}
 			return false;
@@ -354,9 +354,9 @@ Vue.component("n-form-attachment-uploader-configure", {
 	computed: {
 		isArray: function() {
 			if (this.field.name) {
-				var pageInstance = this.$services.page.getPageInstance(this.page, this);
-				if (pageInstance != null) {
-					return pageInstance.isArray(this.field.name);
+				var arrays = this.$services.page.getAllArrays(this.page, this);
+				if (arrays.indexOf(this.field.name) >= 0 || arrays.indexOf("page." + this.field.name) >= 0) {
+					return true;
 				}
 			}
 			return false;

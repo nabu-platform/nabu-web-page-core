@@ -2859,6 +2859,15 @@ nabu.services.VueService(Vue.extend({
 				return isAllowed;
 			});
 		},
+		getPageVariables: function(page, value) {
+			var variables = this.getSimpleKeysFor({properties:this.getAllAvailableParameters(page, null, true)});
+			if (value) {
+				variables = variables.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				});
+			}
+			return variables;
+		},
 		getSimpleClasses: function(value) {
 			var classes = ["primary", "secondary", "info", "success", "warning", "danger", "inline"];
 			if (value) {
