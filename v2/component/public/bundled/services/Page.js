@@ -3258,7 +3258,7 @@ nabu.services.VueService(Vue.extend({
 			var self = this;
 			if (transformer && transformer.inputs) {
 				transformer.inputs.map(function(x) {
-					parameters[x.name] = self.$services.page.getResolvedPageParameterType(x.type);
+					parameters[x.name] = self.$services.page.getResolvedPageParameterType(x.type, null, x.isArray);
 					if (!parameters[x.name].required && x.required) {
 						parameters[x.name].required = x.required;
 					}
@@ -3280,7 +3280,7 @@ nabu.services.VueService(Vue.extend({
 			var self = this;
 			if (transformer && transformer.outputs) {
 				transformer.outputs.map(function(x) {
-					parameters[x.name] = self.$services.page.getResolvedPageParameterType(x.type);
+					parameters[x.name] = self.$services.page.getResolvedPageParameterType(x.type, null, x.isArray);
 				});
 			}
 			return {properties:parameters};
@@ -3533,7 +3533,7 @@ nabu.services.VueService(Vue.extend({
 				var parameters = {};
 				if (page.content.parameters) {
 					page.content.parameters.filter(function(x) { return !x.private }).forEach(function(x) {
-						parameters[x.name] = self.getResolvedPageParameterType(x.type);
+						parameters[x.name] = self.getResolvedPageParameterType(x.type, null, x.isArray);
 						// currently we do not want to allow you to map different parts
 						if (parameters[x.name].properties) {
 							parameters[x.name].properties = {};
@@ -4422,7 +4422,7 @@ nabu.services.VueService(Vue.extend({
 						if (operation && operation.responses && operation.responses["200"]) {
 							var schema = operation.responses["200"].schema;
 							if (schema && schema.$ref) {
-								var definition = self.getResolvedPageParameterType(schema.$ref);
+								var definition = self.getResolvedPageParameterType(schema.$ref, null, x.isArray);
 								if (definition) {
 									parameters.properties[x.name] = definition;
 								}
@@ -4458,7 +4458,7 @@ nabu.services.VueService(Vue.extend({
 						parameters.properties[x.name] = JSON.parse(x.definition);	
 					}
 					else {
-						parameters.properties[x.name] = self.getResolvedPageParameterType(x.type, currentValue);
+						parameters.properties[x.name] = self.getResolvedPageParameterType(x.type, currentValue, x.isArray);
 					}
 				});
 			}
@@ -4520,20 +4520,27 @@ nabu.services.VueService(Vue.extend({
 			}
 			return null;
 		},
-		getResolvedPageParameterType: function(type, instance) {
+		getResolvedPageParameterType: function(type, instance, isArray) {
+			var result;
 			if (type == null && instance != null) {
-				return this.getSchemaFromObject(instance);
+				result = this.getSchemaFromObject(instance);
 			}
 			if (type == null || ['string', 'boolean', 'number', 'integer'].indexOf(type) >= 0) {
-				return {type:type == null ? "string" : type};
+				result = {type:type == null ? "string" : type};
 			}
 			else {
 				try {
-					return this.$services.swagger.resolve(this.$services.swagger.definition(type));
+					result = this.$services.swagger.resolve(this.$services.swagger.definition(type));
 				}
 				catch (exception) {
 					console.error("Could not resolve type: " + type);
 					return {type: "string"};
+				}
+			}
+			if (result && isArray) {
+				result = {
+					type: "array",
+					items: result
 				}
 			}
 		},

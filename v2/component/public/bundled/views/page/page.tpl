@@ -262,14 +262,15 @@
 										<div class="is-column is-spacing-medium">
 											<n-form-text v-model="parameter.name" :required="true" label="Name" :timeout="600"/>
 											<n-form-switch v-model="parameter.private" label="Private parameter"/>
-											<n-form-combo v-model="parameter.type" label="Type" :filter="getParameterTypes" :placeholder="parameter.template ? 'Calculated from template' : (parameter.default || parameter.defaultScript ? 'Calculated from default' : 'string')"/>
+											<n-form-combo v-if="!parameter.useDefinition" v-model="parameter.type" label="Type" :filter="getParameterTypes" :placeholder="parameter.template ? 'Calculated from template' : (parameter.default || parameter.defaultScript ? 'Calculated from default' : 'string')"/>
+											<n-form-combo v-if="false" v-model="parameter.type" label="Type" :filter="getParameterTypes" :placeholder="parameter.template ? 'Calculated from template' : (parameter.default || parameter.defaultScript ? 'Calculated from default' : 'string')"/>
+											<n-form-switch v-model="parameter.isArray" v-if="parameter.type" label="Is an array"/>
 											<n-form-combo v-model="parameter.format" label="Format" v-if="parameter.type == 'string'" :items="['date-time', 'uuid', 'uri', 'date', 'password']"/>
 											<n-form-text v-model="parameter.default" label="Default Value" v-if="!parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)"/>
 											<n-form-switch v-model="parameter.complexDefault" label="Use script for default value"/>
 											<n-form-ace mode="javascript" v-model="parameter.defaultScript" label="Default Value" v-if="parameter.complexDefault && (!parameter.defaults || !parameter.defaults.length)" @input="initializeDefaultParameters(true, [parameter.name], true)"/>
 											<p class="is-p is-size-small is-color-light" v-if="(parameter.default || parameter.defaultScript) && !parameter.private">Note that public variables can not be recalculated through the refresh state action</p>
 											<p class="is-p is-size-small is-color-light" v-if="(parameter.default || parameter.defaultScript) && parameter.private">Private default values can be recalculated using the refresh state action</p>
-											<n-form-combo v-if="!parameter.useDefinition" v-model="parameter.type" label="Type" :filter="getParameterTypes" :placeholder="parameter.template ? 'Calculated from template' : (parameter.default || parameter.defaultScript ? 'Calculated from default' : 'string')"/>
 											<n-form-text v-if="!parameter.useDefinition && (!parameter.defaults || !parameter.defaults.length)" v-model="parameter.template" label="Template Value" after="You can use a template to determine the data type"/>
 											<n-form-switch v-if="!parameter.type && !parameter.template" v-model="parameter.useDefinition" label="Use type definition" after="You can add a custom JSON schema definition for this variable"/>
 											<n-form-ace v-if="parameter.useDefinition" v-model="parameter.definition" label="JSON Schema"/>
