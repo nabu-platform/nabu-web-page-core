@@ -4543,6 +4543,7 @@ nabu.services.VueService(Vue.extend({
 					items: result
 				}
 			}
+			return result;
 		},
 		getApplicationProperties: function() {
 			var properties = {};
