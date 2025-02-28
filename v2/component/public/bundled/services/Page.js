@@ -261,6 +261,24 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		// cleanup internal variables like $position etc
+		cleanup: function(data) {
+			var self = this;
+			if (data instanceof Array) {
+				data.forEach(this.cleanup);
+			}
+			else if (this.isObject(data)) {
+				Object.keys(data).forEach(function(key) {
+					if (key.indexOf("$") == 0) {
+						delete data[key];
+					}
+					else {
+						self.cleanup(data[key]);
+					}
+				});
+			}
+			return data;
+		},
 		nullify: function(data) {
 			var self = this;
 			if (data instanceof Array) {

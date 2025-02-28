@@ -596,6 +596,21 @@
 								<div class="is-column is-spacing-medium">
 									<template-manager :target="cell" :page="page"/>
 								</div>
+								
+								<h2 class="section-title">States</h2>
+								<div class="is-column is-spacing-medium">
+									<p class="is-p is-size-small is-color-light is-spacing-vertical-bottom-small">Set dynamic states on the cell</p>
+									<div class="is-row is-align-end">
+										<button class="is-button is-variant-primary-outline is-size-xsmall" @click="addTargetState(cell)"><icon name="plus"/>State</button>
+									</div>
+									<div v-if="cell.states" class="is-column is-spacing-vertical-gap-medium">
+										<div class="has-button-close is-column is-spacing-medium is-color-body" v-for="(state, index) in cell.states">
+											<n-form-text v-model="state.name" label="Name"/>
+											<n-form-ace v-model="state.condition" label="Condition"/>
+											<button class="is-button is-variant-close" @click="cell.states.splice(index, 1)"><icon name="times"/></button>
+										</div>
+									</div>
+								</div>
 							</template>
 							<template v-if="$services.page.activeSubTab == 'component' || $services.page.availableSubTabs.indexOf($services.page.activeSubTab) >= 0">
 								<component :is="getCellConfigurator(cell)" v-bind="getCellConfiguratorInput(cell)" v-if="canConfigureInline(cell)"/>

@@ -164,6 +164,9 @@
 					},
 					"Data.js": {
 						"url": "services/Data.js"
+					},
+					"Image.js": {
+						"url": "services/Image.js"
 					}
 				},
 				"layouts": {
@@ -175,6 +178,14 @@
 					}
 				},
 				"views": {
+					"attachmentUploader": {
+						"attachmentUploader.js": {
+							"url": "views/attachmentUploader/attachmentUploader.js"
+						},
+						"attachmentUploader.tpl": {
+							"url": "views/attachmentUploader/attachmentUploader.tpl"
+						}
+					},
 					"image": {
 						"image.gcss": {
 							"url": "views/image/image.gcss"

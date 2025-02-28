@@ -127,7 +127,7 @@ Vue.component("n-form-attachment-uploader", {
 			if (this.isArray) {
 				if (this.field.maxFiles) {
 					// when we use reservation, the value will reflect the size, we don't need to check the working
-					return this.field.maxFiles - (value instanceof Array ? value.length : 0) - (this.field.reservationOperation ? 0 : this.working.length);
+					return this.field.maxFiles - (this.value instanceof Array ? this.value.length : 0) - (this.field.reservationOperation ? 0 : this.working.length);
 				}
 				return Number.MAX_SAFE_INTEGER;
 			}

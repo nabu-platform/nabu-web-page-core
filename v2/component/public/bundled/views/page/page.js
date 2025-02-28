@@ -692,6 +692,15 @@ nabu.page.views.Page = Vue.component("n-page", {
 		}
 	},
 	methods: {
+		addTargetState: function(cell) {
+			if (!cell.states) {
+				Vue.set(cell, "states", []);
+			}
+			cell.states.push({
+				name: null,
+				condition: null
+			});
+		},
 		// check if it is an array field or a singular field
 		// useful for example for dynamic form elements that can handle both
 		isArrayField: function(field) {
@@ -4512,6 +4521,14 @@ Vue.component("n-page-row", {
 				// so let's watch the variables instead
 				//return this.$services.page.getDynamicClasses(cell.styles, this.state, this);
 				nabu.utils.arrays.merge(classes, this.$services.page.getDynamicClasses(cell.styles, pageInstance.variables, this));
+			}
+			if (cell.states) {
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				cell.states.forEach(function(state) {
+					if (!state.condition || self.$services.page.isCondition(state.condition, pageInstance.variables, self)) {
+						classes.push("is-" + state.name);
+					}
+				})
 			}
 			// if we have an explicit open trigger on click, we explicitly close it as well
 			// deprecated

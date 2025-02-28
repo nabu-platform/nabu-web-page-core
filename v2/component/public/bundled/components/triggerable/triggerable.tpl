@@ -26,6 +26,8 @@
 						<button class="is-button is-variant-ghost is-size-xsmall" @click="actionDown(trigger, action)"><icon name="chevron-down"/></button>
 						<button class="is-button is-variant-ghost is-size-xsmall" @click="trigger.actions.splice(actionIndex, 1)"><icon name="times"/></button>
 					</div>
+
+					<h4 class="is-h4" v-if="action.type">{{actionTypes.filter(function(x) { return x.name == action.type })[0].title }}</h4>
 					
 					<n-form-text v-model="action.condition" label="Condition" after="You can configure an additional condition that must evaluate to true before this action is triggered. If not triggered, we continue to the next action."
 						:timeout="600"/>
