@@ -27,6 +27,8 @@
 			<n-form-switch v-model="cell.state.stopPropagation" label="Stop click propagation"/>
 			<n-form-switch v-model="cell.state.emitClose" label="Emit close on click" v-if="false"/>
 			
+			<n-form-ace v-model="cell.state.content" label="Raw content" mode="html"/>
+			
 			<n-form-combo label="Activation Type" v-model="cell.state.activationType" :items="['group', 'condition', 'route']"/>
 			
 			<n-form-text v-model="cell.state.componentGroup" label="Button group" after="You can add this button to a button group which will determine group behavior"
