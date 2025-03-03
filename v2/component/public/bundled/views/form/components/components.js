@@ -64,12 +64,45 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				return !!this.cell.state.disabled && this.$services.page.isCondition(this.cell.state.disabled, state, this, null, true);
 			},
 			readOnly: function() {
+				// originally it was modelled as a boolean, we retain this for backwards compatibility until it is phased out
+				if (this.cell.state.readOnly) {
+					return true;
+				}
+				// if you have configured a read only condition on the component, it wins over state
+				if (this.cell.state.readOnlyCondition) {
+					var pageInstance = this.pageInstance;
+					if (!pageInstance) {
+						 return true;
+					}
+					var state = this.$services.page.getPageState(pageInstance);
+					return this.$services.page.isCondition(this.cell.state.readOnlyCondition, state, this, null, true);
+				}
+				// check state
 				var stateName = "readOnly";
 				// the default should be good enough in almost all cases, but we could add a way to set a different one for more complex usecases
 				if (this.cell.state.customReadOnlyState) {
 					stateName = this.cell.state.customReadOnlyState;
 				}
-				return this.getCurrentStates().indexOf(stateName) >= 0;
+				if (this.getCurrentStates().indexOf(stateName) >= 0) {
+					return true;
+				}
+				// otherwise, we check if there is a parent form with the setting
+				var path = this.$services.page.getTargetPath(this.page.content, this.cell.id, true);
+				if (path) {
+					var self = this;
+					var readOnly = false;
+					path.forEach(function(element) {
+						if (element.renderer == "form" && element.form) {
+							if (element.form.readOnly) {
+								readOnly = true;
+							}
+						}
+					});
+					if (readOnly) {
+						return readOnly;
+					}
+				}
+				return false;
 			}
 		},
 		watch: {
@@ -94,24 +127,8 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			if (this.cell.state.rawName) {
 				this.getPageInstance().set("page." + this.cell.state.rawName, null);
 			}
-			if (this.readOnly) {
-				this.editable = false;
-			}
-			if (this.cell.state.readOnly) {
-				this.editable = false;
-			}
-			// check if we have a form renderer parent which has a start read only setting
-			var path = this.$services.page.getTargetPath(this.page.content, this.cell.id, true);
-			if (path) {
-				var self = this;
-				path.forEach(function(element) {
-					if (element.renderer == "form" && element.form) {
-						if (element.form.readOnly) {
-							self.editable = false;
-						}
-					}
-				});
-			}
+			// initialize
+			this.editable = !this.readOnly;
 		},
 		// for some reason enumeration (and all derivatives of enumeration) did not get destroyed correctly
 		// if you remove the alias for example for form-text, the destroy is called correctly at all levels
