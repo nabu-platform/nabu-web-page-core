@@ -116,15 +116,15 @@ nabu.services.VueService(Vue.extend({
 					format = format.replace(/E/g, "#");
 				}
 				format = format.replace(/M/g, "=");
-				format = format.replace(/====/g, nabu.utils.dates.months()[date.getMonth()]);
-				format = format.replace(/===/g, nabu.utils.dates.months()[date.getMonth()].substring(0, 3));
+				format = format.replace(/====/g, this.$services.page.translate(nabu.utils.dates.months()[date.getMonth()]));
+				format = format.replace(/===/g, this.$services.page.translate(nabu.utils.dates.months()[date.getMonth()]).substring(0, 3));
 				format = format.replace(/==/g, (date.getMonth() < 9 ? "0" : "") + (date.getMonth() + 1));
 				format = format.replace(/=/g, date.getMonth() + 1);
 				
 				// this was added later, hence the defensive check for projects that don't have this yet
 				if (nabu.utils.dates.days) {
-					format = format.replace(/####/g, nabu.utils.dates.days()[nabu.utils.dates.dayOfWeek(date)]);
-					format = format.replace(/###/g, nabu.utils.dates.days()[nabu.utils.dates.dayOfWeek(date)].substring(0, 3));
+					format = format.replace(/####/g, this.$services.page.translate(nabu.utils.dates.days()[nabu.utils.dates.dayOfWeek(date)]));
+					format = format.replace(/###/g, this.$services.page.translate(nabu.utils.dates.days()[nabu.utils.dates.dayOfWeek(date)]).substring(0, 3));   
 				}
 				format = format.replace(/##/g, (nabu.utils.dates.dayOfWeek(date) < 9 ? "0" : "") + (nabu.utils.dates.dayOfWeek(date) + 1));
 				format = format.replace(/#/g, nabu.utils.dates.dayOfWeek(date) + 1);
