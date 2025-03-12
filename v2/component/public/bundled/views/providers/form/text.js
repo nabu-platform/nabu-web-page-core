@@ -1,5 +1,5 @@
 Vue.component("page-form-input-text-configure", {
-	template: "<n-form-section><n-form-combo v-model='field.textType' label='Text Type' :items=\"['text', 'area', 'range', 'number', 'color', 'email', 'tel', 'password', 'url', 'time', 'date', 'datetime-local', 'month', 'week']\"/>"
+	template: "<div><h2 class='section-title'>Text field</h2><div class='is-column is-spacing-medium'><n-form-combo v-model='field.textType' label='Text Type' :items=\"['text', 'area', 'range', 'number', 'color', 'email', 'tel', 'password', 'url', 'time', 'date', 'datetime-local', 'month', 'week']\"/>"
 		+ "	<n-form-switch v-model='field.trim' label='Trim value' />"
 		+ "	<n-form-text v-model='field.regexLabel' label='Regex Label' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.regex' label='Regex' :timeout='600'/>"
@@ -22,7 +22,7 @@ Vue.component("page-form-input-text-configure", {
 		+ "	<n-form-ace v-model='field.formatter' label='Formatter' :timeout='600' after='You can format the value that exists in the page for display (and edit) purposes for the user'/>"
 		+ "	<n-form-ace v-model='field.parser' label='Parser' :timeout='600' after='You can parse the user-inputted value into something else to be stored in the page'/>"
 		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"
-		+ "</n-form-section>",
+		+ "</div></div>",
 	props: {
 		cell: {
 			type: Object,
