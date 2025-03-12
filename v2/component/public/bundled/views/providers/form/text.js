@@ -1,5 +1,6 @@
 Vue.component("page-form-input-text-configure", {
 	template: "<n-form-section><n-form-combo v-model='field.textType' label='Text Type' :items=\"['text', 'area', 'range', 'number', 'color', 'email', 'tel', 'password', 'url', 'time', 'date', 'datetime-local', 'month', 'week']\"/>"
+		+ "	<n-form-switch v-model='field.trim' label='Trim value' />"
 		+ "	<n-form-text v-model='field.regexLabel' label='Regex Label' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.regex' label='Regex' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.minLength' label='Min Length' :timeout='600'/>"
@@ -53,6 +54,7 @@ Vue.component("page-form-input-text-configure", {
 
 Vue.component("page-form-input-text", {
 	template: "<n-form-text :type='textType' ref='form'"
+			+ "		:trim='field.trim'"
 			+ "		:class=\"{'has-suffix-icon': !!field.suffixIcon, 'has-suffix': !!field.suffix }\""
 			+ "		:edit='!readOnly'"
 			+ "		:placeholder='$services.page.interpret($services.page.translate(placeholder), $self)'"
