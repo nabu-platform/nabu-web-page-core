@@ -243,7 +243,7 @@ nabu.page.provide("page-renderer", {
 		return {properties:result};
 	},
 	getSlots: function(target) {
-		var slots = ["empty", "loading"];
+		var slots = ["empty", "loading", "appendLoading"];
 		if (target.repeat && target.repeat.customSlots && target.repeat.customSlots.length) {
 			nabu.utils.arrays.merge(slots, target.repeat.customSlots.map(function(x) { return x.name }));
 		}
@@ -421,6 +421,8 @@ Vue.component("renderer-repeat", {
 			// the instance counter is used to manage our pages on the router
 			instanceCounter: $$rendererInstanceCounter++,
 			loading: false,
+			// when loading new data you want to append, we don't want to show the full load indicator but a small append load indicator
+			appendLoading: false,
 			fragmentPage: null,
 			// each slot has its own page
 			fragmentPages: {},
@@ -972,16 +974,6 @@ Vue.component("renderer-repeat", {
 			if (action == "jump-page") {
 				return this.loadData(value.page);
 			}
-			else if (action == "next-page") {
-				if (this.state.paging.current < this.state.paging.total - 1) {
-					return this.loadData(this.state.paging.current + 1);
-				}
-			}
-			else if (action == "previous-page") {
-				if (this.state.paging.current > 0) {
-					return this.loadData(this.state.paging.current - 1);
-				}
-			}
 			else if (action == "refresh") {
 				var retainOffset = value && value.retainOffset;
 				return this.loadData(retainOffset ? this.state.paging.current : 0);
@@ -1179,6 +1171,25 @@ Vue.component("renderer-repeat", {
 				}
 			});
 		},
+		lazyLoad: function(record) {
+			if (this.lazyPromise == null && this.state.paging && this.target.repeat.scrollLoad && this.state.paging.current != null) {
+				var next = this.state.paging.current + 1;
+				if (this.state.paging.total != null && this.state.paging.total != 0 && this.state.paging.current >= this.state.paging.total - 1) {
+					return false;
+				}
+				var index = this.state.records.indexOf(record);
+				// if we are in the final 10% of the table, try to load more
+				if (index >= Math.floor(this.state.records.length * 0.9)) {
+					this.lazyPromise = this.loadData(next, true);
+					var self = this;
+					this.lazyPromise.then(function() {
+						self.lazyPromise = null;
+					}, function() {
+						self.lazyPromise = null;
+					});
+				}
+			}
+		},
 		// in the future we can add a "load more" event support, we then listen to that event and load more data, this means we want to append
 		// currently we don't do anything special with limit and offset, you can fill them in in the bindings if you want
 		// we will just do the call as a whole, assuming it is a limited service result
@@ -1231,10 +1242,14 @@ Vue.component("renderer-repeat", {
 				else {
 					parameters["$serviceContext"] = this.$services.page.getPageInstance(this.page, this).getServiceContext();
 				}
-				this.loading = true;
 				if (!append) {
+					// don't set loading if appending, this will disrupt visualization
+					this.loading = true;
 					self.state.records.splice(0);
 					self.state.allRecords.splice(0);
+				}
+				else {
+					this.appendLoading = true;
 				}
 				this.loadPromise = this.$services.swagger.execute(this.target.repeat.operation, parameters).then(function(list) {
 					Object.keys(self.state.raw).forEach(function(x) {
@@ -1350,6 +1365,7 @@ Vue.component("renderer-repeat", {
 					}
 					self.uniquify();
 					self.loading = false;
+					self.appendLoading = false;
 					self.created = true;
 					// only repeat if we are not yet destroyed
 					if (self.target.repeat.refreshInterval && !self.destroyed) {
@@ -1360,6 +1376,7 @@ Vue.component("renderer-repeat", {
 				}, function(error) {
 					// TODO: what in case of error?
 					self.loading = false;
+					self.appendLoading = false;
 					self.created = true;
 				})
 			}
@@ -1684,4 +1701,4 @@ Vue.component("renderer-repeat-configure", {
 			});
 		}
 	}
-});
+}); 

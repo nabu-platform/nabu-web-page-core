@@ -93,8 +93,8 @@ Vue.component("page-form-checkbox-list", {
 			};
 		},
 		validate: function(soft) {
-			if (this.$refs.checkbox-list) {
-				return this.$refs.checkbox-list.validate(soft);
+			if (this.$refs["checkbox-list"]) {
+				return this.$refs["checkbox-list"].validate(soft);
 			}
 		}
 	}

@@ -3,7 +3,7 @@
 		<template v-if="!edit && !loading && state.records.length">
 			<template v-if="fragmentPage.content.repeatType == 'cell'">
 				<template v-for="(record, index) in state.records">
-					<component :is="getComponent()" :class="getCellClasses()" :page="page" :target="target">
+					<component :is="getComponent()" :class="getCellClasses()" :page="page" :target="target" v-visible="lazyLoad.bind($self, record)">
 						<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
 							<n-page v-fragment
 								:$set-value="repeatSetter"
@@ -69,11 +69,13 @@
 						</template>
 					</component>
 				</template>
+				<slot name="appendLoading" v-if="appendLoading"></slot>
 			</template>
 			<template v-else>
 				<template v-if="!edit && !loading && state.records.length && fragmentPage.content.rows.length >= 2">
 					<template v-for="(record, index) in state.records">
 						<n-page :page="fragmentPage"
+							v-visible="lazyLoad.bind($self, record)"
 							:$set-value="repeatSetter"
 							@update="function() { update(record) }"
 							@click.native="handleClick($event, record)"
@@ -102,10 +104,12 @@
 							@beforeMount="beforeMount"
 							@ready="mounted"/>
 					</template>
+					<slot name="appendLoading" v-if="appendLoading"></slot>
 				</template>
 				<template v-else-if="!edit && !loading && state.records.length">
 					<template v-for="(record, index) in state.records">
 						<n-page-optimized :page="fragmentPage"
+							v-visible="lazyLoad.bind($self, record)"
 							:$set-value="repeatSetter"
 							@update="function() { update(record) }"
 							@click.native="handleClick($event, record)"
@@ -134,16 +138,19 @@
 							@beforeMount="beforeMount"
 							@ready="mounted"/>
 					</template>
+					<slot name="appendLoading" v-if="appendLoading"></slot>
 				</template>
 			</template>
 		</template>
 		<template v-else-if="edit && getComponent()">
 			<component :is="getComponent()" :page="page" :target="target" :class="getComponentClassesForEdit()">
 				<slot></slot>
+				<slot name="appendLoading"></slot>
 			</component>
 		</template>
 		<template v-else-if="edit">
 			<slot></slot>
+			<slot name="appendLoading"></slot>
 		</template>
 		<template v-if="edit && target.repeat.customSlots">
 			<slot v-for="customSlot in target.repeat.customSlots" :name="customSlot.name"></slot>
@@ -171,6 +178,7 @@
 			v-if="target.repeat.type == 'operation'"
 			:formatter="function(x) { return x.id }"
 			:extracter="function(x) { return x.id }"/>
+			
 		<n-form-combo label="Array" v-model="target.repeat.array"
 			:filter="function(value) { return $services.page.suggestArray(page, value) }"
 			v-else-if="target.repeat.type == 'array'"
@@ -203,6 +211,8 @@
 		<n-form-switch v-model="target.repeat.disableMouseSelection" v-if="target.repeat.selectable" label="Disable mouse selection"/>
 		
 		<n-form-switch v-model="target.repeat.raw" label="Add raw data"/>
+			
+		<n-form-switch v-if="target.repeat.type == 'operation'" v-model="target.repeat.scrollLoad" label="Lazy Loading"/> 
 			
 		<div v-for="(defaultOrderBy, index) in target.repeat.defaultOrderBy" class="has-button-close">
 			<div class="is-row">
