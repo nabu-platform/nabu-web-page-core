@@ -1848,6 +1848,12 @@ nabu.page.views.Page = Vue.component("n-page", {
 				if (self.fragmentParent) {				
 					self.$emit("update", value, label, name);
 				}
+				// @2025-03-14
+				// when you have form fields in a form, the form "update" was not being triggered
+				// so I added this to ensure that it continues...
+				else if (component.$parent) {
+					component.$parent.$emit("update", value, label, name);
+				}
 			})
 			
 			component.$on("close", function() {

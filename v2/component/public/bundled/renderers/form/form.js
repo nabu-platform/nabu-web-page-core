@@ -209,6 +209,7 @@ Vue.component("renderer-form", {
 			return this.state;		
 		},
 		update: function() {
+			this.$services.triggerable.trigger(this.target, "update", {}, this);
 			if (this.target.form.submitOnChange) {
 				this.submit();
 			}
