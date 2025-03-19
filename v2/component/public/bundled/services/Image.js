@@ -13,7 +13,10 @@ Vue.service("image", {
 					result.url = dataUrl;
 					result.file = self.urlToBlob(dataUrl);
 					result.file.name = file.name;
-					result.file.type = file.type;
+					// this is not allowed in minified mode
+					// it "should" be the same given the code
+					// if there is ever a problem with the type not matching, we can pass it along to urlToBlob and use the file type over the internal type
+					//result.file.type = file.type;
 					result.name = file.name;
 					result.type = file.type ? file.type : "application/octet-stream";
 					promise.resolve(result);
