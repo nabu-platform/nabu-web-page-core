@@ -1,5 +1,9 @@
 nabu.services.VueService(Vue.extend({
 	methods: {
+		round: function(number, amountOfDecimals) {
+			var multiplier = Math.pow(10, amountOfDecimals);
+			return Math.round(number * multiplier) / multiplier;
+		},
 		format: function(value, properties, page, cell, record, component) {
 			if (!properties.format) {
 				return value;
