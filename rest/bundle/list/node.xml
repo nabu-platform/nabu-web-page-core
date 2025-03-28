@@ -1,1 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?><node artifactManager="be.nabu.eai.module.rest.provider.RESTServiceManager" created="2020-01-25T16:54:25.604+01:00" lastModified="2020-01-25T16:55:29.566+01:00" leaf="true" version="6"><environmentId>apollo</environmentId><hidden>false</hidden><properties/><references>nabu.web.page.core.cloud.swagger.types.platform.portal.rest.bundle.bundleList</references><references>java.lang.Long</references><references>java.lang.String</references><references>nabu.web.page.core.cloud.swagger.services.platform.portal.rest.bundle.list</references></node>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<node artifactManager="be.nabu.eai.module.rest.provider.RESTServiceManager" created="2020-01-25T16:54:25.604+01:00" lastModified="2025-03-28T14:19:06.848+01:00" leaf="true" version="7">
+    <environmentId>ares</environmentId>
+    <hidden>false</hidden>
+    <locked>false</locked>
+    <properties/>
+    <references>nabu.web.page.core.cloud.swagger.types.platform.portal.rest.bundle.bundleList</references>
+    <references>nabu.web.page.core.cloud.swagger.services.platform.portal.rest.bundle.list</references>
+</node>

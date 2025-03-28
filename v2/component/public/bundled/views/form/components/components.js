@@ -86,14 +86,18 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				if (this.getCurrentStates().indexOf(stateName) >= 0) {
 					return true;
 				}
+				
 				// otherwise, we check if there is a parent form with the setting
 				var path = this.$services.page.getTargetPath(this.page.content, this.cell.id, true);
 				if (path) {
 					var self = this;
-					var readOnly = false;
+					var readOnly = null;
 					path.forEach(function(element) {
 						if (element.renderer == "form" && element.form) {
-							if (element.form.readOnly) {
+							if (element.runtimeAlias && self.pageInstance) {
+								readOnly = self.pageInstance.get("page." + element.runtimeAlias + ".readOnly");
+							}
+							if (readOnly == null && element.form.readOnly) {
 								readOnly = true;
 							}
 						}

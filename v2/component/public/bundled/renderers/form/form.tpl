@@ -58,6 +58,7 @@
 		<n-form-switch v-model="target.form.synchronize" label="Synchronize changes back to binding" v-if="target.form.formType != 'page'"/>
 		<n-form-switch v-model="target.form.bindingByReference" label="Perform input parameter binding by reference"/>
 		<n-form-switch v-model="target.form.submitOnChange" label="Submit on change"/>
+		<n-form-switch v-model="target.form.enableParameterWatching" label="Watch bound values for change"/>
 		
 		<div v-if="target.form.formType">
 			<n-form-switch v-model="target.form.noInlineErrors" label="Disable inline error message" after="By default, validation errors will be shown inline."/>

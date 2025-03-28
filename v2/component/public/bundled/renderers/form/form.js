@@ -156,18 +156,9 @@ Vue.component("renderer-form", {
 	},
 	created: function() {
 		var self = this;
-		if (this.parameters) {
-			Object.keys(this.parameters).forEach(function(key) {
-				if (!self.target.form.bindingByReference) {
-					Vue.set(self.state, key, self.$services.page.smartClone(self.parameters[key]));
-				}
-				else {
-					Vue.set(self.state, key, self.parameters[key]);
-				}
-				//Vue.set(self.state, key, !self.target.form.bindingByReference ? JSON.parse(JSON.stringify(self.parameters[key])) : self.parameters[key]);
-				//Vue.set(self.state, key, self.parameters[key]);
-			});
-		}
+		// initialize the read only
+		Vue.set(this.state, "readOnly", this.target.form && this.target.form.readOnly);
+		this.mergeParameters();
 		if (this.target.form && this.target.form.noInlineErrors) {
 			this.mode = null;
 		}
@@ -179,8 +170,6 @@ Vue.component("renderer-form", {
 		if (this.target.form && this.target.form.formType == "operation" && this.state.body == null) {
 			Vue.set(this.state, "body", {});
 		}
-		// initialize the read only
-		Vue.set(this.state, "readOnly", this.target.form && this.target.form.readOnly);
 	},
 	mounted: function() {
 		// trigger a submit
@@ -205,6 +194,21 @@ Vue.component("renderer-form", {
 		}
 	},
 	methods: {
+		mergeParameters: function() {
+			var self = this;
+			if (this.parameters) {
+				Object.keys(this.parameters).forEach(function(key) {
+					if (!self.target.form.bindingByReference) {
+						Vue.set(self.state, key, self.$services.page.smartClone(self.parameters[key]));
+					}
+					else {
+						Vue.set(self.state, key, self.parameters[key]);
+					}
+					//Vue.set(self.state, key, !self.target.form.bindingByReference ? JSON.parse(JSON.stringify(self.parameters[key])) : self.parameters[key]);
+					//Vue.set(self.state, key, self.parameters[key]);
+				});
+			}
+		},
 		getRuntimeState: function() {
 			return this.state;		
 		},
@@ -483,9 +487,19 @@ Vue.component("renderer-form", {
 				this.state.readOnly = !this.state.readOnly;
 			}
 		}
+	},
+	watch: {
+		parameters: {
+			deep: true,
+			handler: function() {
+				if (this.target.form.enableParameterWatching) {
+					this.mergeParameters();
+				}
+			}
+		}
 	}
 });
-
+ 
 Vue.component("renderer-form-configure", {
 	template: "#renderer-form-configure",
 	props: {
