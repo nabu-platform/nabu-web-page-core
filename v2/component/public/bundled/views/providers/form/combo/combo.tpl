@@ -10,7 +10,7 @@
 				<n-form-switch v-model='field.showAmount' label='Show selected amount' info="Show a counter of how many items are selected"/>
 				<n-form-switch :invert='true' v-model='field.allowTyping' label='Disable typing' info='Can the user type to search?'/>
 				<n-form-switch v-model='field.selectFirstIfEmpty' label='Select the first value if none has been selected yet'/>
-				<n-form-switch v-if="false" v-model='field.loadOnFocus' label='Reload on focus'/>
+				<n-form-switch v-model='field.loadOnFocus' label='Reload on focus'/>
 				<n-form-switch v-model="field.searchInDropdown" label="Show search in dropdown" info="This will also use the rich formatter (if possible) for displaying the current item"/>
 			</div>
 		</template>

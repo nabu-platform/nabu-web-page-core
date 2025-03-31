@@ -23,6 +23,14 @@ Vue.view("nabu-form-dynamic-component", {
 			updatingSelf: false
 		}
 	},
+	props: {
+		readOnly: {
+			type: Boolean
+		},
+		disabled: {
+			type: Boolean
+		}
+	},
 	computed: {
 		// the field we get the type from in the record
 		typeField: function() {

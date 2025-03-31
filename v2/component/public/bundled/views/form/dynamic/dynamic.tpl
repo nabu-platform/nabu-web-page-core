@@ -8,6 +8,8 @@
 			:parent-value="getParentValue()"
 			:page="page"
 			:cell="getParametersFor(record)"
+			:disabled="disabled || readOnly"
+			:class="{'is-read-only': readOnly }"
 			:field="getParametersFor(record).state"
 			:label="getLabelFor(record)"
 			:timeout="cell.state.timeout"></component>
