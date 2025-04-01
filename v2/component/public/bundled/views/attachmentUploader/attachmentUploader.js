@@ -121,13 +121,24 @@ Vue.component("n-form-attachment-uploader", {
 			}
 			return false;
 		},
+		maxFiles: function() {
+			if (this.isArray) {
+				var max = this.field.maxFiles;
+				if (max) {
+					return this.$services.page.interpret(max);
+				}
+			}
+			else {
+				return 1;
+			}
+		},
 		// how many files can be added before we can't
 		remaining: function() {
 			// for arrays, it depends on the max size of the array vs the current amount
 			if (this.isArray) {
-				if (this.field.maxFiles) {
+				if (this.maxFiles) {
 					// when we use reservation, the value will reflect the size, we don't need to check the working
-					return this.field.maxFiles - (this.value instanceof Array ? this.value.length : 0) - (this.field.reservationOperation ? 0 : this.working.length);
+					return this.maxFiles - (this.value instanceof Array ? this.value.length : 0) - (this.field.reservationOperation ? 0 : this.working.length);
 				}
 				return Number.MAX_SAFE_INTEGER;
 			}
@@ -149,7 +160,7 @@ Vue.component("n-form-attachment-uploader", {
 					code: "too-many-files",
 					title: "%{You can only add {maximum} images}", 
 					values: {
-						maximum: this.isArray ? this.field.maxFiles : 1
+						maximum: this.maxFiles
 					}
 				});
 			}
