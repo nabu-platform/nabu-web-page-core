@@ -329,6 +329,9 @@ Vue.component("n-form-attachment-uploader", {
 				component: "button"
 			}]
 		},
+		validate() {
+			//TODO: dummy method, need implementation,
+		},
 	}
 });
 
