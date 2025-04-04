@@ -59,7 +59,7 @@
 			:visualize-file-names="false"
 			class="is-column"
 			:class="getChildComponentClasses('file-input')"
-			:button-class="getChildComponentClasses('file-input-button')"
+			:button-class="[getChildComponentClasses('file-input-button'), {'has-text': field.browseLabel, 'has-icon': field.browseIcon }]"
 			/>
 		<n-messages :messages="messages" v-if="messages && messages.length"/>
 		<div class="is-content-after" v-if="field.after" v-html="$services.page.translate(field.after)"></div>

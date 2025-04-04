@@ -125,7 +125,7 @@ Vue.component("n-form-attachment-uploader", {
 			if (this.isArray) {
 				var max = this.field.maxFiles;
 				if (max) {
-					return this.$services.page.interpret(max);
+					return this.$services.page.interpret(max, this); 
 				}
 			}
 			else {
@@ -149,6 +149,9 @@ Vue.component("n-form-attachment-uploader", {
 		}
 	},
 	methods: {
+		validate: function(soft) {
+			return [];
+		},
 		changed: function() {
 			var self = this;
 			this.messages.splice(0);
@@ -196,8 +199,8 @@ Vue.component("n-form-attachment-uploader", {
 		},
 		reserve: function(files) {
 			var parameters = {};
+			var pageInstance = this.$services.page.getPageInstance(this.page, this);
 			if (this.field.reservationBindings) {
-				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				var self = this;
 				files.forEach(function(file) {
 					// we assume that it is a batch service
@@ -235,6 +238,9 @@ Vue.component("n-form-attachment-uploader", {
 						current.push(newRecord);
 					}
 				});
+			}
+			if (!parameters["$serviceContext"]) {
+				parameters["$serviceContext"] = pageInstance.getServiceContext();
 			}
 			return this.$services.swagger.execute(this.field.reservationOperation, parameters);
 		},
@@ -287,6 +293,9 @@ Vue.component("n-form-attachment-uploader", {
 					}
 					if (record && self.field.urlField) {
 						Vue.set(record, self.field.urlField, resized.url);
+					}
+					if (!parameters["$serviceContext"]) {
+						parameters["$serviceContext"] = pageInstance.getServiceContext();
 					}
 					self.$services.swagger.execute(self.field.uploadOperation, parameters).then(function(result) {
 						if (record) {
