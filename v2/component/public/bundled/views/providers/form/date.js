@@ -14,6 +14,8 @@ Vue.component("page-form-input-date-configure", {
 		+ "	<n-form-text v-model='field.after' label='After Content' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.suffix' label='Suffix' v-if='!field.suffixIcon' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.suffixIcon' label='Suffix Icon' v-if='!field.suffix' :timeout='600'/>"
+		+ "	<n-form-text v-model='field.yearsFrom' label='Years from' type='number' />"
+		+ "	<n-form-text v-model='field.yearsTo' label='Years to' type='number' />"
 		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='field.dateFormat ? [\"allow\", \"default\"] : [\"allow\", \"default\",\"formatter\",\"parser\"]'/>"
 		+ "</n-form-section>",
 	props: {
@@ -62,6 +64,8 @@ Vue.component("page-form-input-date", {
 			+ "		:after='field.after ? $services.page.translate(field.after) : null'"
 			+ "		:suffix='field.suffixIcon ? $services.page.getIconHtml(field.suffixIcon) : field.suffix'"
 			+ "		:years-dropdown='field.yearsDropdown'"
+			+ "		:years-from='getYearsFrom()'"
+			+ "		:years-to='getYearsTo()'"
 			+ "		:include-hours='field.includeHours'"
 			+ "		:pattern-comment='$services.page.translate(field.regexLabel)'"
 			+ "		:include-minutes='field.includeHours && field.includeMinutes'"
@@ -129,6 +133,20 @@ Vue.component("page-form-input-date", {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				return this.$services.page.getBindingValue(pageInstance, this.field.bindings.allow, this);
 			}
+		},
+		getYearsFrom: function () {
+			if(!this.field.yearsFrom || isNaN(this.field.yearsFrom)){
+				return undefined;
+			}
+			
+			return parseInt(this.field.yearsFrom);
+		},
+		getYearsTo: function () {
+			if(!this.field.yearsTo || isNaN(this.field.yearsTo)){
+				return undefined;
+			}
+			
+			return parseInt(this.field.yearsTo);
 		},
 		getParser: function () {
 			if (this.field.dateFormat) {
