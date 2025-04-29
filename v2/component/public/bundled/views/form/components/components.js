@@ -88,7 +88,10 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				}
 				
 				// otherwise, we check if there is a parent form with the setting
-				var path = this.$services.page.getTargetPath(this.page.content, this.cell.id, true);
+				// @2025-04-18: if we are in a repeat, we need to get the full content to see if there is a form
+				var path = this.pageInstance && this.pageInstance.fragmentParent
+					? this.$services.page.getTargetPath(this.pageInstance.fragmentParent.page.content, this.cell.id, true)
+					: this.$services.page.getTargetPath(this.page.content, this.cell.id, true);
 				if (path) {
 					var self = this;
 					var readOnly = null;

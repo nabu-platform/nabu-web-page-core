@@ -3098,7 +3098,7 @@ nabu.services.VueService(Vue.extend({
 			//}
 			return value;	
 		},
-		eval: function(condition, state, instance, customValueFunction) {
+		eval: function(condition, state, instance, customValueFunction, skipFunctionExecution) {
 			if (!condition) {
 				return null;
 			}
@@ -3149,7 +3149,9 @@ nabu.services.VueService(Vue.extend({
 					if (result instanceof Function) {
 						// by default it is bound to "undefined"
 						result = result.bind(this);
-						result = result(state);
+						if (!skipFunctionExecution) {
+							result = result(state);
+						}
 					}
 				}
 				catch (exception) {

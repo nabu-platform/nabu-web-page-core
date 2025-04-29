@@ -1,5 +1,5 @@
 Vue.component("page-form-input-date-configure", {
-	template: "<n-form-section>"
+	template: "<div><h2 class='section-title'>Date field</h2><div class='is-column is-spacing-medium'>"
 		+ "	<n-form-switch v-model='field.yearsDropdown' label='Show years in dropdown'/>"
 		+ "	<n-form-switch v-model='field.includeHours' label='Include hours?'/>"
 		+ "	<n-form-switch v-model='field.includeMinutes' label='Include minutes?' v-if='field.includeHours'/>"
@@ -14,8 +14,11 @@ Vue.component("page-form-input-date-configure", {
 		+ "	<n-form-text v-model='field.after' label='After Content' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.suffix' label='Suffix' v-if='!field.suffixIcon' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.suffixIcon' label='Suffix Icon' v-if='!field.suffix' :timeout='600'/>"
+		+ "	<n-form-ace v-model='field.allowFunction' label='Allow function' :timeout='600'/>"
+		+ "	<n-form-text v-model='field.yearsFrom' label='List years from (e.g. -18)' :timeout='600'/>"
+		+ "	<n-form-text v-model='field.yearsTo' label='List years until (e.g. 18)' :timeout='600'/>"
 		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='field.dateFormat ? [\"allow\", \"default\"] : [\"allow\", \"default\",\"formatter\",\"parser\"]'/>"
-		+ "</n-form-section>",
+		+ "</div></div>",
 	props: {
 		cell: {
 			type: Object,
@@ -66,6 +69,8 @@ Vue.component("page-form-input-date", {
 			+ "		:pattern-comment='$services.page.translate(field.regexLabel)'"
 			+ "		:include-minutes='field.includeHours && field.includeMinutes'"
 			+ "		:include-seconds='field.includeHours && field.includeMinutes && field.includeSeconds'"
+			+ "		:years-from='parseInteger(field.yearsFrom)'"
+			+ "		:years-to='parseInteger(field.yearsTo)'"
 			+ "		:timestamp='field.isTimestamp'"
 			+ "		:seconds-timestamp='field.isSecondsTimestamp'"
 			+ "		:required='required'"
@@ -118,6 +123,15 @@ Vue.component("page-form-input-date", {
 		}
 	},
 	methods: {
+		parseInteger: function(value) {
+			var result = null;
+			if (value != null) {
+				result = this.$services.page.interpret(value);
+			}	
+			if (result != null) {
+				return parseInt(result);
+			}
+		},
 		getDefault: function() {
 			if (this.field.bindings && this.field.bindings.default) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
@@ -125,6 +139,9 @@ Vue.component("page-form-input-date", {
 			}
 		},
 		getAllow: function () {
+			if (this.field.allowFunction) {
+				return this.$services.page.eval(this.field.allowFunction, {}, this, null, true);
+			}
 			if (this.field.bindings && this.field.bindings.allow) {
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				return this.$services.page.getBindingValue(pageInstance, this.field.bindings.allow, this);

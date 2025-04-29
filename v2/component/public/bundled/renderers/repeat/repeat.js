@@ -1525,6 +1525,7 @@ Vue.component("renderer-repeat", {
 					this.fragmentPage = page;
 				}
 				var self = this;
+				// @2025-04-18: not used anymore...?
 				var route = {
 					alias: page.name,
 					enter: function(parameters, mask) {
