@@ -163,6 +163,10 @@ Vue.view("page-image", {
 			if (this.cell.state.href) {
 				href = this.$services.page.interpret(this.cell.state.href, this);
 			}
+			if (href && href.substring(0, 5) == "data:") {
+				this.href = href;
+				return href;
+			}
 			// if the href is not an absolute one (either globally absolute or application absolute), we inject the server root
 			if (href && href.substring(0, 7) != "http://" && href.substring(0, 8) != "https://" && href.substring(0, 1) != "/") {
 				href = application.configuration.root + href;
