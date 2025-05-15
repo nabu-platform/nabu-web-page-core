@@ -39,6 +39,7 @@ Vue.component("page-form-input-checkbox", {
 	template: "<n-form-checkbox ref='form'"
 			+ "		:edit='!readOnly'"
 			+ "		:schema='schema'"
+			+ "		:class=\"getChildComponentClasses('page-form-checkbox')\""
 			+ "		:info-icon='field.infoIcon'"
 			+ "		:info='field.info ? $services.page.interpret($services.page.translate(field.info), $self) : null'"
 			+ "		:required='required'"
@@ -90,9 +91,19 @@ Vue.component("page-form-input-checkbox", {
 		readOnly: {
 			type: Boolean,
 			required: false
+		},
+		childComponents: {
+			required: false
 		}
 	},
 	methods: {
+		getChildComponents: function() {
+			return {
+				title: "Form Checkbox",
+				name: "page-form-checkbox",
+				component: "form-checkbox"
+			};
+		},
 		validate: function(soft) {
 			return this.$refs.form.validate(soft);
 		},
