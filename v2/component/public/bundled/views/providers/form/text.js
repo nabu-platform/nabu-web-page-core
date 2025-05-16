@@ -18,7 +18,7 @@ Vue.component("page-form-input-text-configure", {
 		+ "	<n-form-text v-model='field.suffixIcon' label='Suffix Icon' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.minimum' label='Minimum' v-if=\"field.textType == 'range' || field.textType == 'number'\" :timeout='600'/>"
 		+ "	<n-form-text v-model='field.maximum' label='Maximum' v-if=\"field.textType == 'range' || field.textType == 'number'\" :timeout='600'/>"
-		+ "	<n-form-text v-model='field.step' label='Step' v-if=\"field.textType == 'range'\" :timeout='600'/>"
+		+ "	<n-form-text v-model='field.step' label='Step' v-if=\"field.textType == 'range' || field.textType == 'number'\" :timeout='600'/>"
 		+ "	<n-form-ace v-model='field.formatter' label='Formatter' :timeout='600' after='You can format the value that exists in the page for display (and edit) purposes for the user'/>"
 		+ "	<n-form-ace v-model='field.parser' label='Parser' :timeout='600' after='You can parse the user-inputted value into something else to be stored in the page'/>"
 		+ "	<n-page-mapper v-model='field.bindings' :from='availableParameters' :to='[\"validator\"]'/>"
