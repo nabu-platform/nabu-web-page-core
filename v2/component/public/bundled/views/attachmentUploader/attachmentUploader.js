@@ -146,6 +146,15 @@ Vue.component("n-form-attachment-uploader", {
 			else {
 				return 1;
 			}
+		},
+		allowedFileTypes: function() {
+			if (this.field.fileTypes) {
+				return this.field.fileTypes.filter(function(x) { 
+					return !!x.contentType;
+				}).map(function(x) {
+					return x.contentType;
+				});
+			}
 		}
 	},
 	methods: {
@@ -369,6 +378,9 @@ Vue.component("n-form-attachment-uploader-configure", {
 		}
 		if (!this.field.uploadBindings) {
 			Vue.set(this.field, "uploadBindings", {});
+		}
+		if (!this.field.fileTypes) {
+			Vue.set(this.field, "fileTypes", []);
 		}
 	},
 	computed: {

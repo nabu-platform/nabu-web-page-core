@@ -569,6 +569,7 @@ nabu.services.VueService(Vue.extend({
 		},
 		isCloseable: function(target) {
 			// it is closeable when you have an event-driven opening (old school)
+			// or if you set show toggle!
 			// or when you specifically set that it can be closed
 			// or when it is rendered somewhere else than the page
 			return target.on || target.closeable || (target.target != 'page' && target.target != null);	
@@ -4288,6 +4289,26 @@ nabu.services.VueService(Vue.extend({
 			// when we clone things like blob and files, they break, so we do it slightly smarter
 			var cloned = JSON.parse(JSON.stringify(object));
 			var scanForSpecials = function(original, cloned) {
+				if (original instanceof Blob || original instanceof File) {
+					return original;
+				}
+				else if (original instanceof Date) {
+					return new Date(original.getTime());
+				}
+				else if (original instanceof Array) {
+					original.forEach(function(y, index) {
+						cloned[index] = scanForSpecials(y, cloned[index]);
+					})
+				}
+				else if (self.isObject(original)) {
+					Object.keys(original).forEach(function(x) {	
+						cloned[x] = scanForSpecials(original[x], cloned[x]);	
+					});
+				}
+				return cloned;
+				// this logic assumes you already have an object which is not necessarily the case
+				// sometimes we smart clone whatever data you are binding
+				/*
 				Object.keys(original).forEach(function(x) {
 					if (original[x] instanceof Blob || original[x] instanceof File) {
 						// should be immutable
@@ -4307,9 +4328,10 @@ nabu.services.VueService(Vue.extend({
 						scanForSpecials(original[x], cloned[x]);
 					}
 				});
+				*/
 			};
-			scanForSpecials(object, cloned);
-			return cloned;
+			return scanForSpecials(object, cloned);
+			//return cloned;
 		},
 		explode: function(into, from, path) {
 			var self = this;
@@ -4545,7 +4567,7 @@ nabu.services.VueService(Vue.extend({
 			if (type == null && instance != null) {
 				result = this.getSchemaFromObject(instance);
 			}
-			if (type == null || ['string', 'boolean', 'number', 'integer'].indexOf(type) >= 0) {
+			else if (type == null || ['string', 'boolean', 'number', 'integer'].indexOf(type) >= 0) {
 				result = {type:type == null ? "string" : type};
 			}
 			else {

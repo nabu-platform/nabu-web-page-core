@@ -36,17 +36,26 @@
 			after="We can temporarily store a frontend URL in a reserved document until the actual store is ready"
 			v-model="field.urlField" 
 			:filter="getOutputUrlFieldOptions" />
+
+		<n-form-section v-for='(fileType, index) in field.fileTypes' class="is-column is-color-body is-spacing-medium has-button-close">
+			<n-form-text v-model="fileType.contentType" label="Content Type" placeholder="image/*" :timeout="600"/>
+			<button class="is-button is-variant-close is-size-small" @click="field.fileTypes.splice(index, 1)"><icon name="times"/></button>
+		</n-form-section>
+		<div class="is-row is-align-end">
+			<button class="is-button is-variant-primary-outline is-size-xsmall" @click="field.fileTypes.push({})"><span class="fa fa-plus"></span>Filetype</button>
+		</div>
 			
 		<h4 class="category">Images</h4>
 		<n-form-text label='Max width' v-model='field.maxWidth' :timeout="600"/>
 		<n-form-text label='Max height' v-model='field.maxHeight' :timeout="600"/>
+		
 	</div>
 </template> 
 
 
 <template id="n-form-attachment-uploader">
 	<div class="n-form-attachment-uploader">
-		<n-input-file :types='field.fileTypes' ref='form' :amount='remaining > 1 ? remaining : 1'
+		<n-input-file :types="allowedFileTypes" ref='form' :amount='remaining > 1 ? remaining : 1'
 			v-if="!readOnly && (remaining == null || remaining > 0)"
 			@change='changed'
 			:value='files'

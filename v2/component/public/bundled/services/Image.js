@@ -33,7 +33,7 @@ Vue.service("image", {
 							factor = maxWidth / width;
 						}
 						if (maxHeight != null && height > maxHeight) {
-							factor = Math.max(factor, maxHeight / height);
+							factor = Math.min(factor, maxHeight / height);
 						}
 						width *= factor;
 						height *= factor;

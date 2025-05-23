@@ -542,6 +542,8 @@
 										:value="getHideMode(cell)"
 										@input="function(value) { setHideMode(cell, value) }"/>
 										
+									<n-form-switch v-if="$services.page.isCloseable(cell)" label="Cascade close" v-model="cell.cascadeClose"/>
+										
 									<n-form-combo label="The event that has to occur" v-model="cell.on" :filter="getAvailableEvents" v-if="cell.state.hideMode == 'event'" />
 
 									<n-form-text type="number" v-model="cell.showTimeout" v-if="cell.state.hideMode == 'event'" label="Hide automatically after this amount of ms"/>
@@ -719,6 +721,9 @@
 										:formatter="function(x) { return x.title }"
 										:value="getHideMode(row)"
 										@input="function(value) { setHideMode(row, value) }"/>
+										
+										
+									<n-form-switch v-if="$services.page.isCloseable(row)" label="Cascade close" v-model="row.cascadeClose"/>
 									
 									<n-form-combo label="The event that has to occur" v-model="row.on" :filter="getAvailableEvents" v-if="row.state.hideMode == 'event'"/>
 									

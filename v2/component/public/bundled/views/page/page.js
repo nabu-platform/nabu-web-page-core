@@ -3332,10 +3332,14 @@ nabu.page.views.Page = Vue.component("n-page", {
 					return parameter.name == name.substring("page.".length).split(".")[0];
 				})[0] : null;
 				parts = name.substring("page.".length).split(".");
+				// @2025-05-20 you can expose a variable as internal AND query parameter
+				// so we might also want to update the url when updating an internal page parameter
+				var isPublicParameter = this.$services.page.isPublicPageParameter(this.page, name.substring("page.".length));
 				if (pageParameter) {
 					target = this.variables;
+					updateUrl = isPublicParameter && !this.masked;
 				}
-				else if (this.$services.page.isPublicPageParameter(this.page, name.substring("page.".length))) {
+				else if (isPublicParameter) {
 					// check if it is explicitly a query or path parameter, if not, we still put it in the variables!!
 					// otherwise we might accidently update the parameters object which is passed along to all children
 					target = this.parameters;
@@ -4354,14 +4358,26 @@ Vue.component("n-page-row", {
 			if (cell && this.$services.page.isCloseable(cell)) {
 				closed = true;
 				Vue.set(pageInstance.closed, cell.id, cell.on ? cell.on : "$any");
+				// if we want to cascade, don't mark the closed as done
+				if (cell.cascadeClose) {
+					closed = false;
+				}
 			}
 			if (row && this.$services.page.isCloseable(row)) {
 				closed = true;
 				Vue.set(pageInstance.closed, row.id, row.on ? row.on : "$any");
+				// if we want to cascade, don't mark the closed as done
+				if (row.cascadeClose) {
+					closed = false;
+				}
 			}
 			if (childRow && this.$services.page.isCloseable(childRow)) {
 				closed = true;
 				Vue.set(pageInstance.closed, childRow.id, childRow.on ? childRow.on : "$any");
+				// if we want to cascade, don't mark the closed as done
+				if (childRow.cascadeClose) {
+					closed = false;
+				}
 			}
 			if (!closed) {
 				this.$parent.$emit("close");
