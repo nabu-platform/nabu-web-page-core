@@ -974,6 +974,14 @@ Vue.component("renderer-repeat", {
 			if (action == "jump-page") {
 				return this.loadData(value.page);
 			}
+			else if (action == "previous-page") {
+				if (this.state.paging.current) {
+					this.loadData(this.state.paging.current - 1);
+				}
+			}
+			else if (action == "next-page") {
+				this.loadData(this.state.paging.current + 1);
+			}
 			else if (action == "refresh") {
 				var retainOffset = value && value.retainOffset;
 				return this.loadData(retainOffset ? this.state.paging.current : 0);
