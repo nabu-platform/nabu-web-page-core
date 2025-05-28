@@ -55,6 +55,27 @@ nabu.page.provide("page-renderer", {
 					}
 				});
 			}
+			if (container.form.translatable) {
+				result.properties.language = {
+					type: "string"
+				};
+				result.properties.translations = {
+					type: "array",
+					items: {
+						properties: {
+							language: {
+								type: "string"
+							},
+							name: {
+								type: "string"
+							},
+							translation: {
+								type: "string"
+							}
+						}
+					}
+				}
+			}
 			return result;
 		}
 		else {
@@ -122,6 +143,17 @@ nabu.page.provide("page-renderer", {
 			title: "Toggle Readonly",
 			name: "toggle-readonly"
 		});
+		if (container && container.form && container.form.translatable) {
+			actions.push({
+				title: "Switch Language",
+				name: "switch-language",
+				input: {
+					language: {
+						type: "string"
+					}
+				}
+			});	
+		}
 		return actions;
 	}
 });
@@ -158,6 +190,10 @@ Vue.component("renderer-form", {
 		var self = this;
 		// initialize the read only
 		Vue.set(this.state, "readOnly", this.target.form && this.target.form.readOnly);
+		if (this.target.form && this.target.form.translatable) {
+			Vue.set(this.state, "language", null);
+			Vue.set(this.state, "translations", []);
+		}
 		this.mergeParameters();
 		if (this.target.form && this.target.form.noInlineErrors) {
 			this.mode = null;
@@ -485,6 +521,23 @@ Vue.component("renderer-form", {
 					}
 				});
 				this.state.readOnly = !this.state.readOnly;
+			}
+			else if (name == "switch-language") {
+				// you can set a custom component group to only validate those particular elements?
+				var componentGroup = this.target.form.componentGroup ? this.target.form.componentGroup : "form";
+				this.state.language = input ? input.language : null;
+				this.$el.querySelectorAll("[component-group='" + componentGroup + "']").forEach(function(x) {
+					var component = x.__vue__;
+					while (component) {
+						if (Object.keys(component).indexOf("language") >= 0) {
+							component.language = self.state.language;
+							break;
+						}
+						else {
+							component = component.$parent;
+						}
+					}
+				});
 			}
 		}
 	},

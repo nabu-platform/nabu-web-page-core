@@ -9,39 +9,42 @@
     "use strict";
     var $placeholder = Symbol();
     var $fakeParent = Symbol();
-    var nextSiblingPatched = Symbol();
-    var childNodesPatched = Symbol();
+    var $nextSiblingPatched = Symbol();
+    var $childNodesPatched = Symbol();
     var isFrag = function isFrag(node) {
         return "frag" in node;
     };
-    function patchParentNode(node, fakeParent) {
+    var parentNodeDescriptor = {
+        get: function get() {
+            return this[$fakeParent] || this.parentElement;
+        },
+        configurable: true
+    };
+    var patchParentNode = function patchParentNode(node, fakeParent) {
         if ($fakeParent in node) {
             return;
         }
         node[$fakeParent] = fakeParent;
-        Object.defineProperty(node, "parentNode", {
-            get: function get() {
-                return this[$fakeParent] || this.parentElement;
+        Object.defineProperty(node, "parentNode", parentNodeDescriptor);
+    };
+    var nextSiblingDescriptor = {
+        get: function get() {
+            var childNodes = this.parentNode.childNodes;
+            var index = childNodes.indexOf(this);
+            if (index > -1) {
+                return childNodes[index + 1] || null;
             }
-        });
-    }
-    function patchNextSibling(node) {
-        if (nextSiblingPatched in node) {
+            return null;
+        }
+    };
+    var patchNextSibling = function patchNextSibling(node) {
+        if ($nextSiblingPatched in node) {
             return;
         }
-        node[nextSiblingPatched] = true;
-        Object.defineProperty(node, "nextSibling", {
-            get: function get() {
-                var childNodes = this.parentNode.childNodes;
-                var index = childNodes.indexOf(this);
-                if (index > -1) {
-                    return childNodes[index + 1] || null;
-                }
-                return null;
-            }
-        });
-    }
-    function getTopFragment(node, fromParent) {
+        node[$nextSiblingPatched] = true;
+        Object.defineProperty(node, "nextSibling", nextSiblingDescriptor);
+    };
+    var getTopFragment = function getTopFragment(node, fromParent) {
         while (node.parentNode !== fromParent) {
             var _node = node, parentNode = _node.parentNode;
             if (parentNode) {
@@ -49,12 +52,12 @@
             }
         }
         return node;
-    }
+    };
     var getChildNodes;
-    function getChildNodesWithFragments(node) {
+    var getChildNodesWithFragments = function getChildNodesWithFragments(node) {
         if (!getChildNodes) {
-            var childNodesDescriptor = Object.getOwnPropertyDescriptor(Node.prototype, "childNodes");
-            getChildNodes = childNodesDescriptor.get;
+            var _childNodesDescriptor = Object.getOwnPropertyDescriptor(Node.prototype, "childNodes");
+            getChildNodes = _childNodesDescriptor.get;
         }
         var realChildNodes = getChildNodes.apply(node);
         var childNodes = Array.from(realChildNodes).map((function(childNode) {
@@ -63,28 +66,31 @@
         return childNodes.filter((function(childNode, index) {
             return childNode !== childNodes[index - 1];
         }));
+    };
+    var childNodesDescriptor = {
+        get: function get() {
+            return this.frag || getChildNodesWithFragments(this);
+        }
+    };
+    var firstChildDescriptor = {
+        get: function get() {
+            return this.childNodes[0] || null;
+        }
+    };
+    function hasChildNodes() {
+        return this.childNodes.length > 0;
     }
-    function patchChildNodes(node) {
-        if (childNodesPatched in node) {
+    var patchChildNodes = function patchChildNodes(node) {
+        if ($childNodesPatched in node) {
             return;
         }
-        node[childNodesPatched] = true;
+        node[$childNodesPatched] = true;
         Object.defineProperties(node, {
-            childNodes: {
-                get: function get() {
-                    return this.frag || getChildNodesWithFragments(this);
-                }
-            },
-            firstChild: {
-                get: function get() {
-                    return this.childNodes[0] || null;
-                }
-            }
+            childNodes: childNodesDescriptor,
+            firstChild: firstChildDescriptor
         });
-        node.hasChildNodes = function() {
-            return this.childNodes.length > 0;
-        };
-    }
+        node.hasChildNodes = hasChildNodes;
+    };
     function before() {
         var _this$frag$;
         (_this$frag$ = this.frag[0]).before.apply(_this$frag$, arguments);
@@ -102,12 +108,12 @@
             return isFrag(childNode) ? getFragmentLeafNodes(childNode.frag) : childNode;
         })));
     };
-    function addPlaceholder(node, insertBeforeNode) {
+    var addPlaceholder = function addPlaceholder(node, insertBeforeNode) {
         var placeholder = node[$placeholder];
         insertBeforeNode.before(placeholder);
         patchParentNode(placeholder, node);
         node.frag.unshift(placeholder);
-    }
+    };
     function removeChild(node) {
         if (isFrag(this)) {
             var hasChildInFragment = this.frag.indexOf(node);
@@ -131,6 +137,9 @@
         var _this = this;
         var insertNodes = insertNode.frag || [ insertNode ];
         if (isFrag(this)) {
+            if (insertNode[$fakeParent] === this && insertNode.parentElement) {
+                return insertNode;
+            }
             var _frag = this.frag;
             if (insertBeforeNode) {
                 var index = _frag.indexOf(insertBeforeNode);
@@ -159,6 +168,9 @@
         return insertNode;
     }
     function appendChild(node) {
+        if (node[$fakeParent] === this && node.parentElement) {
+            return node;
+        }
         var frag = this.frag;
         var lastChild = frag[frag.length - 1];
         lastChild.after(node);
@@ -167,13 +179,33 @@
         frag.push(node);
         return node;
     }
-    function removePlaceholder(node) {
+    var removePlaceholder = function removePlaceholder(node) {
         var placeholder = node[$placeholder];
         if (node.frag[0] === placeholder) {
             node.frag.shift();
             placeholder.remove();
         }
-    }
+    };
+    var innerHTMLDescriptor = {
+        set: function set(htmlString) {
+            var _this2 = this;
+            if (this.frag[0] !== this[$placeholder]) {
+                this.frag.slice().forEach((function(child) {
+                    return _this2.removeChild(child);
+                }));
+            }
+            if (htmlString) {
+                var domify = document.createElement("div");
+                domify.innerHTML = htmlString;
+                Array.from(domify.childNodes).forEach((function(node) {
+                    _this2.appendChild(node);
+                }));
+            }
+        },
+        get: function get() {
+            return "";
+        }
+    };
     var frag = {
         inserted: function inserted(element) {
             var parentNode = element.parentNode, nextSibling = element.nextSibling, previousSibling = element.previousSibling;
@@ -199,21 +231,7 @@
                 removeChild: removeChild,
                 before: before
             });
-            Object.defineProperty(element, "innerHTML", {
-                set: function set(htmlString) {
-                    var _this2 = this;
-                    var domify = document.createElement("div");
-                    domify.innerHTML = htmlString;
-                    var oldNodesIndex = this.frag.length;
-                    Array.from(domify.childNodes).forEach((function(node) {
-                        _this2.appendChild(node);
-                    }));
-                    domify.append.apply(domify, this.frag.splice(0, oldNodesIndex));
-                },
-                get: function get() {
-                    return "";
-                }
-            });
+            Object.defineProperty(element, "innerHTML", innerHTMLDescriptor);
             if (parentNode) {
                 Object.assign(parentNode, {
                     removeChild: removeChild,
@@ -249,6 +267,7 @@
     frag.Fragment = Fragment;
     return frag;
 }));
+
 
 
 Vue.directive('fragment', Frag);

@@ -53,6 +53,10 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				return instance ? instance.variables : null;
 			},
 			disabled: function() {
+				// if you have switched to a particular language but this field is not translatable, disable it
+				if (this.language != null && !this.cell.state.translatable) {
+					return true;
+				}
 				if (this.running) {
 					return true;
 				}
@@ -136,6 +140,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			}
 			// initialize
 			this.editable = !this.readOnly;
+			this.calculateInitialLanguage();
 		},
 		// for some reason enumeration (and all derivatives of enumeration) did not get destroyed correctly
 		// if you remove the alias for example for form-text, the destroy is called correctly at all levels
@@ -153,10 +158,33 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			return {
 				running: false,
 				editable: true,
-				computed: false
+				computed: false,
+				language: null,
+				// the language array path
+				translationArrayPath: null
 			}
 		},
 		methods: {
+			calculateInitialLanguage: function() {
+				var path = this.pageInstance && this.pageInstance.fragmentParent
+					? this.$services.page.getTargetPath(this.pageInstance.fragmentParent.page.content, this.cell.id, true)
+					: this.$services.page.getTargetPath(this.page.content, this.cell.id, true);
+				if (path) {
+					var self = this;
+					var language = null;
+					path.forEach(function(element) {
+						if (element.renderer == "form" && element.form) {
+							if (element.runtimeAlias && self.pageInstance) {
+								language = self.pageInstance.get("page." + element.runtimeAlias + ".language");
+								self.translationArrayPath = "page." + element.runtimeAlias + ".translations";
+							}
+						}
+					});
+					if (language != null) {
+						this.language = language;
+					}
+				}
+			},
 			getPrettyName: function(target) {
 				if (target.state) {
 					var potential = target.state.label ? target.state.label : target.state.placeholder;
@@ -306,10 +334,39 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			update: function(value, label, rawValue) {
 				if (this.cell.state.name) {
 					var pageInstance = this.getPageInstance();
-					var changed = value !== pageInstance.get("page." + this.cell.state.name);
-					pageInstance.set("page." + this.cell.state.name, value, label);
-					if (this.cell.state.rawName) {
-						pageInstance.set("page." + this.cell.state.rawName, rawValue != null ? rawValue : value, label);
+					var changed = false;
+					// if we have a language toggled, we need different behavior
+					if (this.language != null) {
+						// only do something if we are translatable
+						if (this.cell.state.translatable && this.translationArrayPath) {
+							var self = this;
+							var array = pageInstance.get(self.translationArrayPath);
+							if (array == null) {
+								array = [];
+								pageInstance.set(self.translationArrayPath, array);
+							}
+							var name = this.cell.state.name.replace(/.*?\.([^.]+)$/, "$1");
+							var current = array.filter(function(x) {
+								return x.name == name && x.language == self.language;
+							})[0];
+							if (current == null) {
+								current = {
+									name: name,
+									language: self.language,
+									translation: null
+								}
+								array.push(current);
+							}
+							changed = current.translation != value;
+							current.translation = value;
+						}
+					}
+					else {
+						changed = value !== pageInstance.get("page." + this.cell.state.name);
+						pageInstance.set("page." + this.cell.state.name, value, label);
+						if (this.cell.state.rawName) {
+							pageInstance.set("page." + this.cell.state.rawName, rawValue != null ? rawValue : value, label);
+						}
 					}
 					// we only want to trigger updates if it actually changed
 					// we've had cases where combo elements embedded in a repeat triggered the update of the repeat because the combo does an initial emit for labels etc

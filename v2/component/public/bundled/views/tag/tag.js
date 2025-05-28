@@ -182,5 +182,18 @@ Vue.component("page-tag-configure", {
 			type: Boolean,
 			required: true
 		}
+	},
+	methods: {
+		getAllKeys: function(value) {
+			var keys = [];
+			nabu.utils.arrays.merge(keys, this.$services.page.getAllAvailableKeys(this.page, true));
+			if (value) {
+				keys = keys.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				});
+			}
+			keys.sort();
+			return keys;
+		}
 	}
 });

@@ -57,6 +57,7 @@
 <template id="page-image">
 	<img :src="calculatedUrl ? calculatedUrl : emptyImage"
 		class="is-image"
+		:draggable="false"
 		:class="getChildComponentClasses('image')"
 		:title="title"/>
 </template>

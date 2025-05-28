@@ -59,6 +59,8 @@
 		<n-form-switch v-model="target.form.bindingByReference" label="Perform input parameter binding by reference"/>
 		<n-form-switch v-model="target.form.submitOnChange" label="Submit on change"/>
 		<n-form-switch v-model="target.form.enableParameterWatching" label="Watch bound values for change"/>
+
+		<n-form-switch v-model="target.form.translatable" label="Translatable" after="Add a language switching capability to the form, mostly to manage translations of operational data" />
 		
 		<div v-if="target.form.formType">
 			<n-form-switch v-model="target.form.noInlineErrors" label="Disable inline error message" after="By default, validation errors will be shown inline."/>

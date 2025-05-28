@@ -57,6 +57,7 @@
 				<n-form-switch v-model="cell.state.readOnly" label="Render as read only" v-if="cell.state.readOnly"/>
 				<n-form-ace v-model="cell.state.readOnlyCondition" label="Read only if" v-else/>
 				<n-form-switch v-if="cell.triggers && cell.triggers.length" v-model="cell.state.lockDuringTrigger" label="Lock during trigger"/>
+				<n-form-switch v-model="cell.state.translatable" label="Translatable"/>
 			</div>
 			
 		</template>

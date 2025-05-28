@@ -10,7 +10,7 @@
 				@keyup="update" @blur="update" @input="update"
 				:contenteditable="true"
 				placeholder="Tag label"></span>
-			<span class="is-text-value" v-content.sanitize="getValue()"></span>
+			<page-formatted :value="getValue()" :fragment="cell.state" :cell="cell" :page="page"/>
 		</span>
 	</div>
 </template>
@@ -22,6 +22,10 @@
 			<n-form-combo v-model="cell.state.field" :filter="$services.page.getAllAvailableKeys.bind($self, page, false)" label="Field value to show" v-if="!cell.state.useComputed"/>
 			<n-form-ace v-model="cell.state.computed" label="Initial value for computed" v-else/>
 			<n-form-text v-model="cell.state.icon" label="Icon" placeholder="times"/>
+			<page-formatted-configure :page="page" :cell="cell" 
+				:fragment="cell.state" 
+				:allow-html="true"
+				:keys="getAllKeys()"/>
 		</div>
 		<page-triggerable-configure :page="page" :target="cell.state" :triggers="{'remove': {}}" :allow-closing="true"/>
 	</div>
