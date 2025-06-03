@@ -14,7 +14,7 @@
 		:disabled="disabled || !editable"
 		:schema="getSchema()"
 		:required="isRequired()"
-		:placeholder="editable ? $services.page.interpret($services.page.translate(cell.state.placeholder), $self) : $services.page.interpret($services.page.translate(cell.state.defaultValue), $self)"
+		:placeholder="placeholder"
 		:child-components="childComponents"
 		@input="update"/>
 </template>

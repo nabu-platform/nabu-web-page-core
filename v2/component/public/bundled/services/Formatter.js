@@ -106,7 +106,7 @@ nabu.services.VueService(Vue.extend({
 					return date.toLocaleTimeString();
 				}
 				else if (format.indexOf("locale-time-") == 0) {
-					format = format.substring"locale-time-".length);
+					format = format.substring("locale-time-".length);
 					var parameters = {};
 					var amountOfHours = format.length - format.replace(/h/g, "").length;
 					if (amountOfHours == 1) {

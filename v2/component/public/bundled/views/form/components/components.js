@@ -44,8 +44,40 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				var instance = this.pageInstance;
 				return this.cell.state.useComputed && this.cell.state.computed ? this.$services.page.eval(this.cell.state.computed, {}, this) : null;
 			},
+			placeholder: function() {
+				if (this.editable) {
+					// if we are translating, show the "raw" untranslated value as placeholder
+					if (this.language && this.cell.state.translatable && this.translationArrayPath) {
+						var instance = this.pageInstance;
+						var original = instance && this.cell.state.name ? instance.get('page.' + this.cell.state.name) : null;
+						if (original != null) {
+							return original;
+						}
+					}
+					return this.$services.page.interpret(this.$services.page.translate(this.cell.state.placeholder), this)	;
+				}
+				else {
+					return this.$services.page.interpret(this.$services.page.translate(this.cell.state.defaultValue), this);
+				}
+			},
 			value: function() {
 				var instance = this.pageInstance;
+				// if we have a language AND we are translatable, look up the translated value
+				if (this.language && this.cell.state.translatable && this.translationArrayPath) {
+					var self = this;
+					var array = instance.get(self.translationArrayPath);
+					if (array != null) {
+						var name = this.cell.state.name.replace(/.*?\.([^.]+)$/, "$1");
+						var current = array.filter(function(x) {
+							return x.name == name && x.language == self.language;
+						})[0];
+						// if you have set a specific translation, use that
+						if (current) {
+							return current.translation;
+						}
+					}
+					return null;
+				}
 				return instance && this.cell.state.name ? instance.get('page.' + this.cell.state.name) : null;
 			},
 			parentValue: function() {
@@ -350,12 +382,15 @@ nabu.page.views.FormComponentGenerator = function(name) {
 								return x.name == name && x.language == self.language;
 							})[0];
 							if (current == null) {
-								current = {
-									name: name,
-									language: self.language,
-									translation: null
+								// only add if we actually have a translation
+								if (value != null) {
+									current = {
+										name: name,
+										language: self.language,
+										translation: null
+									}
+									array.push(current);
 								}
-								array.push(current);
 							}
 							changed = current.translation != value;
 							current.translation = value;
