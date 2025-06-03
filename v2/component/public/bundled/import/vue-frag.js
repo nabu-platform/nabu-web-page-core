@@ -1,6 +1,6 @@
 
 // source located at: https://github.com/privatenumber/vue-frag
-// compiled located at: https://unpkg.com/vue-frag@1.4.1/dist/frag.js
+// compiled located at: https://unpkg.com/vue-frag@1.4.3/dist/frag.js
 // compiled is missing explicit directive and component declartions (added at bottom here)
 (function(global, factory) {
     typeof exports === "object" && typeof module !== "undefined" ? module.exports = factory() : typeof define === "function" && define.amd ? define(factory) : (global = typeof globalThis !== "undefined" ? globalThis : global || self, 
@@ -136,10 +136,26 @@
     function insertBefore(insertNode, insertBeforeNode) {
         var _this = this;
         var insertNodes = insertNode.frag || [ insertNode ];
+        
+        // CUSTOM PATCH: by default "adding" children to something that is already rendered will result in randomized order
+        // this prevents the randomized ordering:
+		var isAlreadyInserted = insertNodes.every(function(n) {
+			return n[$fakeParent] === _this;
+		});
+		if (isAlreadyInserted) {
+			insertNodes.forEach(function(node) {
+				if (node !== insertBeforeNode) {
+					_this.removeChild(node);
+				}
+			});
+		}
+		// end custom patch
+        
         if (isFrag(this)) {
-            if (insertNode[$fakeParent] === this && insertNode.parentElement) {
-                return insertNode;
-            }
+        	// DISABLED FOR CUSTOM PATCH
+            //if (insertNode[$fakeParent] === this && insertNode.parentElement) {
+            //    return insertNode;
+            //}
             var _frag = this.frag;
             if (insertBeforeNode) {
                 var index = _frag.indexOf(insertBeforeNode);

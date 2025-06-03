@@ -99,6 +99,42 @@ nabu.services.VueService(Vue.extend({
 				else if (format == "dateTime") {
 					format = "yyyy-MM-ddTHH:mm:ss.SSS";
 				}
+				else if (format == "locale-date" && date.toLocaleDateString) {
+					return date.toLocaleDateString();
+				}
+				else if (format == "locale-time" && date.toLocaleTimeString) {
+					return date.toLocaleTimeString();
+				}
+				else if (format.indexOf("locale-time-") == 0) {
+					format = format.substring"locale-time-".length);
+					var parameters = {};
+					var amountOfHours = format.length - format.replace(/h/g, "").length;
+					if (amountOfHours == 1) {
+						parameters.hour = "numeric";
+					}
+					else if (amountOfHours >= 2) {
+						parameters.hour = amountOfHours + "-digit";
+					}
+					var amountOfMinutes = format.length - format.replace(/m/g, "").length;
+					if (amountOfMinutes == 1) {
+						parameters.minute = "numeric";
+					}
+					else if (amountOfMinutes >= 2) {
+						parameters.minute = amountOfMinutes + "-digit";
+					}
+					var amountOfSeconds = format.length - format.replace(/s/g, "").length;
+					if (amountOfSeconds == 1) {
+						parameters.second = "numeric";
+					}
+					else if (amountOfSeconds >= 2) {
+						parameters.second = amountOfSeconds + "-digit";
+					}
+					return new Date().toLocaleTimeString([], parameters);
+				}
+				else if (format == "locale" && date.toLocaleString) {
+					return date.toLocaleString();
+				}
+				
 				format = format.replace(/yyyy/g, date.getFullYear());
 				format = format.replace(/yy/g, ("" + date.getFullYear()).substring(2, 4));
 				format = format.replace(/dd/g, (date.getDate() < 10 ? "0" : "") + date.getDate());
