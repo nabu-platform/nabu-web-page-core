@@ -4123,7 +4123,7 @@ Vue.component("n-page-row", {
 				var result = this.getPageType(row);
 				var pageType = result ? result.pageType : null;
 				if (!pageType || pageType == "page") {
-					return "div";	
+					return this.isLinkContainer(row) ? "a" : "div";
 				}
 				var self = this;
 				var provider = nabu.page.providers("page-type").filter(function(x) {
@@ -4150,6 +4150,22 @@ Vue.component("n-page-row", {
 		getPageType: function(target) {
 			return this.$services.page.getPageType(this.page, target);
 		},
+		targetHref: function(target) {
+			if (this.isLinkContainer(target)) {
+				return this.$services.triggerable.calculateUrl(target.triggers[0].actions[0], this, {});
+			}
+		},
+		// a link container is a cell or row that should not be rendered as a div
+		isLinkContainer: function(target) {
+			// should not have content routed in it
+			if (target.renderer == null && target.alias == null) {
+				if (target.triggers && target.triggers.length == 1 && target.triggers[0].actions.length == 1 && 
+						target.triggers[0].actions[0].type == "route") {
+					return true;
+				}
+			}
+			return false;
+		},
 		cellTagFor: function(row, cell) {
 			var renderer = cell.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == cell.renderer })[0];
 			// once we have a cell.alias, we can not use a renderer!
@@ -4162,7 +4178,7 @@ Vue.component("n-page-row", {
 				var result = this.getPageType(cell);
 				var pageType = result ? result.pageType : null;
 				if (!pageType || pageType == "page") {
-					return "div";	
+					return this.isLinkContainer(cell) ? "a" : "div";
 				}
 				var self = this;
 				var provider = nabu.page.providers("page-type").filter(function(x) {

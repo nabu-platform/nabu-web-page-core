@@ -165,7 +165,7 @@ Vue.component("page-form-input-text", {
 			}	
 			var self = this;
 			return function(value) {
-				return self.$services.page.eval(self.field.formatter, {value: value}, self);
+				return self.$services.page.eval(self.field.formatter, value, self);
 			};
 		},
 		getParser: function() {
@@ -174,7 +174,7 @@ Vue.component("page-form-input-text", {
 			}	
 			var self = this;
 			return function(value) {
-				return self.$services.page.eval(self.field.parser, {value: value}, self);
+				return self.$services.page.eval(self.field.parser, value, self);
 			};
 		},
 		validate: function(soft) {
