@@ -769,10 +769,19 @@ Vue.component("renderer-repeat", {
 					}
 				})
 			}
+			// @2025-06-06: this can concatenate into "undefined-child" if the parent has no explicit page type
+			// it is unclear exactly why we want a unique page type for each child? styling perhaps?
+			// anyway, disabled the original code and made it smarter
+			//if (pageType == null) {
+			//	pageType = this.page.content.pageType + "-child";
+			//}
 			// we take the parent page type and add "-child" to it
 			// if you keep nesting, we keep adding -child
-			if (pageType == null) {
+			if (pageType == null && this.page.content.pageType) {
 				pageType = this.page.content.pageType + "-child";
+			}
+			else {
+				pageType = "page";
 			}
 			return {
 				pageType: pageType,
