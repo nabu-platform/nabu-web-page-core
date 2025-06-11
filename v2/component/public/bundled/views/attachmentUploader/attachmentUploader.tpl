@@ -60,6 +60,7 @@
 			@change='changed'
 			:value='files'
 			:name='field.name'
+			:disabled="disabled"
 			:capture="field.capture"
 			:dropLabel='field.dropLabel ? $services.page.translate(field.dropLabel) : null'
 			:browseLabel='field.browseLabel ? $services.page.translate(field.browseLabel) : null'

@@ -196,6 +196,7 @@
 							v-model="action.bindings"/>
 						<n-form-switch v-model="action.allowUntrigger" label="Reverse when trigger ends"
 							after="Triggers are limited in time, for example a hover effect might stop, a selection might be undone or the button that triggered a click might be removed alltogether. Enable this if you want the reverse action to take place at that point."/>
+						<n-form-ace v-model="action.defaultValue" label="Default value"/>
 					</div>
 					
 					<div v-else-if="action.type == 'function'" class="is-column is-spacing-gap-medium">

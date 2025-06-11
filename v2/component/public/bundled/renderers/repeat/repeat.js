@@ -755,7 +755,7 @@ Vue.component("renderer-repeat", {
 			var path = this.$services.page.getTargetPath(this.getRootPage().page.content, this.target.id);
 			path.reverse();
 			if (this.parameters.pageType) {
-				this.pageType = this.parameters.pageType;
+				pageType = this.parameters.pageType;
 			}
 			else {
 				// we check if there is a renderer in the path to this repeat
@@ -770,7 +770,7 @@ Vue.component("renderer-repeat", {
 				})
 			}
 			// @2025-06-06: this can concatenate into "undefined-child" if the parent has no explicit page type
-			// it is unclear exactly why we want a unique page type for each child? styling perhaps?
+			// it is unclear exactly why we want a unique page type for each child? styling perhaps? yes, table renderer uses this!
 			// anyway, disabled the original code and made it smarter
 			//if (pageType == null) {
 			//	pageType = this.page.content.pageType + "-child";
@@ -780,9 +780,10 @@ Vue.component("renderer-repeat", {
 			if (pageType == null && this.page.content.pageType) {
 				pageType = this.page.content.pageType + "-child";
 			}
-			else {
-				pageType = "page";
-			}
+			// this breaks EVERYTHING with regards to tables etc
+			//else {
+			//	pageType = "page";
+			//}
 			return {
 				pageType: pageType,
 				path: path
@@ -989,7 +990,9 @@ Vue.component("renderer-repeat", {
 				}
 			}
 			else if (action == "next-page") {
-				this.loadData(this.state.paging.current + 1);
+				if (this.state.paging.current < this.state.paging.total - 1) {
+					return this.loadData(this.state.paging.current + 1);
+				}
 			}
 			else if (action == "refresh") {
 				var retainOffset = value && value.retainOffset;

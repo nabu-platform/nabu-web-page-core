@@ -233,6 +233,16 @@ Vue.component("renderer-form", {
 		mergeParameters: function() {
 			var self = this;
 			if (this.parameters) {
+				// we want to make sure something actually changed, otherwise we might reset pending changes!
+				if (this.target.form.enableParameterWatching) {
+					var stringified = JSON.stringify(this.parameters);
+					if (this.lastParameters != null) {
+						if (stringified == this.lastParameters) {
+							return;
+						}
+					}
+					this.lastParameters = stringified;
+				}
 				Object.keys(this.parameters).forEach(function(key) {
 					if (!self.target.form.bindingByReference) {
 						Vue.set(self.state, key, self.$services.page.smartClone(self.parameters[key]));

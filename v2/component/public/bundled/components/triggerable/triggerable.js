@@ -636,6 +636,9 @@ Vue.service("triggerable", {
 										if (!resolved) {
 											value = self.$services.page.getBindingValue(pageInstance, action.bindings[key], instance, customValueFunction);
 										}
+										if (value == null && action.defaultValue) {
+											value = self.$services.page.eval(action.defaultValue, {}, self);
+										}
 										// if we have an untrigger ability, store the current value
 										if (action.allowUntrigger) {
 											// some events (like hover) are executed continuously, we only want to keep the previous value if it was inactive before
