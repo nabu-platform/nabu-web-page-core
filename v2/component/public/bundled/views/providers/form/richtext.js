@@ -18,7 +18,10 @@ Vue.component("page-form-input-richtext-configure", {
 });
 
 Vue.component("page-form-input-richtext", {
-	template: "<n-form-richtext :disabled='disabled' :support-link-type='field.supportLinkType' :label='label' :timeout='timeout' :edit='!readOnly' ref='form' :value='value' @input=\"function(value) { $emit('input', value) }\" :schema='schema' :clean-style='field.cleanStyle' :placeholder='cell.state.placeholder'/>",
+	template: "<n-form-richtext :disabled='disabled' :support-link-type='field.supportLinkType' :label='label' :timeout='timeout' :edit='!readOnly' ref='form' :value='value' @input=\"function(value) { $emit('input', value) }\" :schema='schema' :clean-style='field.cleanStyle' :placeholder='cell.state.placeholder'"
+			+ "		:before='field.before ? $services.page.interpret($services.page.translate(field.before), $self) : null'"
+			+ "		:after='field.after ? $services.page.interpret($services.page.translate(field.after), $self) : null'"
+			+ "		:translator='$services.page.translate'/>",
 	props: {
 		cell: {
 			type: Object,
