@@ -867,6 +867,7 @@
 			:anchor="row.customId && !row.renderer ? row.customId : null"
 			class="page-row"
 			v-auto-close="$services.page.isCloseable(row) && row.autocloseable ? function() { autocloseCell(row) } : null"
+			draggable="false"
 			>
 		<div class="is-row-menu is-layout is-align-main-center is-align-cross-bottom is-spacing-vertical-xsmall" v-if="edit && false" @mouseenter="menuHover" @mouseleave="menuUnhover">
 			<button class="is-button is-variant-primary is-size-xsmall has-tooltip is-wrap-none" v-if="!row.collapsed" @click="goto($event, row)"><icon name="cog"/><span class="is-text">{{row.renderer ? row.renderer : 'Row'}}</span></button>
@@ -915,6 +916,7 @@
 						:anchor="cell.customId ? cell.customId : null"
 						:slot="cell.rendererSlot"
 						class="page-column"
+						draggable="false"
 						>
 					
 					<div class="is-column-content" v-if="cell.alias && (cell.renderer || cell.rows.length)" :key="'page_' + pageInstanceId + '_edit_' + cell.id" v-route-render.embedded="{ alias: cell.alias, parameters: getParameters(row, cell), mounted: getMountedFor(cell, row), rerender: function() { var rerender = cell.aris && cell.aris.rerender; if (cell.aris) cell.aris.rerender = false; return rerender; }, created: getCreatedComponent(row, cell) }"></div>
