@@ -262,6 +262,9 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				return {
 					"update": {
 						
+					},
+					"blur": {
+						
 					}
 				}	
 			},
@@ -465,6 +468,7 @@ nabu.page.views.FormComponentGenerator = function(name) {
 				if (this.cell.state.validateOnBlur) {
 					this.validate();
 				}
+				this.$services.triggerable.trigger({triggers:this.cell.triggers}, "blur", {}, this);
 			}
 		}
 	})
