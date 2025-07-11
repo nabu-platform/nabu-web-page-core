@@ -4166,6 +4166,14 @@ Vue.component("n-page-row", {
 			}
 			return false;
 		},
+		// we want explicitly "false" if we are rendering it as a clickable target
+		// otherwise you end up dragging the card (or whatever it is) when you swipe on the phone to scroll
+		// in the future we might add other draggable logic, but for now in all other cases we don't want a draggable attribute at all
+		isDraggable: function(target) {
+			if (this.isLinkContainer(target)) {
+				return false;
+			}	
+		},
 		cellTagFor: function(row, cell) {
 			var renderer = cell.renderer == null ? null : nabu.page.providers("page-renderer").filter(function(x) { return x.name == cell.renderer })[0];
 			// once we have a cell.alias, we can not use a renderer!

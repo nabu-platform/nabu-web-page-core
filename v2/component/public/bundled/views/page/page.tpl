@@ -833,6 +833,7 @@
 
 <template id="page-row">
 	<component :is="rowTagFor(row)" :id="row.customId && !row.renderer ? row.customId : page.name + '_' + row.id" 
+			:draggable="isDraggable(row)"
 			@update="updateEvent"
 			:class="$window.nabu.utils.arrays.merge(['page-row-' + row.cells.length, row.class ? row.class : null, {'collapsed': row.collapsed}, {'empty': edit && (!row.cells || !row.cells.length) } ], rowClasses(row))"  
 			:key="'page_' + pageInstanceId + '_row_' + row.id"
@@ -877,6 +878,7 @@
 		<template v-for="cell in row.cells">
 			<template v-if="edit">
 				<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+						:draggable="isDraggable(cell)"
 						v-if="cell.target != 'absolute' || !cell.targetInEdit"
 						@update="updateEvent"
 						v-show="!edit || !row.collapsed"
@@ -960,6 +962,7 @@
 				
 				<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(row, cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right" :snap-point="cell.snapPoint">          
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							:draggable="isDraggable(cell)"
 							@update="updateEvent"
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
@@ -1041,6 +1044,7 @@
 			<template v-else-if="shouldRenderCell(row, cell)">
 				<n-sidebar v-if="cell.target == 'sidebar'" @close="close(row, cell)" :popout="false" :autocloseable="!cell.preventAutoClose" class="content-sidebar" :style="getSideBarStyles(cell)">
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							:draggable="isDraggable(cell)"
 							@update="updateEvent"
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
@@ -1093,6 +1097,7 @@
 				</n-sidebar>
 				<n-prompt v-else-if="cell.target == 'prompt'" @close="close(row, cell)" :autoclose="cell.autoclose">
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							:draggable="isDraggable(cell)"
 							@update="updateEvent"
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
@@ -1144,6 +1149,7 @@
 				</n-prompt>
 				<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(row, cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right" :snap-point="cell.snapPoint">          
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							:draggable="isDraggable(cell)"
 							@update="updateEvent"
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
@@ -1195,6 +1201,7 @@
 				</n-absolute>
 				<template v-else>
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
+							:draggable="isDraggable(cell)"
 							@update="updateEvent"
 							v-show="!isContentHidden(cell)"
 							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
