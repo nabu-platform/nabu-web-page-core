@@ -4804,7 +4804,7 @@ nabu.services.VueService(Vue.extend({
 				branding = resolvedBranding;
 			}
 			
-			var fields = ["favicon", "title", "description", "image", "imageAlt", "facebookAppId", "twitterUserName"];
+			var fields = ["favicon", "title", "siteName", "description", "image", "imageAlt", "facebookAppId", "twitterUserName"];
 			// the current branding takes the specific branding and (if absent) the default branding
 			fields.forEach(function(field) {
 				self.currentBranding[field] = branding[field] ? branding[field] : self.branding[field];
@@ -4813,7 +4813,7 @@ nabu.services.VueService(Vue.extend({
 					self.currentBranding[field] = self.title;
 				}
 			})
-			var og = ["title", "description", "image"];
+			var og = ["title", "description", "image", "siteName"];
 			
 			fields.forEach(function(field) {
 				if (field == "favicon") {

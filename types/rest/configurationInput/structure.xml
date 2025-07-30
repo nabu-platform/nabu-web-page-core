@@ -14,6 +14,7 @@
         <field minOccurs="0" name="imageAlt" type="java.lang.String"/>
         <field minOccurs="0" name="facebookAppId" type="java.lang.String"/>
         <field minOccurs="0" name="twitterUserName" type="java.lang.String"/>
+        <field minOccurs="0" name="siteName" type="java.lang.String"/>
     </structure>
     <structure definition="nabu.utils.types.Property" maxOccurs="unbounded" minOccurs="0" name="properties"/>
     <structure maxOccurs="unbounded" minOccurs="0" name="devices">

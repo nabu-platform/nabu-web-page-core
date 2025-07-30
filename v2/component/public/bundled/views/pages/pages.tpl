@@ -42,6 +42,7 @@
 						<div class="pane">
 							<h4 class="category">Branding</h4>		
 							<div class="padded-content">
+								<n-form-text v-model="$services.page.branding.siteName" label="The name of your site" :timeout="600" @input="$services.page.saveConfiguration"/>
 								<n-form-text v-model="$services.page.branding.favicon" placeholder="/resources/images/logo.png" label="The location of the favicon" :timeout="600" @input="$services.page.saveConfiguration"/>
 								<n-form-text v-model="$services.page.branding.title" :placeholder="$services.page.title" label="The meta title for your application" :timeout="600" @input="$services.page.saveConfiguration"/>
 								<n-form-text v-model="$services.page.branding.description" label="The meta description for your application" :timeout="600" @input="$services.page.saveConfiguration"/>
