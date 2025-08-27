@@ -485,7 +485,7 @@
 							<template v-if="$services.page.activeSubTab == 'container'">
 								<h2 class="section-title">General</h2>
 								<div class="is-column is-spacing-medium"> 
-									<n-form-text label="Name" v-model="cell.name" placeholder="A descriptive name for this cell" :timeout="600"/>
+									<n-form-text label="Name" v-model="cell.name" placeholder="A descriptive name for this cell" :timeout="600" :suffix="cell.id"/>
 									<n-form-text label="Cell Id" v-model="cell.customId" placeholder="Add targetable container with id to this cell" :timeout="600"/>
 								</div>
 								
@@ -575,6 +575,7 @@
 									<n-form-text label="Show only if user has permission" v-model="cell.permission" placeholder="E.g. company.list"/>
 									<n-form-text :label="cell.permission ? 'Optional permission context' : 'Show only if user has any permission in context'" v-model="cell.permissionContext" placeholder="E.g. crm" />
 									<n-form-text :label="cell.permission ? 'Optional permission service context' : 'Show only if user has any permission in service context'" v-model="cell.permissionServiceContext" placeholder="E.g. default" />
+									<n-form-switch label="Permission inversion" v-model="cell.permissionInversion" info="Invert permission check"/>
 								</div>
 								
 								<h2 class="section-title">Location</h2>
@@ -592,7 +593,7 @@
 									<n-form-text label="Minimum Width" v-model="cell.minWidth" v-if="cell.target == 'absolute'"/>
 									<n-form-switch label="Position fixed?" v-model="cell.fixed" v-if="cell.target == 'absolute'"/>
 									<n-form-switch label="Autoclose" v-model="cell.autoclose" v-if="cell.target == 'absolute' || cell.target == 'prompt'"/>
-									<n-form-combo label="Snap Point" v-model="cell.snapPoint" v-if="cell.target == 'absolute'" :items="['top-left', 'center']" placeholder="top-left"/>
+									<n-form-combo label="Snap Point" v-model="cell.snapPoint" v-if="cell.target == 'absolute'" :items="['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center']" placeholder="top-left"/>
 								</div>
 								
 								<h2 class="section-title">Templating</h2>
@@ -682,7 +683,7 @@
 							<template v-if="$services.page.activeSubTab == 'container'">
 								<h2 class="section-title">General</h2>
 								<div class="is-column is-spacing-medium">
-									<n-form-text label="Name" v-model="row.name" placeholder="A descriptive name for this row" :timeout="600"/>
+									<n-form-text label="Name" v-model="row.name" placeholder="A descriptive name for this row" :timeout="600" :suffix="row.id"/>
 									<n-form-text label="Row Id" v-model="row.customId" placeholder="Add an id to this row, useful for skeletons"/>
 								</div>
 								<h2 class="section-title">Content</h2>
@@ -1148,7 +1149,7 @@
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</component>
 				</n-prompt>
-				<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(row, cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right" :snap-point="cell.snapPoint">          
+				<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autocloseable" v-else-if="cell.target == 'absolute'" @close="close(row, cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right" :snap-point="cell.snapPoint">          
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
 							:draggable="isDraggable(cell)"
 							@update="updateEvent"

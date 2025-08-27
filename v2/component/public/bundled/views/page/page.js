@@ -811,7 +811,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 										if (value != null) {
 											value = JSON.stringify(value);
 										}
-										localStorage.setItem(self.page.content.name + "-" + self.getServiceContext() + "-state-" + state.name, value);
+										var serviceContext = self.getServiceContext();
+										localStorage.setItem(self.page.content.name + (serviceContext ? "-" + serviceContext : "") + "-state-" + state.name, value);
 									}, 1);
 								});
 							}
@@ -3111,10 +3112,16 @@ nabu.page.views.Page = Vue.component("n-page", {
 			}
 			else if (name == "parent.$this" || name == "$parent") {
 				var parentInstance = this.page.content.pageParent ? this.$services.page.getPageInstanceByName(this.page.content.pageParent) : null;
+				if (parentInstance == null) {
+					parentInstance = this.$services.page.getParentInstance(this);
+				}
 				return parentInstance;
 			}
 			else if (name == "parent") {
 				var parentInstance = this.page.content.pageParent ? this.$services.page.getPageInstanceByName(this.page.content.pageParent) : null;
+				if (parentInstance == null) {
+					parentInstance = this.$services.page.getParentInstance(this);
+				}
 				return parentInstance ? parentInstance.variables : null;
 			}
 			else if (name == "application.title") {
@@ -4691,7 +4698,8 @@ Vue.component("n-page-row", {
 				if (!permissionServiceContext) {
 					permissionServiceContext = pageInstance.getServiceContext();
 				}
-				var key = permissionServiceContext + "::" + permissionContext + "::" + permission;
+				var inversion = cell.permissionInversion ? "::inverse" : "";
+				var key = permissionServiceContext + "::" + permissionContext + "::" + permission + inversion;
 				// if we haven't resolved it yet, do so
 				if (!this.permissionRendering.hasOwnProperty(key)) {
 					Vue.set(this.permissionRendering, key, false);
@@ -4701,7 +4709,7 @@ Vue.component("n-page-row", {
 						name: permission,
 						serviceContext: permissionServiceContext
 					}).then(function() {
-						Vue.set(self.permissionRendering, key, true);
+						Vue.set(self.permissionRendering, key, cell.permissionInversion ? false : true);
 					})
 				}
 				if (this.permissionRendering[key] === false) {
@@ -5236,6 +5244,15 @@ Vue.component("n-absolute", {
 				// we want the positioning (left, top...) to be to a different point than the default top left
 				if (this.snapPoint == "center") {
 					styles.push({"transform": "translate(-50%, -50%)"});
+				}
+				else if (this.snapPoint == "bottom-right") {
+					styles.push({"transform": "translate(-100%, -100%)"});
+				}
+				else if (this.snapPoint == "bottom-left") {
+					styles.push({"transform": "translate(0, -100%)"});
+				}
+				else if (this.snapPoint == "top-right") {
+					styles.push({"transform": "translate(-100%, 0%)"});
 				}
 			}
 			// can also use fixed positioning

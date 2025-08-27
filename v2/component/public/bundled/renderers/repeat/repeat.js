@@ -225,12 +225,30 @@ nabu.page.provide("page-renderer", {
 				var local = {};
 				container.repeat.localVariables.forEach(function(single) {
 					if (single.name) {
-						if (single.definition) {
-							local[single.name] = $services.swagger.resolve(single.definition);
+						var schema = null; 
+						if (single.template) {
+							var templateValue = $services.page.eval(single.template);
+							if (templateValue) {
+								schema = $services.page.getSchemaFromObject(templateValue);
+							}
+						}
+						else if (single.definition) {
+							schema = $services.swagger.resolve(single.definition);
 						}
 						else {
-							local[single.name] = {
+							schema = {
 								type: "string"
+							}
+						}
+						if (schema) {
+							if (single.isArray) {
+								local[single.name] = {
+									type: "array",
+									items: schema
+								}
+							}
+							else {
+								local[single.name] = schema;
 							}
 						}
 					}
@@ -450,7 +468,7 @@ Vue.component("renderer-repeat", {
 					total: 0,
 					pageSize: 0,
 					rowOffset: 0,
-					totalCount: 0
+					totalRowCount: 0
 				}
 			}
 		}
@@ -505,7 +523,7 @@ Vue.component("renderer-repeat", {
 		}
 	},
 	mounted: function() {
-		
+
 	},
 	computed: {
 		alias: function() {
@@ -1175,6 +1193,16 @@ Vue.component("renderer-repeat", {
 			component.$on("hook:beforeDestroy", function() {
 				unwatch();
 			});
+			
+			// instantiate the local variables if necessary
+			if (this.target.repeat.localVariables && this.target.runtimeAlias) {
+				this.target.repeat.localVariables.forEach(function(variable) {
+					if (variable.defaultValue && variable.name) {
+						self.$services.page.setValue(component.variables, self.target.runtimeAlias + ".local." + variable.name, self.$services.page.eval(variable.defaultValue, component.variables, component));
+						//Vue.set(component.variables, self.target.runtimeAlias + ".local." + variable.name, self.$services.page.eval(variable.defaultValue, component.variables, component));
+					}
+				});
+			}
 		},
 		uniquify: function() {
 			var self = this;

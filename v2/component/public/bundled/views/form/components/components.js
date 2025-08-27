@@ -352,6 +352,8 @@ nabu.page.views.FormComponentGenerator = function(name) {
 			},
 			availableFields: function(value) {
 				var fields = [];
+				// @2025-08-19: should this be replaced with getAllAvailableParameters?
+				// currently things like events are not listed so you can't modify them
 				var parameters = this.$services.page.getPageParameters(this.page);
 				nabu.utils.arrays.merge(fields, this.$services.page.getSimpleKeysFor(parameters, true, true));
 				//console.log("fields are", fields);

@@ -46,4 +46,5 @@ Vue.view("page-markdown-text", {
 			}
 		}
 	}
-})
+});
+

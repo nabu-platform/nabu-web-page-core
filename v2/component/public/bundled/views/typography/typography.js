@@ -144,7 +144,13 @@ Vue.service("typography", {
 					if (!contentToShow && placeholder != null) {
 						contentToShow = placeholder;
 					}
-					content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<span class='is-variable " + (contentToShow != oldContent ? 'is-placeholder' : '') + "' variable='" + variable + "'>" + (contentToShow == null ? "" : contentToShow) + "</span>");
+					// if synchronous, remove the placeholder
+					if (container.fragments[variable].synchronous) {
+						content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), formatted.$el.innerText);
+					}
+					else {
+						content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<span class='is-variable " + (contentToShow != oldContent ? 'is-placeholder' : '') + "' variable='" + variable + "'>" + (contentToShow == null ? "" : contentToShow) + "</span>");
+					}
 				}
 			});
 			return this.$services.page.translate(content);
@@ -279,8 +285,20 @@ Vue.component("typography-core", {
 			var highlighter = nabu.page.providers("page-format").filter(function(x) {
 				 return x.name == "highlight";
 			})[0];
-			console.log("highlighting", content);
-			return highlighter ? highlighter.format(content, this.cell.state.highlightFormat ? "language-" + this.cell.state.highlightFormat : null) : content;
+			if (!highlighter) {
+				highlighter = nabu.page.providers("page-format").filter(function(x) {
+					 return x.name == "code";
+				})[0];
+				if (!highlighter) {
+					return content;
+				}
+				else {
+					return highlighter.format(content, {codeFormat: this.cell.state.highlightFormat});
+				}
+			}
+			else {
+				return highlighter.format(content, this.cell.state.highlightFormat ? "language-" + this.cell.state.highlightFormat : null);
+			}
 		},
 		getChildComponents: function() {
 			var components = [{
@@ -461,7 +479,7 @@ Vue.component("typography-blockquote-configure", {
 	},
 	data: function() {
 		return {
-			highlightable: false
+			highlightable: true
 		}
 	}
 })

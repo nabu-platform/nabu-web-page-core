@@ -238,9 +238,12 @@
 		
 		<template v-if="target.repeat.localVariables">
 			<div v-for="(localVariable, index) in target.repeat.localVariables" class="has-button-close">
-				<div class="is-row">
-					<n-form-text v-model="localVariable.name" />
-					<n-form-text v-model="localVariable.definition" placeholder="string"/>
+				<div class="is-column is-spacing-medium">
+					<n-form-text label="Name" v-model="localVariable.name" />
+					<n-form-text label="Type" v-model="localVariable.definition" placeholder="string"/>
+					<n-form-switch label="Is an array" v-model="localVariable.isArray"/>
+					<n-form-ace v-model="localVariable.defaultValue" label="Default value"/>
+					<n-form-ace v-if="!localVariable.definition" v-model="localVariable.template" label="Template value" info="Add an object that represents the final structure of the resultset"/>
 				</div>
 				<button class="is-button is-variant-close is-size-small is-spacing-horizontal-right-large" @click="target.repeat.localVariables.splice(index, 1)"><icon name="times"/></button>
 			</div>

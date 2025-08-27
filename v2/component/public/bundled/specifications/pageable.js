@@ -23,7 +23,7 @@ nabu.page.provide("page-specification", {
 					type: "int64"
 				},
 				// total amount of rows available
-				totalCount: {
+				totalRowCount: {
 					type: "int64"
 				}
 			}
@@ -58,7 +58,7 @@ nabu.page.provide("page-specification", {
 				type: "int64"
 			},
 			// total amount of rows available
-			totalCount: {
+			totalRowCount: {
 				type: "int64"
 			}
 		}
@@ -85,7 +85,7 @@ nabu.page.provide("page-specification", {
 				type: "int64"
 			},
 			// total amount of rows available
-			totalCount: {
+			totalRowCount: {
 				type: "int64"
 			}
 		}
