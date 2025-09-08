@@ -141,7 +141,17 @@ nabu.page.provide("page-renderer", {
 		}
 		actions.push({
 			title: "Toggle Readonly",
-			name: "toggle-readonly"
+			name: "toggle-readonly",
+			input: {
+				reset: {
+					type: "string",
+					format: "boolean"
+				}
+			}
+		});
+		actions.push({
+			title: "Reset state",
+			name: "reset"
 		});
 		if (container && container.form && container.form.translatable) {
 			actions.push({
@@ -442,6 +452,10 @@ Vue.component("renderer-form", {
 				});
 				return promise;
 			}
+			// reset the state
+			else if (name == "reset") {
+				this.mergeParameters();
+			}
 			else if (name == "validate") {
 				// you can set a custom component group to only validate those particular elements?
 				var componentGroup = this.target.form.componentGroup ? this.target.form.componentGroup : "form";
@@ -531,6 +545,9 @@ Vue.component("renderer-form", {
 					}
 				});
 				this.state.readOnly = !this.state.readOnly;
+				if (input && (input.reset === "true" || input.reset === true)) {
+					this.mergeParameters();
+				}
 			}
 			else if (name == "switch-language") {
 				// you can set a custom component group to only validate those particular elements?

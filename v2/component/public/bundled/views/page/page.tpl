@@ -505,6 +505,7 @@
 										:to="getRouteParameters(cell)"
 										:from="getAvailableParameters(cell)" 
 										v-model="cell.bindings"/>
+									<n-form-text v-model="cell.key" v-if="cell.alias || cell.renderer" label="Dynamic vue key"/>
 									<n-form-text v-model="cell.contentRuntimeAlias" v-if="cell.alias && $window.Object.keys(getRouteParameters(cell).properties).length" label="Content Runtime Alias"/>
 									<n-form-switch v-if="cell.alias" label="Stop Rerender" v-model="cell.stopRerender" info="All components are reactive to their input, you can however prevent rerendering by settings this to true"/>
 									
@@ -1051,7 +1052,7 @@
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
-							:key="cellId(cell)"
+							:key="cellKey(cell)"
 							:cell-id="cell.id"
 							@close="close(row, cell)"
 							@click="clickOnCell(row, cell, $event)"
@@ -1104,7 +1105,7 @@
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
-							:key="cellId(cell)"
+							:key="cellKey(cell)"
 							:cell-id="cell.id"
 							@close="close(row, cell)"
 							@click="clickOnCell(row, cell, $event)"
@@ -1156,7 +1157,7 @@
 							v-show="!edit || !row.collapsed"
 							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
-							:key="cellId(cell)"
+							:key="cellKey(cell)"
 							:cell-id="cell.id"
 							@close="close(row, cell)"
 							@click="clickOnCell(row, cell, $event)"
@@ -1208,7 +1209,7 @@
 							v-show="!isContentHidden(cell)"
 							:id="cell.customId && !cell.alias ? cell.customId : page.name + '_' + row.id + '_' + cell.id"  
 							:class="$window.nabu.utils.arrays.merge([{'clickable': hasCellClickEvent(cell)}, cell.class ? $services.page.interpret(cell.class, $self) : null, {'has-page': hasPageRoute(cell), 'is-root': root}, {'empty': edit && !cell.alias && (!cell.rows || !cell.rows.length) } ], cellClasses(cell))" 
-							:key="cellId(cell)"
+							:key="cellKey(cell)"
 							:cell-id="cell.id"
 							@close="close(row, cell)"
 							@click="clickOnCell(row, cell, $event)"

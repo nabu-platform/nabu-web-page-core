@@ -2252,6 +2252,10 @@ nabu.services.VueService(Vue.extend({
 				currentInstance = currentInstance.$parent;
 				if (currentInstance.page) {
 					parentInstance = this.getPageInstance(currentInstance.page, currentInstance);
+					if (parentInstance == currentInstance) {
+						console.error("Nested page detected, not resolving");
+						return null;
+					}
 				}
 			}
 			return parentInstance;
@@ -3875,7 +3879,9 @@ nabu.services.VueService(Vue.extend({
 			// if not defined explicitly, we might still have a parent in this context?
 			else {
 				var parentInstance = self.$services.page.getParentPageInstance(page, context);
-				if (parentInstance && parentInstance.page) {
+				// for nested pages, the parent may be the same as the current, don't recurse
+				// note that this only covers _direct_ recursion, if there is indirect recursion you will probably still get infinite resolving loops. would need to add a list of resolved pages to fix this
+				if (parentInstance && parentInstance.page && parentInstance.page != page) {
 					result["parent"] = {properties:this.getAllAvailableParameters(parentInstance.page)};
 				}
 			}
@@ -4076,7 +4082,9 @@ nabu.services.VueService(Vue.extend({
 			// if not defined explicitly, we might still have a parent in this context?
 			else {
 				var parentInstance = self.$services.page.getParentPageInstance(page, self);
-				if (parentInstance && parentInstance.page) {
+				// for nested pages, the parent may be the same as the current, don't recurse
+				// note that this only covers _direct_ recursion, if there is indirect recursion you will probably still get infinite resolving loops. would need to add a list of resolved pages to fix this
+				if (parentInstance && parentInstance.page && parentInstance.page != page) {
 					// it is a fragment parent, the data belongs in the same scope
 					if (parentInstance == pageInstance.$props.fragmentParent) {
 						nabu.utils.objects.merge(result, this.getAvailableParameters(parentInstance.page, null, includeAllEvents));

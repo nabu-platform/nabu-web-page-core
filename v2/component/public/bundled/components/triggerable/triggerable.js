@@ -116,11 +116,11 @@ Vue.service("triggerable", {
 			return result;
 		},
 		// check if we can trigger on this one
-		canTrigger: function(target, trigger) {
+		canTrigger: function(target, trigger, disregardEditing) {
 			// @2025-05-13
 			// we've had issues with editing nested components where the parent have triggers (e.G. click) on the component which still trigger, preventing correct editing
 			// let's try for a while by disabling all triggers
-			return target.triggers && this.$services.page.editing == null ? target.triggers.filter(function(x) {
+			return target.triggers && (this.$services.page.editing == null || disregardEditing) ? target.triggers.filter(function(x) {
 			//return target.triggers ? target.triggers.filter(function(x) {
 				return x.trigger == trigger;
 			}).length > 0 : false;

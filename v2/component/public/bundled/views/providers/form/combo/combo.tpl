@@ -23,6 +23,7 @@
 <template id="page-form-combo">
 	<n-form-combo combo-type="n-input-combo2"
 		ref="combo"
+		:autoselect-single="field.selectFirstIfEmpty"
 		:load-on-focus="field.loadOnFocus"
 		:class="getChildComponentClasses('page-form-combo')"
 		:filter="enumerationFilter"

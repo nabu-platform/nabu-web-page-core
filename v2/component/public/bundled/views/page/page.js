@@ -4159,6 +4159,10 @@ Vue.component("n-page-row", {
 		},
 		targetHref: function(target) {
 			if (this.isLinkContainer(target)) {
+				// if you are editing, we don't want to trigger the click
+				if (this.$services.page.editing) {
+					return "javascript:void(0)";
+				}
 				return this.$services.triggerable.calculateUrl(target.triggers[0].actions[0], this, {});
 			}
 		},
@@ -4505,6 +4509,14 @@ Vue.component("n-page-row", {
 			}
 			return cellId;
 		},
+		cellKey: function(cell) {
+			if (!cell.key) {
+				return this.cellId(cell);
+			}
+			else {
+				return this.$services.page.eval(cell.key, {}, this);
+			}
+		},
 		cellClasses: function(cell) {
 			var self = this;
 			var classes = [];
@@ -4666,6 +4678,17 @@ Vue.component("n-page-row", {
 			}
 		},
 		shouldRenderCell: function(row, cell) {
+			// if you are editing a page which has a nested version of itself (either directly or indirectly), you won't want the nested version to render all its content
+			// because then it becomes hard to target the correct items
+			// so we do a check here to see if you are editing this PAGE but not this PAGE INSTANCE
+			if (!this.edit && this.$services.page.editing) {
+				if (this.page == this.$services.page.editing.page) {
+					var instance = this.$services.page.getPageInstance(this.page, this);
+					if (instance != this.$services.page.editing) {
+						return false;
+					}
+				}
+			}
 			if (this.edit) {
 				/*if (row.collapsed) {
 					return false;
@@ -4932,24 +4955,31 @@ Vue.component("n-page-row", {
 			if (!this.edit && cell && cell.state && cell.state.stopClickPropagation && $event) {
 				$event.stopPropagation();
 			}
-			if (!this.edit && this.$services.triggerable.canTrigger(cell, "click")) {
+			// @2025-09-04: we used to only check that this particular page was not being edited
+			// however in case of nesting (parent has a click handler on a nested page and you edit the nested page) this can be really annoying
+			// so now we check that _noone_ is editing
+			if (this.$services.triggerable.canTrigger(cell, "click", true)) {
 				if ($event) {
 					$event.preventDefault();
 				}
-				var promise = this.$services.triggerable.trigger(cell, "click", this.getClickParameters($event), this);
-				return promise;
+				if (!this.edit && !this.$services.page.editing) {
+					var promise = this.$services.triggerable.trigger(cell, "click", this.getClickParameters($event), this);
+					return promise;
+				}
 			}
 		},
 		clickOnRow: function(row, $event) {
 			if (!this.edit && row && row.state && row.state.stopClickPropagation && $event) {
 				$event.stopPropagation();
 			}
-			if (!this.edit && this.$services.triggerable.canTrigger(row, "click")) {
+			if (this.$services.triggerable.canTrigger(row, "click", true)) {
 				if ($event) {
 					$event.preventDefault();
 				}
-				var promise = this.$services.triggerable.trigger(row, "click", this.getClickParameters($event), this);
-				return promise;
+				if (!this.edit && !this.$services.page.editing) {
+					var promise = this.$services.triggerable.trigger(row, "click", this.getClickParameters($event), this);
+					return promise;
+				}
 			}
 		},
 		clickOnContentCell: function(row, cell) {
