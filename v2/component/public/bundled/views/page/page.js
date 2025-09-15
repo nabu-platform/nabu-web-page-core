@@ -1174,7 +1174,8 @@ nabu.page.views.Page = Vue.component("n-page", {
 								var value = null;
 								// check if we have local storage
 								if (x.store) {
-									value = localStorage.getItem(self.page.content.name + "-" + self.getServiceContext() + "-state-" + x.name);
+                                    var serviceContext = self.getServiceContext();
+									value = localStorage.getItem(self.page.content.name + (serviceContext ? "-" + serviceContext : "") + "-state-" + x.name);
 									if (value != null) {
 										value = JSON.parse(value);
 									}
