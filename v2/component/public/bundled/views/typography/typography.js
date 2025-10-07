@@ -212,7 +212,7 @@ Vue.component("typography-variable-replacer", {
 					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
 				});
 			}
-			keys.add("$all");
+			keys.push("$all");
 			keys.sort();
 			return keys;
 		}
