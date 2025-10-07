@@ -127,7 +127,7 @@ Vue.service("typography", {
 						valueToUse = state ? state : pageInstance.variables;
 					}
 					else {
-						state ? self.$services.page.getValue(state, container.fragments[variable].key) : pageInstance.get(container.fragments[variable].key);
+                        valueToUse = state ? self.$services.page.getValue(state, container.fragments[variable].key) : pageInstance.get(container.fragments[variable].key);
 					}
 					formatted = new component({propsData: {
 						page: pageInstance.page,
