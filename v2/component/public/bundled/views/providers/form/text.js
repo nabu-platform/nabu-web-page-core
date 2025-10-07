@@ -1,5 +1,6 @@
 Vue.component("page-form-input-text-configure", {
 	template: "<div><h2 class='section-title'>Text field</h2><div class='is-column is-spacing-medium'><n-form-combo v-model='field.textType' label='Text Type' :items=\"['text', 'area', 'range', 'number', 'color', 'email', 'tel', 'password', 'url', 'time', 'date', 'datetime-local', 'month', 'week']\"/>"
+		+ "	<n-form-switch v-model='field.parseDate' label='Parse date' info='Parse the stringified date into a date object (in UTC)' v-if=\"field.textType == 'date'\"/>"
 		+ "	<n-form-switch v-model='field.trim' label='Trim value' />"
 		+ "	<n-form-text v-model='field.regexLabel' label='Regex Label' :timeout='600'/>"
 		+ "	<n-form-text v-model='field.regex' label='Regex' :timeout='600'/>"
@@ -57,6 +58,7 @@ Vue.component("page-form-input-text", {
 			+ "		:trim='field.trim'"
 			+ "		:class=\"{'has-suffix-icon': !!field.suffixIcon, 'has-suffix': !!field.suffix }\""
 			+ "		:edit='!readOnly'"
+			+ "		:parse-date='field.parseDate'"
 			+ "		:placeholder='$services.page.interpret($services.page.translate(placeholder), $self)'"
 			+ "		:max-length='field.maxLength ? field.maxLength : null'"
 			+ "		:min-length='field.minLength ? field.minLength : null'"

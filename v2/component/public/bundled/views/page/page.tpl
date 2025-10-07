@@ -1150,7 +1150,7 @@
 							@removeRow="function(row) { $confirm({message:'Are you sure you want to remove this row?'}).then(function() { cell.rows.splice(cell.rows.indexOf(row), 1) }) }"/>
 					</component>
 				</n-prompt>
-				<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autocloseable" v-else-if="cell.target == 'absolute'" @close="close(row, cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right" :snap-point="cell.snapPoint">          
+				<n-absolute :fixed="cell.fixed" :style="{'min-width': cell.minWidth}" :autoclose="cell.autoclose" v-else-if="cell.target == 'absolute'" @close="close(row, cell)" :top="cell.top" :bottom="cell.bottom" :left="cell.left" :right="cell.right" :snap-point="cell.snapPoint">          
 					<component :is="cellTagFor(row, cell)" :style="getStyles(cell)" 
 							:draggable="isDraggable(cell)"
 							@update="updateEvent"

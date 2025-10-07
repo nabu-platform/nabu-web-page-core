@@ -850,6 +850,85 @@ nabu.services.VueService(Vue.extend({
 				});
 			}
 		},
+		validate: function(componentGroup, codes, element) {
+			if (componentGroup == null) {
+				componentGroup = "form";
+			}
+			var promises = [];
+			var messages = [];
+			// error codes that need to be rewritten
+			if (codes == null) {
+				codes = [];
+			}
+			if (element == null) {
+				element = document.body;
+			}
+			var self = this;
+			element.querySelectorAll("[component-group='" + componentGroup + "']").forEach(function(x) {
+				var result = x.__vue__.validate();
+				
+				// we likely have the codes on the "wrapper" component
+				// vue can render multiple components on the same $el (e.g. if the root of a component is another component)
+				// this is the case for form components in the page, so we likely find it in the parent
+				var localCodes = null;
+				var component = x.__vue__;
+				while (component && !localCodes) {
+					localCodes = component.codes;
+					component = component.$parent;
+					if (!component || component.$el != x) {
+						break;
+					}
+				}
+				if (!localCodes) {
+					localCodes = [];
+				}
+				var allCodes = [];
+				// the LAST hit wins, so we want the most specific one to win...
+				nabu.utils.arrays.merge(allCodes, codes);
+				nabu.utils.arrays.merge(allCodes, localCodes);
+				
+				// we want to clone them so we don't update the original by reference
+				// then we want to interpret them!
+				var allCodes = allCodes.map(function(x) {
+					var cloned = JSON.parse(JSON.stringify(x));
+					cloned.title = self.translate(self.interpret(cloned.title, self));
+					return cloned;
+				});
+				
+				var translateMessages = function(messages) {
+					messages.forEach(function(message) {
+						message.title = self.translate(message.title);
+					});
+				};
+				
+				// these are currently not compatible with the all() promises bundler... :(
+				if (result && result.then) {
+					var localPromise = self.$services.q.defer();
+					promises.push(localPromise);
+					result.then(function(x) {
+						nabu.utils.vue.form.rewriteCodes(x, allCodes);
+						nabu.utils.arrays.merge(messages, x);
+						translateMessages(x);
+						localPromise.resolve(x);
+					}, localPromise);
+				}
+				else if (result instanceof Array) {
+					nabu.utils.vue.form.rewriteCodes(result, allCodes);	
+					nabu.utils.arrays.merge(messages, result);
+					translateMessages(messages);
+				}
+			});
+			var promise = this.$services.q.defer();
+			this.$services.q.all(promises).then(function() {
+				if (messages.length == 0) {
+					promise.resolve();
+				}
+				else {
+					promise.reject({errorType: "validate", messages: messages});
+				}
+			}, promise);
+			return promise;
+		},
 		calculateAcceptedCookies: function() {
 			this.hasAcceptedCookies = !!this.$services.cookies.get("cookie-settings");	
 		},
@@ -3620,6 +3699,16 @@ nabu.services.VueService(Vue.extend({
 							}
 						}
 						else if (page.content.path) {
+							var cloneParameters = function(parameters) {
+								var blacklist = ["page", "cell", "edit", "childComponents", "pageInstanceId", "stopRerender"];
+								var result = {};
+								Object.keys(parameters).forEach(function(x) {
+									if (blacklist.indexOf(x) < 0) {
+										result[x] = parameters[x];
+									}
+								});
+								return result;
+							}
 							// break out
 							setTimeout(function() {
 								self.$services.analysis.push({
@@ -3627,7 +3716,7 @@ nabu.services.VueService(Vue.extend({
 									category: "page",
 									component: page.content.name,
 									path: page.content.path,
-									data: parameters
+									data: cloneParameters(parameters)
 								});
 							}, 1);
 						}

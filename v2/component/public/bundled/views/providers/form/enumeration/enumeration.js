@@ -263,7 +263,8 @@ Vue.component("enumeration-provider", {
 			return result;
 		},
 		enumerationResolver: function(value) {
-			if (this.field.provider == "operation" && this.field.enumerationOperationResolve && this.field.enumerationFieldValue) {
+			// you can also resolve a value if it is a non-paged list
+			if (this.field.provider == "operation" && this.field.enumerationFieldValue) { // this.field.enumerationOperationResolve &&
 				return this.enumerationFilterAny(value, true);
 			}
 			else if (this.field.provider == "array") {

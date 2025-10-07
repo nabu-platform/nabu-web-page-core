@@ -122,10 +122,17 @@ Vue.service("typography", {
 					};
 					//content = content.replace(new RegExp("\{[\s]*" + variable + "[\s]*\}", "g"), "<page-formatted :page='page' :cell='cell' :value=\"getVariableValue('" + variable + "')\" :fragment=\"getVariableFragment('" + variable + "')\"/>");
 					var div = document.createElement("div");
+					var valueToUse = null;
+					if (container.fragments[variable].key == "$all" || container.fragments[variable].key == null) {
+						valueToUse = state ? state : pageInstance.variables;
+					}
+					else {
+						state ? self.$services.page.getValue(state, container.fragments[variable].key) : pageInstance.get(container.fragments[variable].key);
+					}
 					formatted = new component({propsData: {
 						page: pageInstance.page,
 						cell: {state: container},
-						value: state ? self.$services.page.getValue(state, container.fragments[variable].key) : pageInstance.get(container.fragments[variable].key),
+						value: valueToUse,
 						fragment: container.fragments[variable],
 						updater: updateFunction,
 						// we might need it
@@ -205,6 +212,7 @@ Vue.component("typography-variable-replacer", {
 					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
 				});
 			}
+			keys.add("$all");
 			keys.sort();
 			return keys;
 		}

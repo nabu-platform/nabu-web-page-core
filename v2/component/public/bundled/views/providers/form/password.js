@@ -10,6 +10,7 @@ Vue.component("page-form-input-password-configure", {
 		+ "	<n-form-text v-model='field.regexLabel' label='Regex Label' placholder='%{validation::The password should be at least 8 characters long and contain one capital, one lowercase letter and a number}'/>"
 		+ "	<n-form-text v-model='field.forgotLabel' label='Forgot Password Label'/>"
 		+ "	<n-form-combo v-model='field.forgotRoute' :filter='$services.page.filterRoutes' label='Forgot Password Route'/>"
+		+ "	<n-form-switch v-model='field.newPassword' label='Is new password'/>"
 		+ "</n-form-section>",
 	props: {
 		cell: {
@@ -43,8 +44,8 @@ Vue.component("page-form-input-password", {
 			+ "		:after='field.after ? $services.page.translate(field.after) : null'"
 			+ "		:suffix='field.suffixIcon ? $services.page.getIconHtml(field.suffixIcon) : field.suffix'"
 			+ "		:timeout='timeout'"
-			+ "		name='new-password'"
-			+ "		autocomplete='new-password'"
+			+ "		:name='fieldName'"
+			+ "		:autocomplete='fieldAutocomplete'"
 			+ "		:disabled='disabled'/>"
 			+ "	<n-form-text type='password' v-if='field.repeatLabel && !readOnly'"
 			+ "		:placeholder='field.repeatPlaceholder ? $services.page.translate(field.repeatPlaceholder) : placeholder'"
@@ -57,8 +58,8 @@ Vue.component("page-form-input-password", {
 			+ "		:suffix='field.suffixIcon ? $services.page.getIconHtml(field.suffixIcon) : field.suffix'"
 			+ "		:timeout='timeout'"
 			+ "		:validator='validatePassword'"
-			+ "		name='confirm-password'"
-			+ "		autocomplete='new-password'"
+			+ "		:name='repeatFieldName'"
+			+ "		:autocomplete='repeatFieldAutocomplete'"
 			+ "		:disabled='disabled'/>"
 			+ "	<a class='forgot-password-link' v-route='{alias:field.forgotRoute}' v-if='field.forgotRoute && !readOnly'>{{ field.forgotLabel ? $services.page.translate(field.forgotLabel) : '%{default::Forgot your password?}' }}</a>"
 			+ "</n-form-section>",
@@ -103,6 +104,18 @@ Vue.component("page-form-input-password", {
 		}
 	},
 	computed: {
+		fieldName: function() {
+			return this.field.newPassword ? "new-password" : null;
+		},
+		repeatFieldName: function() {
+			return this.field.newPassword ? "confirm-password" : null;
+		},
+		fieldAutocomplete: function() {
+			return this.field.newPassword ? "new-password" : null;
+		},
+		repeatFieldAutocomplete: function() {
+			return this.field.newPassword ? "new-password" : null;
+		},
 		regexLabel: function() {
 			return this.field.regexLabel != null && this.field.regexLabel != "" 
 				? this.$services.page.interpret(this.field.regexLabel, this)
@@ -133,6 +146,6 @@ Vue.component("page-form-input-password", {
 				});
 			}
 			return messages;
-		},
+		}
 	}
 });
