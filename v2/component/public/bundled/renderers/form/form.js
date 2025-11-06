@@ -206,7 +206,7 @@ Vue.component("renderer-form", {
 		}
 		this.mergeParameters();
 		if (this.target.form && this.target.form.noInlineErrors) {
-			this.mode = null;
+			this.mode = "form";
 		}
 		else {
 			this.mode = "component";

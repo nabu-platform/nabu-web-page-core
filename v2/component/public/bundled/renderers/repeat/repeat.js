@@ -468,7 +468,8 @@ Vue.component("renderer-repeat", {
 					total: 0,
 					pageSize: 0,
 					rowOffset: 0,
-					totalRowCount: 0
+					totalRowCount: 0,
+					hasNext: null
 				}
 			}
 		}
@@ -1398,7 +1399,7 @@ Vue.component("renderer-repeat", {
 								// check if we have an object that has the necessary information
 								if (typeof(root[field]) === "object" && root[field] != null && !pageFound) {
 									// these are the two fields we use and map, check if they exist
-									if (root[field].current != null && root[field].total != null) {
+									if ((root[field].current != null && root[field].total != null) || root[field].hasNext != null) {
 										nabu.utils.objects.merge(self.state.paging, root[field]);
 										pageFound = true;
 									}

@@ -46,6 +46,13 @@ Vue.view("page-paging-next", {
 	computed: {
 		pageNumber: function() {
 			return this.paging && this.paging.current ? this.paging.current : 0;
+		},
+		hasNext: function() {
+			var hasNext = true;
+			if (this.paging && this.paging.hasNext != null) {
+				hasNext = this.paging.hasNext;
+			}
+			return hasNext;
 		}
 	},
 	// hook into component

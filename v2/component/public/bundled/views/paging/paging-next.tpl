@@ -2,7 +2,7 @@
 	<ul class="is-menu" :class="getChildComponentClasses('paging-menu')">
 		<li class="is-column"><button :class="getChildComponentClasses('paging-button')" class="is-button" @click="load(pageNumber - 1)" :disabled="pageNumber <= 0 || loading"><icon name="chevron-left"/></button></li>
 		<li class="is-column"><n-form-text :value="pageNumber + 1" :minimum="1" :class="getChildComponentClasses('paging-page-number')" type="number" :disabled="loading" :timeout="600" @input="function(value) { load(Math.max(0, value - 1)) }"/></li>
-		<li class="is-column"><button :class="getChildComponentClasses('paging-button')" class="is-button" @click="load(pageNumber + 1)" :disabled="loading"><icon name="chevron-right"/></button></li>
+		<li class="is-column"><button :class="getChildComponentClasses('paging-button')" class="is-button" @click="load(pageNumber + 1)" :disabled="loading || !hasNext"><icon name="chevron-right"/></button></li>
 	</ul>
 </template>
 
