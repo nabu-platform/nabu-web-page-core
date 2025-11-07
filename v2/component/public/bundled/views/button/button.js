@@ -56,6 +56,13 @@ Vue.view("page-button", {
 		}
 	},
 	computed: {
+		resolvedIcon: function() {
+			var icon = this.cell.state.icon;
+			if (icon && icon.indexOf("=") == 0) {
+				icon = this.$services.page.interpret(icon, this);
+			}
+			return icon;
+		},
 		tagName: function() {
 			var triggers = this.triggers;
 			if (triggers && triggers.length == 1 && triggers[0].actions.length == 1 && 

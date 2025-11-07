@@ -3,8 +3,8 @@
 			:component-group="cell.state.componentGroup"
 			:type="cell.state.buttonType ? cell.state.buttonType : guessButtonType()"
 			:id="cell.customId ? cell.customId : null">
-		<img :src="cell.state.icon.indexOf('http') == 0 ? cell.state.icon : $window.application.configuration.root + 'resources/' + cell.state.icon" v-if="cell.state.icon && cell.state.icon.match(/^.*\.[^.]+$/)" class="is-icon"/>
-		<icon :name="cell.state.icon" v-if="cell.state.icon"/>
+		<img :src="resolvedIcon.indexOf('http') == 0 ? resolvedIcon : $window.application.configuration.root + 'resources/' + resolvedIcon" v-if="resolvedIcon && resolvedIcon.match(/^.*\.[^.]+$/)" class="is-icon"/>
+		<icon :name="resolvedIcon" v-else-if="resolvedIcon"/>
 		<span class="is-text" v-if="cell.state.content && !edit" v-html="$services.page.translate(getContentWithVariables($services.page.interpret(cell.state.content, $self)))"></span>
 		<span class="is-text is-inline-editor" v-else-if="edit" 
 			v-html-once="cell.state.content ? cell.state.content : null"
