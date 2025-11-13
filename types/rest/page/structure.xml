@@ -1,4 +1,5 @@
 <structure comment="Parameters not contained in the path are found in the content (and most likely query parameters but also direct input)" name="page">
     <field comment="Mandatory name of the page" name="name" type="java.lang.String"/>
     <field comment="The page content (if any)" minOccurs="0" name="marshalled" type="java.lang.String"/>
+    <field comment="Where does the page reside?" minOccurs="0" name="source" type="java.lang.String"/>
 </structure>

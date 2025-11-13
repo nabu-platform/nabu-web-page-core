@@ -2933,16 +2933,23 @@ nabu.page.views.Page = Vue.component("n-page", {
 					Vue.set(self.closed, key, null);
 				}
 			});
-			return this.$services.q.all(promises).then(function() {
+			var finalPromise = this.$services.q.defer();
+			this.$services.q.all(promises).then(function() {
+				var resolved = false;
 				if (self.page.content.globalEvents && !reset) {
 					var globalEvent = self.page.content.globalEvents.filter(function(x) {
 						return x.localName == name;
 					})[0];
 					if (globalEvent) {
-						self.$services.page.emit(globalEvent.globalName ? globalEvent.globalName : name, value, reset);
+						self.$services.page.emit(globalEvent.globalName ? globalEvent.globalName : name, value, reset).then(finalPromise, finalPromise);
+						resolved = true;
 					}
 				}
-			});
+				if (!resolved) {
+					finalPromise.resolve();
+				}
+			}, finalPromise);
+			return finalPromise;
 		},
 		loadState: function(name, initial) {
 			var promise = this.$services.q.defer();

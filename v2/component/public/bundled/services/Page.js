@@ -2280,6 +2280,7 @@ nabu.services.VueService(Vue.extend({
 			if (source != null) {
 				instances.push(source);
 			}
+			var promises = [];
 			Object.keys(nabu.page.instances).map(function(key) {
 				var instance = nabu.page.instances[key];
 				if (instances.indexOf(instance) < 0) {
@@ -2288,12 +2289,13 @@ nabu.services.VueService(Vue.extend({
 							return x.globalName == event;
 						})[0];
 						if (globalEvent) {
-							instance.emit(globalEvent.localName != null ? globalEvent.localName : event, data);
+							promises.push(instance.emit(globalEvent.localName != null ? globalEvent.localName : event, data));
 						}
 					}
 					instances.push(instance);
 				}
 			});
+			return this.$services.q.all(promises);
 		},
 		getCurrentInstance: function(component) {
 			var page = null;
@@ -3534,9 +3536,12 @@ nabu.services.VueService(Vue.extend({
 			// the problem is that we can't dictate the order of mounting, and aliases only become known once they are mounted
 			// at that point, already mounted modules may depend on it
 			
-			
-			//page.marshalled = JSON.stringify(page.content, null, "\t");
-			page.marshalled = JSON.stringify(page.content);
+			if (application && application.configuration && application.configuration.prettifyPages) {
+				page.marshalled = JSON.stringify(page.content, null, "\t");
+			}
+			else {
+				page.marshalled = JSON.stringify(page.content);
+			}
 			return this.$services.swagger.execute("nabu.web.page.core.v2.rest.page.update", { body: page }).then(function() {
 				// add it to the pages if it isn't there yet (e.g. create)
 				var index = self.pages.indexOf(page);
