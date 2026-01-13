@@ -261,6 +261,9 @@ nabu.services.VueService(Vue.extend({
 		});
 	},
 	methods: {
+		isMac: function() {
+			return /Mac/.test(navigator.platform) || navigator.userAgent.includes('Macintosh');
+		},
 		// cleanup internal variables like $position etc
 		cleanup: function(data) {
 			var self = this;

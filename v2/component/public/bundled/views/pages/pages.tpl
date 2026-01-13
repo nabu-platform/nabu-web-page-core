@@ -125,7 +125,7 @@
 							<p class="is-p">Pages are divided into categories allowing you to group them together in whatever way you see fit.</p>
 						</div>
 					</div>
-					<div v-for="category in categories" class="is-column is-variant-card">
+					<div v-for="category in categories" class="is-column is-variant-card" :key="category">
 						<div class="is-row is-variant-card-header">
 							<h3 class="is-h3" :key="category" :ref="'category_' + category">
 								<span class="is-text">{{category}}</span>
@@ -136,7 +136,7 @@
 							</ul>
 						</div>
 						<div class="is-row is-variant-card-content">
-							<n-collapsible :only-one-open="true" :title="page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')" v-for="page in getPagesFor(category)" :key="page.id" :after="getPageTypeBadge(page)">
+							<n-collapsible :only-one-open="true" :title="page.content.label ? page.content.label : (page.name ? page.name : 'Unnamed Page')" v-for="page in getPagesFor(category)" :key="page.content.name" :after="getPageTypeBadge(page)">
 								<ul slot="buttons" class="is-menu is-variant-toolbar is-align-end">
 									<li class="is-column"><button class="is-button is-size-small is-variant-primary has-tooltip" @click="route(page)" title="Open this page"><icon name="search"/><span class="is-tooltip is-position-top">Open page</span></button></li>
 									<li class="is-column"><button class="is-button is-size-small is-variant-primary-outline has-tooltip" @click="copy(page)"><icon name="copy"/><span class="is-tooltip is-position-top">Copy page</span></button></li>

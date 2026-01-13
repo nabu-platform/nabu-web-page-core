@@ -757,6 +757,7 @@
 									<n-form-text label="Show only if user has permission" v-model="row.permission" placeholder="E.g. company.list"/>
 									<n-form-text :label="row.permission ? 'Optional permission context' : 'Show only if user has any permission in context'" v-model="row.permissionContext" placeholder="E.g. crm" />
 									<n-form-text :label="row.permission ? 'Optional permission service context' : 'Show only if user has any permission in service context'" v-model="row.permissionServiceContext" placeholder="E.g. default" />
+									<n-form-switch label="Permission inversion" v-model="row.permissionInversion" info="Invert permission check"/>
 								</div>
 								<h2 class="section-title">Templating</h2>
 								<div class="is-column is-spacing-medium">

@@ -4450,7 +4450,9 @@ Vue.component("n-page-row", {
 				if (!permissionServiceContext) {
 					permissionServiceContext = pageInstance.getServiceContext();
 				}
-				var key = permissionServiceContext + "::" + permissionContext + "::" + permission;
+				
+				var inversion = row.permissionInversion ? "::inverse" : "";
+				var key = permissionServiceContext + "::" + permissionContext + "::" + permission + inversion;
 				// if we haven't resolved it yet, do so
 				if (!this.permissionRendering.hasOwnProperty(key)) {
 					Vue.set(this.permissionRendering, key, false);
@@ -4460,7 +4462,9 @@ Vue.component("n-page-row", {
 						name: permission,
 						serviceContext: permissionServiceContext
 					}).then(function() {
-						Vue.set(self.permissionRendering, key, true);
+						Vue.set(self.permissionRendering, key, row.permissionInversion ? false : true);
+					}, function() {
+						Vue.set(self.permissionRendering, key, row.permissionInversion ? true : false);
 					})
 				}
 				if (this.permissionRendering[key] === false) {
@@ -4741,6 +4745,8 @@ Vue.component("n-page-row", {
 						serviceContext: permissionServiceContext
 					}).then(function() {
 						Vue.set(self.permissionRendering, key, cell.permissionInversion ? false : true);
+					}, function() {
+						Vue.set(self.permissionRendering, key, cell.permissionInversion ? true : false);
 					})
 				}
 				if (this.permissionRendering[key] === false) {
@@ -6451,7 +6457,7 @@ document.addEventListener("keydown", function(event) {
 		application.services.page.activeSubTab = "triggers";
 		event.preventDefault();
 	}
-	else if ((event.code == "Digit4" || event.code == "Digit5" || event.code == "Digit6" || event.code == "Digit7" || event.code == "Digit8" || event.code == "Digit9") && event.altKey && application.services.page.editing) {
+	else if ((event.code == "Digit4" || event.code == "Digit5" || event.code == "Digit6" || event.code == "Digit7" || event.code == "Digit8" || event.code == "Digit9") && event.altKey && application.services.page.editing && !application.services.page.isMac()) {
 		var offset = parseInt(event.code.substring(5)) - 4;
 		if (offset < application.services.page.availableSubTabs.length) {
 			application.services.page.activeSubTab = application.services.page.availableSubTabs[offset];
