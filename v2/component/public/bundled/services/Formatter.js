@@ -52,6 +52,9 @@ nabu.services.VueService(Vue.extend({
 			else if (properties.format == "javascript") {
 				return this.javascript(value, properties.javascript, properties.state, properties.$value);
 			}
+			else if (properties.format == "duration") {
+				return this.duration(value, this.$services.page.getLocale());
+			}
 			// otherwise we are using a provider
 			else {
 				var result = nabu.page.providers("page-format").filter(function(x) { return x.name == properties.format })[0]
@@ -199,6 +202,43 @@ nabu.services.VueService(Vue.extend({
 		conventionize: function(value) {
 			// we currently assume from lower camelcase to word
 			return value.substring(0, 1).toUpperCase() + value.substring(1).replace(/([A-Z]+)/g, " $1");
+		},
+		duration: function (ms, locale = 'en') {
+			if (ms === 0) {
+				const nf = new Intl.NumberFormat(locale, {
+					style: 'unit',
+					unit: 'second',
+					unitDisplay: 'long',
+				});
+				return nf.format(0);
+			}
+
+			const units = [
+				['day', 86400000],
+				['hour', 3600000],
+				['minute', 60000],
+				['second', 1000],
+				['millisecond', 1],
+			];
+
+			let remaining = ms;
+			const parts = [];
+
+			for (const [unit, value] of units) {
+				const amount = Math.floor(remaining / value);
+
+				if (amount > 0) {
+					const nf = new Intl.NumberFormat(locale, {
+						style: 'unit',
+						unit: unit,
+						unitDisplay: 'long',
+					});
+					parts.push(nf.format(amount));
+					remaining -= amount * value;
+				}
+			}
+
+			return parts.join(' ');
 		}
 	}
 }), { name: "nabu.page.services.Formatter" });
