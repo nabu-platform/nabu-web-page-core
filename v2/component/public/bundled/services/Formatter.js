@@ -204,7 +204,10 @@ nabu.services.VueService(Vue.extend({
 			return value.substring(0, 1).toUpperCase() + value.substring(1).replace(/([A-Z]+)/g, " $1");
 		},
 		duration: function (ms, locale = 'en') {
-			if (ms === 0) {
+			const num = Number(ms);
+			const validMs = Number.isNaN(num) ? 0 : num;
+
+			if (validMs === 0) {
 				const nf = new Intl.NumberFormat(locale, {
 					style: 'unit',
 					unit: 'second',
@@ -221,7 +224,8 @@ nabu.services.VueService(Vue.extend({
 				['millisecond', 1],
 			];
 
-			let remaining = ms;
+			const isNegative = validMs < 0;
+			let remaining = Math.abs(validMs);
 			const parts = [];
 
 			for (const [unit, value] of units) {
@@ -238,7 +242,8 @@ nabu.services.VueService(Vue.extend({
 				}
 			}
 
-			return parts.join(' ');
+			const result = parts.join(' ');
+			return isNegative ? '-' + result : result;
 		}
 	}
 }), { name: "nabu.page.services.Formatter" });
