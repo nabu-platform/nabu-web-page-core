@@ -87,8 +87,20 @@ describe('Formatter.duration', () => {
 	});
 
 	describe('edge cases', () => {
-		test('should handle zero milliseconds', () => {
-			expect(getDuration(0)).toBe('');
+		test('should handle zero milliseconds as localized 0 seconds', () => {
+			expect(getDuration(0)).toMatch(/0\s+seconds?/);
+			expect(getDuration(0, 'fr')).toMatch(/0\s+seconde/);
+			expect(getDuration(0, 'de')).toMatch(/0\s+Sekunden?/);
+		});
+
+		test('should handle negative duration with single leading minus', () => {
+			const result = getDuration(-3661000); // 3661000 ms = 1 hour 1 minute 1 second, displayed as "-1 hour 1 minute 1 second"
+			expect(result).toMatch(/^-1\s+hour\s+1\s+minute\s+1\s+second$/);
+		});
+
+		test('should handle negative single unit', () => {
+			expect(getDuration(-1000)).toMatch(/^-1\s+second$/);
+			expect(getDuration(-60000)).toMatch(/^-1\s+minute$/);
 		});
 
 		test('should handle very small and large values', () => {
