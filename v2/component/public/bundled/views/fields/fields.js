@@ -612,7 +612,7 @@ Vue.component("page-formatted-configure", {
 	},
 	computed: {
 		nativeTypes: function() {
-			var types = ['date', 'number', 'masterdata', 'javascript', 'text', 'literal'];
+			var types = ['date', 'duration', 'number', 'masterdata', 'javascript', 'text', 'literal'];
 			if (this.allowHtml) {
 				types.push('link');
 				types.push('html');
@@ -715,7 +715,7 @@ Vue.component("page-formatted", {
 	},
 	computed: {
 		nativeTypes: function() {
-			var types = ['date', 'number', 'masterdata', 'javascript', 'literal'];
+			var types = ['date', 'duration', 'number', 'masterdata', 'javascript', 'literal'];
 			types.push('link');
 			types.push('html');
 			types.push('checkbox');
