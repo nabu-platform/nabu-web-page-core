@@ -1,4 +1,5 @@
-aris = cssWithAris(compile: false)/result
+bundlePath = "repository:" + script.environment("webApplicationId") + ":/private/provided/bundle.json"
+aris = cssWithAris(compile: false, bundlePath: bundlePath)/result
 
 optionCleaner = lambda
 	option ?= null
